@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bearagent"
+version = "0.1.0"
+description = "A lightweight, local-first runtime for durable and secure personal AI agents."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+authors = [{ name = "CherryYang" }]
+keywords = ["agent", "ai", "runtime", "durable-execution", "local-first"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Environment :: Console",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Typing :: Typed",
+]
+dependencies = [
+  "typer>=0.16,<1",
+]
+
+[project.urls]
+Repository = "https://github.com/CherryYang05/BearAgent"
+Documentation = "https://docs.bearguin.cn"
+
+[project.scripts]
+bearagent = "bearagent.interfaces.cli.main:app"
+
+[dependency-groups]
+dev = [
+  "pyright>=1.1.400,<2",
+  "pytest>=8.4,<10",
+  "ruff>=0.12,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bearagent"]
+
+[tool.uv]
+required-version = ">=0.11.2,<0.12"
+default-groups = ["dev"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests", "scripts"]
+extend-exclude = [".python", ".uv-cache", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "SIM"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["src", "tests", "scripts"]
+exclude = [".venv", ".uv-cache", ".python"]
+reportMissingTypeStubs = "warning"
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests"]
