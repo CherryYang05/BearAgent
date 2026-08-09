@@ -42,15 +42,18 @@ Problem
 
 | 内容 | 权威位置 |
 |---|---|
-| 目标、非目标、场景、验收 | `docs/specs/NNNN-*.md` |
-| 跨模块选择及取舍 | `docs/adr/NNNN-*.md` |
+| 当前 milestone 与阶段完成线 | `docs/project/roadmap.md` |
+| 目标、非目标、场景、验收 | `docs/specs/F-NNNN-*.md` |
+| 当前 Feature 的实现切片 | `docs/plans/PLAN-F-NNNN-*.md` |
+| 跨模块选择及取舍 | `docs/adr/ADR-NNNN-*.md` |
 | 当前系统分层和契约 | `docs/architecture/*.md` |
 | AI/贡献者稳定工作约定 | `AGENTS.md` |
-| 未来阶段 | `docs/project/roadmap.md` |
 | 实际类型、schema、CLI/API | 代码、迁移、自动生成 reference |
 | 行为是否成立 | 自动化测试和可复现验收记录 |
 
 同一事实不要在五份手写文档中重复。架构文档描述稳定边界；Feature Spec 描述一个行为；代码 reference 尽量自动生成。
+
+Feature ID `F-NNNN` 在全项目内稳定递增，所属阶段由 Spec 的 `milestone: P<n>` 声明。阶段变化不得导致 Feature 重编号。`related_adrs` 只表达设计依赖；进度以 Spec 状态、Implementation Plan 切片、代码和测试为准，不能通过统计 ADR 推断。
 
 ## 4. 在 ChatGPT/Codex 中如何执行
 
@@ -98,6 +101,7 @@ Discovery 结束后，先核对 AI 引用的文件和当前行为是否真实。
 基于已确认的调查，为这个功能创建/更新 Feature Spec。
 必须写清目标、非目标、术语、用户场景、功能需求、状态转换、
 数据/接口变化、失败语义、安全、可观测性和可执行验收标准。
+声明稳定 spec_id、所属 milestone 和 related_adrs。
 此阶段仍不实现代码。若有开放问题，明确标记，不要自行定案。
 ```
 
@@ -131,6 +135,8 @@ ADR 必须记录 rejected alternatives，防止数周后另一个 AI 再次建�
 ```
 
 每一步都要能运行测试并留下可工作的中间状态。
+
+计划保存在 `docs/plans/PLAN-F-NNNN-<slug>.md`，通过 `related_spec` 关联 Feature。开始实现时将 Plan 标记为 `active`；同时最多只有一个主 Plan 为 `active`。
 
 ### 4.7 第 5 步：实现
 
@@ -170,6 +176,7 @@ ADR 必须记录 rejected alternatives，防止数周后另一个 AI 再次建�
 关闭前：
 
 - Spec `status` 从 `accepted` 改为 `implemented`；
+- Implementation Plan 从 `active` 改为 `completed`，未完成切片不得勾选；
 - 补上 `implemented_in` commit/PR（有后填写）；
 - 更新架构文档中已经改变的当前事实；
 - 添加 migration/rollback 说明；

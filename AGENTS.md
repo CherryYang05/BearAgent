@@ -3,8 +3,18 @@
 ## Read before changing code
 
 1. Read `docs/architecture/overview.md`.
-2. Read the accepted feature spec and related ADRs for the requested change.
-3. Inspect the current code and tests; chat history is never a source of truth.
+2. Read `docs/project/roadmap.md` and `docs/specs/README.md` to identify the current milestone and Feature.
+3. Read the accepted Feature Spec, its active Implementation Plan, and related ADRs.
+4. Inspect the current code and tests; chat history is never a source of truth.
+
+## Project tracking
+
+- `P0`, `P1`, and later milestones live in `docs/project/roadmap.md`.
+- Feature IDs are global and stable. Every Feature Spec must declare `milestone: P<n>`; do not encode the milestone into `F-NNNN` or rename a Feature when it moves.
+- Feature Spec and ADR filenames must begin with their full IDs: `F-NNNN-*.md` and `ADR-NNNN-*.md`.
+- Feature status lives in the Feature Spec. Slice-level progress lives in `docs/plans/PLAN-F-NNNN-*.md`.
+- ADR status records whether a decision is accepted, not whether its implementation is complete.
+- Keep at most one Implementation Plan `active`; reconcile its claims with code and tests before continuing it.
 
 ## Change classification
 
@@ -54,5 +64,6 @@ A change is complete only when:
 - acceptance criteria are satisfied;
 - relevant unit, contract, integration, recovery, and security tests pass;
 - architecture/spec/ADR/user docs are updated when their claims changed;
+- the active Implementation Plan is completed or accurately records remaining slices;
 - the diff contains no provider type leakage, policy bypass, undocumented schema migration, or secret exposure;
 - verification commands and any known limitations are reported.

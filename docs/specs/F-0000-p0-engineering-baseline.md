@@ -2,10 +2,13 @@
 title: "Feature: P0 Engineering Baseline"
 status: implemented
 spec_id: F-0000
+milestone: P0
 owner: CherryYang05
 created: 2026-08-09
 last_updated: 2026-08-09
 implemented_in: initial repository commit
+related_adrs:
+  - ADR-0006
 ---
 
 # Feature: P0 Engineering Baseline

@@ -7,7 +7,9 @@ BearAgent 的目标是构建一个面向长任务的个人 Agent Runtime：小�
 1. [总体架构](architecture/overview.md)：项目边界、核心对象、状态机、事件、工具、权限、持久化和安全设计。
 2. [AI 辅助开发 SOP](development/ai-development-sop.md)：如何让 ChatGPT/Codex 参与需求、设计、实现、测试和文档同步。
 3. [路线图](project/roadmap.md)：为什么做、每个阶段做什么、何时算完成。
-4. [部署策略](deployment/self-hosting.md)：何时本地运行，何时上服务器，如何通过 1Panel 和子域名发布。
+4. [Feature Specs](specs/README.md)：每个阶段有哪些功能，以及各功能的需求和状态。
+5. [Implementation Plans](plans/README.md)：当前 Feature 做到哪个可验证切片。
+6. [部署策略](deployment/self-hosting.md)：何时本地运行，何时上服务器，如何通过 1Panel 和子域名发布。
 
 ## 文档的权威层级
 
@@ -15,6 +17,8 @@ BearAgent 的目标是构建一个面向长任务的个人 Agent Runtime：小�
 用户可观察行为：验收测试 + Feature Spec
 跨模块决策：ADR
 当前系统结构：Architecture 文档
+当前阶段：Roadmap
+当前实现切片：Implementation Plan + 代码和测试
 开发约束：AGENTS.md
 实现细节：代码、类型和迁移文件
 未来意图：Roadmap
@@ -33,3 +37,5 @@ BearAgent 的目标是构建一个面向长任务的个人 Agent Runtime：小�
 - `superseded`：被新的 Spec/ADR 替代，保留历史。
 
 架构文档只描述当前基线和已经接受的目标边界；尚未决定的方案必须明确标为“开放问题”。
+
+Feature ID 在全项目内稳定递增；所属阶段由 Feature Spec 的 `milestone: P<n>` 声明。阶段调整只修改 `milestone`，不重命名 `F-NNNN`。

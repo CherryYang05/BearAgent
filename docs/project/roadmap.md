@@ -91,7 +91,7 @@ timeline
 
 ## 5. P0：项目基线（3-5 个专注开发日）
 
-**状态：已完成（2026-08-09）。** 实现范围与验证证据见 [F-0000 P0 Engineering Baseline](../specs/0000-p0-engineering-baseline.md)。
+**状态：已完成（2026-08-09）。** 实现范围与验证证据见 [F-0000 P0 Engineering Baseline](../specs/F-0000-p0-engineering-baseline.md)。
 
 ### 目标
 
@@ -116,6 +116,8 @@ timeline
 - 新功能能从模板创建 Spec 并按 SOP 走完一次小修复。
 
 ## 6. P1：Minimum Useful Agent（7-10 个专注开发日）
+
+**状态：未开始。** 第一个 Feature Spec 尚未创建。
 
 ### 目标
 
@@ -153,6 +155,8 @@ bearagent run "阅读 docs 下的架构和 SOP，生成一份不超过 800 字�
 - Event schema 有 snapshot/compatibility test。
 
 ## 7. P2：Durable Runtime（7-10 个专注开发日）
+
+**状态：未开始。**
 
 ### 目标
 
@@ -192,6 +196,8 @@ P2 完成后即可部署一个 **仅自己通过 SSH tunnel 使用的服务器 s
 
 ## 8. P3：Secure Self-hosted Beta（7-10 个专注开发日）
 
+**状态：未开始。**
+
 ### 目标
 
 在自己的服务器上安全运行单用户 beta，而不是把本地开发进程直接暴露到公网。
@@ -225,6 +231,8 @@ P3 就是第一个“完整项目”：本地和服务器均可运行、有真�
 
 ## 9. P4：Personal Agent Experience（10-15 个专注开发日）
 
+**状态：未开始。**
+
 ### 目标
 
 在不破坏内核的前提下，让它变成每天能用的个人 Agent。
@@ -250,6 +258,8 @@ P3 就是第一个“完整项目”：本地和服务器均可运行、有真�
 
 ## 10. P5：Trace、Replay、Eval 与公开项目（持续）
 
+**状态：未开始。**
+
 ### 目标
 
 把 BearAgent 从个人可用工具升级为有工程/研究说服力的 Agent Infra 项目。
@@ -274,6 +284,8 @@ P3 就是第一个“完整项目”：本地和服务器均可运行、有真�
 
 ## 11. P6+：只有需求证明后再做
 
+**状态：候选范围，未排期。**
+
 - Child Run 形式的 Multi-Agent：独立 budget、Grant、Checkpoint 和 trace；
 - schedules/webhooks/long timers；
 - browser/computer use；
@@ -287,7 +299,9 @@ P3 就是第一个“完整项目”：本地和服务器均可运行、有真�
 
 ## 12. 第一批 Feature Backlog
 
-按依赖顺序：
+`F-NNNN` 是全项目稳定 ID；下面是尚未创建 Spec 的规划映射。创建 Spec 时必须在 Front Matter 写入对应 `milestone`。如果 Feature 调整阶段，只修改 `milestone` 和本节归组，不修改 Feature ID。
+
+### P1
 
 1. F-0001 Domain IDs, messages and errors
 2. F-0002 Run reducer and budgets
@@ -297,12 +311,18 @@ P3 就是第一个“完整项目”：本地和服务器均可运行、有真�
 6. F-0006 Workspace boundary and read tools
 7. F-0007 Atomic write tool and artifacts
 8. F-0008 CLI run/inspect/events
-9. F-0009 Checkpoint and startup recovery
-10. F-0010 Cancel/retry/idempotency/unknown
-11. F-0011 Policy and approval
-12. F-0012 Sandbox runner
-13. F-0013 HTTP API/SSE/auth
-14. F-0014 Compose/self-host backup and restore
+
+### P2
+
+1. F-0009 Checkpoint and startup recovery
+2. F-0010 Cancel/retry/idempotency/unknown
+
+### P3
+
+1. F-0011 Policy and approval
+2. F-0012 Sandbox runner
+3. F-0013 HTTP API/SSE/auth
+4. F-0014 Compose/self-host backup and restore
 
 不要并行铺开全部 backlog。始终只维护 1 个主 Feature 和至多 1 个小修复在进行中。
 

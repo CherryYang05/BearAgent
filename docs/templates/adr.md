@@ -9,6 +9,8 @@ superseded_by: null
 
 # ADR-NNNN: <decision>
 
+Filename: `docs/adr/ADR-NNNN-<slug>.md`
+
 ## Context
 
 什么力量迫使我们做决定？为什么现在必须决定？
