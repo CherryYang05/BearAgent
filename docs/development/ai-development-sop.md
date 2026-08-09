@@ -1,7 +1,7 @@
 ---
 title: AI-assisted Development SOP
 status: accepted
-version: 0.1
+version: 0.2
 last_verified: 2026-08-09
 ---
 
@@ -13,17 +13,48 @@ Vibe coding 最大的风险不是 AI 偶尔写错一行，而是每次对话都�
 
 解决方法不是让每个小改动都写一篇长文，而是建立 **轻重分级、仓库内持久化、验收驱动** 的 SOP：
 
-```text
-Problem
-  -> Repository discovery
-  -> Feature Spec
-  -> Design and ADR when needed
-  -> Small implementation plan
-  -> Vertical implementation slice
-  -> Tests and failure injection
-  -> Docs impact check
-  -> Independent diff review
-  -> Merge and mark implemented
+```mermaid
+flowchart TD
+    subgraph A["① 调查 Discovery"]
+        A1["AGENTS.md<br/>docs/index.md"]
+        A2["Architecture + Roadmap<br/>相关 Spec / ADR"]
+        A3["当前代码与测试"]
+        A1 --> A2 --> A3
+    end
+
+    subgraph B["② 定义 Define"]
+        B1{"变更分级"}
+        B2["S0<br/>修复 + 回归测试"]
+        B3["S1<br/>docs/specs/F-NNNN-*.md"]
+        B4["S2<br/>Feature Spec +<br/>docs/adr/ADR-NNNN-*.md"]
+        B5{"Spec / ADR<br/>已 accepted？"}
+        B1 -->|S0| B2
+        B1 -->|S1| B3
+        B1 -->|S2| B4
+        B3 --> B5
+        B4 --> B5
+    end
+
+    subgraph C["③ 实现 Implement"]
+        C1["docs/plans/PLAN-F-NNNN-*.md<br/>拆分纵向切片"]
+        C2["测试先行<br/>最小实现"]
+        C3["Ruff / Pyright / Pytest"]
+        C1 --> C2 --> C3
+    end
+
+    subgraph D["④ 关闭 Close"]
+        D1["Docs Impact 检查"]
+        D2["同步发生变化的<br/>当前事实"]
+        D3["Plan → completed<br/>Spec → implemented"]
+        D4["独立审查 + CI + 提交"]
+        D1 --> D2 --> D3 --> D4
+    end
+
+    A3 --> B1
+    B2 --> C2
+    B5 -->|是| C1
+    B5 -->|否| B3
+    C3 --> D1
 ```
 
 聊天记录是工作台，不是数据库。ChatGPT/Codex 可以帮助调查、写文档、实现和验证，但长期事实必须进入 Git。
