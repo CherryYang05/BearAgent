@@ -1,28 +1,32 @@
 # BearAgent
 
-[![P0](https://img.shields.io/badge/status-P0%20baseline-blue)](#project-status)
+[![P0](https://img.shields.io/badge/status-P0%20complete-success)](#project-status)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB)](https://www.python.org/)
+[![CI](https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml)
 
 BearAgent is a lightweight, local-first and self-hostable runtime for safely and reliably executing long-running, tool-intensive personal AI tasks.
 
 BearAgent 是一个轻量、local-first、可自托管的个人 AI Agent Runtime，重点解决长任务中的工具调用、状态持久化、权限控制、故障恢复和可追踪执行。
 
+> [!IMPORTANT]
+> BearAgent 当前已完成 **P0 Engineering Baseline**，P1 尚未开始。工程、架构、文档、CLI 诊断和测试基线可用，但还不能调用真实模型或执行 Agent 任务。
+
 ## Why BearAgent
 
 很多 Agent demo 的核心只是一个 `while model -> tool -> model` 循环；一旦进程重启、外部副作用结果不确定、模型请求越权或上下文持续膨胀，就很难解释系统实际发生了什么。
 
-BearAgent 从运行时边界开始设计：
+BearAgent 从运行时边界开始设计。以下是由 P1-P3 逐步实现的目标执行模型，不代表当前已经支持全部能力：
 
-```text
-request
-  -> durable Run
-  -> model Activity
-  -> typed ToolRequest
-  -> Policy: allow / ask / deny
-  -> isolated execution
-  -> immutable Event
-  -> resume / complete
-  -> inspectable trace and Artifact
+```mermaid
+flowchart LR
+    U["User request"] --> R["Durable Run"]
+    R --> M["Model Activity"]
+    M --> T["Typed ToolRequest"]
+    T --> P["Policy<br/>allow / ask / deny"]
+    P --> X["Isolated execution"]
+    X --> E["Immutable Event"]
+    E --> R
+    R --> O["Artifact + inspectable trace"]
 ```
 
 核心方向：
@@ -36,17 +40,24 @@ request
 
 ## Project status
 
-当前处于 **P0 Engineering Baseline**：工程、文档、CLI、Fake adapters、测试和 CI 基线已经建立，尚未实现真实模型调用或 Agent Loop。
+**P0 已完成，P1 尚未开始。** 当前仓库是可安装、可验证、可继续开发的工程基线，还不是可执行真实任务的 Agent。
 
-- [x] Architecture, development SOP and roadmap
-- [x] Accepted initial ADRs and P0 Feature Spec
-- [x] Python/uv project and lockfile
-- [x] Package boundaries and test adapters
-- [x] `bearagent --help`, `--version`, `doctor`
-- [x] Ruff, Pyright, pytest, docs check and CI
-- [ ] P1 Minimum Useful Agent
+### Available now
 
-P1 之前明确不支持：真实模型、文件 Tool、SQLite、MCP、Memory、Web UI、shell 或 Sandbox。
+- Architecture、Roadmap、Feature Spec、ADR 和 AI 开发 SOP；
+- Python 3.12、uv lockfile 和明确的 package boundaries；
+- `bearagent --help`、`--version` 和 `doctor`；
+- Fake Model、Fake Tool 和 In-memory Event Store；
+- Ruff、Pyright、pytest、文档检查和 Windows/Linux CI。
+
+### Not implemented yet
+
+- 真实 ModelProvider 和 Agent Loop；
+- workspace 文件 Tool 和 SQLite 持久化；
+- checkpoint、resume、cancel、retry 和 `UNKNOWN` 恢复语义；
+- Policy、Approval、Sandbox、MCP、Memory 和 Web UI。
+
+下一阶段是 [P1 Minimum Useful Agent](docs/project/roadmap.md)，目标是完成一次真实、受限、可追踪的本地文件任务。
 
 ## Quick start
 
@@ -94,10 +105,10 @@ uv run ruff check --fix .
 
 开始功能开发前：
 
-1. 阅读 [`AGENTS.md`](AGENTS.md) 和[总体架构](docs/architecture/overview.md)。
-2. 按 [AI 开发 SOP](docs/development/ai-development-sop.md)完成仓库调查。
-3. 创建或更新 Feature Spec；S2 变更同时创建 ADR。
-4. 以可独立验证的纵向切片实现，最后执行问题导向 review。
+1. 阅读 [`AGENTS.md`](AGENTS.md)、[Roadmap](docs/project/roadmap.md)和[总体架构](docs/architecture/overview.md)。
+2. 按 [AI 开发 SOP](docs/development/ai-development-sop.md)调查相关 Spec、ADR、代码和测试。
+3. 创建或更新 Feature Spec；S2 变更同时创建 ADR，并在被接受后建立 Implementation Plan。
+4. 按 Plan 的纵向切片测试和实现，最后执行 Docs Impact 检查与问题导向 review。
 
 ## Repository layout
 
@@ -124,6 +135,7 @@ tests/
 - [项目路线图](docs/project/roadmap.md)
 - [本地与服务器部署策略](docs/deployment/self-hosting.md)
 - [Feature Specs](docs/specs/README.md)
+- [Implementation Plans](docs/plans/README.md)
 - [Architecture Decision Records](docs/adr/README.md)
 
 ## Roadmap
