@@ -81,11 +81,15 @@ timeout、retry、cancel、crash、partial success、`UNKNOWN` 如何处理？
 
 ## 15. Documentation impact
 
-- [ ] Architecture
-- [ ] ADR
-- [ ] User docs
+- [ ] Engineering source of truth (`docs/`)
+- [ ] Site beginner learning path
+- [ ] Site developer documentation
+- [ ] Site current status / milestone summary
+- [ ] Architecture / ADR
 - [ ] Deployment docs
 - [ ] Generated reference
+
+Every Feature must update the three `site/` surfaces above. If no dedicated article is needed, identify the existing index or page that will be updated.
 
 ## 16. Open questions
 

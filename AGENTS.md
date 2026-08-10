@@ -16,6 +16,13 @@
 - ADR status records whether a decision is accepted, not whether its implementation is complete.
 - Keep at most one Implementation Plan `active`; reconcile its claims with code and tests before continuing it.
 
+## Git branches
+
+- Feature branches created by Codex must use `codex/F-NNNN-<short-slug>`, where `F-NNNN` exactly matches the related Feature Spec ID.
+- Use a concise lowercase kebab-case slug that describes the branch scope, for example `codex/F-0003-sqlite-event-store`.
+- Keep one primary Feature per branch. If a Feature moves to another milestone, keep its stable Feature ID in the branch name.
+- For S0 fixes or documentation work with no Feature Spec, use `codex/fix-<short-slug>` or `codex/docs-<short-slug>`.
+
 ## Change classification
 
 - S0, trivial repair: implementation plus a regression test; update public docs only when observable behavior changes.
@@ -23,6 +30,15 @@
 - S2, cross-module architecture, security boundary, persistence schema, public contract, or new production dependency: feature spec plus an ADR and explicit failure/security tests.
 
 Do not create ceremonial documents for formatting-only or mechanical changes.
+
+## Documentation synchronization
+
+- `docs/` is the engineering source of truth. `site/` is the public learning and developer view derived from accepted docs, code, and tests.
+- Closing every Feature must update all four surfaces: authoritative `docs/`, the beginner learning path in `site/`, developer documentation in `site/`, and the public current-status page. Updating only `docs/` is incomplete.
+- A Feature does not always need two new articles, but it must update the relevant learning and developer indexes/pages with what changed, where the implementation lives, how it is verified, and whether the behavior is implemented or planned.
+- Closing every milestone `P<n>` must update the Roadmap plus the site learning map, developer architecture/status summary, and milestone outcome. Do this before selecting the next milestone.
+- External material may explain concepts or provide comparisons, but it cannot establish BearAgent behavior. Prefer primary sources, including the AI Agents in Depth book, DeepTutor documentation, and official documentation for high-star or otherwise relevant Agent projects; verify each project's current maintenance status. Treat star count as a discovery signal, not proof of correctness, and record source links.
+- Public pages must distinguish general concepts, accepted design, current implementation, and future plans. Never copy a reference project's capability into BearAgent's current-state claims.
 
 ## Architecture boundaries
 
@@ -64,6 +80,7 @@ A change is complete only when:
 - acceptance criteria are satisfied;
 - relevant unit, contract, integration, recovery, and security tests pass;
 - architecture/spec/ADR/user docs are updated when their claims changed;
+- the `site/` beginner path, developer docs, and current status are synchronized for every Feature, and milestone summaries are synchronized at every `P<n>` close;
 - the active Implementation Plan is completed or accurately records remaining slices;
 - the diff contains no provider type leakage, policy bypass, undocumented schema migration, or secret exposure;
 - verification commands and any known limitations are reported.

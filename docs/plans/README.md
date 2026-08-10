@@ -18,4 +18,13 @@ related_spec: F-NNNN
 - Feature 验收完成后，Plan 标记 `completed`，Feature Spec 标记 `implemented`。
 - Feature 所属 milestone 从关联 Spec 推导，Plan 不重复维护。
 
-使用 [Implementation Plan 模板](../templates/implementation-plan.md)。当前没有进行中的 Plan。
+使用 [Implementation Plan 模板](../templates/implementation-plan.md)。
+
+当前 active Plan：
+
+- 无。下一个 P1 运行时 Feature 需先与项目所有者确认。
+
+已完成：
+
+- [PLAN-F-0015: Local Starlight documentation site](PLAN-F-0015-local-starlight-docs-site.md)
+- [PLAN-F-0001: Domain IDs, messages and errors](PLAN-F-0001-domain-ids-messages-errors.md)

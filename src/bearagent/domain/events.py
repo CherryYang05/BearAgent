@@ -1,33 +1,51 @@
-"""Immutable facts used by event store ports and test adapters."""
+"""Immutable, versioned facts used across BearAgent ports."""
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from datetime import UTC, datetime
+
+from pydantic import Field, JsonValue, field_serializer, field_validator
+
+from bearagent.domain._base import (
+    DomainModel,
+    freeze_json_mapping,
+    thaw_json_mapping,
+    validate_json_object,
+)
+from bearagent.domain.ids import CausationId, CorrelationId, EventId, RunId
+
+EVENT_TYPE_PATTERN = r"^[A-Z][A-Za-z0-9]{0,127}$"
 
 
-def _empty_payload() -> Mapping[str, object]:
-    return {}
+class Event(DomainModel):
+    """Common envelope for an immutable domain fact."""
 
+    event_id: EventId
+    run_id: RunId
+    sequence: int = Field(ge=1, strict=True)
+    event_type: str = Field(pattern=EVENT_TYPE_PATTERN)
+    schema_version: int = Field(default=1, ge=1, strict=True)
+    occurred_at: datetime
+    causation_id: CausationId
+    correlation_id: CorrelationId
+    payload: Mapping[str, JsonValue] = Field(default_factory=dict)
 
-@dataclass(frozen=True, slots=True)
-class Event:
-    """A minimal P0 event envelope.
+    @field_validator("occurred_at")
+    @classmethod
+    def require_aware_utc_time(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("occurred_at must include a timezone")
+        return value.astimezone(UTC)
 
-    F-0001 and F-0003 will extend and version the production envelope. P0 keeps
-    only the fields required to verify store ordering and package boundaries.
-    """
+    @field_validator("payload", mode="before")
+    @classmethod
+    def require_json_payload(cls, value: object) -> object:
+        return validate_json_object(value)
 
-    event_id: str
-    run_id: str
-    sequence: int
-    event_type: str
-    payload: Mapping[str, object] = field(default_factory=_empty_payload)
+    @field_validator("payload")
+    @classmethod
+    def freeze_payload(cls, value: Mapping[str, JsonValue]) -> Mapping[str, JsonValue]:
+        return freeze_json_mapping(value)
 
-    def __post_init__(self) -> None:
-        if not self.event_id:
-            raise ValueError("event_id must not be empty")
-        if not self.run_id:
-            raise ValueError("run_id must not be empty")
-        if self.sequence < 1:
-            raise ValueError("sequence must be at least 1")
-        if not self.event_type:
-            raise ValueError("event_type must not be empty")
+    @field_serializer("payload")
+    def serialize_payload(self, value: Mapping[str, JsonValue]) -> dict[str, JsonValue]:
+        return thaw_json_mapping(value)

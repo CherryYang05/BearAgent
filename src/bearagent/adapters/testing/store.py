@@ -1,6 +1,7 @@
 """In-memory event store with strict per-Run ordering."""
 
 from bearagent.domain.events import Event
+from bearagent.domain.ids import EventId, RunId
 
 
 class EventSequenceError(ValueError):
@@ -15,8 +16,8 @@ class InMemoryEventStore:
     """
 
     def __init__(self) -> None:
-        self._events_by_run: dict[str, list[Event]] = {}
-        self._event_ids: set[str] = set()
+        self._events_by_run: dict[RunId, list[Event]] = {}
+        self._event_ids: set[EventId] = set()
 
     async def append(self, event: Event) -> None:
         if event.event_id in self._event_ids:
@@ -33,5 +34,5 @@ class InMemoryEventStore:
         events.append(event)
         self._event_ids.add(event.event_id)
 
-    async def list_events(self, run_id: str) -> tuple[Event, ...]:
+    async def list_events(self, run_id: RunId) -> tuple[Event, ...]:
         return tuple(self._events_by_run.get(run_id, ()))

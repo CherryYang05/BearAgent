@@ -3,6 +3,7 @@
 from typing import Protocol
 
 from bearagent.domain.events import Event
+from bearagent.domain.ids import RunId
 
 
 class EventStore(Protocol):
@@ -10,4 +11,4 @@ class EventStore(Protocol):
 
     async def append(self, event: Event) -> None: ...
 
-    async def list_events(self, run_id: str) -> tuple[Event, ...]: ...
+    async def list_events(self, run_id: RunId) -> tuple[Event, ...]: ...

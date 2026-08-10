@@ -1,0 +1,374 @@
+{
+  "ActivityId": {
+    "description": "Identify one model or tool operation.",
+    "format": "uuid4",
+    "title": "ActivityId",
+    "type": "string"
+  },
+  "ArtifactId": {
+    "description": "Identify one retrievable Run output.",
+    "format": "uuid4",
+    "title": "ArtifactId",
+    "type": "string"
+  },
+  "CausationId": {
+    "description": "Identify the command, Activity, or Event that caused a fact.",
+    "format": "uuid4",
+    "title": "CausationId",
+    "type": "string"
+  },
+  "CorrelationId": {
+    "description": "Correlate facts that belong to one diagnostic flow.",
+    "format": "uuid4",
+    "title": "CorrelationId",
+    "type": "string"
+  },
+  "ErrorInfo": {
+    "$defs": {
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "budget_exhausted",
+          "provider_error",
+          "tool_error",
+          "persistence_error",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "additionalProperties": false,
+    "description": "Serializable error data that is safe to expose and persist.",
+    "properties": {
+      "category": {
+        "$ref": "#/$defs/ErrorCategory"
+      },
+      "code": {
+        "$ref": "#/$defs/ErrorCode"
+      },
+      "details": {
+        "additionalProperties": {
+          "$ref": "#/$defs/SafeDetailValue"
+        },
+        "maxProperties": 32,
+        "title": "Details",
+        "type": "object"
+      },
+      "message": {
+        "maxLength": 1000,
+        "minLength": 1,
+        "title": "Message",
+        "type": "string"
+      },
+      "retryable": {
+        "default": false,
+        "title": "Retryable",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "category",
+      "code",
+      "message"
+    ],
+    "title": "ErrorInfo",
+    "type": "object"
+  },
+  "Event": {
+    "$defs": {
+      "CausationId": {
+        "description": "Identify the command, Activity, or Event that caused a fact.",
+        "format": "uuid4",
+        "title": "CausationId",
+        "type": "string"
+      },
+      "CorrelationId": {
+        "description": "Correlate facts that belong to one diagnostic flow.",
+        "format": "uuid4",
+        "title": "CorrelationId",
+        "type": "string"
+      },
+      "EventId": {
+        "description": "Identify one immutable persisted fact.",
+        "format": "uuid4",
+        "title": "EventId",
+        "type": "string"
+      },
+      "JsonValue": {},
+      "RunId": {
+        "description": "Identify one user-request execution.",
+        "format": "uuid4",
+        "title": "RunId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Common envelope for an immutable domain fact.",
+    "properties": {
+      "causation_id": {
+        "$ref": "#/$defs/CausationId"
+      },
+      "correlation_id": {
+        "$ref": "#/$defs/CorrelationId"
+      },
+      "event_id": {
+        "$ref": "#/$defs/EventId"
+      },
+      "event_type": {
+        "pattern": "^[A-Z][A-Za-z0-9]{0,127}$",
+        "title": "Event Type",
+        "type": "string"
+      },
+      "occurred_at": {
+        "format": "date-time",
+        "title": "Occurred At",
+        "type": "string"
+      },
+      "payload": {
+        "additionalProperties": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "title": "Payload",
+        "type": "object"
+      },
+      "run_id": {
+        "$ref": "#/$defs/RunId"
+      },
+      "schema_version": {
+        "default": 1,
+        "minimum": 1,
+        "title": "Schema Version",
+        "type": "integer"
+      },
+      "sequence": {
+        "minimum": 1,
+        "title": "Sequence",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "event_id",
+      "run_id",
+      "sequence",
+      "event_type",
+      "occurred_at",
+      "causation_id",
+      "correlation_id"
+    ],
+    "title": "Event",
+    "type": "object"
+  },
+  "EventId": {
+    "description": "Identify one immutable persisted fact.",
+    "format": "uuid4",
+    "title": "EventId",
+    "type": "string"
+  },
+  "Message": {
+    "$defs": {
+      "JsonValue": {},
+      "MessageRole": {
+        "description": "Roles understood by the BearAgent runtime.",
+        "enum": [
+          "system",
+          "user",
+          "assistant",
+          "tool"
+        ],
+        "title": "MessageRole",
+        "type": "string"
+      },
+      "TextPart": {
+        "additionalProperties": false,
+        "description": "A non-empty text segment.",
+        "properties": {
+          "kind": {
+            "const": "text",
+            "default": "text",
+            "title": "Kind",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 1000000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TextPart",
+        "type": "object"
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      },
+      "ToolCallPart": {
+        "additionalProperties": false,
+        "description": "A structured tool request emitted by a model adapter.",
+        "properties": {
+          "arguments": {
+            "additionalProperties": {
+              "$ref": "#/$defs/JsonValue"
+            },
+            "title": "Arguments",
+            "type": "object"
+          },
+          "kind": {
+            "const": "tool_call",
+            "default": "tool_call",
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "tool_call_id": {
+            "$ref": "#/$defs/ToolCallId"
+          }
+        },
+        "required": [
+          "tool_call_id",
+          "name"
+        ],
+        "title": "ToolCallPart",
+        "type": "object"
+      },
+      "ToolResultPart": {
+        "additionalProperties": false,
+        "description": "A tool observation correlated to its request.",
+        "properties": {
+          "content": {
+            "maxLength": 1000000,
+            "title": "Content",
+            "type": "string"
+          },
+          "is_error": {
+            "default": false,
+            "title": "Is Error",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "tool_result",
+            "default": "tool_result",
+            "title": "Kind",
+            "type": "string"
+          },
+          "tool_call_id": {
+            "$ref": "#/$defs/ToolCallId"
+          }
+        },
+        "required": [
+          "tool_call_id",
+          "content"
+        ],
+        "title": "ToolResultPart",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "One provider-neutral message with role-compatible content parts.",
+    "properties": {
+      "parts": {
+        "items": {
+          "discriminator": {
+            "mapping": {
+              "text": "#/$defs/TextPart",
+              "tool_call": "#/$defs/ToolCallPart",
+              "tool_result": "#/$defs/ToolResultPart"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/TextPart"
+            },
+            {
+              "$ref": "#/$defs/ToolCallPart"
+            },
+            {
+              "$ref": "#/$defs/ToolResultPart"
+            }
+          ]
+        },
+        "maxItems": 128,
+        "minItems": 1,
+        "title": "Parts",
+        "type": "array"
+      },
+      "role": {
+        "$ref": "#/$defs/MessageRole"
+      }
+    },
+    "required": [
+      "role",
+      "parts"
+    ],
+    "title": "Message",
+    "type": "object"
+  },
+  "ModelCallId": {
+    "description": "Identify one model call independently of provider request IDs.",
+    "format": "uuid4",
+    "title": "ModelCallId",
+    "type": "string"
+  },
+  "RunId": {
+    "description": "Identify one user-request execution.",
+    "format": "uuid4",
+    "title": "RunId",
+    "type": "string"
+  },
+  "SessionId": {
+    "description": "Identify a conversation container.",
+    "format": "uuid4",
+    "title": "SessionId",
+    "type": "string"
+  },
+  "ToolCallId": {
+    "description": "Correlate one tool request with its result.",
+    "format": "uuid4",
+    "title": "ToolCallId",
+    "type": "string"
+  }
+}

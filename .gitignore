@@ -1,6 +1,7 @@
 # Python and uv
 .venv/
 .uv-cache/
+.npm-cache/
 .python/
 __pycache__/
 *.py[cod]
@@ -12,6 +13,9 @@ htmlcov/
 # Build outputs
 build/
 dist/
+site/node_modules/
+site/.astro/
+site/dist/
 *.egg-info/
 
 # Runtime data and secrets

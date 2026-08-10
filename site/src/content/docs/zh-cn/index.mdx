@@ -1,0 +1,58 @@
+---
+title: BearAgent 文档
+description: 从 Agent 原理出发，理解一个可检查、可恢复、权限外置的本地优先 Agent Runtime。
+template: splash
+hero:
+  tagline: 可检查执行，诚实恢复，权限外置。理解一个本地优先 Agent Runtime 如何从事实走向可信行动。
+  actions:
+    - text: 开始学习
+      link: /zh-cn/learn/
+      icon: right-arrow
+      variant: primary
+    - text: 查看当前状态
+      link: /zh-cn/project/status/
+      icon: open-book
+bearStatus: mixed
+sourceRefs:
+  - F-0001
+  - F-0015
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## 选择一条路径
+
+<CardGrid>
+  <LinkCard
+    title="理解 Agent"
+    description="从 Model、Context、Tool 和执行循环开始建立整体认识。"
+    href="/zh-cn/learn/"
+  />
+  <LinkCard
+    title="为什么是 BearAgent"
+    description="了解目标用户、竞争边界，以及 P1-P3 怎样用证据建立差异化。"
+    href="/zh-cn/project/positioning/"
+  />
+  <LinkCard
+    title="理解架构"
+    description="了解 Runtime Core、Port、Adapter、Event 和安全边界。"
+    href="/zh-cn/architecture/"
+  />
+  <LinkCard
+    title="参与开发"
+    description="从代码边界、Feature 工作流和验证证据开始阅读项目。"
+    href="/zh-cn/development/"
+  />
+</CardGrid>
+
+:::caution[不要把路线图当成当前能力]
+BearAgent 的运行时部分当前只实现了工程基线和 F-0001 领域契约，还不是一个可以完成真实文件任务的 Agent。
+所有教程都会明确标记“通用原理”“已接受设计”“当前实现”或“规划中”。
+:::
+
+## BearAgent 负责回答什么
+
+- **发生了什么？** 有界循环、Activity、Event、错误、成本和 Artifact 可以检查。
+- **失败后从哪里继续？** Checkpoint、安全边界恢复、幂等和诚实的 `UNKNOWN` 语义。
+- **这件事允许发生吗？** 模型不能自行获得权限，副作用必须经过策略、审批和执行器。
+- **怎样证明？** 代码、测试、故障演练、Spec 和 ADR 共同支持产品承诺。

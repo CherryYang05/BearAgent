@@ -41,8 +41,11 @@ Related Spec: `docs/specs/F-NNNN-<name>.md`
 - [ ] Timeout/cancel/resource limits
 - [ ] Logs/trace/metrics
 - [ ] Migration/rollback
-- [ ] Documentation impact
+- [ ] Engineering documentation impact
+- [ ] Site beginner learning path synchronized
+- [ ] Site developer documentation synchronized
+- [ ] Site current status / milestone summary synchronized
 
 ## Final verification
 
-List exact commands and expected observable results. Do not mark completed until they have run successfully.
+List exact commands and expected observable results, including `npm run build --prefix=site`. Do not mark completed until they have run successfully.
