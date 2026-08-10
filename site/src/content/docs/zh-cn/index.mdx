@@ -1,0 +1,58 @@
+---
+title: BearAgent 文档
+description: 从 Agent 基础原理出发，理解一个可靠、本地优先的 Agent Runtime 如何设计和实现。
+template: splash
+hero:
+  tagline: 从 Agent 基础原理出发，理解一个可靠、本地优先的 Agent Runtime 如何设计和实现。
+  actions:
+    - text: 开始学习
+      link: /zh-cn/learn/
+      icon: right-arrow
+      variant: primary
+    - text: 查看当前状态
+      link: /zh-cn/project/status/
+      icon: open-book
+bearStatus: mixed
+sourceRefs:
+  - F-0001
+  - F-0015
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## 选择一条路径
+
+<CardGrid>
+  <LinkCard
+    title="理解 Agent"
+    description="从 Model、Context、Tool 和执行循环开始建立整体认识。"
+    href="/zh-cn/learn/"
+  />
+  <LinkCard
+    title="运行 BearAgent"
+    description="P1 尚在建设；先查看哪些能力已经可以使用，哪些仍是设计。"
+    href="/zh-cn/project/status/"
+  />
+  <LinkCard
+    title="理解架构"
+    description="了解 Runtime Core、Port、Adapter、Event 和安全边界。"
+    href="/zh-cn/architecture/"
+  />
+  <LinkCard
+    title="参与开发"
+    description="从当前 Feature 和工程 Source of Truth 开始阅读项目。"
+    href="/zh-cn/guides/local-docs/"
+  />
+</CardGrid>
+
+:::caution[不要把路线图当成当前能力]
+BearAgent 的运行时部分当前只实现了工程基线和 F-0001 领域契约，还不是一个可以完成真实文件任务的 Agent。
+所有教程都会明确标记“通用原理”“已接受设计”“当前实现”或“规划中”。
+:::
+
+## BearAgent 关注什么
+
+- **可靠执行**：有界循环、明确失败和可以检查的执行事实。
+- **持久运行**：Event、Checkpoint、安全边界恢复和诚实的 `UNKNOWN` 语义。
+- **权限与隔离**：模型不能自行获得权限，外部副作用必须经过策略和执行器。
+- **可解释工程**：代码、测试、Spec 和 ADR 共同说明系统为什么这样设计。

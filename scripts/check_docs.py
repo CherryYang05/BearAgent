@@ -8,7 +8,16 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-IGNORED_DIRECTORIES = {".git", ".python", ".uv-cache", ".venv"}
+IGNORED_DIRECTORIES = {
+    ".astro",
+    ".git",
+    ".npm-cache",
+    ".python",
+    ".uv-cache",
+    ".venv",
+    "dist",
+    "node_modules",
+}
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 
 

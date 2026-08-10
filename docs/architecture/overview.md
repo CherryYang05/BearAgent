@@ -127,6 +127,7 @@ bear-agent/
 │   ├── development/
 │   ├── deployment/
 │   └── templates/
+├── site/                    # Starlight public learning documentation
 ├── src/bearagent/
 │   ├── domain/             # messages, events, states, errors, ids
 │   ├── runtime/            # reducer, engine, budgets, recovery
@@ -620,7 +621,7 @@ P1/P2 只能在本机或 SSH tunnel 下使用。公开可访问前必须有：�
 | HTTP | httpx | async、timeout、streaming |
 | Tests | pytest | 单元、契约、集成和故障注入 |
 | Quality | Ruff + Pyright | 快速、可自动化 |
-| Docs | Markdown；发布时 MkDocs Material | docs-as-code，静态部署简单 |
+| Docs | Markdown/MDX + Starlight | 学习型导航、静态搜索和 Mermaid；P1 只本地构建 |
 | Deployment | Docker Compose + 1Panel reverse proxy | 与自有服务器匹配，运维成本低 |
 
 第一版不采用 LangChain/LangGraph 作为内核，是为了保持事件、权限和恢复语义可控；不采用 Temporal，是因为单用户/单进程阶段引入独立 workflow service 的成本高于收益。未来若出现多 worker、跨天 workflow、大量 timer 和复杂补偿事务，再用 ADR 评估 Temporal，而不是提前假设需要。

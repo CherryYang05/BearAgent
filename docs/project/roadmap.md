@@ -1,8 +1,8 @@
 ---
 title: BearAgent Project Charter and Roadmap
 status: accepted
-version: 0.1
-last_verified: 2026-08-09
+version: 0.2
+last_verified: 2026-08-10
 ---
 
 # BearAgent 项目启动大纲与路线图
@@ -117,7 +117,7 @@ timeline
 
 ## 6. P1：Minimum Useful Agent（7-10 个专注开发日）
 
-**状态：进行中（2026-08-10 开始）。** [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md) 已实现；下一个 Feature 待确认。
+**状态：进行中（2026-08-10 开始）。** [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md) 与 [F-0015 Local Starlight documentation site](../specs/F-0015-local-starlight-docs-site.md) 已实现。下一个运行时 Feature 仍待确认。
 
 ### 目标
 
@@ -134,6 +134,7 @@ timeline
 - SQLite sessions/runs/events/activities/artifacts；
 - CLI streaming、inspect、events、JSON output；
 - 结构化错误分类和日志关联 ID。
+- Starlight 公共文档站可在本地预览和构建，服务器发布延后到 P1 完成后。
 
 ### 明确不做
 
@@ -274,7 +275,7 @@ P3 就是第一个“完整项目”：本地和服务器均可运行、有真�
 - replay with fake adapters；
 - cost/latency/success dashboard；
 - chaos/recovery benchmark；
-- 文档站、architecture deep dives、tutorial、release notes；
+- architecture deep dives、进阶 tutorial、release notes 和文档版本治理；
 - public security model 和 responsible disclosure。
 
 ### 验收
@@ -282,7 +283,7 @@ P3 就是第一个“完整项目”：本地和服务器均可运行、有真�
 - 固定 eval 在 CI/nightly 可复现；
 - 修改 Prompt/模型/Tool schema 时能看到答案与执行轨迹回归；
 - 文档中每个核心承诺有代码/测试证据链接；
-- `docs.bearguin.cn` 可公开访问并随 release 构建。
+- 已在 P1 后上线的 `docs.bearguin.cn` 能随 release 构建，并持续区分当前实现与规划能力。
 
 ## 11. P6+：只有需求证明后再做
 
@@ -313,6 +314,7 @@ P3 就是第一个“完整项目”：本地和服务器均可运行、有真�
 6. F-0006 Tool contract and registry
 7. F-0007 Workspace boundary and read tools
 8. F-0008 Atomic write tool and artifacts
+9. [F-0015 Local Starlight documentation site](../specs/F-0015-local-starlight-docs-site.md)
 
 ### P2
 

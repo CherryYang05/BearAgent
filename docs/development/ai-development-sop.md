@@ -246,7 +246,7 @@ Spec/ADR 使用 `draft / accepted / implemented / superseded`；架构文档带 
 P0/P1 建立：
 
 - Markdown lint 和内部链接检查；
-- `mkdocs build --strict`（开始发布站点后）；
+- `npm --prefix site run build`（F-0015 起构建 Starlight 静态站点）；
 - Ruff、Pyright、pytest；
 - migration 能从空库升级；
 - architecture import boundary test；

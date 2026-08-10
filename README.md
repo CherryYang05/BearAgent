@@ -1,6 +1,6 @@
 # BearAgent
 
-[![P0](https://img.shields.io/badge/status-P0%20complete-success)](#project-status)
+[![P1](https://img.shields.io/badge/status-P1%20in%20progress-blue)](#project-status)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB)](https://www.python.org/)
 [![CI](https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml)
 
@@ -9,7 +9,7 @@ BearAgent is a lightweight, local-first and self-hostable runtime for safely and
 BearAgent 是一个轻量、local-first、可自托管的个人 AI Agent Runtime，重点解决长任务中的工具调用、状态持久化、权限控制、故障恢复和可追踪执行。
 
 > [!IMPORTANT]
-> BearAgent 当前已完成 **P0 Engineering Baseline**，P1 尚未开始。工程、架构、文档、CLI 诊断和测试基线可用，但还不能调用真实模型或执行 Agent 任务。
+> BearAgent 当前已完成 **P0 Engineering Baseline** 并进入 P1。F-0001 领域契约和 F-0015 本地 Starlight 文档站已实现；目前仍不能调用真实模型或执行 Agent 任务。
 
 ## Why BearAgent
 
@@ -40,7 +40,7 @@ flowchart LR
 
 ## Project status
 
-**P0 已完成，P1 尚未开始。** 当前仓库是可安装、可验证、可继续开发的工程基线，还不是可执行真实任务的 Agent。
+**P0 已完成，P1 进行中。** 当前仓库已经具备稳定的领域 ID、Message、Error 与 Event envelope，但还不是可执行真实任务的 Agent。
 
 ### Available now
 
@@ -48,6 +48,8 @@ flowchart LR
 - Python 3.12、uv lockfile 和明确的 package boundaries；
 - `bearagent --help`、`--version` 和 `doctor`；
 - Fake Model、Fake Tool 和 In-memory Event Store；
+- F-0001 的类型化领域 ID、Message、Error、Event envelope 和 schema snapshot；
+- 位于 `site/`、可本地构建的中文 Starlight 学习文档；
 - Ruff、Pyright、pytest、文档检查和 Windows/Linux CI。
 
 ### Not implemented yet
@@ -57,7 +59,7 @@ flowchart LR
 - checkpoint、resume、cancel、retry 和 `UNKNOWN` 恢复语义；
 - Policy、Approval、Sandbox、MCP、Memory 和 Web UI。
 
-下一阶段是 [P1 Minimum Useful Agent](docs/project/roadmap.md)，目标是完成一次真实、受限、可追踪的本地文件任务。
+当前阶段是 [P1 Minimum Useful Agent](docs/project/roadmap.md)，目标是完成一次真实、受限、可追踪的本地文件任务。
 
 ## Quick start
 
@@ -129,6 +131,7 @@ tests/
 
 ## Documentation
 
+- 本地学习文档站：`npm --prefix site ci`，然后运行 `npm --prefix site run dev`，访问 `http://localhost:4321/zh-cn/`；
 - [文档首页](docs/index.md)
 - [总体架构](docs/architecture/overview.md)
 - [AI 辅助开发 SOP](docs/development/ai-development-sop.md)
