@@ -1,69 +1,68 @@
-# BearAgent
+<div align="center">
 
-[![P1](https://img.shields.io/badge/status-P1%20in%20progress-blue)](#project-status)
-[![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB)](https://www.python.org/)
-[![CI](https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml)
+<h1>BearAgent</h1>
+<p><strong>可靠、可恢复、权限明确的本地优先个人 AI Agent Runtime</strong></p>
+<p><sub>A lightweight, local-first and self-hostable runtime for long-running, tool-intensive personal AI tasks.</sub></p>
+<p>
+  <a href="#project-status"><img alt="P1 in progress" src="https://img.shields.io/badge/status-P1%20in%20progress-2563EB"></a>
+  <a href="https://www.python.org/"><img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&amp;logoColor=white"></a>
+  <a href="https://docs.astral.sh/uv/"><img alt="uv package manager" src="https://img.shields.io/badge/package%20manager-uv-DE5FE9"></a>
+  <a href="https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml/badge.svg"></a>
+</p>
+<p>
+  <a href="#why-bearagent">为什么是 BearAgent</a> ·
+  <a href="#architecture">架构</a> ·
+  <a href="#project-status">当前状态</a> ·
+  <a href="#quick-start">快速开始</a> ·
+  <a href="#roadmap">路线图</a> ·
+  <a href="#contributing">参与开发</a>
+</p>
 
-BearAgent is a lightweight, local-first and self-hostable runtime for safely and reliably executing long-running, tool-intensive personal AI tasks.
-
-BearAgent 是一个轻量、local-first、可自托管的个人 AI Agent Runtime，重点解决长任务中的工具调用、状态持久化、权限控制、故障恢复和可追踪执行。
+</div>
 
 > [!IMPORTANT]
-> BearAgent 当前已完成 **P0 Engineering Baseline** 并进入 P1。F-0001 领域契约和 F-0015 本地 Starlight 文档站已实现；目前仍不能调用真实模型或执行 Agent 任务。
+> BearAgent 已完成 **P0 Engineering Baseline**，当前处于 **P1 Minimum Useful Agent**。领域契约与本地文档站已经实现；真实 Model Provider、Agent Loop、文件工具和 SQLite Run 尚不可用，因此它现在还不能执行真实 Agent 任务。
 
 ## Why BearAgent
 
-很多 Agent demo 的核心只是一个 `while model -> tool -> model` 循环；一旦进程重启、外部副作用结果不确定、模型请求越权或上下文持续膨胀，就很难解释系统实际发生了什么。
+很多 Agent demo 在 happy path 上只是 `model → tool → model` 循环。一旦进程中断、外部写入结果不确定、模型请求越权或上下文持续增长，就很难回答三个关键问题：**发生了什么、允许做什么、应该从哪里继续**。
 
-BearAgent 从运行时边界开始设计。以下是由 P1-P3 逐步实现的目标执行模型，不代表当前已经支持全部能力：
+BearAgent 从运行时边界而不是功能数量开始设计：
 
-```mermaid
-flowchart LR
-    U["User request"] --> R["Durable Run"]
-    R --> M["Model Activity"]
-    M --> T["Typed ToolRequest"]
-    T --> P["Policy<br/>allow / ask / deny"]
-    P --> X["Isolated execution"]
-    X --> E["Immutable Event"]
-    E --> R
-    R --> O["Artifact + inspectable trace"]
-```
+| Durable execution | Authority & isolation | Trace & replay | Local-first |
+|---|---|---|---|
+| Run、Activity、Event 和安全边界恢复 | Grant、Policy、Approval 与独立 runner | 不可变事实、可重建投影和可比较轨迹 | 单用户、单进程、SQLite、CLI-first |
+| 不承诺 exactly-once；不确定副作用进入 `UNKNOWN` | 模型和 Tool 输出不能自行授予权限 | 失败、重试、成本和 Artifact 均可检查 | 没有指标证明前不引入分布式组件 |
 
-核心方向：
+项目刻意保持“小而完整”：先把持久执行、权限隔离和失败语义做对，再增加 Web UI、Skills、MCP、Memory 或 Multi-Agent。
 
-- durable execution at explicit safe boundaries；
-- typed tools, runtime Grants and exact-argument approvals；
-- isolated runner，不在主进程执行模型生成 shell；
-- event log、trace、checkpoint 和 eval 各自有明确语义；
-- local-first、单用户、单进程、SQLite first；
-- Skills、MCP、Memory 和 Web UI 后置到稳定内核之后。
+## Architecture
+
+![BearAgent layered runtime architecture](docs/assets/bearagent-architecture.svg)
+
+图中的绿色 `NOW` 表示已有代码与测试支撑的基础；`P1`—`P5` 表示已接受路线图中的目标阶段，而不是当前可用能力。视觉分层参考了 [DeepTutor](https://github.com/HKUDS/DeepTutor) 的 README 架构图；模块、依赖方向和阶段划分以 BearAgent 的 [总体架构](docs/architecture/overview.md)与[路线图](docs/project/roadmap.md)为准。
+
+两条边界贯穿整个设计：
+
+- Runtime Core 只依赖 BearAgent 领域类型与 Port，不导入模型 SDK、FastAPI、MCP、Docker 或数据库 Adapter。
+- 所有外部副作用都必须经过 Tool Executor 与 Policy；事件是事实，Run/Activity 表、Checkpoint 和索引只是投影或缓存。
 
 ## Project status
 
-**P0 已完成，P1 进行中。** 当前仓库已经具备稳定的领域 ID、Message、Error 与 Event envelope，但还不是可执行真实任务的 Agent。
+| Available now | Building in P1 | Deliberately later |
+|---|---|---|
+| Python 3.12 + uv 工程基线 | Run reducer 与执行预算 | P2：checkpoint、resume、retry、`UNKNOWN` |
+| `help`、`version`、`doctor` CLI | EventStore contract + SQLite | P3：Policy、Approval、Sandbox、HTTP/SSE |
+| 类型化 ID、Message、Error、Event envelope | 一个真实 Model Provider 与有界 Agent Loop | P4：Web UI、Skills、MCP、Memory |
+| Fake Model / Tool / In-memory Store | Workspace 只读工具与 `outputs/**` 原子写入 | P5：OpenTelemetry、replay、eval |
+| Ruff、Pyright、pytest、跨平台 CI | `run`、`inspect`、`events` CLI | P6+：Multi-Agent、browser、多 worker |
+| 中文 Starlight 学习与开发文档 | 可追踪的首个本地文件任务 | 仅在真实需求证明后扩展 |
 
-### Available now
-
-- Architecture、Roadmap、Feature Spec、ADR 和 AI 开发 SOP；
-- Python 3.12、uv lockfile 和明确的 package boundaries；
-- `bearagent --help`、`--version` 和 `doctor`；
-- Fake Model、Fake Tool 和 In-memory Event Store；
-- F-0001 的类型化领域 ID、Message、Error、Event envelope 和 schema snapshot；
-- 位于 `site/`、可本地构建的中文 Starlight 学习文档；
-- Ruff、Pyright、pytest、文档检查和 Windows/Linux CI。
-
-### Not implemented yet
-
-- 真实 ModelProvider 和 Agent Loop；
-- workspace 文件 Tool 和 SQLite 持久化；
-- checkpoint、resume、cancel、retry 和 `UNKNOWN` 恢复语义；
-- Policy、Approval、Sandbox、MCP、Memory 和 Web UI。
-
-当前阶段是 [P1 Minimum Useful Agent](docs/project/roadmap.md)，目标是完成一次真实、受限、可追踪的本地文件任务。
+当前权威状态见 [Project Roadmap](docs/project/roadmap.md) 和[公开文档状态页](site/src/content/docs/zh-cn/project/status.md)。Roadmap 中出现模块名称不等于它已经实现。
 
 ## Quick start
 
-Prerequisite: [uv](https://docs.astral.sh/uv/).
+前置依赖：[uv](https://docs.astral.sh/uv/)。
 
 ```powershell
 git clone https://github.com/CherryYang05/BearAgent.git
@@ -88,7 +87,7 @@ uv run python -m bearagent doctor --json
 
 ## Development
 
-完整验证：
+运行完整 Python 与工程文档验证：
 
 ```powershell
 uv run ruff format --check .
@@ -98,71 +97,70 @@ uv run pytest
 uv run python scripts/check_docs.py
 ```
 
-自动格式化：
+本地启动中文文档站：
 
 ```powershell
-uv run ruff format .
-uv run ruff check --fix .
+npm --prefix=site ci
+npm run dev --prefix=site
 ```
 
-开始功能开发前：
-
-1. 阅读 [`AGENTS.md`](AGENTS.md)、[Roadmap](docs/project/roadmap.md)和[总体架构](docs/architecture/overview.md)。
-2. 按 [AI 开发 SOP](docs/development/ai-development-sop.md)调查相关 Spec、ADR、代码和测试。
-3. 创建或更新 Feature Spec；S2 变更同时创建 ADR，并在被接受后建立 Implementation Plan。
-4. 按 Plan 的纵向切片测试和实现，最后执行 Docs Impact 检查与问题导向 review。
+然后访问 `http://localhost:4321/zh-cn/`。生产构建使用 `npm run build --prefix=site`。
 
 ## Repository layout
 
 ```text
-src/bearagent/
-├── domain/          internal facts and value types
-├── runtime/         state transitions and execution kernel
-├── application/     commands and use cases
-├── ports/           model, tool, store, policy and sandbox contracts
-├── adapters/        provider, persistence, tool and test adapters
-└── interfaces/      CLI now; HTTP API later
-
-tests/
-├── architecture/    dependency boundary checks
-├── integration/     executable entry points
-└── unit/            deterministic behavior and test adapters
+BearAgent/
+├── src/bearagent/
+│   ├── domain/       immutable facts and value types
+│   ├── runtime/      state transitions and execution kernel
+│   ├── application/  commands and use cases
+│   ├── ports/        model, tool and store contracts
+│   ├── adapters/     provider, persistence, sandbox and test adapters
+│   └── interfaces/   CLI now; HTTP API later
+├── tests/
+│   ├── architecture/ dependency-boundary checks
+│   ├── contract/     schema compatibility
+│   ├── security/     safe error behavior
+│   ├── integration/  executable entry points
+│   └── unit/         deterministic domain behavior
+├── docs/             engineering source of truth
+└── site/             public learning and developer documentation
 ```
-
-## Documentation
-
-- 本地学习文档站：`npm --prefix=site ci`，然后运行 `npm run dev --prefix=site`，访问 `http://localhost:4321/zh-cn/`；
-- 站点同时提供初学者学习路径和开发者实现文档；每个 Feature 与里程碑关闭时必须同步更新；
-- [文档首页](docs/index.md)
-- [总体架构](docs/architecture/overview.md)
-- [AI 辅助开发 SOP](docs/development/ai-development-sop.md)
-- [项目路线图](docs/project/roadmap.md)
-- [本地与服务器部署策略](docs/deployment/self-hosting.md)
-- [Feature Specs](docs/specs/README.md)
-- [Implementation Plans](docs/plans/README.md)
-- [Architecture Decision Records](docs/adr/README.md)
 
 ## Roadmap
 
-| Phase | Outcome |
-|---|---|
-| P0 | Engineering and architecture baseline |
-| P1 | Local CLI agent with one provider and bounded workspace tools |
-| P2 | Checkpoint, resume, cancel, retry, idempotency and `UNKNOWN` |
-| P3 | Policy, approval, sandbox runner and secure self-hosted beta |
-| P4 | Web UI, Skills, MCP and inspectable Memory |
-| P5 | OpenTelemetry, replay, eval and public documentation |
+| Phase | Outcome | Status |
+|---|---|---|
+| P0 | Architecture, engineering baseline and documentation governance | Complete |
+| P1 | Local CLI Agent with one Provider and bounded workspace tools | In progress |
+| P2 | Durable recovery, cancel, retry, idempotency and `UNKNOWN` | Planned |
+| P3 | Policy, approval, isolated runner and secure self-hosted beta | Planned |
+| P4 | Web UI, Skills, MCP and inspectable Memory | Planned |
+| P5 | Trace, replay, eval and public project evidence | Planned |
 
-P3 是第一个完整项目完成线。详见[路线图](docs/project/roadmap.md)。
+**P3 是第一个完整项目完成线。** 详细 Feature Backlog、验收标准和明确不做的内容都记录在[路线图](docs/project/roadmap.md)中。
 
-## Design constraints
+## Documentation
 
-- Runtime core 不依赖 FastAPI、UI、模型 SDK、MCP、Docker 或数据库 adapter。
-- 模型和 Tool 输出始终是不可信数据，不能授予权限。
-- 外部副作用必须经过 ToolExecutor 和 PolicyEngine。
-- 不承诺 exactly-once；不确定副作用进入 `UNKNOWN`。
-- shell/code execution 只能进入独立 runner，不能回退到 host subprocess。
+- [文档索引](docs/index.md)：工程文档的推荐阅读顺序与权威层级。
+- [总体架构](docs/architecture/overview.md)：领域模型、状态机、持久化、权限和安全边界。
+- [AI 辅助开发 SOP](docs/development/ai-development-sop.md)：从调查到关闭 Feature 的完整流程。
+- [Feature Specs](docs/specs/README.md)：可观察行为、失败语义和验收标准。
+- [Implementation Plans](docs/plans/README.md)：当前 Feature 的可验证纵向切片。
+- [Architecture Decision Records](docs/adr/README.md)：跨模块设计决策及其权衡。
+- [本地文档站指南](site/README.md)：Starlight 的预览、构建与内容边界。
+
+`docs/` 是工程 Source of Truth；`site/` 是由 Spec、ADR、代码和测试派生的公共学习与开发视图。每个 Feature 关闭时必须同步两者，并明确区分通用原理、已接受设计、当前实现和未来计划。
+
+## Contributing
+
+项目目前处于早期阶段，适合从小而边界清晰的改动开始。提交代码前：
+
+1. 阅读 [`AGENTS.md`](AGENTS.md)、[总体架构](docs/architecture/overview.md)和[路线图](docs/project/roadmap.md)。
+2. 找到对应 Feature Spec、Implementation Plan 与相关 ADR；聊天记录不作为实现依据。
+3. 保持 diff 狭窄，为失败、安全和恢复语义补充相应测试。
+4. 完成 Docs Impact 检查，并运行本 README 中的完整验证命令。
 
 ## License
 
-尚未决定。公开发布代码前将在 Apache-2.0 与 AGPL-3.0 之间做 ADR；在许可证确定前，请不要假设拥有复制、修改或分发授权。
+许可证尚未决定。公开发布代码前会在 Apache-2.0 与 AGPL-3.0 之间通过 ADR 确认；在此之前，请不要假设拥有复制、修改或分发授权。
