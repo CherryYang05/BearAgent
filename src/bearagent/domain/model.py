@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
+from bearagent.domain.messages import Message
+
 
 class ModelEventKind(StrEnum):
     """Kinds emitted by a model provider during P0 tests."""
@@ -15,7 +17,7 @@ class ModelEventKind(StrEnum):
 class ModelRequest:
     """A minimal provider-neutral model request."""
 
-    messages: tuple[str, ...]
+    messages: tuple[Message, ...]
 
 
 @dataclass(frozen=True, slots=True)

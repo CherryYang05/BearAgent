@@ -8,3 +8,4 @@ ADR 记录已经接受、跨模块且代价较高的技术决定。新决定从�
 - [ADR-0004: 权限策略位于模型之外](ADR-0004-policy-outside-model.md)
 - [ADR-0005: Host runtime 不执行模型生成 shell](ADR-0005-no-host-shell-execution.md)
 - [ADR-0006: P0 工具链与依赖基线](ADR-0006-p0-tooling-and-dependencies.md)
+- [ADR-0007: Provider 无关的领域 schema](ADR-0007-provider-neutral-domain-schemas.md)

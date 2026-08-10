@@ -1,0 +1,135 @@
+"""Stable and safe error information for BearAgent boundaries."""
+
+import re
+from collections.abc import Mapping
+from enum import StrEnum
+from math import isfinite
+from types import MappingProxyType
+from typing import Self
+
+from pydantic import (
+    Field,
+    StrictBool,
+    StrictFloat,
+    StrictInt,
+    StrictStr,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
+
+from bearagent.domain._base import DomainModel
+
+MAX_ERROR_MESSAGE_CHARS = 1_000
+MAX_ERROR_DETAILS = 32
+MAX_DETAIL_KEY_CHARS = 64
+MAX_DETAIL_VALUE_CHARS = 512
+_SENSITIVE_KEY_PARTS = frozenset(
+    {
+        "api_key",
+        "authorization",
+        "cookie",
+        "credential",
+        "password",
+        "secret",
+        "token",
+    }
+)
+
+
+class ErrorCategory(StrEnum):
+    """Stable high-level class used for handling and aggregation."""
+
+    VALIDATION = "validation"
+    BUDGET = "budget"
+    PROVIDER = "provider"
+    TOOL = "tool"
+    PERSISTENCE = "persistence"
+    INTERNAL = "internal"
+
+
+class ErrorCode(StrEnum):
+    """Initial stable error codes; later Features may add specific codes."""
+
+    INVALID_INPUT = "invalid_input"
+    BUDGET_EXHAUSTED = "budget_exhausted"
+    PROVIDER_ERROR = "provider_error"
+    TOOL_ERROR = "tool_error"
+    PERSISTENCE_ERROR = "persistence_error"
+    INTERNAL_ERROR = "internal_error"
+
+
+_CODE_CATEGORIES = {
+    ErrorCode.INVALID_INPUT: ErrorCategory.VALIDATION,
+    ErrorCode.BUDGET_EXHAUSTED: ErrorCategory.BUDGET,
+    ErrorCode.PROVIDER_ERROR: ErrorCategory.PROVIDER,
+    ErrorCode.TOOL_ERROR: ErrorCategory.TOOL,
+    ErrorCode.PERSISTENCE_ERROR: ErrorCategory.PERSISTENCE,
+    ErrorCode.INTERNAL_ERROR: ErrorCategory.INTERNAL,
+}
+
+
+type SafeDetailValue = StrictStr | StrictInt | StrictFloat | StrictBool | None
+
+
+class ErrorInfo(DomainModel):
+    """Serializable error data that is safe to expose and persist."""
+
+    category: ErrorCategory
+    code: ErrorCode
+    message: str = Field(min_length=1, max_length=MAX_ERROR_MESSAGE_CHARS)
+    retryable: bool = False
+    details: Mapping[str, SafeDetailValue] = Field(
+        default_factory=dict,
+        max_length=MAX_ERROR_DETAILS,
+        json_schema_extra={"maxProperties": MAX_ERROR_DETAILS},
+    )
+
+    @field_validator("message")
+    @classmethod
+    def reject_blank_message(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("message must not be blank")
+        return value
+
+    @field_validator("details")
+    @classmethod
+    def validate_safe_details(
+        cls, details: Mapping[str, SafeDetailValue]
+    ) -> Mapping[str, SafeDetailValue]:
+        for key, value in details.items():
+            if not key or len(key) > MAX_DETAIL_KEY_CHARS:
+                raise ValueError("detail keys must be non-empty and at most 64 characters")
+            normalized_key = re.sub(r"[^a-z0-9]+", "_", key.lower()).strip("_")
+            if any(part in normalized_key for part in _SENSITIVE_KEY_PARTS):
+                raise ValueError(f"sensitive detail key is not allowed: {key}")
+            if isinstance(value, str) and len(value) > MAX_DETAIL_VALUE_CHARS:
+                raise ValueError(f"detail value is too long: {key}")
+            if isinstance(value, float) and not isfinite(value):
+                raise ValueError(f"detail value must be finite: {key}")
+        return MappingProxyType(dict(details))
+
+    @model_validator(mode="after")
+    def require_matching_category_and_code(self) -> Self:
+        expected_category = _CODE_CATEGORIES[self.code]
+        if self.category is not expected_category:
+            raise ValueError(
+                f"error code {self.code.value} requires category {expected_category.value}"
+            )
+        return self
+
+    @field_serializer("details")
+    def serialize_details(
+        self, details: Mapping[str, SafeDetailValue]
+    ) -> dict[str, SafeDetailValue]:
+        return dict(details)
+
+
+class BearAgentError(Exception):
+    """Exception wrapper whose visible text is limited to safe ErrorInfo."""
+
+    def __init__(self, info: ErrorInfo, *, cause: BaseException | None = None) -> None:
+        self.info = info
+        super().__init__(info.message)
+        if cause is not None:
+            self.__cause__ = cause

@@ -16,6 +16,13 @@
 - ADR status records whether a decision is accepted, not whether its implementation is complete.
 - Keep at most one Implementation Plan `active`; reconcile its claims with code and tests before continuing it.
 
+## Git branches
+
+- Feature branches created by Codex must use `codex/F-NNNN-<short-slug>`, where `F-NNNN` exactly matches the related Feature Spec ID.
+- Use a concise lowercase kebab-case slug that describes the branch scope, for example `codex/F-0003-sqlite-event-store`.
+- Keep one primary Feature per branch. If a Feature moves to another milestone, keep its stable Feature ID in the branch name.
+- For S0 fixes or documentation work with no Feature Spec, use `codex/fix-<short-slug>` or `codex/docs-<short-slug>`.
+
 ## Change classification
 
 - S0, trivial repair: implementation plus a regression test; update public docs only when observable behavior changes.

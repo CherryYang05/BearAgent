@@ -2,7 +2,7 @@
 title: BearAgent Architecture Baseline
 status: accepted
 version: 0.1
-last_verified: 2026-08-09
+last_verified: 2026-08-10
 ---
 
 # BearAgent 总体架构
@@ -403,9 +403,9 @@ P1 只实现：
 - `list_directory`
 - `read_file`
 - `search_files`
-- `write_file`（原子临时文件 + rename）
+- `write_file`（P1 仅允许 `outputs/**`，原子临时文件 + rename）
 
-路径在执行前做 canonicalization，拒绝绝对路径、`..` 逃逸和 symlink 跳出 workspace。读取/输出均设字节上限。删除、任意 HTTP 和 shell 不进入 P1。
+路径在执行前做 canonicalization，拒绝绝对路径、`..` 逃逸和 symlink 跳出 workspace。P1 将 workspace 中已有源码和输入视为只读，只允许创建或替换 `outputs/**` 下的文件。读取/输出均设字节上限。删除、任意 HTTP 和 shell 不进入 P1。
 
 ### 12.4 Sandbox
 

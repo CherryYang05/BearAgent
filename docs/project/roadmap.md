@@ -117,7 +117,7 @@ timeline
 
 ## 6. P1：Minimum Useful Agent（7-10 个专注开发日）
 
-**状态：未开始。** 第一个 Feature Spec 尚未创建。
+**状态：进行中（2026-08-10 开始）。** [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md) 已实现；下一个 Feature 待确认。
 
 ### 目标
 
@@ -129,7 +129,7 @@ timeline
 - 一个真实 ModelProvider adapter；
 - bounded Agent Loop：max iterations、tokens、wall time、tool calls；
 - ToolRegistry、ToolSpec、ToolRequest、ToolResult；
-- `list_directory/read_file/search_files/write_file`；
+- `list_directory/read_file/search_files`，以及仅允许写入 `outputs/**` 的 `write_file`；
 - workspace path boundary、字节上限、timeout；
 - SQLite sessions/runs/events/activities/artifacts；
 - CLI streaming、inspect、events、JSON output；
@@ -139,6 +139,8 @@ timeline
 
 - shell、任意 HTTP、MCP、Memory、Web UI；
 - 任意并行 tool calls；先串行证明语义。
+- 修改 workspace 中已有的源码或输入文件；P1 只允许写入 `outputs/**`。
+- 进程重启后续跑、Checkpoint、pause/resume/cancel/retry/`UNKNOWN`；这些属于 P2。
 
 ### Demo
 
@@ -303,14 +305,14 @@ P3 就是第一个“完整项目”：本地和服务器均可运行、有真�
 
 ### P1
 
-1. F-0001 Domain IDs, messages and errors
+1. [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md)
 2. F-0002 Run reducer and budgets
 3. F-0003 EventStore contract and SQLite adapter
 4. F-0004 ModelProvider contract and first adapter
-5. F-0005 Tool contract and registry
-6. F-0006 Workspace boundary and read tools
-7. F-0007 Atomic write tool and artifacts
-8. F-0008 CLI run/inspect/events
+5. F-0005 CLI run/inspect/events
+6. F-0006 Tool contract and registry
+7. F-0007 Workspace boundary and read tools
+8. F-0008 Atomic write tool and artifacts
 
 ### P2
 

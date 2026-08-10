@@ -18,4 +18,10 @@ related_spec: F-NNNN
 - Feature 验收完成后，Plan 标记 `completed`，Feature Spec 标记 `implemented`。
 - Feature 所属 milestone 从关联 Spec 推导，Plan 不重复维护。
 
-使用 [Implementation Plan 模板](../templates/implementation-plan.md)。当前没有进行中的 Plan。
+使用 [Implementation Plan 模板](../templates/implementation-plan.md)。
+
+当前没有 active Plan。
+
+已完成：
+
+- [PLAN-F-0001: Domain IDs, messages and errors](PLAN-F-0001-domain-ids-messages-errors.md)
