@@ -18,7 +18,7 @@ draft -> accepted -> implemented -> superseded
 
 ## P1+
 
-### P1：Minimum Useful Agent
+### P1：Inspectable Execution
 
 - [F-0001: Domain IDs, messages and errors](F-0001-domain-ids-messages-errors.md)
 - [F-0015: Local Starlight documentation site](F-0015-local-starlight-docs-site.md)

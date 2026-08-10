@@ -18,10 +18,11 @@ Spec、ADR、代码和测试仍是事实来源，这里负责建立阅读顺序�
 
 ## 推荐阅读顺序
 
-1. 阅读[BearAgent 架构概览](../architecture/)理解 Core、Port 和 Adapter 的依赖方向。
-2. 阅读当前 Feature 的 Spec、ADR 和 Implementation Plan，确认目标、边界与取舍。
-3. 通过本区的实现导读找到代码、测试和验证命令。
-4. 修改后同时更新工程文档、初学者学习路径、开发者文档与当前状态。
+1. 阅读[产品定位](../project/positioning.md)，确认功能是在强化核心证据还是只增加能力宽度。
+2. 阅读[BearAgent 架构概览](../architecture/)理解 Core、Port 和 Adapter 的依赖方向。
+3. 阅读当前 Feature 的 Spec、ADR 和 Implementation Plan，确认目标、边界与取舍。
+4. 通过本区的实现导读找到代码、测试和验证命令。
+5. 修改后同时更新工程文档、初学者学习路径、开发者文档与当前状态。
 
 ## 当前实现导读
 

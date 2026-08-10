@@ -1,8 +1,8 @@
 <div align="center">
 
 <h1>BearAgent</h1>
-<p><strong>可靠、可恢复、权限明确的本地优先个人 AI Agent Runtime</strong></p>
-<p><sub>A lightweight, local-first and self-hostable runtime for long-running, tool-intensive personal AI tasks.</sub></p>
+<p><strong>可检查、可恢复、权限外置的本地优先 Agent Runtime</strong></p>
+<p><sub>An inspectable, crash-resumable and authority-first local Agent Runtime.</sub></p>
 <p>
   <a href="#project-status"><img alt="P1 in progress" src="https://img.shields.io/badge/status-P1%20in%20progress-2563EB"></a>
   <a href="https://www.python.org/"><img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&amp;logoColor=white"></a>
@@ -11,6 +11,7 @@
 </p>
 <p>
   <a href="#why-bearagent">为什么是 BearAgent</a> ·
+  <a href="docs/project/product-positioning.md">产品定位</a> ·
   <a href="#architecture">架构</a> ·
   <a href="#project-status">当前状态</a> ·
   <a href="#quick-start">快速开始</a> ·
@@ -21,20 +22,20 @@
 </div>
 
 > [!IMPORTANT]
-> BearAgent 已完成 **P0 Engineering Baseline**，当前处于 **P1 Minimum Useful Agent**。领域契约与本地文档站已经实现；真实 Model Provider、Agent Loop、文件工具和 SQLite Run 尚不可用，因此它现在还不能执行真实 Agent 任务。
+> BearAgent 已完成 **P0 Engineering Baseline**，当前处于 **P1 Inspectable Execution**。领域契约与本地文档站已经实现；真实 Model Provider、Agent Loop、文件工具和 SQLite Run 尚不可用，因此它现在还不能执行真实 Agent 任务。
 
 ## Why BearAgent
 
 很多 Agent demo 在 happy path 上只是 `model → tool → model` 循环。一旦进程中断、外部写入结果不确定、模型请求越权或上下文持续增长，就很难回答三个关键问题：**发生了什么、允许做什么、应该从哪里继续**。
 
-BearAgent 从运行时边界而不是功能数量开始设计：
+BearAgent 从运行时边界而不是功能数量开始设计。它不是“开源 Manus/Claude Code 替代品”，也不把自己限定为 Coding Agent；它选择成为一个最小但可信的个人 Agent 执行底座：
 
-| Durable execution | Authority & isolation | Trace & replay | Local-first |
+| Inspectable execution | Honest recovery | Authority-first | Local ownership |
 |---|---|---|---|
-| Run、Activity、Event 和安全边界恢复 | Grant、Policy、Approval 与独立 runner | 不可变事实、可重建投影和可比较轨迹 | 单用户、单进程、SQLite、CLI-first |
-| 不承诺 exactly-once；不确定副作用进入 `UNKNOWN` | 模型和 Tool 输出不能自行授予权限 | 失败、重试、成本和 Artifact 均可检查 | 没有指标证明前不引入分布式组件 |
+| Run、Activity、Event、预算和 Artifact 可检查 | 从持久安全边界恢复，不假装 exactly-once | Grant、Policy、Approval 与独立 runner | 单用户、单进程、SQLite、CLI-first |
+| P1 先证明一次真实、有界的执行 | P2 处理重启、幂等、receipt 与 `UNKNOWN` | P3 让模型之外的运行时决定权限 | 没有需求证据前不引入分布式组件 |
 
-项目刻意保持“小而完整”：先把持久执行、权限隔离和失败语义做对，再增加 Web UI、Skills、MCP、Memory 或 Multi-Agent。
+项目刻意保持“小而完整”：P1 证明可检查执行，P2 证明安全恢复，P3 证明权限与隔离，再增加 Web UI、Skills、MCP、Memory 或 Multi-Agent。完整的目标用户、竞品边界与表达规范见[产品定位](docs/project/product-positioning.md)。
 
 ## Architecture
 
@@ -132,9 +133,9 @@ BearAgent/
 | Phase | Outcome | Status |
 |---|---|---|
 | P0 | Architecture, engineering baseline and documentation governance | Complete |
-| P1 | Local CLI Agent with one Provider and bounded workspace tools | In progress |
-| P2 | Durable recovery, cancel, retry, idempotency and `UNKNOWN` | Planned |
-| P3 | Policy, approval, isolated runner and secure self-hosted beta | Planned |
+| P1 | Inspectable execution：一个有界、受限、事实可查的本地 CLI Run | In progress |
+| P2 | Safe recovery：checkpoint、resume、cancel、幂等、receipt 与 `UNKNOWN` | Planned |
+| P3 | Governed self-hosting：Grant、Approval、隔离 runner 与安全自托管 | Planned |
 | P4 | Web UI, Skills, MCP and inspectable Memory | Planned |
 | P5 | Trace, replay, eval and public project evidence | Planned |
 
@@ -143,6 +144,7 @@ BearAgent/
 ## Documentation
 
 - [文档索引](docs/index.md)：工程文档的推荐阅读顺序与权威层级。
+- [产品定位](docs/project/product-positioning.md)：目标用户、竞争边界、差异化证据与对外措辞。
 - [总体架构](docs/architecture/overview.md)：领域模型、状态机、持久化、权限和安全边界。
 - [AI 辅助开发 SOP](docs/development/ai-development-sop.md)：从调查到关闭 Feature 的完整流程。
 - [Feature Specs](docs/specs/README.md)：可观察行为、失败语义和验收标准。
@@ -156,7 +158,7 @@ BearAgent/
 
 项目目前处于早期阶段，适合从小而边界清晰的改动开始。提交代码前：
 
-1. 阅读 [`AGENTS.md`](AGENTS.md)、[总体架构](docs/architecture/overview.md)和[路线图](docs/project/roadmap.md)。
+1. 阅读 [`AGENTS.md`](AGENTS.md)、[产品定位](docs/project/product-positioning.md)、[总体架构](docs/architecture/overview.md)和[路线图](docs/project/roadmap.md)。
 2. 找到对应 Feature Spec、Implementation Plan 与相关 ADR；聊天记录不作为实现依据。
 3. 保持 diff 狭窄，为失败、安全和恢复语义补充相应测试。
 4. 完成 Docs Impact 检查，并运行本 README 中的完整验证命令。

@@ -22,18 +22,25 @@ sourceRefs:
 
 以下 Feature 名称已经登记在 Roadmap，但尚未创建或实现对应 Spec：
 
-1. F-0002 Run reducer and budgets
-2. F-0003 EventStore contract and SQLite adapter
-3. F-0004 ModelProvider contract and first adapter
+1. F-0002 Run reducer, Activity lifecycle and budgets
+2. F-0003 EventStore contract, SQLite adapter and projections
+3. F-0004 ModelProvider contract, first adapter and bounded loop
 4. F-0005 CLI run/inspect/events
-5. F-0006 Tool contract and registry
+5. F-0006 Tool contract, registry, executor and baseline policy gate
 6. F-0007 Workspace boundary and read tools
 7. F-0008 Atomic write tool and artifacts
 
 :::caution[当前不能做什么]
-BearAgent 现在还不能调用真实模型完成文件任务，也没有 SQLite Run、ToolRegistry 或可恢复 Agent
-Loop。相关页面如果提前解释设计，必须标记为设计或规划中。
+BearAgent 现在还不能调用真实模型完成文件任务，也没有 SQLite Run、ToolRegistry 或 Agent Loop。
+P1 完成后也只承诺执行事实可检查；Checkpoint、崩溃后自动恢复、`UNKNOWN` 处置、Approval 与
+sandbox 分别属于 P2/P3。相关页面如果提前解释设计，必须标记为设计或规划中。
 :::
+
+## 当前阶段门
+
+P1 下一步仍需由项目所有者确认一个运行时 Feature，并为它创建 accepted Spec 与唯一 active Plan。
+阶段关闭时必须复现真实 CLI 文件任务、非法路径拒绝、预算终止和 Activity/Event/Artifact 检查；
+不能用已接受 Roadmap 或架构图代替这些实现证据。
 
 ## 服务器发布时间
 

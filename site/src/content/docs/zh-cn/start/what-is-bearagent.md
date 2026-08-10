@@ -7,8 +7,8 @@ sourceRefs:
   - roadmap
 ---
 
-BearAgent 是一个轻量、local-first、可自托管的个人 Agent Runtime。它希望安全、可靠地执行
-需要多次模型与工具交互的本地任务。
+BearAgent 是一个可检查、可恢复、权限外置的 local-first Agent Runtime。它面向希望把长期文件
+与开发任务交给 AI、又不愿把权限和执行历史交给黑箱的个人开发者与高级用户。
 
 :::note[内容状态：设计目标]
 这一定义描述项目已经接受的方向，不表示所有能力现在都已实现。请同时查看[当前实现状态](../project/status.md)。
@@ -24,12 +24,20 @@ BearAgent 是一个轻量、local-first、可自托管的个人 Agent Runtime。
 - 模型看到的文本不能等同于系统权限；
 - 最终答案看似正确，执行过程仍可能违反规则。
 
-BearAgent 的重点是围绕模型建立一个可以约束、记录、恢复和验证执行过程的 Runtime。
+BearAgent 的重点是围绕模型建立一个可以约束、记录、恢复和验证执行过程的 Runtime：
+
+- 发生了什么：Run、Activity、Event、预算和 Artifact 可以检查；
+- 允许做什么：权限来自模型之外的 Grant、Policy 与 Approval；
+- 从哪里继续：只从持久安全边界恢复，不确定副作用进入 `UNKNOWN`。
+
+这让 BearAgent 更像一个个人 Agent 执行底座，而不是聊天 UI、垂直应用或另一个功能齐全的
+Coding Agent。完整说明见[产品定位](../project/positioning.md)。
 
 ## 第一阶段有意保持很小
 
-项目首先限制为单用户、单进程、SQLite 和 CLI-first。P1 的目标只是让本地 CLI 完成一次真实、
-受限、可追踪的文件任务。Web UI、MCP、Memory、多 Agent 和浏览器控制都不会抢在运行时基础之前。
+项目首先限制为单用户、单 Agent、单进程、SQLite 和 CLI-first。P1 证明可检查执行，P2 证明
+安全恢复，P3 证明权限治理与隔离自托管。Web UI、MCP、Memory、多 Agent 和浏览器控制都不会
+抢在这三个闭环之前。
 
 ## 当前能做什么
 

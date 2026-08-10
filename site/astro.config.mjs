@@ -14,7 +14,7 @@ export default defineConfig({
     }),
     starlight({
       title: 'BearAgent Docs',
-      description: '从 Agent 原理到可靠本地运行时的学习与设计文档',
+      description: '可检查、可恢复、权限外置的本地优先 Agent Runtime',
       defaultLocale: 'zh-cn',
       locales: {
         'zh-cn': {
@@ -29,6 +29,7 @@ export default defineConfig({
           label: '开始',
           items: [
             { label: 'BearAgent 是什么', slug: 'start/what-is-bearagent' },
+            { label: '产品定位', slug: 'project/positioning' },
           ],
         },
         {

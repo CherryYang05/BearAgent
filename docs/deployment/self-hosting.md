@@ -1,8 +1,8 @@
 ---
 title: Local-first and Self-hosting Strategy
 status: accepted
-version: 0.2
-last_verified: 2026-08-10
+version: 0.3
+last_verified: 2026-08-11
 ---
 
 # 本地开发、服务器部署与域名方案
@@ -10,7 +10,7 @@ last_verified: 2026-08-10
 ## 1. 直接结论
 
 - **先本地开发，但不要等全部做完才碰服务器。**
-- P1 全部本地，包括 F-0015 的 Starlight 文档站；P1 完成后再部署 `docs.bearguin.cn`。P2 完成后建立 Agent 私有 staging，通过 SSH tunnel 使用；P3 完成安全、认证和 runner 后再通过公网子域名开放给自己。
+- P1 全部本地，包括 F-0015 的 Starlight 文档站；P1 完成后再部署 `docs.bearguin.cn`。P2 完成后建立 Agent 私有 staging，只通过 SSH 或私有网络操作；P3 完成 Policy、认证、HTTP API 和 runner 后再通过公网子域名开放给自己。
 - 你 **不需要再注册一个域名**。使用现有 `bearguin.cn` 的子域名即可：
   - `docs.bearguin.cn`：公开文档；
   - `agent.bearguin.cn`：Agent Web UI 和同源 `/api`；
@@ -50,15 +50,15 @@ Production: public hostname only after P3 security gate
 ### P2：Private server staging
 
 - 一台 Docker Compose 服务；
-- API 即使存在也只绑定 `127.0.0.1`；
-- 通过 SSH tunnel 或 Tailscale/WireGuard 访问；
+- 通过 SSH 运行 CLI；如为了 P3 预研存在临时 API，也只绑定 `127.0.0.1`；
+- 仅通过 SSH tunnel 或 Tailscale/WireGuard 访问；
 - 每次 release 做 kill/restart 和 restore drill；
 - 不创建公网 DNS 也可以先测试。
 
 ### P3：Private production beta
 
 - `agent.bearguin.cn` 指向服务器；
-- 1Panel/OpenResty 终止 TLS并反向代理到 loopback API/Web 端口；
+- 1Panel/OpenResty 终止 TLS 并反向代理到 loopback API 端口；P3 仍是 headless API/CLI，Web UI 属于 P4；
 - Agent 自身单用户认证；可额外用 1Panel 密码访问作为第二道门，但不能替代应用会话安全；
 - runner sidecar 在独立 network，禁止公网入站；
 - 定时备份数据库、artifacts、配置和 Memory。
@@ -74,7 +74,7 @@ Production: public hostname only after P3 security gate
 ```mermaid
 flowchart LR
     B["Browser"] -->|HTTPS| O["1Panel OpenResty"]
-    O -->|127.0.0.1:8080| W["BearAgent Web/API"]
+    O -->|127.0.0.1:8080| W["BearAgent API"]
     W --> DB["SQLite volume"]
     W --> DATA["Workspace and artifacts volume"]
     W -->|private authenticated RPC| R["Sandbox runner"]
@@ -129,7 +129,7 @@ docs   A/AAAA   <server public IP>
 - SQLite 数据库；
 - artifacts；
 - user workspace（若它不是外部 Git repo）；
-- Memory；
+- Memory（P4 启用后）；
 - 非 secret 配置；
 - 加密后的 secret store 及其独立恢复密钥（采用后）。
 

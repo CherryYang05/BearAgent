@@ -1,26 +1,34 @@
 ---
 title: BearAgent Architecture Baseline
 status: accepted
-version: 0.1
-last_verified: 2026-08-10
+version: 0.2
+last_verified: 2026-08-11
 ---
 
 # BearAgent 总体架构
 
 ## 1. 架构结论
 
-BearAgent 的第一目标不是覆盖最多 Agent 功能，而是完成一个可靠的最小运行时：
+BearAgent 的第一目标不是覆盖最多 Agent 功能，而是完成一个可验证的最小运行时：
 
-> 一个单用户、单 Agent、local-first、可自托管的 durable tool-using runtime；所有外部动作均受策略控制，执行事实可以持久化、检查和从安全边界恢复。
+> 一个单用户、单 Agent、local-first、可自托管的 tool-using runtime；执行过程可检查，崩溃后可从安全边界恢复，外部动作的权限由模型之外的运行时控制。
 
-项目的核心差异化由四条主线构成：
+产品定位由四条架构主线支撑：
 
-1. **Durable execution**：Run、Activity、Event、Checkpoint、Resume、Cancel、Retry、Idempotency。
-2. **Authority and isolation**：Grant、Policy、Approval、Workspace boundary、Sandbox runner、Secret isolation。
-3. **Trace and replay**：持久事件、结构化日志、可重建 projection、可回放的评测输入。
-4. **Context and memory**：可恢复的上下文压缩、文件外部记忆、带来源的长期记忆，而不是先堆向量数据库。
+1. **Inspectable execution**：Run、Activity、Event、Artifact 和预算让过程、结果与失败可以解释。
+2. **Honest recovery**：Checkpoint、Resume、Cancel、Retry、Idempotency、receipt 与 `UNKNOWN` 明确表达崩溃后的真实语义。
+3. **Authority outside the model**：Grant、Policy、Approval、Workspace boundary、Sandbox runner 与 Secret isolation 共同约束副作用。
+4. **Local ownership**：单用户、单进程、SQLite、CLI-first，数据和部署由用户控制，复杂度只按证据增加。
 
-P1-P3 完成后，BearAgent 就是一个“小而完整”的项目；Web UI、Skills、MCP、Memory 是后续挂载在稳定内核上的产品能力。
+Trace/replay/eval 是前三条主线的验证面；Context、Skill、MCP 与 Memory 是 P4 以后挂载在稳定内核上的能力，不再与 P1-P3 争夺优先级。P1-P3 完成后，BearAgent 才达到“小而完整”的第一个产品完成线。详细目标用户、竞争边界和表达规范见[产品定位](../project/product-positioning.md)。
+
+### 1.1 P1-P3 的递进关系
+
+| 阶段 | 先证明什么 | 暂不声称什么 |
+|---|---|---|
+| P1 | 一次真实本地文件 Run 可以有界完成，事实与失败可检查 | 崩溃后自动续跑、安全自托管 |
+| P2 | 已持久化事实能在安全边界恢复，未知副作用得到诚实处理 | 模型已经获得任意工具权限或公网安全性 |
+| P3 | 权限、审批、隔离 runner 与自托管运维形成闭环 | Web 产品体验、MCP/Memory 生态或多用户能力 |
 
 ## 2. 从参考项目借什么
 
@@ -29,11 +37,14 @@ P1-P3 完成后，BearAgent 就是一个“小而完整”的项目；Web UI、S
 | DeepTutor | Tool 与多阶段 Capability 分层；统一 orchestrator 和 event stream；`ask_user` 的 pause/resume；文件型三层 Memory 及来源链；独立 sandbox/secret scope | 教学产品表面、多个 RAG 引擎、大量 capability、多用户、IM partner 和完整前端 |
 | Proma | local-first workspace；Provider adapter；Skills/MCP 按工作区管理；会话 JSONL 思路；权限确认和后台运行体验 | Electron/Bun/React 桌面栈、远程机器人、多运行时兼容矩阵和产品级渠道管理 |
 | Manus | 每任务隔离计算机；文件系统作为可恢复外部上下文；持续更新 todo 以维持目标注意；保留失败证据 | 第一版就提供完整 VM、浏览器和无限制 root 环境 |
+| CodeWhale | 多模型 Coding Agent 的授权层级、工作区分支与控制面设计 | 在一致持久语义之前扩张模型 fleet、并行宽度和多种状态介质 |
+| Claude Code snapshot | 成熟 Query loop、权限 UX、sandbox、会话记录和兼容性工程 | SDK/CLI 形态耦合的内核或只靠 transcript 启发式恢复 |
+| Claw Code | 机器可读输出、行为 parity 和小步重实现方法 | 把兼容另一个产品作为 BearAgent 的产品目标 |
 | Codex | 仓库级 `AGENTS.md` 作为稳定工作约定；本地/隔离工作区；实现后验证和代码审查 | 把聊天上下文当长期项目记忆 |
 
 DeepTutor 当前将单次 Tool 和接管整个 turn 的多阶段 Capability 分开，并让入口通过统一 orchestrator 路由；它的 Memory 使用 L1 事件、L2 surface facts、L3 cross-surface synthesis，并保留来源链。Proma 把 Provider、workspace、Skills、MCP、会话持久化和权限体验放在 local-first 桌面产品里。Manus 则明确把文件系统当可恢复的外部上下文，并把每个任务放在隔离 sandbox 中。
 
-这些项目证明了方向，但 BearAgent 要更早把运行时事实、恢复语义和权限边界做成显式契约。
+这些项目证明了不同 Agent 的差异主要发生在任务域、上下文、工具环境、权限、持久语义和产品入口，而不只是模型循环。BearAgent 要更早把运行时事实、恢复语义和权限边界做成显式契约；详细比较与来源见[产品定位](../project/product-positioning.md)和本文末尾参考资料。
 
 ## 3. 范围
 
@@ -638,31 +649,39 @@ P1/P2 只能在本机或 SSH tunnel 下使用。公开可访问前必须有：�
 | 成本控制 | 每个 Run 支持 token、金额、时间、迭代和工具次数预算 |
 | 可测试 | Model、clock、id generator、store、policy、tool 都可替换为 fake |
 
-## 20. 首批 ADR
+## 20. 已接受的架构决定
 
-进入编码前建议接受以下 ADR：
+- [ADR-0001](../adr/ADR-0001-python-single-process-first.md)：Python 与单进程优先；
+- [ADR-0002](../adr/ADR-0002-event-log-safe-boundary-recovery.md)：Event log 与安全边界恢复；
+- [ADR-0003](../adr/ADR-0003-sqlite-initial-durable-store.md)：SQLite 作为首个 durable store；
+- [ADR-0004](../adr/ADR-0004-policy-outside-model.md)：Policy 位于模型之外；
+- [ADR-0005](../adr/ADR-0005-no-host-shell-execution.md)：host runtime 不执行模型生成 shell；
+- [ADR-0006](../adr/ADR-0006-p0-tooling-and-dependencies.md)：P0 工具与依赖基线；
+- [ADR-0007](../adr/ADR-0007-provider-neutral-domain-schemas.md)：Provider-neutral 领域 schema；
+- [ADR-0008](../adr/ADR-0008-starlight-public-docs.md)：公共文档站使用 Starlight。
 
-1. `ADR-0001-python-single-process-first.md`
-2. `ADR-0002-event-log-safe-boundary-recovery.md`
-3. `ADR-0003-sqlite-initial-durable-store.md`
-4. `ADR-0004-policy-outside-model.md`
-5. `ADR-0005-no-host-shell-execution.md`
+ADR 的 `accepted` 只表示决策已生效，不表示 Roadmap 中的恢复、Policy、runner 或 API 已经实现。
 
-## 21. 仍需在 P0 决定
+## 21. 对应 Feature 开始前仍需决定
 
-- 第一版实际模型协议：Responses 还是广泛兼容的 Chat Completions。
-- 项目最终开源许可证：Apache-2.0 还是 AGPL-3.0。
-- Web UI 是独立 React/Vite，还是先用极简服务端页面。
-- Artifact 的最大保留时间和自动清理策略。
-- 服务器是 x86_64 还是 ARM、内存/磁盘和 Docker/Podman 条件；这会影响 runner 实现。
+- F-0004 前：第一版实际模型协议是 Responses 还是广泛兼容的 Chat Completions；
+- F-0008 前：Artifact 最大保留时间和自动清理策略；
+- F-0012/F-0014 前：目标服务器架构、资源条件以及 Docker/Podman runner 选择；
+- P4 Web UI 前：独立前端还是最小服务端页面；
+- 公开发布代码前：Apache-2.0 或 AGPL-3.0 许可证。
 
-这些开放问题不阻塞文档骨架，但必须在对应功能开始前落 ADR。
+开放问题不授权提前实现；影响跨模块边界、持久 schema、安全或生产依赖时，必须在对应 Feature 开始前落 ADR。
 
 ## 参考资料
 
 - [DeepTutor Agent-Native Architecture](https://github.com/HKUDS/DeepTutor/blob/main/AGENTS.md)
 - [DeepTutor README: Agent Loop, Memory, multi-user isolation](https://github.com/HKUDS/DeepTutor/blob/main/README.md)
-- [Proma README: Pi runtime, workspaces, Skills, MCP and persistence](https://github.com/proma-ai/Proma)
+- [Proma README: Pi runtime, workspaces, Skills, MCP and persistence](https://github.com/proma-ai/Proma/blob/main/README.md)
 - [Manus: Context Engineering for AI Agents](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus)
 - [Manus Sandbox](https://manus.im/blog/manus-sandbox)
+- [CodeWhale authorization order](https://github.com/Hmbown/CodeWhale/blob/main/docs/AUTHORIZATION_ORDER.md)
+- [CodeWhale persistence RFC](https://github.com/Hmbown/CodeWhale/blob/main/docs/rfcs/2189-persistence-sqlite.md)
+- [Cloud-code 2.1.88 extracted study repository](https://github.com/Janlaywss/cloud-code)
+- [Claude Code 2.1.88 source-map snapshot](https://github.com/Rito-w/claude-code)
+- [Claw Code philosophy and scope](https://github.com/ultraworkers/claw-code/blob/main/PHILOSOPHY.md)
 - [OpenAI Docs: Custom instructions with AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
