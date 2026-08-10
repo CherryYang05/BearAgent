@@ -73,7 +73,7 @@ DeepTutor 当前将单次 Tool 和接管整个 turn 的多阶段 Capability 分�
 7. **Single-user first**：先把单用户单进程做正确，再讨论分布式 worker 和租户隔离。
 8. **Inspectable over magical**：配置、Memory、事件、审批和 Artifact 尽量可读、可导出、可追溯。
 9. **Replaceable adapters, stable domain**：Provider/MCP/存储/runner 可以替换，内部 Message/Event/ToolResult 不随 SDK 漂移。
-10. **Documentation is versioned code**：被接受的行为、设计和验证证据必须在仓库中，不依赖聊天记忆。
+10. **Documentation is versioned code**：被接受的行为、设计和验证证据必须在仓库中，不依赖聊天记忆；每个 Feature 同步工程 `docs/`、站点初学者路径、开发者文档和当前状态，每个里程碑再同步阶段总结。
 
 ## 5. 系统分层
 

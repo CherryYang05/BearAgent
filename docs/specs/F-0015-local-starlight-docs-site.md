@@ -6,7 +6,7 @@ milestone: P1
 owner: CherryYang05
 created: 2026-08-10
 last_updated: 2026-08-10
-implemented_in: null
+implemented_in: "PR #3"
 related_adrs:
   - ADR-0008
 ---
@@ -30,6 +30,7 @@ BearAgent 需要在 P1 期间建立公共文档的内容与技术底座，让 Ag
 - G-3：提供从 Agent 基础原理到 BearAgent 架构和代码的初学者学习入口。
 - G-4：明确区分通用原理、BearAgent 已接受设计、当前实现和未来规划。
 - G-5：将文档站构建纳入可重复的本地命令和 CI 检查。
+- G-6：把每个 Feature 与每个 P 阶段的初学者学习路径、开发者文档和当前状态同步纳入 Definition of Done。
 
 ## 3. Non-goals
 
@@ -63,6 +64,11 @@ Given 开发者已安装受支持的 Node.js，When 在 `site/` 安装锁定依�
 Given 文档包含无效 Front Matter、内部链接或无法编译的页面，When 执行生产构建，Then
 构建失败而不是生成一个表面成功但内容损坏的站点。
 
+### Scenario D：Feature 和阶段关闭
+
+Given 一个 Feature 或 P 阶段满足代码验收条件，When 准备将其标记完成，Then 工程 `docs/`、
+站点初学者学习路径、开发者文档和当前状态/阶段总结已经同步，并能链接到实现与验证证据。
+
 ## 6. Functional requirements
 
 - FR-1：站点工程位于仓库根目录的 `site/`，Node 依赖和构建产物不得进入 Python 包。
@@ -75,6 +81,9 @@ Given 文档包含无效 Front Matter、内部链接或无法编译的页面，W
 - FR-8：支持仓库现有的 Mermaid 图表写法；相关集成必须锁定版本并通过构建验证。
 - FR-9：提供本地开发、生产构建和生产预览命令，并在站点 README 中说明。
 - FR-10：CI 在不发布静态产物的前提下执行锁定安装与生产构建。
+- FR-11：每个 Feature 关闭时必须同步工程 `docs/`、站点初学者路径、站点开发者文档和当前状态页；只更新 `docs/` 不满足完成条件。
+- FR-12：每个 P 阶段关闭时必须额外同步 Roadmap、学习地图、开发者架构总结和阶段结果。
+- FR-13：外部资料优先使用论文、规范、官方文档和官方仓库；可从《深入理解 AI Agent》、DeepTutor 及高关注 Agent 项目发现资料，但 star 不能作为 BearAgent 设计或实现证据。
 
 ## 7. Interfaces
 
@@ -132,6 +141,8 @@ npm run preview --prefix=site
 - AC-6：当前状态页明确 F-0001 已实现，其余能力按仓库 Roadmap 标记为规划中。
 - AC-7：CI 构建站点但不执行部署，不包含服务器凭证或发布权限。
 - AC-8：Python 质量检查、测试和工程 Markdown 链接检查继续通过。
+- AC-9：`AGENTS.md`、SOP、Feature/Plan 模板和 PR 模板都要求 Feature 级双轨站点同步与阶段总结。
+- AC-10：站点具有独立开发者入口、Feature 文档同步规则、F-0001 开发者导读和阶段页，并与初学者学习路径互链。
 
 ## 14. Test plan
 
@@ -144,9 +155,11 @@ npm run preview --prefix=site
 
 ## 15. Documentation impact
 
-- [x] Architecture
-- [x] ADR
-- [x] User docs
+- [x] Engineering source of truth (`docs/`)
+- [x] Site beginner learning path
+- [x] Site developer documentation
+- [x] Site current status / milestone summary
+- [x] Architecture / ADR
 - [x] Deployment docs
 - [ ] Generated reference
 

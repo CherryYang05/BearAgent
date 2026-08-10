@@ -46,6 +46,14 @@ export default defineConfig({
           ],
         },
         {
+          label: '开发者文档',
+          items: [
+            { label: '开发者入口', slug: 'development' },
+            { label: 'Feature 文档同步', slug: 'development/feature-documentation' },
+            { label: 'F-0001 实现导读', slug: 'development/domain-contracts' },
+          ],
+        },
+        {
           label: '指南',
           items: [
             { label: '本地运行文档站', slug: 'guides/local-docs' },
@@ -62,6 +70,7 @@ export default defineConfig({
           label: '项目',
           items: [
             { label: '当前实现状态', slug: 'project/status' },
+            { label: '阶段与里程碑', slug: 'project/milestones' },
           ],
         },
       ],

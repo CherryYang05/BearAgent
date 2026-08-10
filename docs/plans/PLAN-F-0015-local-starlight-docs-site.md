@@ -56,6 +56,15 @@ Related Spec: `docs/specs/F-0015-local-starlight-docs-site.md`
 - Verification command：Definition of Done 全部命令。
 - Rollback point：移除 Node CI job，保留可本地使用的站点。
 
+### Slice 5: Feature 与里程碑双轨文档治理
+
+- Status：completed。
+- Domain/contracts：每个 Feature 同步工程事实、初学者路径、开发者文档与当前状态；每个 P 阶段额外同步阶段总结。
+- Adapter/interface：AGENTS、SOP、Feature/Plan/PR 模板、开发者导航、F-0001 开发导读和阶段页。
+- Tests：Starlight build、工程链接检查、双轨页面与侧边栏路由检查。
+- Verification command：`npm run build --prefix=site` 和完整 Definition of Done。
+- Rollback point：回退治理与新增页面，不影响 Runtime 数据或 F-0001 契约。
+
 ## Cross-cutting checks
 
 - [x] Persistence/recovery：站点无持久状态；构建产物可从源码重建。
@@ -63,7 +72,10 @@ Related Spec: `docs/specs/F-0015-local-starlight-docs-site.md`
 - [x] Timeout/cancel/resource limits：CI 只执行有限的安装和静态构建，不启动预览进程。
 - [x] Logs/trace/metrics：构建脚本禁用 Astro telemetry，只保留本地/CI 构建输出。
 - [x] Migration/rollback：新目录隔离，可整体删除；没有数据库 migration。
-- [x] Documentation impact：已同步 Architecture、Roadmap、SOP、部署策略和本地使用说明。
+- [x] Engineering documentation impact：已同步 Architecture、Roadmap、SOP、模板与部署策略。
+- [x] Site beginner learning path：已将 F-0001 学习导读连接到开发者实现导读。
+- [x] Site developer documentation：已增加开发者入口、Feature 同步规则和 F-0001 代码地图。
+- [x] Site current status / milestone summary：已同步当前状态并增加阶段与里程碑页。
 
 ## Final verification
 
@@ -78,4 +90,4 @@ uv run python scripts/check_docs.py
 git diff --check
 ```
 
-本 Plan 只有在静态中文页面、搜索、Mermaid、CI 和全部回归检查通过后才标记 `completed`。
+本 Plan 只有在静态中文页面、搜索、Mermaid、双轨文档治理、CI 和全部回归检查通过后才标记 `completed`。

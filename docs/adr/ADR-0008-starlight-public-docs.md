@@ -63,6 +63,8 @@ VitePress 简洁，但其 Vue 定制能力没有给当前 Python 项目带来直
 - 使用 Starlight 默认 Pagefind 搜索，不接入外部搜索或分析服务。
 - Mermaid 通过锁定的最小集成支持，必须由生产构建验证。
 - `docs/` 保持工程 Source of Truth；`site/` 提供教学改写并链接到工程证据。
+- `site/` 同时维护初学者学习路径与开发者实现文档。每个 Feature 必须更新两条路径和当前状态；每个 P 阶段还要更新阶段总结。
+- 外部资料优先使用论文、规范、官方文档和官方仓库。GitHub star 仅用于发现参考项目，不构成 BearAgent 的架构证据。
 - F-0015 只交付本地预览、静态构建和 CI，不部署服务器。
 
 ## Consequences

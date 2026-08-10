@@ -32,7 +32,9 @@ flowchart LR
 ## 第二层：稳定的运行时契约
 
 当执行跨越多个模型和工具 Activity 时，字符串与任意字典会迅速制造歧义。BearAgent 从
-F-0001 开始稳定 ID、Message、Error 和 Event envelope。
+F-0001 开始稳定 ID、Message、Error 和 Event envelope。先读面向初学者的
+[F-0001 领域契约导读](../architecture/domain-contracts.md)，需要继续看代码时再进入
+[F-0001 开发者实现导读](../development/domain-contracts.md)。
 
 ## 第三层：可靠执行
 
@@ -43,3 +45,9 @@ F-0001 开始稳定 ID、Message、Error 和 Event envelope。
 
 最后学习 Grant、Policy、Approval、Sandbox、Trace、Replay 和 Eval。它们回答的是 Agent
 “能否以允许的方式持续完成任务”，而不只是“偶尔能不能给出好答案”。
+
+## 每个 Feature 如何进入学习路径
+
+后续每个 Feature 完成时，本学习路径都会增加或更新对应概念、前置知识和实现状态；开发者文档
+则同步代码入口、契约和测试证据。一个 Feature 只有两条路径与[当前状态](../project/status.md)
+都更新后，才算完成文档关闭。

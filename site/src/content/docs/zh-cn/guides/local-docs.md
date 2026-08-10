@@ -44,3 +44,6 @@ npm run preview --prefix=site
 
 公共文章应根据仓库中的 Architecture、Spec、ADR、代码和测试改写。聊天记录和未来 Roadmap 不能
 被直接描述成当前能力；每个页面必须声明 `bearStatus` 和 `sourceRefs`。
+
+每个 Feature 还必须同时检查初学者学习路径、开发者实现导读和当前状态页，完整流程见
+[Feature 与阶段的文档同步](../development/feature-documentation.md)。

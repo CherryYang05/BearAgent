@@ -1,8 +1,8 @@
 ---
 title: AI-assisted Development SOP
 status: accepted
-version: 0.2
-last_verified: 2026-08-09
+version: 0.3
+last_verified: 2026-08-10
 ---
 
 # AI 辅助开发 SOP
@@ -81,6 +81,9 @@ flowchart TD
 | AI/贡献者稳定工作约定 | `AGENTS.md` |
 | 实际类型、schema、CLI/API | 代码、迁移、自动生成 reference |
 | 行为是否成立 | 自动化测试和可复现验收记录 |
+| 面向初学者的概念与学习顺序 | `site/src/content/docs/zh-cn/learn/`，从上述事实来源派生 |
+| 面向开发者的实现导读 | `site/src/content/docs/zh-cn/development/`，从上述事实来源派生 |
+| 公开的当前能力与阶段结果 | `site/src/content/docs/zh-cn/project/`，以 Spec、Roadmap 和测试为准 |
 
 同一事实不要在五份手写文档中重复。架构文档描述稳定边界；Feature Spec 描述一个行为；代码 reference 尽量自动生成。
 
@@ -210,6 +213,9 @@ ADR 必须记录 rejected alternatives，防止数周后另一个 AI 再次建�
 - Implementation Plan 从 `active` 改为 `completed`，未完成切片不得勾选；
 - 补上 `implemented_in` commit/PR（有后填写）；
 - 更新架构文档中已经改变的当前事实；
+- 更新 `site/` 初学者学习路径：解释本 Feature 对应的 Agent 原理、前置知识和当前成熟度；
+- 更新 `site/` 开发者文档：解释代码入口、契约、失败/安全语义和验证证据；
+- 更新站点当前状态页；关闭 `P<n>` 时再同步学习地图、开发者架构总结和阶段结果；
 - 添加 migration/rollback 说明；
 - 把验证命令和结果写进 PR/变更记录，不把瞬时测试输出长期复制进架构文档；
 - 未完成项回到 roadmap/issue，不写成“已经支持”。
@@ -231,22 +237,31 @@ Spec/ADR 使用 `draft / accepted / implemented / superseded`；架构文档带 
 每次变更明确选择：
 
 ```text
-[ ] No observable or architectural documentation impact
-[ ] Feature Spec updated
-[ ] ADR added/updated
-[ ] Architecture updated
-[ ] User/deployment docs updated
+[ ] Engineering source of truth updated
+[ ] Site beginner learning path updated
+[ ] Site developer documentation updated
+[ ] Site current status / milestone summary updated
+[ ] Architecture / ADR / deployment docs updated as needed
 [ ] Generated reference refreshed
 ```
 
-“没有文档影响”也是一个显式判断，不能默认为遗漏。
+S0 变更可以明确记录没有可观察文档影响；Feature 不能只选择“无影响”。每个 Feature 至少更新相关学习/开发索引和当前状态，即使不需要新建独立文章。
 
-### 5.4 CI 做机械检查
+### 5.4 公共站点使用双轨同步
+
+站点不是把工程文档复制一遍，而是维护两个互相链接的入口：
+
+1. **初学者学习路径**回答“这个 Feature 解决什么 Agent 问题、需要先懂什么、如何形成整体架构认识”。优先使用简图、最小例子和逐层概念。
+2. **开发者文档**回答“代码在哪里、边界是什么、接口如何使用、失败与安全语义是什么、用哪些测试证明”。它链接 Spec/ADR/代码，不重新发明一套事实。
+
+外部资料先从《深入理解 AI Agent》、DeepTutor 文档和高关注 Agent 项目的官方文档中发现解释方式与对照案例。优先引用原始文档、论文或官方仓库；GitHub star 只表示社区关注度，不表示设计适合 BearAgent。引用外部能力时必须同时说明 BearAgent 当前是已实现、已接受设计还是规划中。
+
+### 5.5 CI 做机械检查
 
 P0/P1 建立：
 
 - Markdown lint 和内部链接检查；
-- `npm --prefix site run build`（F-0015 起构建 Starlight 静态站点）；
+- `npm run build --prefix=site`（F-0015 起构建 Starlight 静态站点）；
 - Ruff、Pyright、pytest；
 - migration 能从空库升级；
 - architecture import boundary test；
@@ -255,7 +270,7 @@ P0/P1 建立：
 
 CI 不能判断设计是否正确，但可以阻止最常见的格式、链接、生成物和契约漂移。
 
-### 5.5 每个里程碑做一次 Reality Check
+### 5.6 每个里程碑做一次 Reality Check
 
 让 AI 从代码反向生成“当前系统图”，再与架构文档比较。只修事实差异，不趁机扩范围。检查：
 
@@ -295,8 +310,9 @@ Eval 不是 unit test 的替代品。可确定行为使用普通测试；模型�
 3. 失败、重启、取消、超时和权限路径得到与风险匹配的验证；
 4. 数据迁移和回滚/恢复策略明确；
 5. Spec、ADR、架构和用户文档没有把未来写成现在；
-6. AI 对 diff 做过独立问题导向审查；
-7. 没有将秘密、临时调试代码或未使用抽象留在仓库。
+6. `site/` 的初学者路径、开发者文档和当前状态均已同步；里程碑关闭时还更新阶段总结；
+7. AI 对 diff 做过独立问题导向审查；
+8. 没有将秘密、临时调试代码或未使用抽象留在仓库。
 
 ## 9. 推荐的日常节奏
 
@@ -304,8 +320,8 @@ Eval 不是 unit test 的替代品。可确定行为使用普通测试；模型�
 每日开始：读取 roadmap + 当前 Spec，选一个最小验收切片
 开发中：每个切片实现、测试、提交
 每日结束：更新 Spec 的进度/开放问题，不重写架构大纲
-每个 Feature：独立 review + docs impact + 完整测试
-每个里程碑：reality check + recovery drill + 文档站预览
+每个 Feature：独立 review + docs/source-of-truth + site 学习/开发/状态三面同步 + 完整测试
+每个里程碑：reality check + recovery drill + site 学习地图/开发总结/阶段结果 + 文档站预览
 ```
 
 这套流程的目标不是让个人项目变成大公司流程，而是用最少文字保留最昂贵的信息：边界、理由、失败语义和验收证据。
@@ -315,3 +331,5 @@ Eval 不是 unit test 的替代品。可确定行为使用普通测试；模型�
 - [OpenAI Docs: Custom instructions with AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
 - [OpenAI Docs: Codex environments](https://learn.chatgpt.com/docs/environments/modes)
 - [OpenAI Docs: Code review](https://learn.chatgpt.com/docs/code-review)
+- [DeepTutor 中文文档](https://docs.deeptutor.info/zh-cn/)
+- [《深入理解 AI Agent》](https://bojieli.github.io/ai-agent-book/)
