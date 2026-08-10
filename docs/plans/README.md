@@ -20,8 +20,11 @@ related_spec: F-NNNN
 
 使用 [Implementation Plan 模板](../templates/implementation-plan.md)。
 
-当前没有 active Plan。
+当前 active Plan：
+
+- 无。下一个 P1 运行时 Feature 需先与项目所有者确认。
 
 已完成：
 
+- [PLAN-F-0015: Local Starlight documentation site](PLAN-F-0015-local-starlight-docs-site.md)
 - [PLAN-F-0001: Domain IDs, messages and errors](PLAN-F-0001-domain-ids-messages-errors.md)

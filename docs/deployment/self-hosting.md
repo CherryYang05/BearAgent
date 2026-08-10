@@ -1,8 +1,8 @@
 ---
 title: Local-first and Self-hosting Strategy
 status: accepted
-version: 0.1
-last_verified: 2026-08-09
+version: 0.3
+last_verified: 2026-08-11
 ---
 
 # 本地开发、服务器部署与域名方案
@@ -10,7 +10,7 @@ last_verified: 2026-08-09
 ## 1. 直接结论
 
 - **先本地开发，但不要等全部做完才碰服务器。**
-- P1 全部本地；P2 完成后立即建立私有 staging，通过 SSH tunnel 使用；P3 完成安全、认证和 runner 后再通过公网子域名开放给自己。
+- P1 全部本地，包括 F-0015 的 Starlight 文档站；P1 完成后再部署 `docs.bearguin.cn`。P2 完成后建立 Agent 私有 staging，只通过 SSH 或私有网络操作；P3 完成 Policy、认证、HTTP API 和 runner 后再通过公网子域名开放给自己。
 - 你 **不需要再注册一个域名**。使用现有 `bearguin.cn` 的子域名即可：
   - `docs.bearguin.cn`：公开文档；
   - `agent.bearguin.cn`：Agent Web UI 和同源 `/api`；
@@ -50,22 +50,22 @@ Production: public hostname only after P3 security gate
 ### P2：Private server staging
 
 - 一台 Docker Compose 服务；
-- API 即使存在也只绑定 `127.0.0.1`；
-- 通过 SSH tunnel 或 Tailscale/WireGuard 访问；
+- 通过 SSH 运行 CLI；如为了 P3 预研存在临时 API，也只绑定 `127.0.0.1`；
+- 仅通过 SSH tunnel 或 Tailscale/WireGuard 访问；
 - 每次 release 做 kill/restart 和 restore drill；
 - 不创建公网 DNS 也可以先测试。
 
 ### P3：Private production beta
 
 - `agent.bearguin.cn` 指向服务器；
-- 1Panel/OpenResty 终止 TLS并反向代理到 loopback API/Web 端口；
+- 1Panel/OpenResty 终止 TLS 并反向代理到 loopback API 端口；P3 仍是 headless API/CLI，Web UI 属于 P4；
 - Agent 自身单用户认证；可额外用 1Panel 密码访问作为第二道门，但不能替代应用会话安全；
 - runner sidecar 在独立 network，禁止公网入站；
 - 定时备份数据库、artifacts、配置和 Memory。
 
-### P5：Public docs
+### P1 完成后：Public docs
 
-- `docs.bearguin.cn` 发布静态 MkDocs 构建；
+- `docs.bearguin.cn` 发布 F-0015 产生的 Starlight 静态构建；
 - 文档公开，Agent 仍保持认证；
 - CI 构建 docs，服务器只接收静态产物，不在 Web 请求时运行文档生成器。
 
@@ -74,7 +74,7 @@ Production: public hostname only after P3 security gate
 ```mermaid
 flowchart LR
     B["Browser"] -->|HTTPS| O["1Panel OpenResty"]
-    O -->|127.0.0.1:8080| W["BearAgent Web/API"]
+    O -->|127.0.0.1:8080| W["BearAgent API"]
     W --> DB["SQLite volume"]
     W --> DATA["Workspace and artifacts volume"]
     W -->|private authenticated RPC| R["Sandbox runner"]
@@ -108,7 +108,7 @@ docs   A/AAAA   <server public IP>
 4. 调大 SSE/长任务相关 proxy read timeout，并关闭 SSE 路径的 buffering/cache；
 5. 配置请求体大小，限制上传；
 6. Agent 容器端口不要绑定 `0.0.0.0`；
-7. 为 `docs.bearguin.cn` 新建静态网站，站点目录只放 MkDocs 构建产物。
+7. P1 完成后，为 `docs.bearguin.cn` 新建静态网站，站点目录只放 `site/dist/` 构建产物。
 
 不要将 1Panel 管理面板和 Agent 应用共用同一域名/路径。管理面板应继续使用独立端口或管理子域，并开启 MFA、授权 IP 或其他访问限制。
 
@@ -129,7 +129,7 @@ docs   A/AAAA   <server public IP>
 - SQLite 数据库；
 - artifacts；
 - user workspace（若它不是外部 Git repo）；
-- Memory；
+- Memory（P4 启用后）；
 - 非 secret 配置；
 - 加密后的 secret store 及其独立恢复密钥（采用后）。
 
@@ -186,7 +186,13 @@ CI test/docs/security checks
 
 ## 11. 文档站方案
 
-使用 MkDocs Material 即可，优点是 Markdown 原生、Python 项目依赖一致、搜索和导航足够、静态文件容易被 1Panel 托管。
+F-0015 已选择 Starlight。它以 Markdown/MDX 组织学习内容，提供静态搜索、导航和 Mermaid 集成，构建结果仍是容易由 1Panel 托管的静态文件。站点源文件位于 `site/`，P1 期间只在本地运行：
+
+```powershell
+npm --prefix=site ci
+npm run dev --prefix=site
+npm run build --prefix=site
+```
 
 建议导航：
 
@@ -212,7 +218,7 @@ Development
 Roadmap
 ```
 
-文档从 P0 就写，但 P2/P3 再上线 `docs.bearguin.cn`；先保证内容与代码一致，再花时间做主题和品牌视觉。
+文档从 P0 就写，F-0015 在 P1 建立本地站点；P1 完成后再上线 `docs.bearguin.cn`。先保证内容与代码一致，再花时间做主题和品牌视觉。
 
 ## 12. 何时需要新域名
 

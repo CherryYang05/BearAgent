@@ -31,6 +31,15 @@
 
 Do not create ceremonial documents for formatting-only or mechanical changes.
 
+## Documentation synchronization
+
+- `docs/` is the engineering source of truth. `site/` is the public learning and developer view derived from accepted docs, code, and tests.
+- Closing every Feature must update all four surfaces: authoritative `docs/`, the beginner learning path in `site/`, developer documentation in `site/`, and the public current-status page. Updating only `docs/` is incomplete.
+- A Feature does not always need two new articles, but it must update the relevant learning and developer indexes/pages with what changed, where the implementation lives, how it is verified, and whether the behavior is implemented or planned.
+- Closing every milestone `P<n>` must update the Roadmap plus the site learning map, developer architecture/status summary, and milestone outcome. Do this before selecting the next milestone.
+- External material may explain concepts or provide comparisons, but it cannot establish BearAgent behavior. Prefer primary sources, including the AI Agents in Depth book, DeepTutor documentation, and official documentation for high-star or otherwise relevant Agent projects; verify each project's current maintenance status. Treat star count as a discovery signal, not proof of correctness, and record source links.
+- Public pages must distinguish general concepts, accepted design, current implementation, and future plans. Never copy a reference project's capability into BearAgent's current-state claims.
+
 ## Architecture boundaries
 
 - The runtime core must not import FastAPI, UI code, provider SDK response types, MCP clients, Docker clients, or database adapters.
@@ -71,6 +80,7 @@ A change is complete only when:
 - acceptance criteria are satisfied;
 - relevant unit, contract, integration, recovery, and security tests pass;
 - architecture/spec/ADR/user docs are updated when their claims changed;
+- the `site/` beginner path, developer docs, and current status are synchronized for every Feature, and milestone summaries are synchronized at every `P<n>` close;
 - the active Implementation Plan is completed or accurately records remaining slices;
 - the diff contains no provider type leakage, policy bypass, undocumented schema migration, or secret exposure;
 - verification commands and any known limitations are reported.
