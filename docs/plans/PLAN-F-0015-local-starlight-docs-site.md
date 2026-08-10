@@ -35,7 +35,7 @@ Related Spec: `docs/specs/F-0015-local-starlight-docs-site.md`
 - Domain/contracts：定义站点目录、中文路由和本地命令。
 - Adapter/interface：Starlight、Pagefind、Mermaid 和 npm scripts。
 - Tests：lockfile 安装、生产构建、静态输出检查。
-- Verification command：`npm --prefix site ci` 和 `npm --prefix site run build`。
+- Verification command：`npm --prefix=site ci` 和 `npm run build --prefix=site`。
 - Rollback point：删除 `site/`；不涉及 Python 依赖或运行时数据。
 
 ### Slice 3: 第一批学习与架构内容
@@ -44,7 +44,7 @@ Related Spec: `docs/specs/F-0015-local-starlight-docs-site.md`
 - Domain/contracts：页面状态区分原理、设计、当前实现和规划。
 - Adapter/interface：首页、导航、学习路径、架构、F-0001、状态与来源页。
 - Tests：Starlight build、路由存在性和人工导航检查。
-- Verification command：`npm --prefix site run build`。
+- Verification command：`npm run build --prefix=site`。
 - Rollback point：保留站点骨架，逐页回退内容。
 
 ### Slice 4: CI、文档同步与关闭
@@ -68,8 +68,8 @@ Related Spec: `docs/specs/F-0015-local-starlight-docs-site.md`
 ## Final verification
 
 ```text
-npm --prefix site ci
-npm --prefix site run build
+npm --prefix=site ci
+npm run build --prefix=site
 uv run ruff format --check .
 uv run ruff check .
 uv run pyright

@@ -81,10 +81,10 @@ Given 文档包含无效 Front Matter、内部链接或无法编译的页面，W
 新增文档开发命令：
 
 ```text
-npm --prefix site ci
-npm --prefix site run dev
-npm --prefix site run build
-npm --prefix site run preview
+npm --prefix=site ci
+npm run dev --prefix=site
+npm run build --prefix=site
+npm run preview --prefix=site
 ```
 
 不新增 BearAgent CLI、Python API、HTTP API、Tool、Event 或数据库 schema。
@@ -125,8 +125,8 @@ npm --prefix site run preview
 ## 13. Acceptance criteria
 
 - AC-1：分支基于 F-0001 已完成提交，且 F-0001 代码和测试不被修改。
-- AC-2：`npm --prefix site ci` 可从 lockfile 安装依赖。
-- AC-3：`npm --prefix site run build` 成功并生成 `/zh-cn/` 静态页面与本地搜索索引。
+- AC-2：`npm --prefix=site ci` 可从 lockfile 安装依赖。
+- AC-3：`npm run build --prefix=site` 成功并生成 `/zh-cn/` 静态页面与本地搜索索引。
 - AC-4：本地站点包含 FR-5 的页面，并能从首页和侧边栏到达。
 - AC-5：至少一张 BearAgent Mermaid 架构图在站点中渲染。
 - AC-6：当前状态页明确 F-0001 已实现，其余能力按仓库 Roadmap 标记为规划中。

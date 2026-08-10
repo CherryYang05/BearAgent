@@ -19,8 +19,8 @@ F-0015 只建立本地文档站和 CI 构建，不发布服务器。
 在仓库根目录执行：
 
 ```powershell
-npm --prefix site ci
-npm --prefix site run dev
+npm --prefix=site ci
+npm run dev --prefix=site
 ```
 
 然后访问 `http://localhost:4321/zh-cn/`。
@@ -30,8 +30,8 @@ npm --prefix site run dev
 开发模式不生成 Pagefind 搜索索引。要验证实际搜索体验，应构建并预览生产产物：
 
 ```powershell
-npm --prefix site run build
-npm --prefix site run preview
+npm run build --prefix=site
+npm run preview --prefix=site
 ```
 
 生产预览默认位于 `http://localhost:4321/`，根路径会跳转到 `/zh-cn/`。

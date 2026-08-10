@@ -189,9 +189,9 @@ CI test/docs/security checks
 F-0015 已选择 Starlight。它以 Markdown/MDX 组织学习内容，提供静态搜索、导航和 Mermaid 集成，构建结果仍是容易由 1Panel 托管的静态文件。站点源文件位于 `site/`，P1 期间只在本地运行：
 
 ```powershell
-npm --prefix site ci
-npm --prefix site run dev
-npm --prefix site run build
+npm --prefix=site ci
+npm run dev --prefix=site
+npm run build --prefix=site
 ```
 
 建议导航：

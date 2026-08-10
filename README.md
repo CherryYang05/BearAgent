@@ -131,7 +131,7 @@ tests/
 
 ## Documentation
 
-- 本地学习文档站：`npm --prefix site ci`，然后运行 `npm --prefix site run dev`，访问 `http://localhost:4321/zh-cn/`；
+- 本地学习文档站：`npm --prefix=site ci`，然后运行 `npm run dev --prefix=site`，访问 `http://localhost:4321/zh-cn/`；
 - [文档首页](docs/index.md)
 - [总体架构](docs/architecture/overview.md)
 - [AI 辅助开发 SOP](docs/development/ai-development-sop.md)
