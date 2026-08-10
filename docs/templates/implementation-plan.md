@@ -1,6 +1,15 @@
+---
+title: "Implementation Plan: <feature>"
+status: draft
+plan_id: PLAN-F-NNNN
+related_spec: F-NNNN
+created: YYYY-MM-DD
+last_updated: YYYY-MM-DD
+---
+
 # Implementation Plan: <feature>
 
-Related Spec: `docs/specs/NNNN-<name>.md`
+Related Spec: `docs/specs/F-NNNN-<name>.md`
 
 ## Preconditions
 

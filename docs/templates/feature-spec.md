@@ -1,14 +1,18 @@
 ---
 title: "Feature: <name>"
 status: draft
-spec_id: NNNN
+spec_id: F-NNNN
+milestone: P<n>
 owner: <name>
 created: YYYY-MM-DD
 last_updated: YYYY-MM-DD
 implemented_in: null
+related_adrs: []
 ---
 
 # Feature: <name>
+
+Filename: `docs/specs/F-NNNN-<slug>.md`
 
 ## 1. Background / Problem
 

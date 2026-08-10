@@ -122,6 +122,7 @@ bear-agent/
 ├── docs/
 │   ├── architecture/
 │   ├── specs/
+│   ├── plans/
 │   ├── adr/
 │   ├── development/
 │   ├── deployment/
@@ -640,11 +641,11 @@ P1/P2 只能在本机或 SSH tunnel 下使用。公开可访问前必须有：�
 
 进入编码前建议接受以下 ADR：
 
-1. `0001-python-single-process-first.md`
-2. `0002-event-log-and-safe-boundary-recovery.md`
-3. `0003-sqlite-as-initial-durable-store.md`
-4. `0004-policy-outside-model.md`
-5. `0005-no-host-shell-execution.md`
+1. `ADR-0001-python-single-process-first.md`
+2. `ADR-0002-event-log-safe-boundary-recovery.md`
+3. `ADR-0003-sqlite-initial-durable-store.md`
+4. `ADR-0004-policy-outside-model.md`
+5. `ADR-0005-no-host-shell-execution.md`
 
 ## 21. 仍需在 P0 决定
 
