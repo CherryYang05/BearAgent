@@ -18,7 +18,7 @@ draft -> accepted -> implemented -> superseded
 
 ## P1+
 
-### P1：Inspectable Execution
+### P1：可检查执行
 
 - [F-0001: Domain IDs, messages and errors](F-0001-domain-ids-messages-errors.md)
 - [F-0002: Run reducer, Activity lifecycle and budgets](F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented

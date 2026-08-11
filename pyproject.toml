@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "bearagent"
 version = "0.1.0"
-description = "A lightweight, local-first runtime for durable and secure personal AI agents."
+description = "A lightweight, local-first runtime for inspectable personal agent tasks."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 authors = [{ name = "CherryYang" }]

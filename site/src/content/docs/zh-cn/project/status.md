@@ -26,15 +26,16 @@ sourceRefs:
 以下名称只登记在 Roadmap，尚未创建对应 Spec：
 
 1. F-0003 EventStore contract, SQLite adapter and projections
-2. F-0004 ModelProvider contract, minimal ContextBuilder, reference Agent config and bounded loop
-3. F-0005 CLI run/inspect/events
-4. F-0006 Tool contract, registry, executor and baseline policy gate
-5. F-0007 Workspace boundary and read tools
-6. F-0008 Atomic write tool and artifacts
+2. F-0006 Tool contract, registry, executor and baseline policy gate
+3. F-0007 Workspace boundary and read tools
+4. F-0008 Atomic write tool and artifacts
+5. F-0004 ModelProvider contract and first production adapter
+6. F-0016 Minimal ContextBuilder, bounded loop, versioned Agent configuration and eval task pack
+7. F-0005 CLI run/inspect/events
 
 :::caution[当前不能做什么]
 BearAgent 现在可以从内存 Event sequence 推导 Run/Activity 状态并检查预算，但还不能调用真实模型
-完成文件任务，也没有 SQLite Run、ToolRegistry 或 Agent Loop。
+完成文件任务，也没有 SQLite EventStore、文件工具、真实 Provider 或执行循环。
 P1 完成后也只承诺执行事实可检查；Checkpoint、崩溃后自动恢复、`UNKNOWN` 处置、Approval 与
 sandbox 分别属于 P2/P3。相关页面如果提前解释设计，必须标记为设计或规划中。
 :::

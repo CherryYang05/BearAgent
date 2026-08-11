@@ -14,7 +14,7 @@ export default defineConfig({
     }),
     starlight({
       title: 'BearAgent Docs',
-      description: '面向本地长任务、失败语义诚实的 Agent Runtime',
+      description: '让个人 Agent 在本地可靠地完成长任务',
       defaultLocale: 'zh-cn',
       locales: {
         'zh-cn': {

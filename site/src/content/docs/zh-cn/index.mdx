@@ -1,9 +1,9 @@
 ---
 title: BearAgent 文档
-description: 从 Agent 原理出发，理解一个面向本地长任务、失败语义诚实的 Agent Runtime。
+description: 从 Agent 原理出发，理解一个让本地长任务可查看、可约束、可恢复的运行时。
 template: splash
 hero:
-  tagline: 持久事实，诚实恢复，模型外授权。用 Repo/Document Research Agent 验证本地长任务如何可信执行。
+  tagline: 每一步可查看，失败后不乱重试，危险操作必须获准。
   actions:
     - text: 开始学习
       link: /zh-cn/learn/
@@ -30,12 +30,12 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
   />
   <LinkCard
     title="为什么是 BearAgent"
-    description="了解失败语义诚实的定位、首个参考应用，以及 P1-P3 怎样用证据验证差异化。"
+    description="了解 BearAgent 解决什么问题、先服务谁，以及 P1-P3 怎样逐步证明价值。"
     href="/zh-cn/project/positioning/"
   />
   <LinkCard
     title="理解架构"
-    description="了解 Runtime Core、Port、Adapter、Event 和安全边界。"
+    description="了解核心执行、外部实现、任务记录和安全边界。"
     href="/zh-cn/architecture/"
   />
   <LinkCard
@@ -52,7 +52,7 @@ BearAgent 的运行时部分当前只实现了工程基线和 F-0001 领域契�
 
 ## BearAgent 负责回答什么
 
-- **发生了什么？** 有界循环、Activity、Event、错误、成本和 Artifact 可以检查。
-- **失败后从哪里继续？** Checkpoint、安全边界恢复、幂等和诚实的 `UNKNOWN` 语义。
-- **这件事允许发生吗？** 模型不能自行获得权限，副作用必须经过策略、审批和执行器。
-- **怎样证明？** 代码、测试、故障演练、Spec 和 ADR 共同支持产品承诺。
+- **做过什么？** 模型调用、工具操作、错误、成本和输出文件都可以查看。
+- **失败后怎么办？** 已确认的操作不重复，无法确认的操作停下来等待处理。
+- **允许做什么？** 模型不能给自己增加权限，危险操作必须经过系统检查和用户批准。
+- **怎样证明？** 用固定任务、自动化测试和故障演练支持每一项产品承诺。
