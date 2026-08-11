@@ -38,9 +38,10 @@ F-0001 开始稳定 ID、Message、Error 和 Event envelope。先读面向初学
 
 ## 第三层：从可检查到可恢复
 
-P1 先解释有界循环、Reducer、EventStore 和可检查事实；P2 再解释 Checkpoint、幂等、恢复和
-`UNKNOWN`。把两者拆开，可以避免把“记录了事件”误解为“已经能安全续跑”。这些内容只有在
-相关 Feature 实现并有测试证据后，才会标记为“当前实现”。
+F-0002 已实现 P1 的 Run/Activity 状态、纯 Reducer 和五维预算门。先阅读
+[Run 状态、Reducer 与预算](runtime-state-and-budgets.md)，理解为什么“相同 Event 可重放”仍不等于
+“进程重启后能自动续跑”。F-0003/F-0004 将继续补 EventStore 与 Agent Loop；P2 才增加 Checkpoint、
+幂等、恢复和 `UNKNOWN`。
 
 ## 第四层：安全与质量
 

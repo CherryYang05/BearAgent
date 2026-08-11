@@ -213,6 +213,20 @@ PENDING -> RUNNING -> SUCCEEDED
 
 `UNKNOWN` 表示 runtime 在外部副作用提交后、结果持久化前失联，不能证明动作是否发生。它不能自动伪装成 FAILED。
 
+### 7.1 F-0002 已实现的 P1 子集
+
+F-0002 当前只实现 Run 的 `QUEUED / RUNNING / SUCCEEDED / FAILED` 与 Activity 的
+`PENDING / RUNNING / SUCCEEDED / FAILED`。上图中的 pause、cancel、approval 和 `UNKNOWN` 仍是
+P2/P3 目标，不能由 P1 reducer 生成。P1 同时最多一个 active Activity。
+
+状态由严格纯 reducer 从连续、同 Run、白名单 type/version 的 Event 推导。预算 limit 在
+`RunCreated` 成为受信事实；model iteration 与 Tool call 在 request Event 记账，实际 token/费用
+在模型 completion/failure Event 记账。Budget gate 只阻止新的 Activity request，不丢弃已经开始的
+Activity completion/failure，也不把一次实际 token/费用超额伪装成没有发生。
+
+相同 Event sequence 得到值相等的 `RunState`，但 P1 没有 startup scan、Checkpoint 或自动续跑；
+这些仍属于 P2 safe recovery。
+
 ## 8. 一次 Run 的标准流程
 
 ```mermaid
@@ -274,6 +288,7 @@ RunStarted
 UserInputAccepted
 
 ModelCallRequested
+ModelCallStarted
 ModelCallCompleted
 ModelCallFailed
 
@@ -659,6 +674,7 @@ P1/P2 只能在本机或 SSH tunnel 下使用。公开可访问前必须有：�
 - [ADR-0006](../adr/ADR-0006-p0-tooling-and-dependencies.md)：P0 工具与依赖基线；
 - [ADR-0007](../adr/ADR-0007-provider-neutral-domain-schemas.md)：Provider-neutral 领域 schema；
 - [ADR-0008](../adr/ADR-0008-starlight-public-docs.md)：公共文档站使用 Starlight。
+- [ADR-0009](../adr/ADR-0009-event-driven-run-state-and-budget-accounting.md)：Event 驱动的 Run 状态与预算记账。
 
 ADR 的 `accepted` 只表示决策已生效，不表示 Roadmap 中的恢复、Policy、runner 或 API 已经实现。
 

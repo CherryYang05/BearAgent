@@ -1,5 +1,6 @@
-"""BearAgent runtime kernel.
+"""Framework-independent BearAgent runtime state transitions."""
 
-The P0 package intentionally contains no execution loop. F-0002 will add the
-first reducer and bounded runtime behavior.
-"""
+from bearagent.runtime.budgets import check_activity_budget
+from bearagent.runtime.reducer import RunReducerError, reduce_event, reduce_events
+
+__all__ = ["RunReducerError", "check_activity_budget", "reduce_event", "reduce_events"]

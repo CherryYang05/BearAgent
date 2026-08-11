@@ -99,7 +99,7 @@ P3 是第一个“小而完整”的产品完成线，而不是功能终点。�
 
 ## 6. P1：Inspectable Execution
 
-**状态：进行中（2026-08-10 开始）。** [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md) 与 [F-0015 Local Starlight documentation site](../specs/F-0015-local-starlight-docs-site.md) 已实现；下一个运行时 Feature 尚未确认。
+**状态：进行中（2026-08-10 开始）。** [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md)、[F-0002 Run reducer, Activity lifecycle and budgets](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md) 与 [F-0015 Local Starlight documentation site](../specs/F-0015-local-starlight-docs-site.md) 已实现；下一个运行时 Feature 尚未确认。
 
 ### 6.1 阶段目标
 
@@ -472,7 +472,7 @@ P3 的关键词是 **authority-first**。Sandbox 是纵深防御，不代替 Pol
 ### P1：Inspectable Execution
 
 1. [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md) — implemented
-2. F-0002 Run reducer, Activity lifecycle and budgets
+2. [F-0002 Run reducer, Activity lifecycle and budgets](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
 3. F-0003 EventStore contract, SQLite adapter and projections
 4. F-0004 ModelProvider contract, first adapter and bounded loop
 5. F-0005 CLI run/inspect/events

@@ -16,20 +16,58 @@ from bearagent.domain.ids import (
     ToolCallId,
 )
 from bearagent.domain.messages import Message
+from bearagent.domain.run_events import (
+    ModelCallCompletedPayload,
+    ModelCallFailedPayload,
+    ModelCallRequestedPayload,
+    ModelCallStartedPayload,
+    RunCreatedPayload,
+    RunFailedPayload,
+    RunStartedPayload,
+    RunSucceededPayload,
+    ToolCallCompletedPayload,
+    ToolCallFailedPayload,
+    ToolCallRequestedPayload,
+    ToolCallStartedPayload,
+)
+from bearagent.domain.runs import (
+    ActivityState,
+    BudgetExhaustion,
+    BudgetLimits,
+    BudgetUsage,
+    RunState,
+)
 
 PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     ActivityId,
+    ActivityState,
     ArtifactId,
+    BudgetExhaustion,
+    BudgetLimits,
+    BudgetUsage,
     CausationId,
     CorrelationId,
     ErrorInfo,
     Event,
     EventId,
     Message,
+    ModelCallCompletedPayload,
+    ModelCallFailedPayload,
     ModelCallId,
+    ModelCallRequestedPayload,
+    ModelCallStartedPayload,
     RunId,
+    RunCreatedPayload,
+    RunFailedPayload,
+    RunStartedPayload,
+    RunState,
+    RunSucceededPayload,
     SessionId,
     ToolCallId,
+    ToolCallCompletedPayload,
+    ToolCallFailedPayload,
+    ToolCallRequestedPayload,
+    ToolCallStartedPayload,
 )
 
 

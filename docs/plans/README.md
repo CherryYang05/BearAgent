@@ -26,5 +26,6 @@ related_spec: F-NNNN
 
 已完成：
 
+- [PLAN-F-0002: Run reducer, Activity lifecycle and budgets](PLAN-F-0002-run-reducer-activity-lifecycle-budgets.md)
 - [PLAN-F-0015: Local Starlight documentation site](PLAN-F-0015-local-starlight-docs-site.md)
 - [PLAN-F-0001: Domain IDs, messages and errors](PLAN-F-0001-domain-ids-messages-errors.md)

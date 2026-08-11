@@ -52,6 +52,8 @@ class ErrorCode(StrEnum):
     """Initial stable error codes; later Features may add specific codes."""
 
     INVALID_INPUT = "invalid_input"
+    INVALID_EVENT = "invalid_event"
+    INVALID_STATE_TRANSITION = "invalid_state_transition"
     BUDGET_EXHAUSTED = "budget_exhausted"
     PROVIDER_ERROR = "provider_error"
     TOOL_ERROR = "tool_error"
@@ -61,6 +63,8 @@ class ErrorCode(StrEnum):
 
 _CODE_CATEGORIES = {
     ErrorCode.INVALID_INPUT: ErrorCategory.VALIDATION,
+    ErrorCode.INVALID_EVENT: ErrorCategory.VALIDATION,
+    ErrorCode.INVALID_STATE_TRANSITION: ErrorCategory.VALIDATION,
     ErrorCode.BUDGET_EXHAUSTED: ErrorCategory.BUDGET,
     ErrorCode.PROVIDER_ERROR: ErrorCategory.PROVIDER,
     ErrorCode.TOOL_ERROR: ErrorCategory.TOOL,
