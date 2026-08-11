@@ -1,7 +1,7 @@
 ---
 title: BearAgent Product Positioning
 status: accepted
-version: 0.1
+version: 0.2
 last_verified: 2026-08-11
 ---
 
@@ -11,11 +11,11 @@ last_verified: 2026-08-11
 
 一句话：
 
-> BearAgent 是一个可检查、可恢复、权限外置的 local-first Agent Runtime，面向希望把长期文件与开发任务交给 AI、又不愿把权限和执行历史交给黑箱的个人开发者与高级用户。
+> BearAgent 是面向本地长任务的、失败语义诚实的 local-first Agent Runtime：它把模型与工具动作记录为持久事实，由模型外的确定性 Policy 强制授权；崩溃后只在结果可确认时继续，无法确认的外部副作用停在 `UNKNOWN` 等待 reconcile。
 
 英文短句：
 
-> An inspectable, crash-resumable and authority-first local Agent Runtime.
+> A failure-honest, inspectable and authority-governed local Agent Runtime.
 
 BearAgent 不用“支持多少模型、工具和角色”定义自己，而要持续回答三个问题：
 
@@ -23,7 +23,9 @@ BearAgent 不用“支持多少模型、工具和角色”定义自己，而要�
 2. **这件事允许发生吗？** 权限来自运行时 Grant 与 Policy，不来自 Prompt、模型或 Tool 输出。
 3. **失败后从哪里继续？** Runtime 只从已持久化的安全边界恢复；不能确认的副作用进入 `UNKNOWN`，不伪装成 exactly-once。
 
-这三个问题分别由 P1 的可检查执行、P2 的安全恢复、P3 的权限与隔离逐步证明。
+这三个问题分别由 P1 的真实纵向执行、P2 的失败语义恢复、P3 的模型外授权与隔离逐步证明。
+
+BearAgent 不声称自己是首个拥有 transcript、checkpoint、approval 或 sandbox 的 Agent。成熟产品和 Runtime 已经以不同粒度提供这些能力；BearAgent 的差异化假设是：把它们统一到 Activity/Attempt/Event/Receipt 契约中，并用故障注入公开证明“何时可以重试、何时必须停在 `UNKNOWN`”。在证据完成前，这仍是待验证的项目主张。
 
 ## 2. 目标用户与首个任务
 
@@ -36,9 +38,19 @@ BearAgent 不用“支持多少模型、工具和角色”定义自己，而要�
 
 ### 2.2 首个 Job to be Done
 
-> 在一个明确限定的 workspace 中，让 Agent 读取和检索资料、生成受控 Artifact；任务很长或进程中断时仍能解释已经发生的动作，并在安全边界继续；危险动作只有得到精确授权后才能执行。
+> 在一个明确限定的 workspace 中，让 Repo/Document Research Agent 连续完成仓库理解、资料检索与文档生成；任务中断后仍能解释已经发生的动作，只有结果可确认时才自动继续，危险动作只有得到精确授权后才能执行。
 
-P1-P3 不以非技术普通消费者、企业多租户管理员或无代码工作流搭建者为首要用户。
+首个参考应用不是临时 Demo，而是验证 Runtime 价值的产品楔子：同一组真实任务会依次用于 P1 的执行检查、P2 的崩溃恢复和 P3 的授权/隔离演练。P1-P3 不以非技术普通消费者、企业多租户管理员或无代码工作流搭建者为首要用户。
+
+### 2.3 产品分层
+
+```mermaid
+flowchart TB
+    A["Repo / Document Research Agent<br/>首个参考应用"] --> R["BearAgent Runtime<br/>状态、事实、预算、恢复、授权"]
+    R --> I["Model / Tool / SQLite / Sandbox / MCP adapters"]
+```
+
+Runtime 回答“任务怎样被可靠地执行和约束”；参考应用回答“用户究竟能交付什么任务”。二者必须一起验收，避免只完成基础设施却没有真实使用价值。
 
 ## 3. BearAgent 属于什么，也不属于什么
 
@@ -48,11 +60,11 @@ P1-P3 不以非技术普通消费者、企业多租户管理员或无代码工�
 | Coding Agent harness | 代码检索、补丁、终端、模型路由和开发体验 | 首个任务域包含仓库，但不把 BearAgent 限定成编码产品 |
 | 垂直 Agent | 教学、研究、客服等领域效果和专有数据 | 不在早期绑定单一垂直业务；用稳定 Runtime 承载后续 Skill/Workflow |
 | Agent framework / SDK | 让开发者快速组装 Agent | BearAgent 不是通用编排库优先，而是一个可直接运行、持久化和治理执行的 Runtime |
-| BearAgent | 可检查执行、诚实恢复、权限外置和本地所有权 | 用可复现故障与安全证据证明，而不是用功能清单证明 |
+| BearAgent | 持久执行事实、失败语义诚实、模型外强制授权和本地所有权 | 用同一参考应用上的可复现故障与安全证据证明，而不是用功能清单证明 |
 
 因此，BearAgent 的产品楔子不是“另一个万能 Agent”，而是：
 
-> **最小但可信的个人 Agent 执行底座。**
+> **面向本地长任务、失败语义诚实的 Agent Runtime，并以 Repo/Document Research Agent 作为首个参考应用。**
 
 ## 4. 为什么很多人仍在写自己的 Agent
 
@@ -65,7 +77,7 @@ P1-P3 不以非技术普通消费者、企业多租户管理员或无代码工�
 - **交互与分发**：CLI、桌面、Web、IM、IDE 和 API 面向不同工作习惯；
 - **工程与社区动机**：Agent 是理解模型、工具、系统和产品交界面的高密度项目。
 
-所以“自己写 Agent”本身不是差异化。真正的差异在于选定一个值得负责的系统边界，并拿出可验证证据。BearAgent 选择对**执行事实、运行时权限和失败恢复**负责。
+所以“自己写 Agent”本身不是差异化。真正的差异在于选定一个值得负责的系统边界，并拿出可验证证据。BearAgent 选择对**执行事实、失败语义和模型外授权**负责，并要求每个 Runtime 阶段都在同一个真实参考应用上交付可复现结果。
 
 ## 5. 从参考项目吸收什么
 
@@ -86,9 +98,10 @@ P1-P3 不以非技术普通消费者、企业多租户管理员或无代码工�
 
 | 阶段 | 用户可感知价值 | 必须公开的旗舰证据 |
 |---|---|---|
-| P1：Inspectable Execution | 本地文件任务有界完成，过程与失败可检查 | 一次真实 CLI Run；非法路径与预算耗尽被明确拒绝；完整 Activity/Event/Artifact 视图 |
-| P2：Safe Recovery | 进程退出不等于任务和副作用语义丢失 | 多个 kill point 的恢复演练；删除 Checkpoint 后重建；`UNKNOWN` 人工处置路径 |
-| P3：Governed Self-hosting | Agent 只能在授予的权限和隔离环境中行动 | 审批参数篡改被拒绝；runner 读不到宿主/secrets；空目录备份恢复演练 |
+| P1：Reference Execution | Repo/Document Research Agent 能完成一组固定真实任务，过程与失败可检查 | CLI 任务集；非法路径与预算耗尽被明确拒绝；完整 Activity/Event/Artifact 视图 |
+| P2：Failure-honest Recovery | 同一任务在进程退出后只从可确认边界继续 | 多个 kill point；删除 Checkpoint 后重建；receipt/reconcile；`UNKNOWN` 人工处置路径 |
+| P3：Governed Self-hosting | 同一任务只能在授予的权限和隔离环境中行动 | 审批参数篡改被拒绝；runner 读不到宿主/secrets；空目录备份恢复演练 |
+| P4：Extension Proof | 内核可以承载受控扩展而不绕过原有语义 | 一个只读 MCP 或版本化 Skill 经同一 Policy/Event/ToolResult 路径运行 |
 
 没有这些证据时，只能说“设计为”或“规划中”，不能说 BearAgent 已经可靠、可恢复或安全。
 
@@ -97,22 +110,22 @@ P1-P3 不以非技术普通消费者、企业多租户管理员或无代码工�
 P1-P3 坚持：
 
 - 单用户、单 Agent、单进程、SQLite、CLI-first；
-- 一个真实 Provider，串行 Tool 调用，有限的 workspace 工具；
+- 一个真实 Provider、最小 ContextBuilder、串行 Tool 调用、有限的 workspace 工具和内置参考 Agent 配置；
 - Event 是事实，projection 与 Checkpoint 可重建；
 - 所有副作用经统一 ToolExecutor 与 Policy；
 - host runtime 永不执行模型生成 shell；
 - 不以 exactly-once、全自动恢复或“完全安全”作为宣传语。
 
-明确后置到稳定内核之后：Web UI、MCP、Skills、Memory、任意 HTTP、浏览器/电脑控制、Multi-Agent、多用户、插件市场和分布式 worker。
+明确后置到稳定内核之后：Web UI、Memory、任意 HTTP、浏览器/电脑控制、Multi-Agent、多用户、插件市场和分布式 worker。P4 先用一个只读 MCP 或版本化 Skill 验证扩展接缝，再决定是否扩张生态宽度。
 
 ## 8. 对外表达规范
 
 推荐表达：
 
-- “可检查、可恢复、权限外置的本地优先 Agent Runtime”；
-- “P1-P3 正在逐步实现，当前能力见状态页”；
-- “从安全边界恢复，不承诺任意外部副作用 exactly-once”；
-- “小而完整：先证明执行、恢复和权限，再扩展体验与生态”。
+- “面向本地长任务、失败语义诚实的 Agent Runtime”；
+- “以 Repo/Document Research Agent 验证持久执行事实、失败恢复与模型外授权”；
+- “崩溃后只在结果可确认时继续；无法确认的副作用停在 `UNKNOWN` 等待 reconcile”；
+- “当前能力见状态页；定位描述的是架构优先级，不暗示其他 Agent 没有检查、恢复或权限控制”。
 
 避免表达：
 

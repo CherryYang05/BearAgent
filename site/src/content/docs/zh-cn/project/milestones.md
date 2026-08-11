@@ -10,21 +10,21 @@ sourceRefs:
   - F-0015
 ---
 
-BearAgent 不按功能数量划阶段，而是按三个依赖明确的产品承诺推进。未来计划不会因为出现在这里就变成当前能力。
+BearAgent 不按功能数量划阶段，而是让 Repo/Document Research Agent 在三个依赖明确的 Runtime 承诺上逐步变得可信。未来计划不会因为出现在这里就变成当前能力。
 
 ## 阶段总览
 
 | 阶段 | 状态 | 产品承诺 | 关键证据 |
 |---|---|---|---|
 | P0 Engineering Baseline | 已完成 | 仓库可以持续、安全地开发 | 包边界、CLI doctor、质量工具和文档治理 |
-| P1 Inspectable Execution | 进行中 | 一次真实本地 Run 有界、受限、事实可查 | 文件任务 + Activity/Event/Artifact 视图 |
-| P2 Safe Recovery | 未开始 | 崩溃后从安全边界继续，副作用语义诚实 | kill-point、Checkpoint 重建、幂等与 `UNKNOWN` |
-| P3 Governed Self-hosting | 未开始 | 权限外置、代码隔离、单用户安全自托管 | Approval 安全、runner 隔离、备份恢复与 HTTPS |
+| P1 Reference Execution | 进行中 | 参考 Agent 的真实本地任务有界、受限、事实可查 | 固定任务集 + Activity/Event/Artifact 视图 |
+| P2 Failure-honest Recovery | 未开始 | 同一任务在崩溃后只从可确认边界继续 | kill-point、Checkpoint 重建、receipt/reconcile 与 `UNKNOWN` |
+| P3 Governed Self-hosting | 未开始 | 模型外授权、代码隔离、单用户安全自托管 | 同一任务的 Approval 安全、runner 隔离、备份恢复与 HTTPS |
 
 ```mermaid
 flowchart TB
-    P1["P1 可检查执行"] --> P2["P2 安全恢复"]
-    P2 --> P3["P3 权限治理与隔离自托管"]
+    P1["P1 参考应用 + 可检查执行"] --> P2["P2 失败语义恢复"]
+    P2 --> P3["P3 模型外授权 + 隔离自托管"]
 ```
 
 P2 依赖 P1 的 Event/Activity 事实，P3 依赖 P2 的恢复和副作用语义；三个阶段不能用未来能力替代当前验收。
@@ -35,7 +35,7 @@ P2 依赖 P1 的 Event/Activity 事实，P3 依赖 P2 的恢复和副作用语�
 
 - Run/Activity 状态、纯 Reducer 和迭代/token/费用/时间/Tool 预算；
 - SQLite EventStore、projection、migration 和 Artifact metadata；
-- 一个真实 Provider-neutral Model Adapter 与有界 Agent Loop；
+- 一个真实 Provider-neutral Model Adapter、最小 ContextBuilder、内置参考 Agent 配置与有界 Agent Loop；
 - 统一 ToolSpec/ToolResult/Registry/Executor 和固定最小策略门；
 - workspace `list/read/search` 与只写 `outputs/**` 的原子 `write_file`；
 - `run/inspect/events` CLI、人类可读与 JSON 输出；
@@ -43,7 +43,7 @@ P2 依赖 P1 的 Event/Activity 事实，P3 依赖 P2 的恢复和副作用语�
 
 ### 怎样证明
 
-真实模型读取 `docs/` 并生成 `outputs/intro.md`；随后展示非法路径被拒绝、低预算 Run 明确终止，以及每个模型/Tool Activity 对应的 Event、usage、错误和 Artifact。
+Repo/Document Research Agent 完成固定仓库与文档任务集，包括读取 `docs/` 并生成 `outputs/intro.md`；随后展示非法路径被拒绝、低预算 Run 明确终止，以及每个模型/Tool Activity 对应的 Event、usage、错误和 Artifact。
 
 ### 明确边界
 
@@ -88,7 +88,7 @@ P3 是 headless CLI/API 单用户 beta。Web UI、Skills、MCP、Memory、浏览
 
 ## P3 为什么是第一个完整项目
 
-到 P3，BearAgent 才同时具备：真实任务闭环、持久事实、崩溃恢复、诚实副作用语义、运行时权限、代码隔离、认证、自托管和备份恢复。它仍然功能少，但已经能对自己的行为负责。
+到 P3，BearAgent Runtime 与首个参考应用才同时具备：真实任务闭环、持久事实、崩溃恢复、诚实副作用语义、模型外授权、代码隔离、认证、自托管和备份恢复。它仍然功能少，只代表第一个可信 Runtime 完成线，不代表成熟通用 Agent 产品。
 
 ## 阶段什么时候可以关闭
 

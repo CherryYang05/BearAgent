@@ -11,7 +11,7 @@ last_verified: 2026-08-11
 
 BearAgent 的第一目标不是覆盖最多 Agent 功能，而是完成一个可验证的最小运行时：
 
-> 一个单用户、单 Agent、local-first、可自托管的 tool-using runtime；执行过程可检查，崩溃后可从安全边界恢复，外部动作的权限由模型之外的运行时控制。
+> 一个单用户、单 Agent、local-first、可自托管且失败语义诚实的 tool-using runtime；执行过程以持久事实表达，崩溃后只在结果可确认时继续，外部动作由模型之外的运行时强制授权。
 
 产品定位由四条架构主线支撑：
 
@@ -20,9 +20,19 @@ BearAgent 的第一目标不是覆盖最多 Agent 功能，而是完成一个可
 3. **Authority outside the model**：Grant、Policy、Approval、Workspace boundary、Sandbox runner 与 Secret isolation 共同约束副作用。
 4. **Local ownership**：单用户、单进程、SQLite、CLI-first，数据和部署由用户控制，复杂度只按证据增加。
 
-Trace/replay/eval 是前三条主线的验证面；Context、Skill、MCP 与 Memory 是 P4 以后挂载在稳定内核上的能力，不再与 P1-P3 争夺优先级。P1-P3 完成后，BearAgent 才达到“小而完整”的第一个产品完成线。详细目标用户、竞争边界和表达规范见[产品定位](../project/product-positioning.md)。
+Trace/replay/eval 是前三条主线的验证面。最小 ContextBuilder 是 P1 Agent Loop 的必要组成；复杂压缩、Skill、MCP 与 Memory 是 P4 以后挂载在稳定内核上的能力。P1-P3 完成后，BearAgent 才达到“小而完整”的可信 Runtime 完成线；首个用户价值由 Repo/Document Research Agent 参考应用持续验证。详细目标用户、竞争边界和表达规范见[产品定位](../project/product-positioning.md)。
 
-### 1.1 P1-P3 的递进关系
+### 1.1 产品层与 Runtime 层
+
+```mermaid
+flowchart TB
+    A["Repo / Document Research Agent<br/>任务配置、完成条件、用户入口"] --> R["BearAgent Runtime<br/>循环、状态、事实、预算、恢复、授权"]
+    R --> D["Adapters<br/>Model、Tool、SQLite、Sandbox、MCP"]
+```
+
+参考应用回答“交付什么任务”，Runtime 回答“这些任务怎样被执行、约束和恢复”。P1-P3 的验收必须同时覆盖两层，不能把 Runtime 组件测试当作完整产品证据。
+
+### 1.2 P1-P3 的递进关系
 
 | 阶段 | 先证明什么 | 暂不声称什么 |
 |---|---|---|
@@ -51,7 +61,7 @@ DeepTutor 当前将单次 Tool 和接管整个 turn 的多阶段 Capability 分�
 ### 3.1 P1-P3 必须具备
 
 - 一个内部统一的模型接口，第一版只有一个真正可用的 Provider adapter。
-- 一个明确有界的 Agent Loop，限制迭代数、token、费用、时间和工具次数。
+- 一个明确有界的 Agent Loop 与最小 ContextBuilder，限制上下文、迭代数、token、费用、时间和工具次数。
 - 类型化 Tool schema、结构化 ToolResult、timeout、输出大小限制和取消传播。
 - 工作区内的 `list/read/search/write` 基础文件工具。
 - `allow / ask / deny` 策略和一次性审批。

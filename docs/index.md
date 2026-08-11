@@ -1,6 +1,6 @@
 # BearAgent 文档
 
-BearAgent 的目标是构建一个可检查、可恢复、权限外置的 local-first Agent Runtime：小而完整，并可以从本地平滑迁移到自托管服务器。
+BearAgent 的目标是构建一个面向本地长任务、失败语义诚实的 local-first Agent Runtime：用持久执行事实、模型外强制授权和显式 `UNKNOWN` 处理崩溃后的不确定副作用；首个参考应用是 Repo/Document Research Agent。
 
 公开站点位于 [`site/`](../site/README.md)，同时维护初学者学习路径和开发者文档；P1 期间只在本地预览和构建。本目录继续作为工程设计与项目治理的 Source of Truth，站点内容必须从这里、代码和测试派生。
 

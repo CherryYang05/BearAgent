@@ -1,8 +1,8 @@
 <div align="center">
 
 <h1>BearAgent</h1>
-<p><strong>可检查、可恢复、权限外置的本地优先 Agent Runtime</strong></p>
-<p><sub>An inspectable, crash-resumable and authority-first local Agent Runtime.</sub></p>
+<p><strong>面向本地长任务、失败语义诚实的 Agent Runtime</strong></p>
+<p><sub>A failure-honest Agent Runtime for inspectable, governed local task execution.</sub></p>
 <p>
   <a href="#project-status"><img alt="P1 in progress" src="https://img.shields.io/badge/status-P1%20in%20progress-2563EB"></a>
   <a href="https://www.python.org/"><img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&amp;logoColor=white"></a>
@@ -28,14 +28,14 @@
 
 很多 Agent demo 在 happy path 上只是 `model → tool → model` 循环。一旦进程中断、外部写入结果不确定、模型请求越权或上下文持续增长，就很难回答三个关键问题：**发生了什么、允许做什么、应该从哪里继续**。
 
-BearAgent 从运行时边界而不是功能数量开始设计。它不是“开源 Manus/Claude Code 替代品”，也不把自己限定为 Coding Agent；它选择成为一个最小但可信的个人 Agent 执行底座：
+成熟 Agent 已经普遍具备工具轨迹、会话恢复、审批或 sandbox 的一部分，BearAgent 不把“有这些功能”当作独占卖点。它聚焦的是更严格的一致执行契约，尤其在崩溃跨过外部副作用边界时，不用猜测掩盖未知结果：
 
-| Inspectable execution | Honest recovery | Authority-first | Local ownership |
+| Durable facts | Failure-honest recovery | Model-independent authorization | Reference application |
 |---|---|---|---|
-| Run、Activity、Event、预算和 Artifact 可检查 | 从持久安全边界恢复，不假装 exactly-once | Grant、Policy、Approval 与独立 runner | 单用户、单进程、SQLite、CLI-first |
-| P1 先证明一次真实、有界的执行 | P2 处理重启、幂等、receipt 与 `UNKNOWN` | P3 让模型之外的运行时决定权限 | 没有需求证据前不引入分布式组件 |
+| Run、Activity、Attempt、Event、预算和 Artifact 可检查 | 用 idempotency key、receipt、reconcile 与 `UNKNOWN` 表达真实结果 | Policy、Approval 和 runner 在模型之外强制执行 | 先用 Repo/Document Research Agent 验证真实本地长任务 |
+| P1 打通可用的纵向任务闭环 | P2 在 kill-point 证明何时继续、重试或停住 | P3 证明参数篡改与权限绕过会被阻断 | P4 再验证受控 Skill/MCP 与日常体验 |
 
-项目刻意保持“小而完整”：P1 证明可检查执行，P2 证明安全恢复，P3 证明权限与隔离，再增加 Web UI、Skills、MCP、Memory 或 Multi-Agent。完整的目标用户、竞品边界与表达规范见[产品定位](docs/project/product-positioning.md)。
+BearAgent 的结构是“可信执行内核 + 第一个参考应用”，而不是另一个只展示 Agent Loop 的框架，也不是 Claude Code/Manus 的功能复刻。完整的目标用户、竞品边界与表达规范见[产品定位](docs/project/product-positioning.md)。
 
 ## Architecture
 
@@ -133,13 +133,13 @@ BearAgent/
 | Phase | Outcome | Status |
 |---|---|---|
 | P0 | Architecture, engineering baseline and documentation governance | Complete |
-| P1 | Inspectable execution：一个有界、受限、事实可查的本地 CLI Run | In progress |
-| P2 | Safe recovery：checkpoint、resume、cancel、幂等、receipt 与 `UNKNOWN` | Planned |
-| P3 | Governed self-hosting：Grant、Approval、隔离 runner 与安全自托管 | Planned |
-| P4 | Web UI, Skills, MCP and inspectable Memory | Planned |
+| P1 | Reference execution：Repo/Document Research Agent 完成有界、受限、事实可查的本地任务 | In progress |
+| P2 | Failure-honest recovery：checkpoint、resume、cancel、幂等、receipt、reconcile 与 `UNKNOWN` | Planned |
+| P3 | Governed self-hosting：模型外授权、精确 Approval、隔离 runner 与安全自托管 | Planned |
+| P4 | Daily-use experience：受控 Skill/MCP、Web UI 与可检查 Memory | Planned |
 | P5 | Trace, replay, eval and public project evidence | Planned |
 
-**P3 是第一个完整项目完成线。** 详细 Feature Backlog、验收标准和明确不做的内容都记录在[路线图](docs/project/roadmap.md)中。
+**P3 是第一个可信 Runtime 完成线，不等于成熟的通用 Agent 产品。** 详细 Feature Backlog、验收标准和明确不做的内容都记录在[路线图](docs/project/roadmap.md)中。
 
 ## Documentation
 

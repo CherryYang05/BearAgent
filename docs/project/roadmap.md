@@ -1,7 +1,7 @@
 ---
 title: BearAgent Project Charter and Roadmap
 status: accepted
-version: 0.3
+version: 0.4
 last_verified: 2026-08-11
 ---
 
@@ -9,11 +9,11 @@ last_verified: 2026-08-11
 
 ## 1. 项目使命
 
-通用聊天产品擅长生成答案，但把长期任务真正交给 Agent 后，还必须回答：执行过什么、允许做什么、失败后从哪里继续。BearAgent 的使命是把这三件事做成可运行、可测试、可由个人维护的 Runtime。
+通用聊天产品擅长生成答案，但把长期任务真正交给 Agent 后，还必须回答：执行过什么、允许做什么、外部副作用结果不确定时能否安全继续。BearAgent 的使命是把这三件事做成可运行、可测试、可由个人维护的 Runtime，并用一个真实参考应用持续检验它们是否具有用户价值。
 
 一句话定位：
 
-> BearAgent 是一个可检查、可恢复、权限外置的 local-first Agent Runtime，面向希望把长期文件与开发任务交给 AI、又不愿把权限和执行历史交给黑箱的个人开发者与高级用户。
+> BearAgent 是面向本地长任务的、失败语义诚实的 local-first Agent Runtime：持久记录执行事实，在模型之外强制授权，并让无法确认的外部副作用停在 `UNKNOWN` 等待 reconcile。
 
 详细目标用户、竞品边界与对外表达见[产品定位](product-positioning.md)。本 Roadmap 只负责阶段顺序、范围和验收证据。
 
@@ -21,15 +21,16 @@ last_verified: 2026-08-11
 
 ### 2.1 产品原则
 
-- **先闭环，后扩面**：先让一个 Provider、一个 Agent、有限文件 Tool 可靠工作，再增加模型、工具和角色。
+- **先用户闭环，后能力宽度**：每个阶段都让 Repo/Document Research Agent 完成同一组真实任务；不能用一组彼此分离的底层组件代替产品闭环。
 - **先事实，后恢复**：P1 先证明执行事实可以持久化与检查；P2 才承诺进程重启后的安全恢复。
-- **先边界，后自治**：所有 ToolRequest 都经过运行时策略边界；P3 再增加 Grant、Approval 和隔离 runner。
+- **先确认，后继续**：恢复决定必须基于 Event、idempotency key、receipt 或 reconcile；无法确认时进入 `UNKNOWN`，不猜测成功或失败。
+- **先边界，后自治**：所有 ToolRequest 都经过运行时策略边界；P3 再增加 Grant、精确 Approval 和隔离 runner。
 - **先证据，后宣传**：没有代码、测试和可复现演练支撑的能力只能标记为设计或规划中。
 - **先单机，后分布式**：P0-P3 固定单用户、单 Agent、单进程、SQLite、CLI-first。
 
 ### 2.2 首个任务域
 
-首个目标用户是项目作者本人，首个任务域是**限定 workspace 内的文件与技术研究/编码辅助**：
+首个目标用户是项目作者本人，首个任务域被明确包装为 **Repo/Document Research Agent**，而不是一组散落的文件工具。它在限定 workspace 内完成技术研究与仓库/文档理解：
 
 - 读取、列出和检索项目资料；
 - 在 `outputs/**` 生成或替换文档、报告和代码 Artifact；
@@ -50,9 +51,9 @@ P3 权限治理 + 隔离自托管
 
 三个阶段必须依次关闭。P2 不能用“未来会有审批”代替当前恢复测试，P3 也不能用 sandbox 掩盖尚未解决的副作用恢复语义。
 
-## 3. P3 项目完成线
+## 3. P3 可信 Runtime 完成线
 
-P3 是第一个“小而完整”的产品完成线，而不是功能终点。关闭 P3 时必须同时满足：
+P3 是第一个“小而完整”的可信 Runtime 完成线，而不是成熟通用 Agent 产品的完成线。关闭 P3 时，Runtime 与 Repo/Document Research Agent 必须作为一个纵向产品切片同时满足：
 
 - 10 个固定端到端 workspace 任务中至少 8 个无需修改代码完成；
 - 在模型完成、workspace 写提交、等待审批三个安全边界强制结束进程后，Run 可按契约恢复且不重复已确认副作用；
@@ -71,10 +72,10 @@ P3 是第一个“小而完整”的产品完成线，而不是功能终点。�
 | 阶段 | 产品承诺 | 主要风险 | 退出证据 |
 |---|---|---|---|
 | P0 Engineering Baseline | 仓库可以持续、安全地开发 | 边界和术语漂移 | 工程、架构、CI 和文档治理基线 |
-| P1 Inspectable Execution | 一次真实本地 Run 有界、受限、可检查 | 无限循环、路径越界、事实缺失 | CLI 文件任务 + Activity/Event/Artifact 视图 |
-| P2 Safe Recovery | 崩溃后从安全边界继续，副作用语义诚实 | 重复写、假 exactly-once、状态分叉 | kill-point、重建、幂等与 `UNKNOWN` 演练 |
-| P3 Governed Self-hosting | 权限外置、代码隔离、单用户安全自托管 | 提权、审批重放、secret/host 暴露 | 安全测试 + runner + 备份恢复 + HTTPS |
-| P4 Personal Agent Experience | 稳定内核上形成日常体验 | 过早堆集成 | Web、Skill、MCP、Memory 共用同一 Runtime |
+| P1 Reference Execution | Repo/Document Research Agent 的真实本地任务有界、受限、可检查 | 只完成底层组件、上下文膨胀、路径越界、事实缺失 | 固定任务集 + Activity/Event/Artifact 视图 |
+| P2 Failure-honest Recovery | 同一任务在崩溃后只从可确认边界继续 | 重复写、假 exactly-once、状态分叉 | kill-point、重建、receipt/reconcile 与 `UNKNOWN` 演练 |
+| P3 Governed Self-hosting | 模型外授权、代码隔离、单用户安全自托管 | 提权、审批重放、secret/host 暴露 | 同一任务的安全测试 + runner + 备份恢复 + HTTPS |
+| P4 Personal Agent Experience | 先证明扩展接缝，再形成日常体验 | 过早堆集成 | 一个受控 Skill/MCP + Web/Memory 共用同一 Runtime |
 | P5 Trace / Replay / Eval | 核心承诺可持续比较和公开证明 | 只评答案不评行为 | 可复现 eval、trace assertions 和发布证据 |
 
 ## 5. P0：Engineering Baseline
@@ -103,7 +104,7 @@ P3 是第一个“小而完整”的产品完成线，而不是功能终点。�
 
 ### 6.1 阶段目标
 
-本地 CLI 完成一次真实、受限、有界的 workspace 文件任务，并让用户能检查每个关键 Activity、Event、预算消耗、错误和 Artifact。
+本地 CLI 通过内置 Repo/Document Research Agent 配置完成一组真实、受限、有界的 workspace 任务，并让用户能检查每个关键 Activity、Event、预算消耗、错误和 Artifact。P1 交付的是可用纵向切片，不只是 Reducer、Port 和 Adapter 的集合。
 
 P1 的关键词是 **inspectable**，不是 resumable。进程崩溃后，已提交事实必须保留且不能伪装成功，但 P1 不自动续跑；安全恢复属于 P2。
 
@@ -126,13 +127,16 @@ P1 的关键词是 **inspectable**，不是 resumable。进程崩溃后，已提
 
 P1 的 Event log 是可检查事实来源，不等于已经具备 Checkpoint 或 startup recovery。
 
-#### C. Model Port 与 Agent Loop
+#### C. Model Port、最小 ContextBuilder 与 Agent Loop
 
 - 内部 `ModelRequest/ModelEvent` 保持 Provider-neutral；
 - 实现一个真实 Provider adapter，并用 Fake Provider 做确定性 Loop 测试；
+- 最小 ContextBuilder 按稳定层级组装 runtime 规则、当前目标、必要消息、Tool schema 和 ToolResult，并对每层设置 token/字节预算；
+- 大 ToolResult 必须截断或落为 Artifact 引用，不能无限回灌上下文；P1 不做自动摘要 Memory 或复杂 compaction；
+- 内置 Repo/Document Research Agent 配置固定任务说明、可用 Tool 和完成条件，但不能创建权限；
 - Adapter 负责 SDK 对象翻译、timeout、取消、usage 和错误分类；
 - 只对明确临时错误做有界 retry，参数、权限和上下文超限不得盲重试；
-- Prompt、Tool schema、Provider 与模型标识进入可比较 trace metadata，密钥不落盘。
+- Prompt、ContextBuilder、Tool schema、Provider 与模型标识进入可比较 trace metadata，密钥不落盘。
 
 #### D. Tool 与固定权限边界
 
@@ -162,7 +166,7 @@ P1 仍要求每个 ToolRequest 经过统一策略端口。其实现只有固定�
 ### 6.3 明确不做
 
 - Checkpoint、startup recovery、pause/resume/cancel/retry command 和 `UNKNOWN` 处置；
-- shell、代码执行、任意 HTTP、MCP、Memory、Web UI；
+- shell、代码执行、任意 HTTP、MCP、Memory、Web UI 和复杂自动压缩；
 - 修改 workspace 中已有源码或输入文件；只允许写 `outputs/**`；
 - 并行 Tool、多 Agent、多 Provider 兼容矩阵；
 - 公开 HTTP 服务或服务器 Agent 部署。
@@ -172,7 +176,7 @@ P1 仍要求每个 ToolRequest 经过统一策略端口。其实现只有固定�
 1. **State**：F-0002 Run reducer、Activity lifecycle 与 budgets；
 2. **Facts**：F-0003 EventStore contract、SQLite、projection 与 migration；
 3. **Effects**：F-0006 Tool contract/registry/baseline policy gate，F-0007 只读工具，F-0008 原子写与 Artifact；
-4. **Intelligence**：F-0004 第一个真实 ModelProvider 与 bounded Agent Loop；
+4. **Intelligence**：F-0004 第一个真实 ModelProvider、最小 ContextBuilder、内置参考 Agent 配置与 bounded Agent Loop；
 5. **Product path**：F-0005 `run/inspect/events` CLI 与端到端演示。
 
 每次只激活一个主 Feature。Feature 可按依赖重新排序，但不能绕过前置契约或并行铺开全部 Backlog。
@@ -185,11 +189,11 @@ bearagent run inspect <run-id>
 bearagent run events <run-id> --json
 ```
 
-演示必须同时展示一次非法路径请求被拒绝，以及一次低预算 Run 明确终止。
+旗舰演示属于固定任务集的一部分。任务集至少还覆盖跨多个文档汇总、带来源的差异比较和已有输出的受控替换；演示必须同时展示一次非法路径请求被拒绝，以及一次低预算 Run 明确终止。
 
 ### 6.6 P1 退出门槛
 
-- 真实模型成功完成旗舰 Demo，生成带 hash 的 Artifact；
+- 真实模型在 5 个固定 Repo/Document Research 任务中至少完成 4 个，无需修改代码或 Prompt，并生成带 hash 的 Artifact；
 - 非法路径、symlink escape、超大读写和超时被结构化拒绝；
 - 每个模型/Tool Activity 可由 `inspect` 关联到有序 Event；
 - budget 耗尽不会继续调度新 Activity；
@@ -409,6 +413,7 @@ P3 的关键词是 **authority-first**。Sandbox 是纵深防御，不代替 Pol
 
 ### 功能
 
+- 先接入一个版本化只读 Skill 或受控只读 MCP Tool，证明扩展仍走同一 ToolSpec/Policy/Event/ToolResult 契约；
 - 最小 Web UI：Session/Run、stream、Approval、Artifact、trace；
 - Skill loader 和版本化 manifest；
 - MCPToolProvider，按 server/tool 授权；
@@ -420,8 +425,8 @@ P3 的关键词是 **authority-first**。Sandbox 是纵深防御，不代替 Pol
 
 ### 验收
 
-- 新 Skill 不改 Runtime 代码即可加载；
-- MCP Tool 与内置 Tool 走同一 Policy/Event/ToolResult；
+- 首个受控 Skill/MCP 扩展不改 Runtime 内核即可加载，且故障/权限测试与内置 Tool 使用同一断言；
+- 后续 MCP Tool 与内置 Tool 走同一 Policy/Event/ToolResult；
 - 用户能查看某条 Memory 的来源并删除；
 - 长任务压缩后仍可通过文件/Event reference 恢复关键证据；
 - Web 和 CLI 操作同一 Run，不存在两套业务逻辑。
@@ -474,7 +479,7 @@ P3 的关键词是 **authority-first**。Sandbox 是纵深防御，不代替 Pol
 1. [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md) — implemented
 2. [F-0002 Run reducer, Activity lifecycle and budgets](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
 3. F-0003 EventStore contract, SQLite adapter and projections
-4. F-0004 ModelProvider contract, first adapter and bounded loop
+4. F-0004 ModelProvider contract, minimal ContextBuilder, reference Agent config and bounded loop
 5. F-0005 CLI run/inspect/events
 6. F-0006 Tool contract, registry, executor and baseline policy gate
 7. F-0007 Workspace boundary and read tools
@@ -509,9 +514,9 @@ P3 的关键词是 **authority-first**。Sandbox 是纵深防御，不代替 Pol
 
 对外 README 与演示按以下顺序叙述：
 
-1. 普通 Agent loop 为什么无法回答执行事实、权限和恢复问题；
-2. BearAgent 的 P1/P2/P3 如何依次证明可检查执行、安全恢复和权限外置；
-3. 一个从受限执行、crash/resume 到 Approval/sandbox 的真实演示；
+1. Repo/Document Research Agent 能替用户完成哪些真实任务，以及普通 Agent loop 在长任务中的失败边界；
+2. BearAgent 的 P1/P2/P3 如何依次证明持久执行事实、失败语义恢复和模型外强制授权；
+3. 同一任务从受限执行、crash/resume 到 Approval/sandbox 的连续演示；
 4. 如何本地运行与安全自托管；
 5. 哪些能力故意后置，以及当前版本尚未实现什么。
 

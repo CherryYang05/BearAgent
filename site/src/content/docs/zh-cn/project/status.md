@@ -26,7 +26,7 @@ sourceRefs:
 以下名称只登记在 Roadmap，尚未创建对应 Spec：
 
 1. F-0003 EventStore contract, SQLite adapter and projections
-2. F-0004 ModelProvider contract, first adapter and bounded loop
+2. F-0004 ModelProvider contract, minimal ContextBuilder, reference Agent config and bounded loop
 3. F-0005 CLI run/inspect/events
 4. F-0006 Tool contract, registry, executor and baseline policy gate
 5. F-0007 Workspace boundary and read tools

@@ -7,8 +7,9 @@ sourceRefs:
   - roadmap
 ---
 
-BearAgent 是一个可检查、可恢复、权限外置的 local-first Agent Runtime。它面向希望把长期文件
-与开发任务交给 AI、又不愿把权限和执行历史交给黑箱的个人开发者与高级用户。
+BearAgent 是一个面向本地长任务、失败语义诚实的 local-first Agent Runtime。它把模型与工具
+动作记录为持久事实，由模型外的确定性 Policy 强制授权；崩溃后只在结果可确认时继续，无法确认
+的外部副作用停在 `UNKNOWN` 等待 reconcile。
 
 :::note[内容状态：设计目标]
 这一定义描述项目已经接受的方向，不表示所有能力现在都已实现。请同时查看[当前实现状态](../project/status.md)。
@@ -30,8 +31,12 @@ BearAgent 的重点是围绕模型建立一个可以约束、记录、恢复和�
 - 允许做什么：权限来自模型之外的 Grant、Policy 与 Approval；
 - 从哪里继续：只从持久安全边界恢复，不确定副作用进入 `UNKNOWN`。
 
-这让 BearAgent 更像一个个人 Agent 执行底座，而不是聊天 UI、垂直应用或另一个功能齐全的
-Coding Agent。完整说明见[产品定位](../project/positioning.md)。
+这不表示其他 Agent 都没有日志、恢复、审批或 sandbox；区别假设在于 BearAgent 是否能用统一
+Activity/Attempt/Event/Receipt 契约和故障注入，更严格地证明副作用结果。完整说明见
+[产品定位](../project/positioning.md)。
+
+Runtime 本身不回答“用户能完成什么”。因此 P1 同时交付 Repo/Document Research Agent 作为首个
+参考应用，用同一组真实任务贯穿 P1 的执行检查、P2 的崩溃恢复和 P3 的授权/隔离。
 
 ## 第一阶段有意保持很小
 
