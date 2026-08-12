@@ -16,23 +16,23 @@ Related Spec: `docs/specs/F-NNNN-<name>.md`
 - Spec status is `accepted`.
 - Open questions that affect implementation are resolved.
 
-## Vertical slices
+## Independently verifiable implementation steps
 
-### Slice 1: <small end-to-end behavior>
+### Step 1: <small end-to-end behavior>
 
-- Domain/contracts:
-- Adapter/interface:
+- Internal data and rules:
+- Interfaces and external implementations:
 - Tests:
 - Verification command:
-- Rollback point:
+- Safe rollback point:
 
-### Slice 2: <small end-to-end behavior>
+### Step 2: <small end-to-end behavior>
 
-- Domain/contracts:
-- Adapter/interface:
+- Internal data and rules:
+- Interfaces and external implementations:
 - Tests:
 - Verification command:
-- Rollback point:
+- Safe rollback point:
 
 ## Cross-cutting checks
 

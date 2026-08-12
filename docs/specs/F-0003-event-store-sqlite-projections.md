@@ -82,7 +82,7 @@ Then adapter 返回安全 persistence failure，不跳过 migration、不合成�
 - FR-1：`EventStore.append(event)` 原子追加一个 Event 并返回提交后的 `RunState`。
 - FR-2：`list_events(run_id, after_sequence, limit)` 按 sequence 升序返回有界结果；参数有严格范围。
 - FR-3：`get_run(run_id)` 返回完整 `RunState` projection 或 `None`；Activity 顺序与 request 顺序一致。
-- FR-4：InMemory 与 SQLite adapters 通过同一 contract tests；端口不暴露 connection、row 或 SQL 类型。
+- FR-4：内存版与 SQLite 版适配器通过同一套共用接口测试；内部接口不暴露数据库连接、数据行或 SQL 类型。
 - FR-5：append 在写 transaction 内读取当前 projection，核对 Event 最大 sequence，调用 F-0002
   `reduce_event`，插入 Event，并更新 Run 与发生变化的 Activity projection。
 - FR-6：首个 Event 必须为 sequence 1 的合法 `RunCreated`；后续 sequence 必须连续。同一
@@ -178,7 +178,7 @@ Event 是事实来源；projection 可在未来从 Event 重建。F-0003 只维�
 
 ## 13. Acceptance criteria
 
-- AC-1：两种 adapter 对合法/非法 append、bounded list 和 get_run 通过同一 contract suite。
+- AC-1：两种适配器对合法/非法追加、有上限的列表查询和 `get_run` 通过同一套共用接口测试。
 - AC-2：SQLite 重开后 Event envelope 值相等，projection 与 `reduce_events` 值相等。
 - AC-3：sequence gap、重复 event ID、非法 transition 和未知 Event/version 均不产生部分写入。
 - AC-4：故障注入使 projection insert/update 失败时，同 transaction 的 Event insert 可证明已回滚。

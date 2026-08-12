@@ -18,6 +18,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
+  "httpx>=0.28,<1",
+  "openai>=2.54,<3",
   "pydantic>=2.11,<3",
   "typer>=0.16,<1",
 ]

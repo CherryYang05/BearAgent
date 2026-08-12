@@ -1,1 +1,5 @@
-"""Real model provider adapters will be introduced in P1."""
+"""Production model Provider adapters."""
+
+from bearagent.adapters.model.openai_responses import OpenAIResponsesProvider
+
+__all__ = ["OpenAIResponsesProvider"]

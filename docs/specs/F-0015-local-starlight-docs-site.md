@@ -38,7 +38,7 @@ BearAgent 需要在 P1 期间建立公共文档的内容与技术底座，让 Ag
 - NG-2：不在第一版完成整套 Agent 教程、英文翻译或历史版本文档。
 - NG-3：不提供文档问答 Agent、评论、登录、分析后台或其他动态服务。
 - NG-4：不把 Spec、ADR 和 Roadmap 原样复制后就宣称已经形成初学者教程。
-- NG-5：不改变 F-0001 或其他运行时 Feature 的实现和公开契约。
+- NG-5：不改变 F-0001 或其他运行时 Feature 的实现、公开接口或既定行为。
 
 ## 4. Terms and assumptions
 

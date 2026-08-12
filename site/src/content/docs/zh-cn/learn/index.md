@@ -29,11 +29,11 @@ flowchart LR
 先理解 Model、Context、Tool 和 Environment，然后观察模型如何根据工具结果继续决策。
 从[Agent 基础原理](agent-basics.md)开始。
 
-## 第二层：稳定的运行时契约
+## 第二层：稳定的内部数据规则
 
 当执行跨越多个模型和工具 Activity 时，字符串与任意字典会迅速制造歧义。BearAgent 从
 F-0001 开始稳定 ID、Message、Error 和 Event envelope。先读面向初学者的
-[F-0001 领域契约导读](../architecture/domain-contracts.md)，需要继续看代码时再进入
+[F-0001 内部数据格式导读](../architecture/domain-contracts.md)，需要继续看代码时再进入
 [F-0001 开发者实现导读](../development/domain-contracts.md)。
 
 ## 第三层：从可检查到可恢复
@@ -41,8 +41,10 @@ F-0001 开始稳定 ID、Message、Error 和 Event envelope。先读面向初学
 F-0002 已实现 P1 的 Run/Activity 状态、纯 Reducer 和五维预算门。先阅读
 [Run 状态、Reducer 与预算](runtime-state-and-budgets.md)，理解为什么“相同 Event 可重放”仍不等于
 “进程重启后能自动续跑”。F-0003 已把 Event 与 projection 原子持久化到 SQLite；继续阅读
-[持久事实与安全恢复的边界](durable-events.md)。F-0004 将补 Agent Loop；P2 才增加 Checkpoint、幂等、
-恢复和 `UNKNOWN`。
+[持久事实与安全恢复的边界](durable-events.md)。
+[模型 Provider 为什么要有边界](model-provider-boundary.md)解释 F-0004 已实现的请求、流事件、
+函数调用与失败分类。F-0016 才补 ContextBuilder/Agent Loop；P2 再增加 Checkpoint、幂等、恢复和
+`UNKNOWN`。
 
 ## 第四层：安全与质量
 
@@ -52,5 +54,5 @@ P3 学习 Grant、Policy、Approval 和 Sandbox；之后再进入 Trace、Replay
 ## 每个 Feature 如何进入学习路径
 
 后续每个 Feature 完成时，本学习路径都会增加或更新对应概念、前置知识和实现状态；开发者文档
-则同步代码入口、契约和测试证据。一个 Feature 只有两条路径与[当前状态](../project/status.md)
+则同步代码入口、数据规则和测试证据。一个 Feature 只有两条路径与[当前状态](../project/status.md)
 都更新后，才算完成文档关闭。

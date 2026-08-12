@@ -1,6 +1,6 @@
 """Framework-independent contracts implemented by BearAgent adapters."""
 
-from bearagent.ports.model import ModelProvider
+from bearagent.ports.model import ModelProvider, ModelProviderError
 from bearagent.ports.store import (
     EventStore,
     EventStoreConflictError,
@@ -19,5 +19,6 @@ __all__ = [
     "EventStoreMigrationError",
     "EventStoreNotInitializedError",
     "ModelProvider",
+    "ModelProviderError",
     "Tool",
 ]

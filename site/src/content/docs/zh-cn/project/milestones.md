@@ -35,11 +35,11 @@ P2 依赖 P1 的 Event/Activity 事实，P3 依赖 P2 的恢复和副作用语�
 
 - Run/Activity 状态、纯 Reducer 和迭代/token/费用/时间/Tool 预算；
 - SQLite EventStore、projection、migration 和 Artifact metadata；
-- 一个真实 Provider-neutral Model Adapter 与有界 Agent Loop；
+- 一个不依赖特定模型服务商的真实模型适配器与有界 Agent Loop；
 - 统一 ToolSpec/ToolResult/Registry/Executor 和固定最小策略门；
 - workspace `list/read/search` 与只写 `outputs/**` 的原子 `write_file`；
 - `run/inspect/events` CLI、人类可读与 JSON 输出；
-- 路径、symlink、timeout、大小上限、错误安全与 schema/contract tests。
+- 路径、符号链接、超时、大小上限、错误安全、数据格式快照和共用接口测试。
 
 ### 怎样证明
 
