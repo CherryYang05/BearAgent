@@ -4,6 +4,7 @@ description: BearAgent 中稳定使用的核心领域术语。
 bearStatus: design
 sourceRefs:
   - architecture/overview
+  - F-0002
 ---
 
 这些术语来自 BearAgent 已接受的架构。文档和代码不应随意引入同义词。
@@ -16,6 +17,8 @@ sourceRefs:
 | Activity | 一个需要跟踪生命周期的模型调用或工具调用 |
 | Attempt | 同一个 Activity 的一次执行尝试；重试会创建新的 Attempt |
 | Event | 已经发生、不可变、带顺序的事实 |
+| Reducer | 按 sequence 把 Event 逐个折叠成 `RunState` 的纯确定性函数，不执行模型、Tool 或 I/O |
+| Budget | 创建 Run 时确定的资源上限，以及由已接受 Event 推导出的实际用量 |
 | Command | 希望系统执行的动作，可以被拒绝 |
 | Checkpoint | 某个 Event sequence 上的派生状态快照，可重建 |
 | Artifact | Run 生成并由用户取回的文件或结构化产物 |

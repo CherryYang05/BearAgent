@@ -38,6 +38,7 @@ export default defineConfig({
             { label: '学习路径', slug: 'learn' },
             { label: 'Agent 基础原理', slug: 'learn/agent-basics' },
             { label: 'Run 状态与预算', slug: 'learn/runtime-state-and-budgets' },
+            { label: '一次 Run 的事件演练', slug: 'learn/run-event-reducer-walkthrough' },
           ],
         },
         {

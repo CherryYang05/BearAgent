@@ -39,9 +39,10 @@ F-0001 开始稳定 ID、Message、Error 和 Event envelope。先读面向初学
 ## 第三层：从可检查到可恢复
 
 F-0002 已实现 P1 的 Run/Activity 状态、纯 Reducer 和五维预算门。先阅读
-[Run 状态、Reducer 与预算](runtime-state-and-budgets.md)，理解为什么“相同 Event 可重放”仍不等于
-“进程重启后能自动续跑”。F-0003/F-0004 将继续补 EventStore 与 Agent Loop；P2 才增加 Checkpoint、
-幂等、恢复和 `UNKNOWN`。
+[Run 状态、Reducer 与预算](runtime-state-and-budgets.md)，再跟着
+[一次 Run 的完整事件演练](run-event-reducer-walkthrough.md)观察模型、Tool、预算和失败怎样连起来。
+相同 Event 可重放仍不等于进程重启后能自动续跑；F-0003、F-0004 与 F-0016 将分别补 EventStore、
+真实 Provider 和 Agent Loop，P2 才增加 Checkpoint、幂等、恢复和 `UNKNOWN`。
 
 ## 第四层：安全与质量
 
