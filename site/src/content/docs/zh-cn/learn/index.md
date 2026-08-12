@@ -21,7 +21,7 @@ flowchart LR
     D --> E[Event 与状态]
     E --> F[持久化与恢复]
     F --> G[权限与沙箱]
-    G --> H[Trace 与 Eval]
+    G --> H[持续追踪与评测]
 ```
 
 ## 第一层：Agent 的最小组成
@@ -39,13 +39,15 @@ F-0001 开始稳定 ID、Message、Error 和 Event envelope。先读面向初学
 ## 第三层：从可检查到可恢复
 
 F-0002 已实现 P1 的 Run/Activity 状态、纯 Reducer 和五维预算门。先阅读
-[Run 状态、Reducer 与预算](runtime-state-and-budgets.md)，理解为什么“相同 Event 可重放”仍不等于
-“进程重启后能自动续跑”。F-0003/F-0004 将继续补 EventStore 与 Agent Loop；P2 才增加 Checkpoint、
-幂等、恢复和 `UNKNOWN`。
+[Run 状态、Reducer 与预算](runtime-state-and-budgets.md)，再跟着
+[一次 Run 的完整事件演练](run-event-reducer-walkthrough.md)观察模型、Tool、预算和失败怎样连起来。
+相同 Event 可重放仍不等于进程重启后能自动续跑；F-0003、F-0004 与 F-0016 将分别补 EventStore、
+真实 Provider 和 Agent Loop，P2 才增加 Checkpoint、幂等、恢复和 `UNKNOWN`。
 
 ## 第四层：安全与质量
 
-P3 学习 Grant、Policy、Approval 和 Sandbox；之后再进入 Trace、Replay 和 Eval。它们回答的是 Agent
+P3 学习权限、用户审批和隔离执行。评测则从 P1 就开始：先记录固定任务与执行路径，P2 增加中断
+恢复演练，P3 增加越权与隔离测试，P5 再把这些证据做成持续比较系统。它们共同回答 Agent
 “能否以允许的方式持续完成任务”，而不只是“偶尔能不能给出好答案”。
 
 ## 每个 Feature 如何进入学习路径

@@ -40,12 +40,13 @@ adapters   --------------------^
 外层实现依赖内层契约。Runtime Core 不 import Provider SDK、Starlight、数据库 Adapter、FastAPI
 或 UI。外部对象必须在 Adapter 边界翻译为内部领域类型。
 
-## 四条架构主线
+## 架构先解决四件事
 
-1. **Inspectable execution**：Run、Activity、Event、预算和 Artifact 让执行可解释。
-2. **Honest recovery**：Checkpoint、幂等、receipt 和 `UNKNOWN` 让恢复语义真实。
-3. **Authority outside the model**：Grant、Policy、Approval、Workspace 和 Sandbox 约束副作用。
-4. **Local ownership**：单用户、单进程、SQLite、CLI-first，复杂度按证据增加。
+1. **过程可查**：每次模型和工具操作、预算、错误和输出文件都能关联起来。
+2. **恢复有依据**：已确认的操作不重复，无法确认的操作明确停住。
+3. **权限在模型之外**：模型只能提出请求，运行时负责允许、询问或拒绝。
+4. **数据由用户掌握**：第一版使用单用户、单进程、SQLite 和命令行，复杂度按真实需求增加。
 
-Trace/replay/eval 是这些主线的验证面；Context、Skill、MCP 与 Memory 后置到 P4。下一步可以阅读
+最小上下文组装属于 P1；复杂压缩、Skill、MCP 与 Memory 后置到 P4。评测从 P1 的固定任务开始，
+P2 增加恢复演练，P3 增加安全演练，P5 再形成跨版本比较平台。下一步可以阅读
 [产品定位](../project/positioning.md)或 [F-0001：为什么先建立领域契约](domain-contracts.md)。

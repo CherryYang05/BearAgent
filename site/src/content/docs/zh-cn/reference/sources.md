@@ -11,6 +11,10 @@ sourceRefs:
   - Claude Code snapshot
   - Claw Code
   - LangGraph
+  - Pydantic AI
+  - Inspect
+  - E2B
+  - MCP
   - AutoGen
   - OpenHands
   - Dify
@@ -82,6 +86,18 @@ Proma 用 local-first 桌面工作区承载 Provider、Skill、MCP 与会话体�
   [SDK 架构](https://docs.openhands.dev/sdk/arch/sdk)：参考 Agent Loop、Workspace、Tool 与 Runtime/Sandbox 的职责拆分。
 - [Dify 官方仓库](https://github.com/langgenius/dify)与
   [官方文档](https://docs.dify.ai/)：参考工作流、运行观察和面向使用者的文档组织。
+
+## AI Infra 专题资料
+
+- [LangGraph 概览](https://docs.langchain.com/oss/python/langgraph/overview)与
+  [持久化文档](https://docs.langchain.com/oss/python/langgraph/persistence)：用于比较持久执行、Checkpoint 和人工介入；这些能力本身不是 BearAgent 的独占卖点。
+- [Pydantic AI 概览](https://pydantic.dev/docs/ai/overview/)与
+  [Pydantic Evals](https://pydantic.dev/docs/ai/evals/evals/)：参考类型化 Agent 边界、OpenTelemetry 和基于执行路径的代码化评测。
+- [Inspect 官方文档](https://inspect.aisi.org.uk/)：参考 Agent 任务、限制、工具路径和隔离环境评测；是否接入由 P5 Feature 决定。
+- [E2B 官方文档](https://www.e2b.dev/docs)：参考远程隔离环境接口；BearAgent P3 先定义可替换的 SandboxBackend，不把托管服务变成内核依赖。
+- [MCP 授权规范](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization)：用于理解 HTTP 传输层授权。它不能替代 BearAgent 对具体 ToolRequest 的 Grant 和 Policy 检查。
+
+用户提供的 AI Infra 调研报告用于发现上述主题；本页只保留可公开核验的一手资料作为工程引用。
 
 GitHub star 只用于发现具有广泛社区关注的项目。是否采用某项设计，仍要比较 BearAgent 的
 local-first、单用户、单进程范围以及失败、安全和维护成本。

@@ -1,8 +1,8 @@
 <div align="center">
 
 <h1>BearAgent</h1>
-<p><strong>可检查、可恢复、权限外置的本地优先 Agent Runtime</strong></p>
-<p><sub>An inspectable, crash-resumable and authority-first local Agent Runtime.</sub></p>
+<p><strong>让个人 Agent 在本地可靠地完成长任务</strong></p>
+<p><sub>Every step is inspectable. Uncertain actions are never guessed. Risky actions require permission.</sub></p>
 <p>
   <a href="#project-status"><img alt="P1 in progress" src="https://img.shields.io/badge/status-P1%20in%20progress-2563EB"></a>
   <a href="https://www.python.org/"><img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&amp;logoColor=white"></a>
@@ -22,20 +22,19 @@
 </div>
 
 > [!IMPORTANT]
-> BearAgent 已完成 **P0 Engineering Baseline**，当前处于 **P1 Inspectable Execution**。领域契约与本地文档站已经实现；真实 Model Provider、Agent Loop、文件工具和 SQLite Run 尚不可用，因此它现在还不能执行真实 Agent 任务。
+> BearAgent 已完成 **P0 工程基础**，当前处于 **P1 可检查执行**。领域数据结构和本地文档站已经实现；真实模型、执行循环、文件工具和 SQLite 任务记录尚不可用，因此它现在还不能执行真实 Agent 任务。
 
 ## Why BearAgent
 
-很多 Agent demo 在 happy path 上只是 `model → tool → model` 循环。一旦进程中断、外部写入结果不确定、模型请求越权或上下文持续增长，就很难回答三个关键问题：**发生了什么、允许做什么、应该从哪里继续**。
+让模型调用工具并不难。真正把一个耗时较长的任务交给 Agent 后，困难通常出现在模型循环之外：进程可能中断，写文件可能已经发生却没有留下成功记录，模型也可能请求它本来不该使用的工具。
 
-BearAgent 从运行时边界而不是功能数量开始设计。它不是“开源 Manus/Claude Code 替代品”，也不把自己限定为 Coding Agent；它选择成为一个最小但可信的个人 Agent 执行底座：
+BearAgent 先把三个问题做清楚：
 
-| Inspectable execution | Honest recovery | Authority-first | Local ownership |
-|---|---|---|---|
-| Run、Activity、Event、预算和 Artifact 可检查 | 从持久安全边界恢复，不假装 exactly-once | Grant、Policy、Approval 与独立 runner | 单用户、单进程、SQLite、CLI-first |
-| P1 先证明一次真实、有界的执行 | P2 处理重启、幂等、receipt 与 `UNKNOWN` | P3 让模型之外的运行时决定权限 | 没有需求证据前不引入分布式组件 |
+1. **它做过什么？** 每次模型调用、工具操作、错误和产物都可以查看。
+2. **失败后怎么办？** 只有能确认结果时才继续；无法判断时停下来告诉用户，不把猜测当成功。
+3. **它可以做什么？** 权限由运行时检查，模型看到的一段文字不能给自己增加权限。
 
-项目刻意保持“小而完整”：P1 证明可检查执行，P2 证明安全恢复，P3 证明权限与隔离，再增加 Web UI、Skills、MCP、Memory 或 Multi-Agent。完整的目标用户、竞品边界与表达规范见[产品定位](docs/project/product-positioning.md)。
+项目首先用一个“仓库与本地文档研究助手”验证这些能力：它在限定目录中阅读资料、整理内容，并且只向 `outputs/**` 写入结果。BearAgent 不是 Claude Code 或 Manus 的复刻，也不追求在早期支持最多模型、工具和角色。完整说明见[产品定位](docs/project/product-positioning.md)。
 
 ## Architecture
 
@@ -43,21 +42,21 @@ BearAgent 从运行时边界而不是功能数量开始设计。它不是“开�
 
 图中的绿色 `NOW` 表示已有代码与测试支撑的基础；`P1`—`P5` 表示已接受路线图中的目标阶段，而不是当前可用能力。视觉分层参考了 [DeepTutor](https://github.com/HKUDS/DeepTutor) 的 README 架构图；模块、依赖方向和阶段划分以 BearAgent 的 [总体架构](docs/architecture/overview.md)与[路线图](docs/project/roadmap.md)为准。
 
-两条边界贯穿整个设计：
+两条规则贯穿整个设计：
 
-- Runtime Core 只依赖 BearAgent 领域类型与 Port，不导入模型 SDK、FastAPI、MCP、Docker 或数据库 Adapter。
-- 所有外部副作用都必须经过 Tool Executor 与 Policy；事件是事实，Run/Activity 表、Checkpoint 和索引只是投影或缓存。
+- 核心执行代码不直接依赖模型厂商、Web 框架、MCP、Docker 或具体数据库，外部实现可以替换。
+- 所有会改变外部世界的操作都经过同一个执行与权限入口，并留下可追溯记录。
 
 ## Project status
 
-| Available now | Building in P1 | Deliberately later |
+| 现在已有 | P1 正在建设 | 明确后置 |
 |---|---|---|
-| Python 3.12 + uv 工程基线 | Run reducer 与执行预算 | P2：checkpoint、resume、retry、`UNKNOWN` |
-| `help`、`version`、`doctor` CLI | EventStore contract + SQLite | P3：Policy、Approval、Sandbox、HTTP/SSE |
-| 类型化 ID、Message、Error、Event envelope | 一个真实 Model Provider 与有界 Agent Loop | P4：Web UI、Skills、MCP、Memory |
-| Fake Model / Tool / In-memory Store | Workspace 只读工具与 `outputs/**` 原子写入 | P5：OpenTelemetry、replay、eval |
-| Ruff、Pyright、pytest、跨平台 CI | `run`、`inspect`、`events` CLI | P6+：Multi-Agent、browser、多 worker |
-| 中文 Starlight 学习与开发文档 | 可追踪的首个本地文件任务 | 仅在真实需求证明后扩展 |
+| Python 3.12 + uv 工程基础 | 任务状态、限制和 SQLite 记录 | P2：中断后的恢复与不确定结果处理 |
+| `help`、`version`、`doctor` 命令 | 一个真实模型和有界执行循环 | P3：审批、隔离执行和安全自托管 |
+| 类型化 ID、消息、错误和事件外壳 | 受限的工作区读取与 `outputs/**` 写入 | P4：Web UI、Skills、MCP、Memory |
+| 测试用模型、工具和内存存储 | `run`、`inspect`、`events` 命令 | P5：跨版本追踪、回放和评测平台 |
+| Ruff、Pyright、pytest、跨平台 CI | 固定任务集与可复现评测记录 | P6+：多个 Agent、浏览器控制、分布式执行 |
+| 中文 Starlight 学习与开发文档 | 可复现的仓库与文档任务集 | 仅在真实需求证明后扩展 |
 
 当前权威状态见 [Project Roadmap](docs/project/roadmap.md) 和[公开文档状态页](site/src/content/docs/zh-cn/project/status.md)。Roadmap 中出现模块名称不等于它已经实现。
 
@@ -130,16 +129,16 @@ BearAgent/
 
 ## Roadmap
 
-| Phase | Outcome | Status |
+| 阶段 | 做到什么 | 状态 |
 |---|---|---|
-| P0 | Architecture, engineering baseline and documentation governance | Complete |
-| P1 | Inspectable execution：一个有界、受限、事实可查的本地 CLI Run | In progress |
-| P2 | Safe recovery：checkpoint、resume、cancel、幂等、receipt 与 `UNKNOWN` | Planned |
-| P3 | Governed self-hosting：Grant、Approval、隔离 runner 与安全自托管 | Planned |
-| P4 | Web UI, Skills, MCP and inspectable Memory | Planned |
-| P5 | Trace, replay, eval and public project evidence | Planned |
+| P0 工程基础 | 仓库可安装、可测试、边界和文档规则明确 | 已完成 |
+| P1 可检查执行 | 真实本地任务可以完成，过程、限制和失败都能查看 | 进行中 |
+| P2 失败恢复 | 进程中断后只从可确认的位置继续，不确定的操作不会被自动重做 | 规划中 |
+| P3 权限与隔离 | 危险操作必须获准，代码在隔离环境运行，并可安全自托管 | 规划中 |
+| P4 日常使用 | 依次接入 Skill、MCP、Web UI 和带来源的 Memory | 规划中 |
+| P5 持续评测 | 比较任务质量、执行路径、成本、恢复和安全回归 | 规划中 |
 
-**P3 是第一个完整项目完成线。** 详细 Feature Backlog、验收标准和明确不做的内容都记录在[路线图](docs/project/roadmap.md)中。
+**P3 是第一个可信运行时完成线，不等于成熟的通用 Agent 产品。** 每一阶段都必须用同一组真实任务和失败测试证明，不能仅凭架构图或功能清单关闭。详细范围见[路线图](docs/project/roadmap.md)。
 
 ## Documentation
 

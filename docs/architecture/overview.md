@@ -1,7 +1,7 @@
 ---
 title: BearAgent Architecture Baseline
 status: accepted
-version: 0.2
+version: 0.3
 last_verified: 2026-08-11
 ---
 
@@ -9,20 +9,30 @@ last_verified: 2026-08-11
 
 ## 1. 架构结论
 
-BearAgent 的第一目标不是覆盖最多 Agent 功能，而是完成一个可验证的最小运行时：
+BearAgent 的第一目标不是覆盖最多 Agent 功能，而是完成一个个人可以理解、运行和验证的最小运行时：
 
-> 一个单用户、单 Agent、local-first、可自托管的 tool-using runtime；执行过程可检查，崩溃后可从安全边界恢复，外部动作的权限由模型之外的运行时控制。
+> 让一个 Agent 在限定的本地工作区完成长任务；每一步有记录，失败后不乱重试，危险操作必须获得授权。
 
-产品定位由四条架构主线支撑：
+架构围绕四件事展开：
 
-1. **Inspectable execution**：Run、Activity、Event、Artifact 和预算让过程、结果与失败可以解释。
-2. **Honest recovery**：Checkpoint、Resume、Cancel、Retry、Idempotency、receipt 与 `UNKNOWN` 明确表达崩溃后的真实语义。
-3. **Authority outside the model**：Grant、Policy、Approval、Workspace boundary、Sandbox runner 与 Secret isolation 共同约束副作用。
-4. **Local ownership**：单用户、单进程、SQLite、CLI-first，数据和部署由用户控制，复杂度只按证据增加。
+1. **过程可查**：每次模型和工具操作、预算、错误和产物都能关联起来。
+2. **恢复有依据**：中断后只从可确认的位置继续；无法确认的外部操作明确停住。
+3. **权限在模型之外**：模型只能提出请求，运行时决定是否允许、询问用户或拒绝。
+4. **数据由用户掌握**：第一版使用单用户、单进程、SQLite 和命令行，复杂度只在真实需求出现后增加。
 
-Trace/replay/eval 是前三条主线的验证面；Context、Skill、MCP 与 Memory 是 P4 以后挂载在稳定内核上的能力，不再与 P1-P3 争夺优先级。P1-P3 完成后，BearAgent 才达到“小而完整”的第一个产品完成线。详细目标用户、竞争边界和表达规范见[产品定位](../project/product-positioning.md)。
+评测从 P1 就开始：P1 检查任务和执行记录，P2 检查中断恢复，P3 检查权限与隔离。P5 再把这些证据接入统一的追踪和跨版本比较系统。最小上下文组装属于 P1；复杂压缩、Skill、MCP 与 Memory 放到 P4。P1-P3 完成后，BearAgent 才达到“小而完整”的可信 Runtime 完成线。详细目标用户和竞争边界见[产品定位](../project/product-positioning.md)。
 
-### 1.1 P1-P3 的递进关系
+### 1.1 产品层与 Runtime 层
+
+```mermaid
+flowchart TB
+    A["仓库与本地文档研究助手<br/>任务说明、完成条件、用户入口"] --> R["BearAgent Runtime<br/>执行、记录、限制、恢复、权限"]
+    R --> D["外部实现<br/>模型、文件、SQLite、隔离环境、MCP"]
+```
+
+参考应用回答“交付什么任务”，Runtime 回答“这些任务怎样被执行、约束和恢复”。P1-P3 的验收必须同时覆盖两层，不能把 Runtime 组件测试当作完整产品证据。
+
+### 1.2 P1-P3 的递进关系
 
 | 阶段 | 先证明什么 | 暂不声称什么 |
 |---|---|---|
@@ -30,28 +40,26 @@ Trace/replay/eval 是前三条主线的验证面；Context、Skill、MCP 与 Mem
 | P2 | 已持久化事实能在安全边界恢复，未知副作用得到诚实处理 | 模型已经获得任意工具权限或公网安全性 |
 | P3 | 权限、审批、隔离 runner 与自托管运维形成闭环 | Web 产品体验、MCP/Memory 生态或多用户能力 |
 
-## 2. 从参考项目借什么
+## 2. 调研如何影响架构
 
-| 参考 | 借鉴 | 不照搬 |
-|---|---|---|
-| DeepTutor | Tool 与多阶段 Capability 分层；统一 orchestrator 和 event stream；`ask_user` 的 pause/resume；文件型三层 Memory 及来源链；独立 sandbox/secret scope | 教学产品表面、多个 RAG 引擎、大量 capability、多用户、IM partner 和完整前端 |
-| Proma | local-first workspace；Provider adapter；Skills/MCP 按工作区管理；会话 JSONL 思路；权限确认和后台运行体验 | Electron/Bun/React 桌面栈、远程机器人、多运行时兼容矩阵和产品级渠道管理 |
-| Manus | 每任务隔离计算机；文件系统作为可恢复外部上下文；持续更新 todo 以维持目标注意；保留失败证据 | 第一版就提供完整 VM、浏览器和无限制 root 环境 |
-| CodeWhale | 多模型 Coding Agent 的授权层级、工作区分支与控制面设计 | 在一致持久语义之前扩张模型 fleet、并行宽度和多种状态介质 |
-| Claude Code snapshot | 成熟 Query loop、权限 UX、sandbox、会话记录和兼容性工程 | SDK/CLI 形态耦合的内核或只靠 transcript 启发式恢复 |
-| Claw Code | 机器可读输出、行为 parity 和小步重实现方法 | 把兼容另一个产品作为 BearAgent 的产品目标 |
-| Codex | 仓库级 `AGENTS.md` 作为稳定工作约定；本地/隔离工作区；实现后验证和代码审查 | 把聊天上下文当长期项目记忆 |
+外部项目用于发现问题，不用于复制功能：
 
-DeepTutor 当前将单次 Tool 和接管整个 turn 的多阶段 Capability 分开，并让入口通过统一 orchestrator 路由；它的 Memory 使用 L1 事件、L2 surface facts、L3 cross-surface synthesis，并保留来源链。Proma 把 Provider、workspace、Skills、MCP、会话持久化和权限体验放在 local-first 桌面产品里。Manus 则明确把文件系统当可恢复的外部上下文，并把每个任务放在隔离 sandbox 中。
+| 项目类型 | 代表项目 | BearAgent 吸收什么 | 暂时不做什么 |
+|---|---|---|---|
+| 完整 Agent 产品 | Proma、Manus、Claude Code | 工作区体验、权限提示、隔离环境和失败证据 | 桌面全栈、浏览器和大量渠道 |
+| 垂直 Agent | DeepTutor | Tool 与固定流程分开，结果保留来源 | 教学业务、多个检索引擎和多用户 |
+| 编码 Agent | CodeWhale、Claw Code | 授权顺序、机器可读输出和行为对照 | 多模型并行控制面和产品兼容复刻 |
+| Runtime / 框架 | LangGraph、Pydantic AI | 持久状态、类型化边界、追踪和代码化评测 | 把第三方框架直接变成 BearAgent 内核 |
+| 基础设施工具 | Inspect、E2B、MCP | Agent 评测、隔离执行和标准化工具连接 | 在执行与权限语义稳定前提前集成 |
 
-这些项目证明了不同 Agent 的差异主要发生在任务域、上下文、工具环境、权限、持久语义和产品入口，而不只是模型循环。BearAgent 要更早把运行时事实、恢复语义和权限边界做成显式契约；详细比较与来源见[产品定位](../project/product-positioning.md)和本文末尾参考资料。
+调研说明 Agent 的差异主要发生在任务、上下文、工具环境、权限、失败处理和产品入口，而不只是模型循环。BearAgent 选择先把执行记录、恢复决定和权限边界做成自己的稳定契约。详细比较与来源见[产品定位](../project/product-positioning.md)和本文末尾参考资料。
 
 ## 3. 范围
 
 ### 3.1 P1-P3 必须具备
 
 - 一个内部统一的模型接口，第一版只有一个真正可用的 Provider adapter。
-- 一个明确有界的 Agent Loop，限制迭代数、token、费用、时间和工具次数。
+- 一个明确有界的 Agent Loop 与最小 ContextBuilder，限制上下文、迭代数、token、费用、时间和工具次数。
 - 类型化 Tool schema、结构化 ToolResult、timeout、输出大小限制和取消传播。
 - 工作区内的 `list/read/search/write` 基础文件工具。
 - `allow / ask / deny` 策略和一次性审批。
@@ -75,16 +83,16 @@ DeepTutor 当前将单次 Tool 和接管整个 turn 的多阶段 Capability 分�
 
 ## 4. 设计原则
 
-1. **Core owns policy-neutral state transitions**：内核只认识领域对象和端口，不认识 FastAPI、MCP、Docker 或模型 SDK。
-2. **Events are facts**：Event 是不可变事实；Run/Activity 表、Checkpoint、搜索索引都是 projection 或优化。
-3. **Side effects are explicit**：任何外部副作用都必须变成 Activity，经 Policy 和 ToolExecutor 执行。
-4. **Authority is not language**：Prompt、模型输出和 Tool 输出都不能授予权限；权限只来自运行时 Grant。
-5. **Resume at safe boundaries**：不恢复任意 Python 调用栈，只在已持久化的模型/工具 Activity 边界恢复。
-6. **No fake exactly-once**：不能确认外部写入结果时进入 `UNKNOWN`，由查询、幂等重试或人工决定。
-7. **Single-user first**：先把单用户单进程做正确，再讨论分布式 worker 和租户隔离。
-8. **Inspectable over magical**：配置、Memory、事件、审批和 Artifact 尽量可读、可导出、可追溯。
-9. **Replaceable adapters, stable domain**：Provider/MCP/存储/runner 可以替换，内部 Message/Event/ToolResult 不随 SDK 漂移。
-10. **Documentation is versioned code**：被接受的行为、设计和验证证据必须在仓库中，不依赖聊天记忆；每个 Feature 同步工程 `docs/`、站点初学者路径、开发者文档和当前状态，每个里程碑再同步阶段总结。
+1. **核心保持独立**：内核只认识 BearAgent 自己的数据和接口，不认识 FastAPI、MCP、Docker 或模型 SDK。
+2. **事件记录事实**：Event 只追加；状态表、Checkpoint 和索引都可以从事实重建。
+3. **外部操作必须显式**：任何会改变文件或外部系统的操作都经过统一执行入口。
+4. **文字不是权限**：Prompt、模型输出、Tool 输出和 Skill 都不能授予权限。
+5. **只从安全位置恢复**：不尝试保存 Python 调用栈，只从已持久化的模型或工具操作边界继续。
+6. **不假装 exactly-once**：不能确认外部写入结果时进入 `UNKNOWN`，由查询、幂等重试或人工处理。
+7. **先做好单用户**：单用户单进程正确运行后，再讨论分布式 worker 和租户隔离。
+8. **优先可检查**：配置、Memory、事件、审批和 Artifact 尽量可读、可导出、可追溯。
+9. **外部实现可替换**：模型、MCP、存储和隔离环境可以替换，内部消息与事件不跟随 SDK 变化。
+10. **文档也是版本化证据**：被接受的行为、设计和验证必须进入仓库，不依赖聊天记忆。
 
 ## 5. 系统分层
 
@@ -171,10 +179,14 @@ bear-agent/
 | Session | 用户连续对话的容器；可以包含多个 Run | Thread、Conversation |
 | Run | 对一条用户请求的一次可持久化执行 | Task、Job、Turn |
 | Activity | 一个需要跟踪生命周期的模型调用或工具调用 | Step（含义太宽） |
+| Attempt | 同一个 Activity 的一次执行尝试；重试会创建新的 Attempt | Activity |
 | Event | 已经发生、不可变、带顺序的事实 | 日志文本、Command |
 | Command | 希望系统执行的动作，可以被拒绝 | Event |
 | Checkpoint | 某个 event sequence 上的派生状态快照，可重建 | Event log |
 | Artifact | Run 生成并由用户取回的文件或结构化产物 | Tool stdout |
+| Receipt | 外部系统返回的、可用于核对操作结果的证据 | ToolResult 的任意文本 |
+| Reconcile | 根据目标状态、幂等键或 Receipt 核对操作究竟发生了什么 | Retry |
+| UNKNOWN | 外部操作可能已经发生，但 Runtime 暂时无法确认结果 | FAILED |
 | Tool | 具有输入 schema 和执行语义的动作接口 | Skill |
 | Skill | 可按需加载的指令、知识和工作流程提示 | Tool、Grant |
 | Grant | 对主体、动作、资源和约束的授权 | DeepTutor 的 Capability |
@@ -467,6 +479,8 @@ Prompt 输入按稳定层级组装：
 
 每层有 token budget。压缩必须尽量可恢复：大文件内容可以替换为路径、hash、来源 Event 和短摘要，但不能只留下无法回溯的自由文本。失败和错误观察默认保留到问题解决，避免 Agent 重复同一错误。
 
+P1 的 ContextBuilder 保持确定性：相同的已保存输入、Agent 版本和预算应得到相同的上下文计划。截断了什么、为什么截断以及改成了哪个 Artifact 引用都要可查看。P1 不使用模型自动总结历史；复杂压缩属于 P4。
+
 ### 13.2 Skill
 
 P4 的 Skill 是版本化指令包，不是权限：
@@ -480,6 +494,8 @@ skills/<name>/
 ```
 
 Skill 声明所需 Tool/Grant，但不能自行授予。第三方 Skill 按不可信供应链输入处理。
+
+P4 先用一个只读 Skill 验证“说明可以复用但不能扩大权限”，通过后再接入 MCP。Skill 和 MCP 不能用二选一的验收代替彼此。
 
 ### 13.3 Memory
 
@@ -503,7 +519,7 @@ ToolRegistry
 └── MCPToolProvider
 ```
 
-MCP server 和每个 MCP tool 都需要独立启用、schema 校验、timeout、输出上限和 Grant。接入 MCP 不改变核心 ToolRequest/ToolResult/Policy/Event 契约。
+MCP server 和每个 MCP tool 都需要独立启用、schema 校验、timeout、输出上限和 Grant。MCP 的传输层授权不能代替 BearAgent 对具体工具请求的 Policy 检查。接入 MCP 不改变核心 ToolRequest/ToolResult/Policy/Event 契约。
 
 ## 14. SQLite 与文件布局
 
@@ -586,7 +602,7 @@ Trace       = latency, nesting, provider/tool diagnostics
 Checkpoint  = recovery optimization
 ```
 
-P1 先提供 JSON structured logs 和事件检查 CLI；P5 再接 OpenTelemetry。建议 span：
+P1 先提供 JSON 结构化日志、事件检查命令和固定任务评测；P2 增加中断恢复断言，P3 增加权限与隔离断言。P5 再接 OpenTelemetry 和外部评测框架，形成跨版本比较。建议 span：
 
 ```text
 AgentRun
@@ -700,4 +716,9 @@ ADR 的 `accepted` 只表示决策已生效，不表示 Roadmap 中的恢复、P
 - [Cloud-code 2.1.88 extracted study repository](https://github.com/Janlaywss/cloud-code)
 - [Claude Code 2.1.88 source-map snapshot](https://github.com/Rito-w/claude-code)
 - [Claw Code philosophy and scope](https://github.com/ultraworkers/claw-code/blob/main/PHILOSOPHY.md)
+- [LangGraph overview and durable execution](https://docs.langchain.com/oss/python/langgraph/overview)
+- [Pydantic Evals](https://pydantic.dev/docs/ai/evals/evals/)
+- [Inspect agent evaluations](https://inspect.aisi.org.uk/)
+- [E2B sandbox documentation](https://www.e2b.dev/docs)
+- [MCP authorization specification](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization)
 - [OpenAI Docs: Custom instructions with AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md)

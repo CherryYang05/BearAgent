@@ -39,6 +39,7 @@ Do not create ceremonial documents for formatting-only or mechanical changes.
 - Closing every milestone `P<n>` must update the Roadmap plus the site learning map, developer architecture/status summary, and milestone outcome. Do this before selecting the next milestone.
 - External material may explain concepts or provide comparisons, but it cannot establish BearAgent behavior. Prefer primary sources, including the AI Agents in Depth book, DeepTutor documentation, and official documentation for high-star or otherwise relevant Agent projects; verify each project's current maintenance status. Treat star count as a discovery signal, not proof of correctness, and record source links.
 - Public pages must distinguish general concepts, accepted design, current implementation, and future plans. Never copy a reference project's capability into BearAgent's current-state claims.
+- Treat questions raised while the project owner reads code as documentation feedback. Verify each answer against `docs/`, code, and tests; then fold the reusable explanation into the relevant beginner page with a minimal example, a diagram when it clarifies flow, and explicit current/planned boundaries. Do not publish chat transcripts. Update learning indexes and cross-links, and update public status only when an implementation claim changed.
 
 ## Architecture boundaries
 
