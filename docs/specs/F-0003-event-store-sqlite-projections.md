@@ -6,7 +6,7 @@ milestone: P1
 owner: CherryYang05
 created: 2026-08-12
 last_updated: 2026-08-12
-implemented_in: "codex/F-0003-sqlite-event-store"
+implemented_in: "PR #6"
 related_adrs:
   - ADR-0001
   - ADR-0002
