@@ -12,7 +12,7 @@
 - `P0`, `P1`, and later milestones live in `docs/project/roadmap.md`.
 - Feature IDs are global and stable. Every Feature Spec must declare `milestone: P<n>`; do not encode the milestone into `F-NNNN` or rename a Feature when it moves.
 - Feature Spec and ADR filenames must begin with their full IDs: `F-NNNN-*.md` and `ADR-NNNN-*.md`.
-- Feature status lives in the Feature Spec. Slice-level progress lives in `docs/plans/PLAN-F-NNNN-*.md`.
+- Feature status lives in the Feature Spec. Step-level progress lives in `docs/plans/PLAN-F-NNNN-*.md`.
 - ADR status records whether a decision is accepted, not whether its implementation is complete.
 - Keep at most one Implementation Plan `active`; reconcile its claims with code and tests before continuing it.
 
@@ -33,13 +33,23 @@ Do not create ceremonial documents for formatting-only or mechanical changes.
 
 ## Documentation synchronization
 
-- `docs/` is the engineering source of truth. `site/` is the public learning and developer view derived from accepted docs, code, and tests.
+- Engineering facts live in `docs/`, code, and tests. `site/` explains those facts to readers; it must not invent a second version of the system.
 - Closing every Feature must update all four surfaces: authoritative `docs/`, the beginner learning path in `site/`, developer documentation in `site/`, and the public current-status page. Updating only `docs/` is incomplete.
 - A Feature does not always need two new articles, but it must update the relevant learning and developer indexes/pages with what changed, where the implementation lives, how it is verified, and whether the behavior is implemented or planned.
 - Closing every milestone `P<n>` must update the Roadmap plus the site learning map, developer architecture/status summary, and milestone outcome. Do this before selecting the next milestone.
 - External material may explain concepts or provide comparisons, but it cannot establish BearAgent behavior. Prefer primary sources, including the AI Agents in Depth book, DeepTutor documentation, and official documentation for high-star or otherwise relevant Agent projects; verify each project's current maintenance status. Treat star count as a discovery signal, not proof of correctness, and record source links.
 - Public pages must distinguish general concepts, accepted design, current implementation, and future plans. Never copy a reference project's capability into BearAgent's current-state claims.
 - Treat questions raised while the project owner reads code as documentation feedback. Verify each answer against `docs/`, code, and tests; then fold the reusable explanation into the relevant beginner page with a minimal example, a diagram when it clarifies flow, and explicit current/planned boundaries. Do not publish chat transcripts. Update learning indexes and cross-links, and update public status only when an implementation claim changed.
+
+## Documentation writing
+
+- Start with the reader's concrete question or a short execution example. Introduce a term only after the reader can see what it names.
+- Keep established terms such as Runtime, port, adapter, Event, reducer, schema, Provider, Tool, Run, and Activity when they are the precise name. At first use, explain their job in one ordinary sentence. Do not replace them with longer invented Chinese phrases.
+- Describe observable behavior instead of abstract proof claims. For example, write: “The same tests run against the in-memory and SQLite stores. Callers therefore use both stores in the same way.” Do not write: “The contract suite proves that port semantics are adapter-independent.”
+- Titles should state the decision or reader question. Prefer “BearAgent modules exchange BearAgent data types” to “Provider-neutral domain schemas.”
+- Keep one main claim per sentence and one reader task per section. Avoid dense strings of nouns, slash-separated labels, unexplained abbreviations, and bilingual synonym lists.
+- A site page should teach a coherent idea, not mirror the headings of a Spec or ADR. Specs and Plans may remain precise, but their prose must still say what changes, where it connects, how failure appears, and how a reviewer verifies it.
+- Before closing documentation work, read changed paragraphs in sequence. Search-and-replace output that is locally grammatical but awkward in context is not acceptable.
 
 ## Architecture boundaries
 

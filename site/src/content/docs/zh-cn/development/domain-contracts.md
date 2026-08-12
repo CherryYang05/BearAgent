@@ -1,6 +1,6 @@
 ---
-title: F-0001 开发者实现导读
-description: 领域 ID、Message、Error 和 Event envelope 的代码地图与验证方式。
+title: F-0001：修改内部数据类型
+description: ID、Message、Error 和 Event 的代码入口、修改顺序与验证方法。
 bearStatus: implemented
 sourceRefs:
   - F-0001
@@ -8,31 +8,31 @@ sourceRefs:
   - domain schema snapshot
 ---
 
-初学者导读解释了[为什么先建立领域契约](../architecture/domain-contracts.md)；本页继续说明如何从
-代码和测试验证 F-0001。
+F-0001 规定 Runtime 内部交换哪些数据。修改这里会同时影响后续模型、存储、工具和 CLI，因此先
+判断新字段是不是 BearAgent 长期需要的事实，而不是某个 SDK 或数据库恰好提供的字段。
 
-## 代码地图
+## 代码入口
 
-| 范围 | 位置 | 责任 |
-|---|---|---|
-| ID | `src/bearagent/domain/ids.py` | 不透明 UUID4 类型与可注入生成器 |
-| Message | `src/bearagent/domain/messages.py` | Provider 无关的 role 和 discriminated parts |
-| Error | `src/bearagent/domain/errors.py` | 稳定分类、安全详情和可展示异常 |
-| Event | `src/bearagent/domain/events.py` | 不可变、版本化、JSON-only 的通用 envelope |
-| Schema | `src/bearagent/domain/schema.py` | 公共 schema registry 与 snapshot 输入 |
+| 文件 | 负责什么 |
+|---|---|
+| `src/bearagent/domain/ids.py` | 各种 UUID4 ID 和可替换的 ID 生成器 |
+| `src/bearagent/domain/messages.py` | 四种消息角色，以及文本、工具请求和工具结果 |
+| `src/bearagent/domain/errors.py` | 稳定错误分类和可以安全展示的详情 |
+| `src/bearagent/domain/events.py` | 所有 Event 共用的 ID、顺序、版本和时间字段 |
+| `src/bearagent/domain/schema.py` | 参与 JSON schema 快照比较的类型登记 |
 
-这些类型经过 `domain/__init__.py` 暴露给内部 Port。Provider Adapter 必须做显式翻译，不能把
-SDK response 类型传入 Runtime。
+`domain/__init__.py` 对内部模块暴露这些类型。模型 adapter 必须把 SDK 响应显式转换成 Message；
+Runtime 不接受 SDK response 类型。
 
-## 修改契约前要检查什么
+## 修改时按这个顺序判断
 
-- 新字段是否属于稳定领域事实，还是某个 Provider/数据库的实现细节；
-- 旧 JSON 的含义是否变化，是否需要新的 schema version；
-- unknown field、非法组合和非 JSON 数据是否仍在边界失败；
-- Error 是否可能包含 token、authorization、cookie 或原始异常；
-- schema snapshot 的变化是否是有意兼容性决策。
+1. 新字段是否描述 BearAgent 的事实，还是只属于一个 Provider？
+2. 已保存 JSON 的含义会不会改变？如果会，是否需要新的 schema version？
+3. 非法组合、未知字段和非 JSON 值是否仍会在入口被拒绝？
+4. 错误详情会不会带入 token、cookie、authorization 或原始异常？
+5. JSON schema 快照为什么变化，旧读取方是否还能理解？
 
-## 验证证据
+## 验证
 
 ```powershell
 uv run pytest tests/unit/test_ids.py tests/unit/test_messages.py
@@ -41,5 +41,4 @@ uv run pytest tests/contract/test_domain_schemas.py
 uv run pyright
 ```
 
-完整测试仍以仓库 Definition of Done 为准。F-0001 没有实现 Run reducer、SQLite、真实 Provider
-或 Tool，这些名称出现在接口规划中不表示当前可用。
+这些测试覆盖数据结构和边界，不代表 SQLite、真实模型或完整执行循环已经可用。

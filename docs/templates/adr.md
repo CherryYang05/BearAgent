@@ -7,15 +7,15 @@ supersedes: null
 superseded_by: null
 ---
 
-# ADR-NNNN: <decision>
+# ADR-NNNN：<直接写出决定>
 
 Filename: `docs/adr/ADR-NNNN-<slug>.md`
 
-## Context
+## 要解决的问题
 
-什么力量迫使我们做决定？为什么现在必须决定？
+先用一个具体冲突说明：如果不统一决定，哪些模块会出现不同做法？为什么现在必须选择？
 
-## Decision drivers
+## 选择时最看重什么
 
 - 可维护性：
 - 恢复语义：
@@ -23,34 +23,34 @@ Filename: `docs/adr/ADR-NNNN-<slug>.md`
 - 复杂度/交付时间：
 - 兼容与迁移：
 
-## Considered options
+## 比较过的方案
 
-### Option A
-
-优点、缺点、失败模式。
-
-### Option B
+### 方案 A
 
 优点、缺点、失败模式。
 
-## Decision
+### 方案 B
 
-选择什么，以及适用边界。
+优点、缺点、失败模式。
 
-## Consequences
+## 决定
 
-### Positive
+直接写选择什么、哪些代码必须遵守，以及哪些范围不在本决定内。
+
+## 带来的影响
+
+### 得到的好处
 
 -
 
-### Negative / debt accepted
+### 接受的代价
 
 -
 
-## Migration and rollback
+## 迁移和回退
 
 如何迁移已有状态？如何回退？
 
-## Validation
+## 怎样验证
 
 用什么测试、指标或演练证明决定可行？何时重新评估？

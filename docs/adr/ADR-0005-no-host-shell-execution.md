@@ -1,26 +1,28 @@
 ---
-title: "ADR-0005: No model-generated shell in the host runtime"
+title: "ADR-0005: The host Runtime never executes model-generated shell"
 status: accepted
 date: 2026-08-09
 ---
 
-# ADR-0005：Host runtime 不执行模型生成 shell
+# ADR-0005：主 Runtime 进程不执行模型生成的 shell
 
-## Context
+## 要解决的问题
 
-在 API/runtime 进程执行模型生成命令会同时暴露宿主文件、服务数据、provider secrets 和网络权限；字符串过滤不能构成可靠隔离。
+主 Runtime 进程拥有 Provider 密钥、数据库和宿主文件权限。在这里执行模型生成的命令，会把这些
+资源同时暴露给不可信代码；字符串过滤和简单 allowlist 不能形成可靠隔离。
 
-## Decision
+## 决定
 
-P1/P2 不提供 shell。P3 通过 `SandboxBackend` 调用独立、无特权、受资源限制、默认断网且不挂 secrets 的 runner。runner 不可用时 shell tool 不注册，不回退到 host subprocess。
+P1 和 P2 不提供 shell。P3 通过 `SandboxBackend` 调用独立、无特权、受资源限制、默认断网且不
+挂载密钥的 runner。runner 不可用时 shell Tool 不注册，绝不回退到 host subprocess。
 
-## Alternatives
+## 比较过的方案
 
-- host subprocess + allowlist：实现快，但 shell 解析、二进制间接执行、文件和 secret 范围难以控制。
-- 主 API 容器内执行：比宿主略好，但仍与数据库、key 和服务生命周期共享边界。
-- 每任务完整 VM：隔离更强，但个人服务器初期资源和实现成本过高。
+- host subprocess + allowlist 无法覆盖 shell 解析、间接二进制和文件权限；
+- 在主 API 容器中执行仍共享数据库、密钥和服务生命周期；
+- 每任务完整 VM 隔离更强，但超出个人服务器第一版的资源与维护范围。
 
-## Consequences
+## 怎样验证
 
-- P1 能力刻意受限；P3 需要 runner RPC、workspace 传递和清理逻辑。
-- 后续可以添加 Docker/rootless Podman/remote runner adapter，而不改变 runtime 契约。
+测试 runner 读不到 Provider key、主数据库、宿主根目录、用户 home 和 Docker socket；资源、网络、
+输出和执行时间都必须有上限。runner 故障时验证没有 host fallback。

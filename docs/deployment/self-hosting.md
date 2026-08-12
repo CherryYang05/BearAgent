@@ -1,238 +1,166 @@
 ---
 title: Local-first and Self-hosting Strategy
 status: accepted
-version: 0.3
-last_verified: 2026-08-11
+version: 0.4
+last_verified: 2026-08-13
 ---
 
-# 本地开发、服务器部署与域名方案
+# 本地开发与自托管
 
-## 1. 直接结论
+## 1. 现在怎样运行
 
-- **先本地开发，但不要等全部做完才碰服务器。**
-- P1 全部本地，包括 F-0015 的 Starlight 文档站；P1 完成后再部署 `docs.bearguin.cn`。P2 完成后建立 Agent 私有 staging，只通过 SSH 或私有网络操作；P3 完成 Policy、认证、HTTP API 和 runner 后再通过公网子域名开放给自己。
-- 你 **不需要再注册一个域名**。使用现有 `bearguin.cn` 的子域名即可：
-  - `docs.bearguin.cn`：公开文档；
-  - `agent.bearguin.cn`：Agent Web UI 和同源 `/api`；
-  - 暂时不要增加 `api.*`，减少 CORS、cookie 和证书复杂度。
+P1 全部在本地开发和验证，Runtime 不开放 HTTP。F-0015 文档站也只在本地与 CI 构建。P1 完成后
+可以发布静态文档；P2 完成后建立私有服务器 staging；只有 P3 的权限、认证、runner 和备份恢复
+全部通过，Agent 服务才通过公网子域名提供给项目所有者。
 
-只有将来想建立完全独立品牌、出售项目或隔离声誉/SEO 时，才值得买新域名。
+不需要新域名：
 
-## 2. 为什么不是“全本地做完再部署”
+- `docs.bearguin.cn`：P1 完成后发布静态文档；
+- `agent.bearguin.cn`：P3 后的单用户 Agent API，未来 Web UI 与 `/api` 同源。
 
-本地适合快速开发和调试，但服务器会暴露不同问题：
+暂不增加 `api.*`，避免 CORS、cookie 和证书管理复杂度。
 
-- Linux/Windows 路径和文件权限；
-- container volume UID/GID；
-- SQLite WAL、备份和磁盘持久化；
-- 时区、重启、健康检查和日志轮转；
-- reverse proxy、SSE buffering、TLS 和超时；
-- runner 网络和 secret 隔离。
+## 2. 为什么不能一直只测本地
 
-因此采用双轨：
+服务器会暴露 Windows 本地开发看不到的问题：Linux 路径和权限、容器 volume 的 UID/GID、SQLite
+WAL 与备份、时区和重启、SSE 代理缓冲、TLS timeout，以及 runner 的网络和 secret 隔离。
+
+因此部署分三步：
 
 ```text
-Local: fastest development and full tests
-Staging: early Linux/Compose/restart verification, not public
-Production: public hostname only after P3 security gate
+Local       快速开发和全部自动测试
+Staging     私有 Linux/Compose/重启与恢复演练
+Production  P3 安全门通过后才启用公网 hostname
 ```
 
-## 3. 各阶段部署方式
+## 3. 每个阶段允许什么
 
-### P0-P1：Local only
+### P0–P1：只在本地
 
 - CLI 直接运行；
-- SQLite 和 workspace 在项目外的开发数据目录；
-- 不暴露 HTTP；
-- 不提供 host shell；
-- secrets 只在本机环境/secret store。
+- SQLite 和 workspace 放在项目外的数据目录；
+- 不开放 HTTP，不提供 host shell；
+- secret 只在本机环境或 secret store；
+- 文档站本地预览和 CI 构建，不部署。
 
-### P2：Private server staging
+### P1 完成后：公开静态文档
 
-- 一台 Docker Compose 服务；
-- 通过 SSH 运行 CLI；如为了 P3 预研存在临时 API，也只绑定 `127.0.0.1`；
-- 仅通过 SSH tunnel 或 Tailscale/WireGuard 访问；
-- 每次 release 做 kill/restart 和 restore drill；
-- 不创建公网 DNS 也可以先测试。
+构建 `site/dist/` 并发布到 `docs.bearguin.cn`。服务器只接收静态产物，不在 Web 请求中运行文档
+生成器。托管、HTTPS、发布权限和回滚需单独确认。
 
-### P3：Private production beta
+### P2：私有服务器 staging
+
+- 使用一台 Docker Compose 主机；
+- 通过 SSH 运行 CLI；临时 API 只能绑定 `127.0.0.1`；
+- 通过 SSH tunnel、Tailscale 或 WireGuard 访问；
+- 每个 release 做 kill/restart 和 restore drill；
+- 不需要公网 DNS。
+
+### P3：单用户生产 beta
 
 - `agent.bearguin.cn` 指向服务器；
-- 1Panel/OpenResty 终止 TLS 并反向代理到 loopback API 端口；P3 仍是 headless API/CLI，Web UI 属于 P4；
-- Agent 自身单用户认证；可额外用 1Panel 密码访问作为第二道门，但不能替代应用会话安全；
-- runner sidecar 在独立 network，禁止公网入站；
-- 定时备份数据库、artifacts、配置和 Memory。
+- 1Panel/OpenResty 终止 TLS，反向代理到 loopback API；
+- 应用自己完成单用户认证，1Panel 密码访问只能作为第二层；
+- runner 位于独立私有 network，不接受公网入站；
+- 定期备份 SQLite、Artifact 和非 secret 配置；
+- P3 仍以 CLI/API 为主，Web UI 属于 P4。
 
-### P1 完成后：Public docs
-
-- `docs.bearguin.cn` 发布 F-0015 产生的 Starlight 静态构建；
-- 文档公开，Agent 仍保持认证；
-- CI 构建 docs，服务器只接收静态产物，不在 Web 请求时运行文档生成器。
-
-## 4. 推荐服务器拓扑
+## 4. 服务器连接方式
 
 ```mermaid
 flowchart LR
-    B["Browser"] -->|HTTPS| O["1Panel OpenResty"]
-    O -->|127.0.0.1:8080| W["BearAgent API"]
-    W --> DB["SQLite volume"]
-    W --> DATA["Workspace and artifacts volume"]
-    W -->|private authenticated RPC| R["Sandbox runner"]
-    R --> RW["Scoped per-run workspace"]
-    W -. no secrets mounted .-> R
-    D["docs.bearguin.cn"] --> S["Static docs files"]
+    B["Browser / CLI"] -->|"HTTPS"| O["1Panel OpenResty"]
+    O -->|"127.0.0.1:8080"| A["BearAgent API"]
+    A --> DB["SQLite volume"]
+    A --> W["Workspace + Artifact volume"]
+    A -->|"私有、认证 RPC"| R["Sandbox runner"]
+    R --> RW["每 Run 受限 workspace"]
+    A -. "不向 runner 挂 secret" .-> R
+    D["docs.bearguin.cn"] --> S["静态 site/dist"]
 ```
 
-Compose 初期只需要 `bearagent-api` 和 `bearagent-runner` 两个服务；OpenResty 和证书由现有 1Panel 管理。不要为了“标准架构”加入 PostgreSQL、Redis、消息队列和独立 observability stack。
+P3 Compose 只需要 Runtime API 和 runner。OpenResty 和证书继续由现有 1Panel 管理。不为“标准架构”
+加入 PostgreSQL、Redis、队列或独立观测服务。
 
-## 5. DNS 与 1Panel
+## 5. DNS 和 1Panel
 
-### 5.1 DNS
+在现有 DNS 服务商添加 `agent` 和 `docs` 指向服务器。Agent 的 SSE、上传大小和长请求 timeout 必须
+确认代理支持；第一版建议直连服务器并限制访问，减少 CDN 变量。
 
-在 `bearguin.cn` 当前 DNS 服务商中添加：
+1Panel 配置重点：
 
-```text
-agent  A/AAAA   <server public IP>
-docs   A/AAAA   <server public IP>
-```
+1. `agent.bearguin.cn` 反向代理到 loopback 端口；
+2. 申请独立或 wildcard 证书，并强制 HTTP 跳转 HTTPS；
+3. SSE 路径关闭 buffering/cache，proxy read timeout 大于 heartbeat 间隔；
+4. 限制请求体和上传大小；
+5. 容器端口不绑定 `0.0.0.0`；
+6. `docs.bearguin.cn` 只托管构建后的静态文件。
 
-如果主域已通过 CDN/代理，也可以使用合适的 CNAME；Agent 的 SSE、上传大小和长请求超时需确认 CDN 支持。第一版建议先直连服务器并限制访问，减少变量。
+1Panel 管理面板不和 Agent 共用域名或路径，并继续使用 MFA、授权 IP 等保护。
 
-### 5.2 1Panel 网站
+## 6. API、SSE 和会话
 
-1Panel 官方文档支持网站域名、反向代理、密码访问和 HTTPS/ACME。建议：
-
-1. 为 `agent.bearguin.cn` 新建反向代理网站，upstream 指向 `http://127.0.0.1:<host-port>`；
-2. 通过证书模块申请独立证书或 `*.bearguin.cn` wildcard；
-3. HTTP 自动跳转 HTTPS；
-4. 调大 SSE/长任务相关 proxy read timeout，并关闭 SSE 路径的 buffering/cache；
-5. 配置请求体大小，限制上传；
-6. Agent 容器端口不要绑定 `0.0.0.0`；
-7. P1 完成后，为 `docs.bearguin.cn` 新建静态网站，站点目录只放 `site/dist/` 构建产物。
-
-不要将 1Panel 管理面板和 Agent 应用共用同一域名/路径。管理面板应继续使用独立端口或管理子域，并开启 MFA、授权 IP 或其他访问限制。
-
-## 6. TLS、SSE 与反向代理注意项
-
-- Web UI 和 API 同源，cookie 使用 `Secure`、`HttpOnly`、合适的 `SameSite`；
-- SSE response 禁止代理缓存和缓冲，设置 heartbeat；
-- 每次连接可从最后 event sequence 恢复，而不是只依赖活跃内存流；
-- 代理 timeout 大于 heartbeat 间隔，但 Run 本身仍有独立执行 deadline；
-- 上传先落到受限 staging 目录，做大小、类型和解压限制；
+- Web 与 API 同源；cookie 使用 Secure、HttpOnly 和合适 SameSite；
+- SSE 禁止代理缓存和缓冲，并发送 heartbeat；
+- 重连从最后 Event sequence 补齐，不只依赖内存 token 流；
+- 代理 timeout 与 Run deadline 分开；
+- 上传先进入受限 staging 目录，并限制大小、类型和解压；
 - CORS 默认只允许同源；
-- 开 HSTS 前先确认所有子域 HTTPS 策略，避免误锁。
+- 开启 HSTS 前先确认所有子域的 HTTPS 策略。
 
-## 7. 数据持久化与备份
+## 7. 数据和备份
 
-### 7.1 必须备份
+必须备份 SQLite、Artifact、非外部 Git 仓库的 workspace、非 secret 配置，以及 P4 以后启用的
+Memory。采用 secret store 后，还要备份加密数据和独立恢复密钥。
 
-- SQLite 数据库；
-- artifacts；
-- user workspace（若它不是外部 Git repo）；
-- Memory（P4 启用后）；
-- 非 secret 配置；
-- 加密后的 secret store 及其独立恢复密钥（采用后）。
+SQLite 使用 online backup API 或受控 checkpoint/停写流程。不能在 WAL 模式运行时只复制一个
+`.db` 文件。每份备份记录 hash，并定期在空目录执行真实恢复。
 
-### 7.2 SQLite 备份
+初始保留建议为 7 份日备份、4 份周备份和 3 份月备份；最终根据 Artifact 大小调整。至少一份加密
+备份离开主服务器。
 
-不要在运行时简单复制单个 `.db` 文件并忽略 WAL。使用 SQLite online backup API 或受控 checkpoint/停写流程。备份完成后记录 hash，并定期在空目录执行真实恢复测试。
+## 8. Secret 边界
 
-推荐保留：
+- Provider key 只给 Runtime API，不给 runner；
+- `.env` 不进 Git，也不复制到 workspace；
+- Event、日志和 Artifact 写入前脱敏；
+- 以后 MCP/远程 Tool 的凭据由服务端注入，模型只看到引用；
+- 轮换 key 不需要重写历史，因为历史 Event 本来就不应包含密钥。
 
-```text
-daily: 7
-weekly: 4
-monthly: 3
-```
+## 9. Runner 最低限制
 
-这是初始建议，最终根据 Artifact 体积和服务器容量调整。至少一份加密备份应离开该服务器，避免磁盘/主机同时损坏。
+- rootless/unprivileged；只读 rootfs 和受限 tmpfs；
+- `cap_drop: ALL`、`no-new-privileges`；
+- CPU、内存、PID、总时间和 stdout/stderr 上限；
+- 每 Run 独立目录，网络默认关闭；
+- 不挂宿主根目录、用户 home、Docker socket、1Panel、主数据库和 secret；
+- runner API 只在私有 network，并验证调用身份、request ID 和 nonce；
+- 任务后清理临时目录，Artifact 通过受控复制返回。
 
-## 8. Secrets
+runner 不可用时，shell/code Tool 必须不可用，不能回退到主 Runtime subprocess。
 
-- Provider key 只提供给 API/runtime，不提供给 runner；
-- `.env` 不进 Git，也不复制进 workspace；
-- event/log/artifact 写入前做 redaction；
-- MCP/remote tool 凭据后续通过 credential broker 或 server-side injection 使用，模型只看到引用；
-- 轮换 key 后不需要重写历史 Event；历史中本来就不应有 key。
-
-## 9. Runner 硬化清单
-
-- rootless/unprivileged user；
-- `read_only` rootfs、临时 `tmpfs`；
-- `cap_drop: ALL`，按需最小添加；
-- `no-new-privileges`；
-- CPU、memory、PID、wall-time、stdout/stderr 限制；
-- 每 Run 独立工作目录；
-- network deny default，按域/代理受控放行；
-- 不挂宿主 `/`、用户 home、Docker socket、1Panel 目录和 secret 目录；
-- runner API 仅 private network，可验证调用身份和 request nonce；
-- 任务结束清理临时目录，Artifact 通过受控复制输出。
-
-## 10. 发布与回滚
-
-最小发布流程：
+## 10. 发布和回退
 
 ```text
-CI test/docs/security checks
-  -> build immutable image tag
-  -> backup current data
-  -> apply migration in staging
-  -> recovery smoke tests
-  -> deploy production
-  -> health + one read-only canary Run
+CI：测试、文档和安全检查
+  -> 构建不可变镜像 tag
+  -> 备份当前数据
+  -> staging 应用 migration
+  -> 运行恢复 smoke test
+  -> 部署 production
+  -> 健康检查 + 一个只读 canary Run
 ```
 
-数据库 migration 必须先验证向前恢复路径。若 migration 不可逆，回滚方案是旧镜像 + 部署前完整备份，而不是假装可以 downgrade schema。
+数据库 migration 必须先验证前进恢复。如果 migration 不可逆，回退方式是旧镜像加部署前完整备份，
+不能假装可以安全 downgrade schema。
 
-## 11. 文档站方案
+## 11. 什么时候才需要新域名
 
-F-0015 已选择 Starlight。它以 Markdown/MDX 组织学习内容，提供静态搜索、导航和 Mermaid 集成，构建结果仍是容易由 1Panel 托管的静态文件。站点源文件位于 `site/`，P1 期间只在本地运行：
+只有 BearAgent 成为独立品牌、需要独立 SEO/邮箱/社区、准备作为独立资产转让，或现有主域的 DNS/
+备案策略不适合 Agent 服务时，才考虑新域名。当前新增域名只会增加续费、证书和维护成本。
 
-```powershell
-npm --prefix=site ci
-npm run dev --prefix=site
-npm run build --prefix=site
-```
+## 参考
 
-建议导航：
-
-```text
-Home
-Getting Started
-Concepts
-  Run and Event
-  Tools and Grants
-  Recovery semantics
-Architecture
-Guides
-  Local install
-  Self-host with 1Panel
-  Backup and restore
-Reference
-  CLI
-  Configuration
-  Event schema
-Development
-  SOP
-  ADRs
-Roadmap
-```
-
-文档从 P0 就写，F-0015 在 P1 建立本地站点；P1 完成后再上线 `docs.bearguin.cn`。先保证内容与代码一致，再花时间做主题和品牌视觉。
-
-## 12. 何时需要新域名
-
-继续使用子域名，除非至少满足一项：
-
-- BearAgent 成为独立品牌，名称不再依赖 BearGuin；
-- 需要独立 SEO、邮箱、社区和发行身份；
-- 计划将项目/服务作为独立资产转让；
-- 主域 DNS/CDN/备案策略不适合 Agent 服务。
-
-现阶段注册新域名只增加续费、证书、DNS、备案和品牌维护成本，没有技术收益。
-
-## 参考资料
-
-- [1Panel 网站配置：域名、反向代理、密码访问和 HTTPS](https://1panel.cn/docs/v2/user_manual/websites/website_config_basic/)
-- [DeepTutor README: secret scopes and multi-container deployment](https://github.com/HKUDS/DeepTutor/blob/main/README.md)
-- [Manus Sandbox: per-task isolation and lifecycle](https://manus.im/blog/manus-sandbox)
+- [1Panel 网站配置](https://1panel.cn/docs/v2/user_manual/websites/website_config_basic/)
+- [DeepTutor 部署说明](https://github.com/HKUDS/DeepTutor/blob/main/README.md)
+- [Manus Sandbox](https://manus.im/blog/manus-sandbox)

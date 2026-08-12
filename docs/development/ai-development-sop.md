@@ -1,335 +1,243 @@
 ---
 title: AI-assisted Development SOP
 status: accepted
-version: 0.3
-last_verified: 2026-08-10
+version: 0.4
+last_verified: 2026-08-13
 ---
 
-# AI 辅助开发 SOP
+# AI 辅助开发流程
 
-## 1. 先回答核心问题
+## 1. 这套流程解决什么问题
 
-Vibe coding 最大的风险不是 AI 偶尔写错一行，而是每次对话都重新解释系统，导致概念、边界、数据模型和错误语义逐步分叉。
+AI 可以快速写代码，真正昂贵的问题却常发生在多次对话之间：每次任务重新解释系统，结果是术语、
+模块边界、数据格式和失败处理逐渐出现多个版本。
 
-解决方法不是让每个小改动都写一篇长文，而是建立 **轻重分级、仓库内持久化、验收驱动** 的 SOP：
+BearAgent 不要求每个小改动写长文。它要求把高成本信息留在仓库：用户要得到什么、哪些边界不能
+破坏、失败时怎样表现、为什么选择这个方案，以及什么证据说明已经完成。
 
 ```mermaid
-flowchart TD
-    subgraph A["① 调查 Discovery"]
-        A1["AGENTS.md<br/>docs/index.md"]
-        A2["Architecture + Roadmap<br/>相关 Spec / ADR"]
-        A3["当前代码与测试"]
-        A1 --> A2 --> A3
-    end
-
-    subgraph B["② 定义 Define"]
-        B1{"变更分级"}
-        B2["S0<br/>修复 + 回归测试"]
-        B3["S1<br/>docs/specs/F-NNNN-*.md"]
-        B4["S2<br/>Feature Spec +<br/>docs/adr/ADR-NNNN-*.md"]
-        B5{"Spec / ADR<br/>已 accepted？"}
-        B1 -->|S0| B2
-        B1 -->|S1| B3
-        B1 -->|S2| B4
-        B3 --> B5
-        B4 --> B5
-    end
-
-    subgraph C["③ 实现 Implement"]
-        C1["docs/plans/PLAN-F-NNNN-*.md<br/>拆分纵向切片"]
-        C2["测试先行<br/>最小实现"]
-        C3["Ruff / Pyright / Pytest"]
-        C1 --> C2 --> C3
-    end
-
-    subgraph D["④ 关闭 Close"]
-        D1["Docs Impact 检查"]
-        D2["同步发生变化的<br/>当前事实"]
-        D3["Plan → completed<br/>Spec → implemented"]
-        D4["独立审查 + CI + 提交"]
-        D1 --> D2 --> D3 --> D4
-    end
-
-    A3 --> B1
-    B2 --> C2
-    B5 -->|是| C1
-    B5 -->|否| B3
-    C3 --> D1
+flowchart TB
+    A["调查：读仓库事实"] --> B{"变更风险多大？"}
+    B -->|"S0 小修"| C["修复 + 回归测试"]
+    B -->|"S1 行为变化"| D["先接受 Feature Spec"]
+    B -->|"S2 架构/安全/数据"| E["先接受 Spec + ADR"]
+    D --> F["Plan：拆成可单独验证的步骤"]
+    E --> F
+    C --> G["实现并验证"]
+    F --> G
+    G --> H["反向审查"]
+    H --> I["同步文档和状态"]
+    I --> J["完整验证后关闭 Feature"]
 ```
 
-聊天记录是工作台，不是数据库。ChatGPT/Codex 可以帮助调查、写文档、实现和验证，但长期事实必须进入 Git。
+聊天是工作台，不是项目数据库。结论只有进入 Git 后才会影响后续开发。
 
-## 2. 文档税要与风险相称
+## 2. 先判断改动风险
 
-| 级别 | 例子 | 必需产物 |
+| 级别 | 典型改动 | 必需结果 |
 |---|---|---|
-| S0 | typo、格式、明显 bug、内部机械重构 | 回归测试；用户行为变化时同步相关文档 |
-| S1 | 新 CLI、Tool、状态或可观察行为 | Feature Spec、测试、用户文档 |
-| S2 | 数据库 schema、安全边界、跨模块抽象、新生产依赖、公开 API | Feature Spec、ADR、失败/安全测试、迁移与回滚说明 |
+| S0 | typo、格式、明确 bug、小型内部重构 | 修复和回归测试；用户行为变化时更新文档 |
+| S1 | 新 CLI、Tool、状态或用户可观察行为 | Feature Spec、测试和相关文档 |
+| S2 | 持久 schema、安全边界、多个模块共用的接口、新生产依赖 | Feature Spec、ADR、失败/安全测试、迁移和回退 |
 
-不要把 ADR 用成日记。ADR 只记录代价高、跨模块、以后难以反转的决定及其理由。
+ADR 只记录影响多个模块、以后难以反转的决定，不用来记录每日实现细节。
 
-## 3. Source of Truth 规则
+## 3. 先找到仓库里的事实
 
-| 内容 | 权威位置 |
+| 你要确认什么 | 首选位置 |
 |---|---|
-| 当前 milestone 与阶段完成线 | `docs/project/roadmap.md` |
-| 目标、非目标、场景、验收 | `docs/specs/F-NNNN-*.md` |
-| 当前 Feature 的实现切片 | `docs/plans/PLAN-F-NNNN-*.md` |
-| 跨模块选择及取舍 | `docs/adr/ADR-NNNN-*.md` |
-| 当前系统分层和契约 | `docs/architecture/*.md` |
-| AI/贡献者稳定工作约定 | `AGENTS.md` |
-| 实际类型、schema、CLI/API | 代码、迁移、自动生成 reference |
-| 行为是否成立 | 自动化测试和可复现验收记录 |
-| 面向初学者的概念与学习顺序 | `site/src/content/docs/zh-cn/learn/`，从上述事实来源派生 |
-| 面向开发者的实现导读 | `site/src/content/docs/zh-cn/development/`，从上述事实来源派生 |
-| 公开的当前能力与阶段结果 | `site/src/content/docs/zh-cn/project/`，以 Spec、Roadmap 和测试为准 |
+| 当前阶段和退出条件 | `docs/project/roadmap.md` |
+| Feature 必须做到什么 | `docs/specs/F-NNNN-*.md` |
+| 为什么选择当前方案 | `docs/adr/ADR-NNNN-*.md` |
+| 当前实施顺序 | `docs/plans/PLAN-F-NNNN-*.md` |
+| 模块如何连接 | `docs/architecture/` + 代码 |
+| 行为是否成立 | 测试和可复现命令 |
+| 开发约束 | `AGENTS.md` |
+| 面向读者的解释 | `site/`，必须能追溯到以上事实 |
 
-同一事实不要在五份手写文档中重复。架构文档描述稳定边界；Feature Spec 描述一个行为；代码 reference 尽量自动生成。
+Feature ID 全项目稳定，阶段写在 Spec 的 `milestone` 中。ADR 的 accepted 不能用来推断 Feature 已
+完成；进度由 Spec、Plan、代码和测试共同确认。
 
-Feature ID `F-NNNN` 在全项目内稳定递增，所属阶段由 Spec 的 `milestone: P<n>` 声明。阶段变化不得导致 Feature 重编号。`related_adrs` 只表达设计依赖；进度以 Spec 状态、Implementation Plan 切片、代码和测试为准，不能通过统计 ADR 推断。
+## 4. 一个 Feature 从开始到结束
 
-## 4. 在 ChatGPT/Codex 中如何执行
+### 4.1 第一步：写清任务边界
 
-### 4.1 一个功能一个任务上下文
-
-建议每个 Feature/修复对应一个 Codex 任务和一个小 diff。任务开始时明确关联 Spec；跨功能的“顺便重构”拆开。需要隔离时使用 Git worktree，普通小改动可在本地工作区完成。OpenAI Docs 说明 Codex 会在工作前读取并按目录层级合并 `AGENTS.md`，所以稳定规则放在那里，而不是每次复制到 prompt。
-
-### 4.2 第 0 步：任务合同
-
-第一次发给 AI 的内容只需要包含：
+交给 AI 的任务至少包含：
 
 ```text
-目标：解决什么用户问题
+目标：用户或开发者最终得到什么
 范围：允许修改哪些模块
-约束：兼容性、安全、时间或依赖限制
+约束：兼容性、安全、依赖和时间边界
 成功：最关键的可验证结果
-非目标：本次明确不做什么
+不做：本次明确排除什么
 ```
 
-若这些信息缺失，AI 的第一个动作应是仓库调查和列出假设，不是创建一套自认为合理的架构。
+信息不足时，AI 先调查和列出假设，不直接创建新架构。
 
-### 4.3 第 1 步：Discovery，禁止写代码
+### 4.2 第二步：只调查，不修改
 
-推荐 prompt：
+读取 `AGENTS.md`、架构、路线图、相关 Spec/ADR/Plan、代码和测试，回答：
+
+1. 当前行为在哪里实现，有什么测试；
+2. 目标与当前状态之间差什么；
+3. 哪些 ID、Event、状态、持久化、权限和公开入口会受影响；
+4. 失败、恢复和安全场景有哪些；
+5. 哪些问题需要项目所有者决定。
+
+聊天记忆不能替代当前 Git 状态。
+
+### 4.3 第三步：接受 Spec
+
+S1/S2 先写 Feature Spec。Spec 从具体场景开始，然后说明本次交付、不做什么、状态与数据、失败时
+用户看到什么、安全边界和二值验收条件。
+
+验收条件不能使用“更智能”“更稳定”“体验良好”等无法判断的词。开放问题不由实现代码暗中决定。
+
+### 4.4 第四步：必要时写 ADR
+
+S2 比较 2–3 个可行方案，重点看维护成本、失败恢复、安全、迁移和测试。ADR 标题直接说出决定，
+正文先给具体冲突，再写选择、代价和验证。
+
+例如不要只写“Provider-neutral schema”；写成“BearAgent 模块之间只交换 BearAgent 数据类型”，
+再说明 SDK 响应在 adapter 处翻译。
+
+### 4.5 第五步：Plan 拆成可验证步骤
+
+每一步都写：交付结果、代码落点、谁调用谁、重点测试、验证命令和回退方式。例如：
 
 ```text
-先不要修改代码。
-读取 AGENTS.md、总体架构、相关 Spec/ADR、实现和测试。
-输出：
-1. 当前行为和证据路径；
-2. 与目标之间的差距；
-3. 受影响的领域对象、持久化、权限和公开契约；
-4. 失败场景与安全风险；
-5. 仍需我决定的问题。
-不要根据聊天记忆猜测仓库事实。
+1. 用 Event 算出 Run 状态，并通过 Reducer 单元测试
+2. SQLite 追加 Event，同时更新 projection，并通过 transaction 测试
+3. Application command 接入内存实现，通过端到端测试
+4. 接入一个真实 adapter，并运行同一组行为测试
+5. CLI 接通用户路径
+6. 加入故障注入和文档关闭
 ```
 
-Discovery 结束后，先核对 AI 引用的文件和当前行为是否真实。
+Plan 不能只按技术层横向分成“先写全部 model，再写全部 API”。同时最多一个主 Plan 为 active。
 
-### 4.4 第 2 步：写 Feature Spec
+### 4.6 第六步：一次只实现下一步
 
-推荐 prompt：
+先补能证明验收条件的测试，再写最小实现。不得引入 Spec/ADR 没有接受的新概念或生产依赖。遇到
+需求缺口时回到 Spec，而不是让代码自行做出跨模块决定。
 
-```text
-基于已确认的调查，为这个功能创建/更新 Feature Spec。
-必须写清目标、非目标、术语、用户场景、功能需求、状态转换、
-数据/接口变化、失败语义、安全、可观测性和可执行验收标准。
-声明稳定 spec_id、所属 milestone 和 related_adrs。
-此阶段仍不实现代码。若有开放问题，明确标记，不要自行定案。
-```
+每一步完成后运行范围匹配的检查，并报告实际命令和结果。diff 过大时停在可用的中间结果，不一次
+生成几千行再整体调试。
 
-Spec 的验收条件必须可以转换成测试，不使用“更智能”“更稳定”“体验良好”这类无法判断的形容词。
+### 4.7 第七步：从找问题的角度审查
 
-### 4.5 第 3 步：设计与 ADR
+把 diff 当成别人提交的代码，逐条检查：
 
-只有 S2 需要独立 ADR。推荐 prompt：
+- Event 和状态是否会分叉；
+- 哪个崩溃窗口可能重复副作用；
+- 路径、权限和 secret 是否能绕过；
+- SDK 或框架类型是否进入核心；
+- timeout、取消和输出上限是否缺失；
+- 文档是否把计划写成当前实现；
+- 测试是否只验证 mock，而没有验证真实边界。
 
-```text
-为已接受的 Spec 给出 2-3 个可行设计，比较复杂度、恢复语义、
-安全边界、迁移成本和可测试性。推荐一个最小方案。
-如果改变跨模块边界、schema 或生产依赖，创建 ADR；否则把实现说明
-留在 Spec，避免多余文档。
-```
+S2 最好在独立任务中做这次审查，减少同一上下文的确认偏差。
 
-ADR 必须记录 rejected alternatives，防止数周后另一个 AI 再次建议已否决的方案。
+### 4.8 第八步：关闭 Feature
 
-### 4.6 第 4 步：实现计划
+- Spec 改为 `implemented`，Plan 改为 `completed`；
+- 填入实际 PR/commit；
+- 更新发生变化的架构事实；
+- 学习页用一个具体场景解释功能为什么存在；
+- 开发者页写代码入口、连接关系、失败边界和验证；
+- 状态页只增加已有代码和测试支持的能力；
+- 迁移、回退和已知限制写清；
+- 完整验证通过后提交。
 
-计划以可以独立验证的纵向切片组织，而不是“先写全部 model，再写全部 API”。例如：
+关闭整个阶段时，再更新 Roadmap、学习地图、架构总结和阶段结果。
 
-```text
-1. 领域类型 + reducer 单元测试
-2. SQLite event append + projection transaction 集成测试
-3. application command + fake adapter 端到端测试
-4. 一个真实 adapter
-5. CLI 接入
-6. recovery/failure injection
-7. 文档和验收检查
-```
+## 5. 怎样写清文档
 
-每一步都要能运行测试并留下可工作的中间状态。
+### 5.1 先讲行为，再给术语命名
 
-计划保存在 `docs/plans/PLAN-F-NNNN-<slug>.md`，通过 `related_spec` 关联 Feature。开始实现时将 Plan 标记为 `active`；同时最多只有一个主 Plan 为 `active`。
+术语不是问题，只有术语而没有行为才是问题。Runtime、port、adapter、Event、Reducer、schema 和
+Provider 都可以保留；第一次出现时，用一句普通话说明它做什么。
 
-### 4.7 第 5 步：实现
+例如：
 
-推荐 prompt：
+> 同一组测试分别跑在内存和 SQLite store 上。两种实现对追加、冲突和读取顺序给出相同结果，
+> 所以调用方换用 SQLite 时不用改代码。
 
-```text
-只实现计划中的下一纵向切片。
-保持现有边界，不引入未被 Spec/ADR 接受的新概念或生产依赖。
-先写/更新能证明验收条件的测试，再完成最小实现。
-遇到 Spec 缺口时暂停设计决策，在 Spec 中记录，不要用代码偷偷决定。
-完成后运行范围匹配的验证，并报告实际命令和结果。
-```
+如果后文需要，可以再说这组测试叫 `contract suite`。不要反过来先写“contract suite 证明 port
+语义不由 adapter 决定”，更不要把它机械替换成长中文短语。
 
-一个 diff 过大时，先停在可验证切片，而不是让 AI 一次性生成几千行后再整体调试。
+### 5.2 不同文档承担不同问题
 
-### 4.8 第 6 步：验证与反向审查
+- Architecture 写稳定模块关系和当前/未来边界；
+- Spec 写可验收行为；
+- ADR 写跨模块决定、代价和验证；
+- Plan 写实施顺序；
+- Site 学习页用连续例子教学；
+- Site 开发者页提供代码和测试入口；
+- 状态页只回答现在能否使用。
 
-实现者完成后，再执行一次以找问题为目标的 review pass：
+同一事实不要在多份文档中逐字复制。手写文档也不要长期维护完整函数签名、每个默认值和所有文件
+清单；这些尽量由 schema、CLI help 或生成文档提供。
 
-```text
-把当前 diff 当成他人提交的代码审查，不要继续实现新功能。
-逐条对照 Spec 验收条件和 AGENTS.md，重点检查：
-- 状态/事件不一致；
-- 崩溃窗口和重复副作用；
-- 权限绕过、路径逃逸和 secrets；
-- provider/framework 类型泄漏；
-- timeout、取消和输出上限；
-- 文档是否描述了尚不存在的行为；
-- 测试是否只验证 mock 而没验证真实边界。
-按严重度给出证据；没有问题也要说明验证覆盖和剩余风险。
-```
+### 5.3 连续阅读，不能只检查局部语法
 
-对 S2 变更，最好在新任务中执行这次 review，减少同一上下文的确认偏差。
+全文搜索适合发现术语和重复，但不能代替上下文审查。文档改完后，从标题到段落连续阅读，检查：
 
-### 4.9 第 7 步：关闭功能
+- 标题是否直接说出问题或决定；
+- 段落是否有明确主语；
+- 一句话是否承担了太多判断；
+- 是否堆叠斜杠、缩写和双语同义词；
+- 前后页面是否重复同一批内容；
+- 当前实现和未来计划是否清楚分开。
 
-关闭前：
+## 6. CI 能检查什么
 
-- Spec `status` 从 `accepted` 改为 `implemented`；
-- Implementation Plan 从 `active` 改为 `completed`，未完成切片不得勾选；
-- 补上 `implemented_in` commit/PR（有后填写）；
-- 更新架构文档中已经改变的当前事实；
-- 更新 `site/` 初学者学习路径：解释本 Feature 对应的 Agent 原理、前置知识和当前成熟度；
-- 更新 `site/` 开发者文档：解释代码入口、契约、失败/安全语义和验证证据；
-- 更新站点当前状态页；关闭 `P<n>` 时再同步学习地图、开发者架构总结和阶段结果；
-- 添加 migration/rollback 说明；
-- 把验证命令和结果写进 PR/变更记录，不把瞬时测试输出长期复制进架构文档；
-- 未完成项回到 roadmap/issue，不写成“已经支持”。
+P0/P1 自动检查：
 
-## 5. 防止文档漂移的具体机制
-
-### 5.1 文档写稳定契约，不抄实现
-
-不在手写文档维护完整函数签名、每个配置默认值或目录中每个文件的清单。这些最容易漂移，应从代码 schema、CLI `--help`、OpenAPI 或配置模型自动生成。
-
-手写文档重点写：为什么、边界、状态、失败语义、安全和用户流程。
-
-### 5.2 每份文档有生命周期
-
-Spec/ADR 使用 `draft / accepted / implemented / superseded`；架构文档带 `last_verified`。被替代文档不删除，添加指向新文档的链接。
-
-### 5.3 PR 必须回答 Docs Impact
-
-每次变更明确选择：
-
-```text
-[ ] Engineering source of truth updated
-[ ] Site beginner learning path updated
-[ ] Site developer documentation updated
-[ ] Site current status / milestone summary updated
-[ ] Architecture / ADR / deployment docs updated as needed
-[ ] Generated reference refreshed
-```
-
-S0 变更可以明确记录没有可观察文档影响；Feature 不能只选择“无影响”。每个 Feature 至少更新相关学习/开发索引和当前状态，即使不需要新建独立文章。
-
-### 5.4 公共站点使用双轨同步
-
-站点不是把工程文档复制一遍，而是维护两个互相链接的入口：
-
-1. **初学者学习路径**回答“这个 Feature 解决什么 Agent 问题、需要先懂什么、如何形成整体架构认识”。优先使用简图、最小例子和逐层概念。
-2. **开发者文档**回答“代码在哪里、边界是什么、接口如何使用、失败与安全语义是什么、用哪些测试证明”。它链接 Spec/ADR/代码，不重新发明一套事实。
-
-项目所有者在阅读代码时提出的概念、命名或执行流程问题，也是站点改进输入。先回到 `docs/`、代码
-和测试验证答案，再把可复用部分整理进已有初学者页面或新专题；优先给出“术语 -> 最小例子 ->
-逐步状态变化 -> 失败边界 -> 继续阅读”，必要时用简短 Mermaid 图。不要发布聊天原文，也不要仅凭
-问答改变当前实现状态；只有工程事实变化时才同步状态页。
-
-外部资料先从《深入理解 AI Agent》、DeepTutor 文档和高关注 Agent 项目的官方文档中发现解释方式与对照案例。优先引用原始文档、论文或官方仓库；GitHub star 只表示社区关注度，不表示设计适合 BearAgent。引用外部能力时必须同时说明 BearAgent 当前是已实现、已接受设计还是规划中。
-
-### 5.5 CI 做机械检查
-
-P0/P1 建立：
-
-- Markdown lint 和内部链接检查；
-- `npm run build --prefix=site`（F-0015 起构建 Starlight 静态站点）；
+- Markdown 内部链接；
+- Starlight 生产构建和本地搜索；
 - Ruff、Pyright、pytest；
-- migration 能从空库升级；
-- architecture import boundary test；
-- CLI/OpenAPI/config reference 生成后 `git diff --exit-code`；
-- 公共 Event/Tool schema 的 snapshot/compatibility test。
+- import boundary；
+- schema snapshot；
+- 后续数据库 migration 和生成 reference 的未提交差异。
 
-CI 不能判断设计是否正确，但可以阻止最常见的格式、链接、生成物和契约漂移。
+CI 能阻止格式、链接、生成物和契约漂移，不能判断一段解释是否自然，因此仍需人工连续阅读。
 
-### 5.6 每个里程碑做一次 Reality Check
+## 7. 测试与风险匹配
 
-让 AI 从代码反向生成“当前系统图”，再与架构文档比较。只修事实差异，不趁机扩范围。检查：
-
-- 是否出现重复概念和 Manager/Service；
-- core 是否依赖外围框架；
-- 事件是否覆盖所有状态变化；
-- 文档是否写了未来功能却没标注；
-- roadmap 已完成项是否有测试证据。
-
-## 6. 测试金字塔适配 Agent Runtime
-
-| 层 | 重点 |
+| 测试 | 主要回答什么 |
 |---|---|
-| Unit | reducer、budget、policy match、path validation、context selection |
-| Contract | 每个 ModelProvider、Tool、SandboxBackend 的统一契约 |
-| Integration | SQLite transaction、migration、artifact、API/CLI |
-| Recovery | 在每个持久化边界 kill/restart；幂等与 `UNKNOWN` |
-| Security | traversal、symlink、approval tamper、SSRF、secret redaction |
-| Eval | 固定任务集上的答案、工具轨迹、成本、延迟和权限行为 |
+| Unit | Reducer、预算、Policy、路径和上下文选择是否按规则工作 |
+| Contract | 不同 Provider、Tool、Store、Sandbox adapter 是否给调用方相同行为 |
+| Integration | SQLite transaction、migration、Artifact、CLI/API 是否接通 |
+| Recovery | 在持久化边界中断后是否重复副作用，`UNKNOWN` 是否正确 |
+| Security | 路径逃逸、批准篡改、SSRF 和 secret 泄漏是否被阻止 |
+| Eval | 固定任务的结果、工具路径、成本、延迟和权限行为是否回归 |
 
-Eval 不是 unit test 的替代品。可确定行为使用普通测试；模型质量和 trace 变化才使用 eval。
+可确定的规则用普通测试，不用模型 eval 代替。Eval 只处理模型质量和执行路径变化。
 
-## 7. 分支与提交建议
+## 8. 分支、提交和完成标准
 
-- 一项 Feature 一个短分支/工作树。
-- 先提交 accepted Spec/ADR，再提交实现；个人项目也可以在同一 PR 中分 commit。
-- 不把大规模格式化、依赖升级和行为变化混在同一 diff。
-- 每个 commit 尽量保持测试通过；schema migration 与读取新 schema 的代码同批提交。
-- 合并前从干净环境执行完整验证。
+- 一个 Feature 一个短分支或 worktree；
+- accepted Spec/ADR 可先提交，实现按可验证步骤提交；
+- 不把大规模格式化、依赖升级和行为变化混在同一 diff；
+- migration 与读取新 schema 的代码同批提交；
+- 合并前从干净环境运行完整验证。
 
-## 8. 个人开发的 Definition of Done
+一个 Feature 只有在真实入口可运行、验收有证据、失败/恢复/权限测试与风险相称、迁移回退清楚、
+工程事实与站点同步、独立审查完成、没有 secret 和临时代码时才算完成。
 
-一个功能只有同时满足以下条件才算完成：
-
-1. 用户场景从真实入口可运行；
-2. 所有验收条件有自动化或清晰的人工验证证据；
-3. 失败、重启、取消、超时和权限路径得到与风险匹配的验证；
-4. 数据迁移和回滚/恢复策略明确；
-5. Spec、ADR、架构和用户文档没有把未来写成现在；
-6. `site/` 的初学者路径、开发者文档和当前状态均已同步；里程碑关闭时还更新阶段总结；
-7. AI 对 diff 做过独立问题导向审查；
-8. 没有将秘密、临时调试代码或未使用抽象留在仓库。
-
-## 9. 推荐的日常节奏
+## 9. 日常节奏
 
 ```text
-每日开始：读取 roadmap + 当前 Spec，选一个最小验收切片
-开发中：每个切片实现、测试、提交
-每日结束：更新 Spec 的进度/开放问题，不重写架构大纲
-每个 Feature：独立 review + docs/source-of-truth + site 学习/开发/状态三面同步 + 完整测试
-每个里程碑：reality check + recovery drill + site 学习地图/开发总结/阶段结果 + 文档站预览
+开始：读 Roadmap 和当前 Spec，选择一个可单独验证的步骤
+开发：测试 -> 最小实现 -> 范围检查
+结束：记录剩余问题，不重写整份架构
+Feature：反向审查 -> docs/site/status 同步 -> 完整验证
+阶段：真实任务 + 故障演练 + Reality Check + 阶段文档
 ```
 
-这套流程的目标不是让个人项目变成大公司流程，而是用最少文字保留最昂贵的信息：边界、理由、失败语义和验收证据。
+目标不是增加流程，而是用尽量少的文字保留最难重建的信息：边界、理由、失败方式和验收证据。
 
 ## 参考
 

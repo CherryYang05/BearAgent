@@ -7,34 +7,36 @@ created: YYYY-MM-DD
 last_updated: YYYY-MM-DD
 ---
 
-# Implementation Plan: <feature>
+# PLAN-F-NNNN：<功能名称>
 
-Related Spec: `docs/specs/F-NNNN-<name>.md`
+关联 Spec：`docs/specs/F-NNNN-<name>.md`
 
-## Preconditions
+## 开始前确认
 
 - Spec status is `accepted`.
 - Open questions that affect implementation are resolved.
 
-## Vertical slices
+## 实施步骤
 
-### Slice 1: <small end-to-end behavior>
+### 第 1 步：<完成后能单独验证的结果>
 
-- Domain/contracts:
-- Adapter/interface:
-- Tests:
-- Verification command:
-- Rollback point:
+- 交付结果：
+- 代码落点：
+- 接入关系：谁调用它，结果交给谁。
+- 重点测试：
+- 验证命令：
+- 回退方式：
 
-### Slice 2: <small end-to-end behavior>
+### 第 2 步：<完成后能单独验证的结果>
 
-- Domain/contracts:
-- Adapter/interface:
-- Tests:
-- Verification command:
-- Rollback point:
+- 交付结果：
+- 代码落点：
+- 接入关系：
+- 重点测试：
+- 验证命令：
+- 回退方式：
 
-## Cross-cutting checks
+## 每一步都要检查
 
 - [ ] Persistence/recovery
 - [ ] Permission/security
@@ -46,6 +48,6 @@ Related Spec: `docs/specs/F-NNNN-<name>.md`
 - [ ] Site developer documentation synchronized
 - [ ] Site current status / milestone summary synchronized
 
-## Final verification
+## 最终验证
 
-List exact commands and expected observable results, including `npm run build --prefix=site`. Do not mark completed until they have run successfully.
+列出完整命令和应当看到的结果，包括 `npm run build --prefix=site`。命令没有实际通过前，不得把 Plan 标记为 `completed`。

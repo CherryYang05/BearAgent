@@ -4,67 +4,68 @@ status: completed
 plan_id: PLAN-F-0001
 related_spec: F-0001
 created: 2026-08-10
-last_updated: 2026-08-10
+last_updated: 2026-08-13
 ---
 
-# Implementation Plan: Domain IDs, messages and errors
+# PLAN-F-0001：内部 ID、Message、Error 和 Event
 
-Related Spec: `docs/specs/F-0001-domain-ids-messages-errors.md`
+关联 Spec：`docs/specs/F-0001-domain-ids-messages-errors.md`
 
-## Preconditions
+## 开始前确认
 
-- Spec status is `accepted`.
-- P1 kickoff 已确认 UUID4、文本/工具消息范围和安全错误边界。
-- ADR-0001、ADR-0002 与 ADR-0007 为 `accepted`。
+Spec 与 ADR-0001、ADR-0002、ADR-0007 已接受；UUID4、文本/工具消息范围和安全 Error 边界已经确认。
 
-## Vertical slices
+## 实施步骤
 
-### Slice 1: 类型化 ID 与 schema 基线
+### 第 1 步：用不同类型表示不同 ID
 
-- Status：completed。
-- Domain/contracts：冻结的 UUID4 ID types 和可注入 generator。
-- Adapter/interface：P0 store port 与 fake store 改用 `RunId/EventId`。
-- Tests：生成、解析、类型隔离、JSON 和非法 UUID 测试。
-- Verification command：`uv run pytest tests/unit/test_ids.py tests/unit/test_testing_adapters.py`。
-- Rollback point：删除 ID 模块并恢复 P0 字符串契约；无持久数据。
+- 状态：completed；
+- 交付结果：冻结的 UUID4 ID 类型和可替换生成器；
+- 代码落点：`domain/ids.py`，P0 store port 和 Fake store 改用 `RunId/EventId`；
+- 接入关系：Application 创建 ID，其他模块只传递对应具体类型；
+- 重点测试：生成、解析、类型隔离、JSON 和非法 UUID；
+- 验证：`uv run pytest tests/unit/test_ids.py tests/unit/test_testing_adapters.py`；
+- 回退：恢复 P0 字符串 ID，无持久数据迁移。
 
-### Slice 2: Provider 无关 Message 与安全 Error
+### 第 2 步：统一 Message 和可以安全传播的 Error
 
-- Status：completed。
-- Domain/contracts：Message role/parts、ErrorInfo、BearAgentError。
-- Adapter/interface：FakeModelProvider 请求改用 Message。
-- Tests：合法 round-trip、非法组合、unknown fields、secret detail keys 和大小限制。
-- Verification command：`uv run pytest tests/unit/test_messages.py tests/security/test_domain_errors.py`。
-- Rollback point：恢复 P0 string messages；无外部调用。
+- 状态：completed；
+- 交付结果：Message 角色/内容、ErrorInfo 和 BearAgentError；
+- 代码落点：`domain/messages.py`、`domain/errors.py`，Fake model 请求改用 Message；
+- 接入关系：Provider adapter 将来把 SDK 响应翻译成 Message，Application 把外部异常转成安全 Error；
+- 重点测试：JSON 往返、非法角色组合、未知字段、敏感详情键和大小限制；
+- 验证：`uv run pytest tests/unit/test_messages.py tests/security/test_domain_errors.py`；
+- 回退：恢复 P0 字符串消息，无外部调用和持久数据。
 
-### Slice 3: 版本化 Event envelope
+### 第 3 步：补全所有 Event 共用的字段
 
-- Status：completed。
-- Domain/contracts：完整通用 envelope、时区与 JSON-only payload validation。
-- Adapter/interface：InMemoryEventStore 使用类型化 envelope。
-- Tests：sequence、时间、payload、ordering 和 duplicate ID。
-- Verification command：`uv run pytest tests/unit/test_events.py tests/unit/test_testing_adapters.py`。
-- Rollback point：恢复 P0 Event；无 SQLite migration。
+- 状态：completed；
+- 交付结果：版本、时间、关联 ID 和 JSON-only payload；
+- 代码落点：`domain/events.py`，内存 store 改用完整 Event；
+- 接入关系：后续具体 Event payload 复用该外壳，store 按 Run 和 sequence 保存；
+- 重点测试：sequence、时区、payload、排序和重复 ID；
+- 验证：`uv run pytest tests/unit/test_events.py tests/unit/test_testing_adapters.py`；
+- 回退：恢复 P0 Event，无 SQLite migration。
 
-### Slice 4: Schema compatibility 与文档关闭
+### 第 4 步：建立 schema 兼容性基线并关闭 Feature
 
-- Status：completed。
-- Domain/contracts：公共 schema registry/snapshot。
-- Adapter/interface：domain exports 和 architecture claim 同步。
-- Tests：JSON schema snapshot、import boundary、完整回归。
-- Verification command：完整 Definition of Done 命令。
-- Rollback point：在 F-0002 前整体回退 F-0001；没有持久化兼容负担。
+- 状态：completed；
+- 交付结果：公共 schema registry、快照、exports 和对应文档；
+- 代码落点：`domain/schema.py`、schema snapshot、Architecture/ADR/Spec/Site；
+- 接入关系：后续公共类型加入 registry，修改时通过快照审查 JSON 变化；
+- 重点测试：schema snapshot、import boundary 和完整回归；
+- 验证：最终验证命令；
+- 回退：在 F-0002 前整体回退 F-0001，无持久兼容负担。
 
-## Cross-cutting checks
+## 每一步都检查过
 
-- [x] Persistence/recovery：本 Feature 无持久 adapter；回退不涉及 migration。
-- [x] Permission/security：覆盖 secret detail key、unknown field 与 Provider object 拒绝测试。
-- [x] Timeout/cancel/resource limits：无外部调用；Message/Error/JSON 容器均有结构与大小限制。
-- [x] Logs/trace/metrics：Event 提供 correlation/causation/sequence，Error 提供稳定聚合字段。
-- [x] Migration/rollback：P0 内部契约一次性替换，无已持久化 schema。
-- [x] Documentation impact：Spec、ADR、Plan、索引、Roadmap 和 schema snapshot 已同步。
+- [x] 无持久 adapter，回退不涉及 migration；
+- [x] 敏感 Error 键、未知字段和 Provider 对象被拒绝；
+- [x] 无外部调用，容器和文本有结构与大小限制；
+- [x] Event 提供 correlation、causation、sequence，Error 提供稳定聚合字段；
+- [x] Spec、ADR、Plan、Architecture、Roadmap、Site 和快照已同步。
 
-## Final verification
+## 最终验证
 
 ```text
 uv run ruff check .
@@ -73,4 +74,4 @@ uv run pytest
 uv run python scripts/check_docs.py
 ```
 
-结果（2026-08-10）：39 tests passed；Ruff、Pyright 和文档链接检查通过；最终关闭前再次运行。
+2026-08-10：39 tests passed，Ruff、Pyright 和文档链接检查通过。

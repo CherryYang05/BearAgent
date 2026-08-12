@@ -28,33 +28,33 @@ export default defineConfig({
         {
           label: '开始',
           items: [
-            { label: 'BearAgent 是什么', slug: 'start/what-is-bearagent' },
-            { label: '产品定位', slug: 'project/positioning' },
+            { label: 'BearAgent 要解决什么问题', slug: 'start/what-is-bearagent' },
+            { label: '为什么做 BearAgent', slug: 'project/positioning' },
           ],
         },
         {
           label: '学习 Agent',
           items: [
-            { label: '学习路径', slug: 'learn' },
-            { label: 'Agent 基础原理', slug: 'learn/agent-basics' },
-            { label: 'Run 状态与预算', slug: 'learn/runtime-state-and-budgets' },
-            { label: '一次 Run 的事件演练', slug: 'learn/run-event-reducer-walkthrough' },
+            { label: '从一次任务理解 BearAgent', slug: 'learn' },
+            { label: '一项 Agent 任务怎样运转', slug: 'learn/agent-basics' },
+            { label: '状态和预算怎样计算', slug: 'learn/runtime-state-and-budgets' },
+            { label: '逐条读懂一次 Run', slug: 'learn/run-event-reducer-walkthrough' },
           ],
         },
         {
           label: 'BearAgent 架构',
           items: [
-            { label: '架构概览', slug: 'architecture' },
-            { label: 'F-0001：领域契约', slug: 'architecture/domain-contracts' },
+            { label: 'Runtime 各部分怎样协作', slug: 'architecture' },
+            { label: '内部怎样交换数据', slug: 'architecture/domain-contracts' },
           ],
         },
         {
           label: '开发者文档',
           items: [
-            { label: '开发者入口', slug: 'development' },
-            { label: 'Feature 文档同步', slug: 'development/feature-documentation' },
-            { label: 'F-0001 实现导读', slug: 'development/domain-contracts' },
-            { label: 'F-0002 实现导读', slug: 'development/run-reducer-and-budgets' },
+            { label: '从哪里开始读代码', slug: 'development' },
+            { label: 'Feature 怎样更新文档', slug: 'development/feature-documentation' },
+            { label: 'F-0001：修改内部数据', slug: 'development/domain-contracts' },
+            { label: 'F-0002：修改状态和预算', slug: 'development/run-reducer-and-budgets' },
           ],
         },
         {
@@ -67,14 +67,14 @@ export default defineConfig({
           label: '参考',
           items: [
             { label: '术语表', slug: 'reference/glossary' },
-            { label: '资料来源', slug: 'reference/sources' },
+            { label: '参考资料怎样使用', slug: 'reference/sources' },
           ],
         },
         {
           label: '项目',
           items: [
-            { label: '当前实现状态', slug: 'project/status' },
-            { label: '阶段与里程碑', slug: 'project/milestones' },
+            { label: '现在实现到了哪里', slug: 'project/status' },
+            { label: 'BearAgent 按什么顺序完成', slug: 'project/milestones' },
           ],
         },
       ],

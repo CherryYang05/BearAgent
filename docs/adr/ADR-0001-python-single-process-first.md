@@ -1,27 +1,32 @@
 ---
-title: "ADR-0001: Python and single-process first"
+title: "ADR-0001: P0-P3 use Python and one process"
 status: accepted
 date: 2026-08-09
 ---
 
-# ADR-0001：Python 与单进程优先
+# ADR-0001：P0–P3 使用 Python 和单进程
 
-## Context
+## 要解决的问题
 
-项目由个人开发，需要快速形成可用闭环，同时保留对 Agent runtime、tool、recovery 和 eval 的直接控制。
+BearAgent 由个人开发。早期需要直接接入模型和评测生态，也需要看清状态、恢复和权限规则。如果
+同时引入多语言服务、任务队列和分布式 worker，部署与调试成本会先于用户价值出现。
 
-## Decision
+## 决定
 
-P0-P3 使用固定版本 Python、一个 API/runtime 进程和 asyncio。CLI/API 共享同一 application/runtime；不引入分布式 queue 或独立 workflow service。
+P0 至 P3 固定使用 Python 3.12、asyncio 和一个 API/Runtime 进程。CLI 和未来 API 调用同一套
+application 与 Runtime 代码；不引入分布式队列或独立 workflow service。
 
-## Alternatives
+## 比较过的方案
 
-- TypeScript/Bun：适合桌面/Web 一体，但本项目早期核心不是 UI，且 Python 模型/评测生态更直接。
-- Rust/Go：运行时属性好，但会把大量早期时间投入 SDK、schema 和 Web 外围。
-- Temporal/Celery：支持复杂分布式工作流，但单用户阶段增加部署、状态映射和调试成本。
+- TypeScript/Bun 更适合 Web 与桌面一体开发，但早期核心不是 UI；
+- Rust/Go 的运行时特性更强，但模型 SDK、schema 和评测接入成本更高；
+- Temporal/Celery 能处理复杂分布式流程，但单用户阶段会增加部署和状态映射。
 
-## Consequences
+## 带来的影响
 
-- 交付快、测试和模型生态成熟；单进程的并发和隔离上限可接受。
-- 必须通过端口和 adapter 控制 Python 动态性，使用 Pyright/Pydantic/contract tests。
-- 出现多 worker、长 timer 或 SQLite 写竞争的真实证据后重新评估。
+Python 让早期交付和测试更直接。动态语言带来的边界风险通过类型检查、Pydantic、port 和契约测试
+控制。单进程的吞吐和隔离上限是当前接受的代价。
+
+## 何时重新评估
+
+只有出现多 worker、跨天 timer 或 SQLite 写竞争的实际证据时，才重新评估语言或分布式执行方案。

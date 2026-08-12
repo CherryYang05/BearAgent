@@ -1,8 +1,9 @@
 # Implementation Plans
 
-Implementation Plan 记录一个已接受 Feature 的纵向实现切片和当前进度，不重复 Feature Spec 的需求，也不代替 ADR。
+Plan 说明一个已接受 Feature 准备按什么顺序落到代码。每一步完成后都应能单独验证，仓库同时最多
+只有一个 `active` 主 Plan。
 
-命名使用 `PLAN-F-NNNN-<slug>.md`，并在 Front Matter 中声明：
+命名为 `PLAN-F-NNNN-<slug>.md`，Front Matter 至少包含：
 
 ```yaml
 status: draft | active | completed | superseded
@@ -10,22 +11,17 @@ plan_id: PLAN-F-NNNN
 related_spec: F-NNNN
 ```
 
-规则：
+Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `accepted`，影响实现的开放问题已经
+解决；完成后根据代码和测试把 Plan 改为 `completed`、Spec 改为 `implemented`。
 
-- Feature Spec 达到 `accepted` 且影响实现的开放问题已解决后，Plan 才能从 `draft` 进入 `active`。
-- 仓库同时最多只有一个 `active` 主 Plan；小型 S0 修复不需要 Plan。
-- 切片完成状态必须与代码和测试证据一致，不能只依据聊天记录勾选。
-- Feature 验收完成后，Plan 标记 `completed`，Feature Spec 标记 `implemented`。
-- Feature 所属 milestone 从关联 Spec 推导，Plan 不重复维护。
+新 Plan 使用 [Implementation Plan 模板](../templates/implementation-plan.md)。
 
-使用 [Implementation Plan 模板](../templates/implementation-plan.md)。
+## 当前计划
 
-当前 active Plan：
+没有 active Plan。下一个 P1 Runtime Feature 需要项目所有者确认后再开始。
 
-- 无。下一个 P1 运行时 Feature 需先与项目所有者确认。
+## 已完成计划
 
-已完成：
-
-- [PLAN-F-0002: Run reducer, Activity lifecycle and budgets](PLAN-F-0002-run-reducer-activity-lifecycle-budgets.md)
-- [PLAN-F-0015: Local Starlight documentation site](PLAN-F-0015-local-starlight-docs-site.md)
-- [PLAN-F-0001: Domain IDs, messages and errors](PLAN-F-0001-domain-ids-messages-errors.md)
+- [PLAN-F-0001：内部 ID、Message、Error 和 Event](PLAN-F-0001-domain-ids-messages-errors.md)
+- [PLAN-F-0002：Run/Activity 状态和预算](PLAN-F-0002-run-reducer-activity-lifecycle-budgets.md)
+- [PLAN-F-0015：本地 Starlight 文档站](PLAN-F-0015-local-starlight-docs-site.md)

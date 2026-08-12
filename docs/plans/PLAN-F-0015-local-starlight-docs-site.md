@@ -4,80 +4,70 @@ status: completed
 plan_id: PLAN-F-0015
 related_spec: F-0015
 created: 2026-08-10
-last_updated: 2026-08-10
+last_updated: 2026-08-13
 ---
 
-# Implementation Plan: Local Starlight documentation site
+# PLAN-F-0015：本地 Starlight 文档站
 
-Related Spec: `docs/specs/F-0015-local-starlight-docs-site.md`
+关联 Spec：`docs/specs/F-0015-local-starlight-docs-site.md`
 
-## Preconditions
+## 开始前确认
 
-- Spec status is `accepted`.
-- ADR-0008 is accepted.
-- Starlight、中文优先和 P1 期间仅本地部署已确认。
-- 分支从 F-0001 的已完成提交创建。
+F-0015 与 ADR-0008 已接受；中文优先、P1 只本地构建、工程事实和公共解释分开维护已经确认。
 
-## Vertical slices
+## 实施步骤
 
-### Slice 1: 文档治理与站点边界
+### 第 1 步：明确工程文档和公共站点的分工
 
-- Status：completed。
-- Domain/contracts：定义 `docs/` 工程事实与 `site/` 公共教学内容的职责。
-- Adapter/interface：登记 F-0015、ADR-0008、Plan 和 Roadmap。
-- Tests：工程 Markdown 链接检查。
-- Verification command：`uv run python scripts/check_docs.py`。
-- Rollback point：删除新增治理文档和索引登记，不影响 F-0001。
+- 状态：completed；
+- 交付结果：`docs/` 保存精确事实，`site/` 按读者任务解释，不建立第二套 Feature 状态；
+- 代码落点：F-0015 Spec、ADR、Plan、Roadmap 和仓库规则；
+- 接入关系：每个站点页面通过状态和来源回到工程事实；
+- 重点测试：工程 Markdown 链接；
+- 验证：`uv run python scripts/check_docs.py`；
+- 回退：删除新增治理说明和索引登记，不影响 Runtime。
 
-### Slice 2: 可重复的本地 Starlight 构建
+### 第 2 步：建立可重复的本地构建
 
-- Status：completed。
-- Domain/contracts：定义站点目录、中文路由和本地命令。
-- Adapter/interface：Starlight、Pagefind、Mermaid 和 npm scripts。
-- Tests：lockfile 安装、生产构建、静态输出检查。
-- Verification command：`npm --prefix=site ci` 和 `npm run build --prefix=site`。
-- Rollback point：删除 `site/`；不涉及 Python 依赖或运行时数据。
+- 状态：completed；
+- 交付结果：Starlight、中文路由、Pagefind、Mermaid 和 npm scripts；
+- 代码落点：`site/`、package lock 和 CI；
+- 接入关系：CI 只安装并构建静态页面，不部署、不读取 Runtime 数据；
+- 重点测试：锁定安装、生产构建和静态输出；
+- 验证：`npm --prefix=site ci`、`npm run build --prefix=site`；
+- 回退：删除 `site/`，不影响 Python 依赖和数据。
 
-### Slice 3: 第一批学习与架构内容
+### 第 3 步：用一次任务组织学习与架构内容
 
-- Status：completed。
-- Domain/contracts：页面状态区分原理、设计、当前实现和规划。
-- Adapter/interface：首页、导航、学习路径、架构、F-0001、状态与来源页。
-- Tests：Starlight build、路由存在性和人工导航检查。
-- Verification command：`npm run build --prefix=site`。
-- Rollback point：保留站点骨架，逐页回退内容。
+- 状态：completed；
+- 交付结果：首页、学习路径、Agent 基础、Runtime 架构、F-0001/F-0002 导读和当前状态；
+- 代码落点：`site/src/content/docs/zh-cn/`；
+- 接入关系：学习页先讲具体行为，架构页解释 port/adapter，开发者页连接代码与测试；
+- 重点测试：站点构建、路由和人工连续阅读；
+- 验证：`npm run build --prefix=site`；
+- 回退：保留站点骨架，逐页恢复内容。
 
-### Slice 4: CI、文档同步与关闭
+### 第 4 步：把文档同步和写作质量加入完成标准
 
-- Status：completed。
-- Domain/contracts：无运行时变化。
-- Adapter/interface：CI 只构建不部署；README/SOP/Architecture 与当前事实同步。
-- Tests：完整 Python 质量检查、测试、工程文档链接和站点构建。
-- Verification command：Definition of Done 全部命令。
-- Rollback point：移除 Node CI job，保留可本地使用的站点。
+- 状态：completed；
+- 交付结果：每个 Feature 同步工程事实、学习页、开发者页和状态；禁止机械术语替换；
+- 代码落点：`AGENTS.md`、SOP、Spec/Plan/ADR 模板、PR 模板和站点开发者页；
+- 接入关系：后续 Feature 先通过代码/测试确认事实，再按页面职责写入不同入口；
+- 重点测试：链接、站点构建、变更段落连续阅读和完整工程回归；
+- 验证：最终验证命令；
+- 回退：回退文档治理，不影响 Runtime 数据和接口。
 
-### Slice 5: Feature 与里程碑双轨文档治理
+## 每一步都检查过
 
-- Status：completed。
-- Domain/contracts：每个 Feature 同步工程事实、初学者路径、开发者文档与当前状态；每个 P 阶段额外同步阶段总结。
-- Adapter/interface：AGENTS、SOP、Feature/Plan/PR 模板、开发者导航、F-0001 开发导读和阶段页。
-- Tests：Starlight build、工程链接检查、双轨页面与侧边栏路由检查。
-- Verification command：`npm run build --prefix=site` 和完整 Definition of Done。
-- Rollback point：回退治理与新增页面，不影响 Runtime 数据或 F-0001 契约。
+- [x] 站点无 Runtime 持久状态，产物可从源码重建；
+- [x] 不读取密钥和用户数据，不增加发布凭证或远程脚本；
+- [x] CI 只运行有限安装和静态构建；
+- [x] Astro telemetry 禁用，只保留构建日志；
+- [x] Node 工具链与 Python Runtime 分开；
+- [x] 学习、开发、状态和阶段页面同步；
+- [x] 术语在具体行为中解释，未使用机械字符串替换。
 
-## Cross-cutting checks
-
-- [x] Persistence/recovery：站点无持久状态；构建产物可从源码重建。
-- [x] Permission/security：不读取 secret/runtime data，不添加发布凭证或远程脚本。
-- [x] Timeout/cancel/resource limits：CI 只执行有限的安装和静态构建，不启动预览进程。
-- [x] Logs/trace/metrics：构建脚本禁用 Astro telemetry，只保留本地/CI 构建输出。
-- [x] Migration/rollback：新目录隔离，可整体删除；没有数据库 migration。
-- [x] Engineering documentation impact：已同步 Architecture、Roadmap、SOP、模板与部署策略。
-- [x] Site beginner learning path：已将 F-0001 学习导读连接到开发者实现导读。
-- [x] Site developer documentation：已增加开发者入口、Feature 同步规则和 F-0001 代码地图。
-- [x] Site current status / milestone summary：已同步当前状态并增加阶段与里程碑页。
-
-## Final verification
+## 最终验证
 
 ```text
 npm --prefix=site ci
@@ -90,4 +80,4 @@ uv run python scripts/check_docs.py
 git diff --check
 ```
 
-本 Plan 只有在静态中文页面、搜索、Mermaid、双轨文档治理、CI 和全部回归检查通过后才标记 `completed`。
+只有静态页面、搜索、Mermaid、工程检查和内容连贯性全部通过后，本 Plan 才保持 `completed`。

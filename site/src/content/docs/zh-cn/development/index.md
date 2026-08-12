@@ -1,6 +1,6 @@
 ---
-title: BearAgent 开发者入口
-description: 从工程事实、模块边界、Feature 工作流和验证证据理解 BearAgent。
+title: 从哪里开始读代码
+description: 先找到当前功能的事实，再沿着调用关系进入实现和测试。
 bearStatus: implemented
 sourceRefs:
   - AGENTS.md
@@ -8,39 +8,33 @@ sourceRefs:
   - ai-development-sop
 ---
 
-开发者文档帮助你从“知道概念”继续走到“能解释、修改和验证实现”。它不会取代工程 `docs/`：
-Spec、ADR、代码和测试仍是事实来源，这里负责建立阅读顺序和代码地图。
+开发者文档不复制 Spec，也不把每个目录重新列一遍。它负责回答三个问题：代码从哪里进入、关键
+规则在哪里、什么测试能证明修改没有破坏行为。
 
-:::note[内容状态：当前开发流程]
-本页描述的文档同步和验证流程已经写入仓库规则。Runtime 功能是否可用仍以
-[当前实现状态](../project/status.md)为准。
-:::
+## 第一次阅读
 
-## 推荐阅读顺序
-
-1. 阅读[产品定位](../project/positioning.md)，确认功能是在强化核心证据还是只增加能力宽度。
-2. 阅读[BearAgent 架构概览](../architecture/)理解 Core、Port 和 Adapter 的依赖方向。
-3. 阅读当前 Feature 的 Spec、ADR 和 Implementation Plan，确认目标、边界与取舍。
-4. 通过本区的实现导读找到代码、测试和验证命令。
-5. 修改后同时更新工程文档、初学者学习路径、开发者文档与当前状态。
+1. 先看[当前实现状态](../project/status.md)，避免把路线图当成已有功能；
+2. 用[Runtime 各部分怎样协作](../architecture/)理解调用方向；
+3. 找到当前 Feature 的 Spec、相关 ADR 和 Plan；
+4. 按下面的实现导读进入代码和测试；
+5. 修改后运行完整验证，并同步会受影响的学习页和状态页。
 
 ## 当前实现导读
 
-- [F-0001：领域契约实现](domain-contracts.md)：ID、Message、Error、Event envelope 和 schema snapshot。
-- [F-0002：Run reducer 与预算](run-reducer-and-budgets.md)：typed payload、状态转换、usage 与预算门。
-- [Feature 文档同步规则](feature-documentation.md)：每个 Feature 和每个 P 阶段如何关闭。
-- [本地运行文档站](../guides/local-docs.md)：安装、预览并验证 Starlight 构建。
+- [F-0001：内部数据类型](domain-contracts.md)——ID、Message、Error、Event 以及模型 adapter 的翻译边界；
+- [F-0002：状态和预算](run-reducer-and-budgets.md)——具体 Event、Reducer、预算检查和修改顺序；
+- [Feature 完成时怎样更新文档](feature-documentation.md)——哪些事实写在 `docs/`，哪些解释写在站点；
+- [本地运行文档站](../guides/local-docs.md)——安装、构建和检查 Starlight。
 
-## 证据地图
+## 不同问题去哪里找答案
 
-| 问题 | 去哪里找 |
+| 你要确认什么 | 首选位置 |
 |---|---|
-| 为什么要做 | Feature Spec |
-| 为什么选择这种设计 | ADR |
-| 当前做到哪个切片 | Implementation Plan |
-| 系统现在如何分层 | Architecture |
-| 行为是否真实成立 | 代码、测试和可复现命令 |
-| 初学者怎样理解 | `site/.../learn/` 与架构导读 |
-| 开发者怎样修改 | `site/.../development/` |
+| 这个功能必须做到什么 | Feature Spec |
+| 为什么选择当前方案 | ADR |
+| 准备按什么顺序实现 | Implementation Plan |
+| 当前模块如何连接 | Architecture |
+| 行为是否真的成立 | 代码、测试和可复现命令 |
+| 当前版本能否使用 | 站点状态页 + implemented Spec |
 
-开发者页面只解释已经被这些证据支持的事实；尚未实现的设计必须明确标注。
+聊天讨论可以提出问题，但不会自动改变这些事实。决定只有写入仓库并通过审查后才生效。

@@ -1,76 +1,70 @@
 ---
-title: Run 状态、Reducer 与预算
-description: 理解 Agent Runtime 如何用 Event 推导状态，并在下一次 Activity 前执行预算门。
+title: 状态和预算怎样计算
+description: 先理解 Event 与 Reducer 的分工，再看下一次模型或工具调用为什么会被允许或拒绝。
 bearStatus: implemented
 sourceRefs:
   - F-0002
   - ADR-0009
 ---
 
-一个普通 Agent demo 往往把“当前做到哪里”和“还剩多少预算”放在 while loop 的局部变量里。
-进程结束后，这些变量既无法检查，也很难证明 Store、CLI 和 Runtime 看到的是同一个状态。
+如果执行循环只用几个可变变量保存“做到哪里”和“用了多少 token”，进程结束后就很难还原过程，
+SQLite 查询和命令行也可能算出不同结果。F-0002 选择先记录发生过的事实，再用同一段代码计算状态。
 
-F-0002 把这两个问题拆成无 I/O 的确定性规则：Event 描述已经发生的事实，Reducer 从事实推导
-不可变状态，budget gate 决定能否请求下一个 Activity。
-
-:::note[内容状态：已实现]
-本页描述的 P1 Run/Activity reducer 与预算规则已有代码、schema snapshot 和测试证据。
-SQLite 持久化、真实 Provider、Agent Loop 和崩溃后自动恢复仍分别属于后续 Feature。
+:::note[这部分已经实现]
+Run、Activity、12 种 Event payload、Reducer 和预算检查已有代码和测试。它们目前只处理内存中的
+Event 序列；SQLite 和崩溃后继续执行尚未实现。
 :::
 
-## Reducer 为什么叫这个名字
+## Event 记录事实，Reducer 计算结果
 
-`reduce` 在函数式编程里表示“把一串值逐个合并成一个结果”，也常叫 `fold`。BearAgent 反复应用
-同一条规则：
+例如，一次模型调用会依次留下“已请求”“已开始”“已完成”三个 Event。Event 不会为了更新状态
+而被改写。Reducer 逐条读取这些 Event，返回新的 `RunState`。
 
 ```text
-state(n) = reduce_event(state(n-1), event(n))
+旧状态 + 下一条 Event -> 新状态
 ```
 
-所以 `reduce_events([event1, event2, ...])` 最终把一串 Event **折叠**为一个 `RunState`。这里的
-“reduce”不是删除或压缩 Event；Event 仍是事实，Reducer 只计算它们在当前 sequence 上代表的状态。
-它不读写数据库、不调用模型或 Tool，也不原地修改旧 state，因此相同 Event sequence 会得到值相等
-的结果。
-
-## 状态怎样产生
+这类把一串输入逐个合并成一个结果的函数通常叫 `reducer`。名称来自 `reduce` / `fold`，不是
+“删除 Event”的意思。Reducer 不访问数据库、不调用模型，也不读取系统时钟；同一串 Event 总会
+得到值相等的状态。
 
 ```mermaid
-flowchart TD
-    E["有序 Event"] --> V{"type/version/sequence 合法？"}
-    V -->|否| X["稳定失败，不修改旧状态"]
-    V -->|是| R["纯 Reducer"]
-    R --> S["新的不可变 RunState"]
-    S --> B{"请求下一个 Activity？"}
-    B -->|否| F["记录已经发生的完成或失败事实"]
-    B -->|是| G{"预算允许？"}
-    G -->|是| N["记录 ActivityRequested"]
-    G -->|否| D["BUDGET_EXHAUSTED -> RunFailed"]
+flowchart TB
+    E["按 sequence 排好的 Event"] --> V{"顺序和状态转换合法吗？"}
+    V -->|"否"| X["拒绝，不修改旧状态"]
+    V -->|"是"| R["Reducer"]
+    R --> S["新的 RunState"]
+    S --> G{"还要请求下一次 Activity？"}
+    G -->|"是"| B["先检查预算"]
+    G -->|"否"| F["记录完成或失败"]
 ```
 
-P1 的 Run 只实现 `QUEUED -> RUNNING -> SUCCEEDED/FAILED`。模型和 Tool 操作不塞进 Run status，
-而是各自作为 Activity 经过 `PENDING -> RUNNING -> SUCCEEDED/FAILED`。第一版同时最多一个 active
-Activity，这让状态和预算语义保持可解释。
+## Run 和 Activity 为什么分开
 
-## 五类预算在哪里记账
+Run 表示“处理这一条用户请求”的整体进度。Activity 表示其中一次模型调用或工具调用。P1 的
+Run 只有 `QUEUED`、`RUNNING`、`SUCCEEDED`、`FAILED`；每个 Activity 经过 `PENDING`、
+`RUNNING`，最后成功或失败。
 
-| 预算 | 记账点 | 新请求怎样判断 |
+如果把“正在调用模型”“正在读文件”都塞进 Run 状态，两个层次会纠缠在一起。分开以后，用户
+可以看到整次请求是否完成，也能定位具体是哪一次调用失败。
+
+## 五类预算在不同时间记账
+
+| 限制 | 什么时候增加用量 | 什么时候阻止新 Activity |
 |---|---|---|
-| 模型迭代 | `ModelCallRequested` | 只限制下一次 Model Activity |
-| Tool 次数 | `ToolCallRequested` | 只限制下一次 Tool Activity |
-| token | 模型完成或失败 Event | 达到 limit 后阻止两类新 Activity |
-| 费用 | 模型完成或失败 Event，整数 micro-USD | 达到 limit 后阻止两类新 Activity |
-| wall time | `RunStarted` 到候选请求时间 | deadline 后不再请求新 Activity |
+| 模型调用次数 | 接受 `ModelCallRequested` 时 | 下一次模型请求将超过上限 |
+| 工具调用次数 | 接受 `ToolCallRequested` 时 | 下一次工具请求将超过上限 |
+| token | 模型报告完成或失败时 | 已知用量达到上限 |
+| 费用 | 模型报告完成或失败时，以整数 micro-USD 保存 | 已知费用达到上限 |
+| 总时间 | 从 `RunStarted` 计算 | 准备请求下一次 Activity 时已过期限 |
 
-token 和费用只有 Provider 返回 usage 后才能精确知道。因此一次已经开始的模型调用可能让实际
-usage 超过 limit；Runtime 必须记录这个事实，并阻止后续 Activity，不能假装调用没有发生。
-同理，deadline 不会让 Reducer 丢弃迟到的 completion/failure Event。
+token 和费用只有模型返回后才知道准确数字。因此某次已经开始的调用可能让实际用量超过上限。
+Runtime 必须保留这个事实，然后禁止下一次 Activity；它不能为了让数字不超限而丢掉完成记录。
 
-## 可重放不等于自动恢复
+## 这还不是崩溃恢复
 
-相同 Event sequence 会得到值相等的 `RunState`，这是未来恢复的必要基础，但不是完整恢复能力。
-P1 没有 SQLite startup scan、Checkpoint、attempt、cancel、receipt 或 `UNKNOWN`。这些语义必须在
-P2 通过持久边界和故障注入另行证明。
+确定性计算状态是恢复的前提，但不是完整恢复。当前没有 SQLite 启动扫描、Checkpoint、重试
+Attempt 或 `UNKNOWN`。P2 才会决定进程重启后哪些 Activity 能重试、哪些必须停住。
 
-下一步用[一次 Run 的完整事件演练](run-event-reducer-walkthrough.md)观察每个 Event 怎样改变状态，
-再阅读 [F-0002 开发者实现导读](../development/run-reducer-and-budgets.md)和
-[当前实现状态](../project/status.md)。
+继续阅读[逐条读懂一次 Run](run-event-reducer-walkthrough.md)，或进入
+[F-0002 代码导读](../development/run-reducer-and-budgets.md)。

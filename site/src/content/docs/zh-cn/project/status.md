@@ -1,58 +1,49 @@
 ---
-title: 当前实现状态
-description: 区分 BearAgent 已实现能力、正在建设内容和未来 Roadmap。
+title: 现在实现到了哪里
+description: 只列出当前分支中已有代码和测试支持的能力。
 bearStatus: implemented
 sourceRefs:
   - roadmap
   - F-0001
   - F-0002
-  - ADR-0009
   - F-0015
 ---
 
-本页只陈述有仓库证据支持的当前状态。Roadmap 中出现的名称不等于已经可用。
+BearAgent 当前还不能调用真实模型完成文件任务。已经写入路线图、架构或 ADR 的设计，不等于已经
+接通运行入口。
 
-## 已完成
+## 已经可以验证
 
-| 范围 | 状态 | 证据 |
-|---|---|---|
-| P0 工程基线 | 已完成 | Python/uv 骨架、CLI doctor、CI、文档治理和测试 |
-| F-0001 领域契约 | 已实现 | 类型化 ID、Message、Error、Event envelope 和 schema snapshot |
-| F-0002 状态与预算 | 已实现 | Run/Activity schema、12 种 payload、纯 Reducer、五维 budget gate |
-| F-0015 本地文档站 | 已实现 | Starlight 中文站、本地搜索、Mermaid、学习与架构入口 |
+| 已完成部分 | 现在能验证什么 |
+|---|---|
+| P0 工程基础 | Python/uv 安装、CLI `doctor`、Ruff、Pyright、pytest、CI 和模块依赖检查 |
+| F-0001 内部数据类型 | ID、Message、Error 和通用 Event 可以校验、冻结、JSON 往返并生成 schema 快照 |
+| F-0002 状态和预算规则 | 12 种 Event 可以推导 Run/Activity 状态；五类预算在新 Activity 前检查 |
+| F-0015 本地文档站 | 中文 Starlight 页面、搜索和 Mermaid 可以在本地构建 |
 
-## P1 运行时 Backlog
+## P1 还需要接通
 
-以下名称只登记在 Roadmap，尚未创建对应 Spec：
+- Event store 和 SQLite 保存；
+- 工具接口、统一执行入口和固定权限规则；
+- 工作区读取、搜索和 `outputs/**` 原子写入；
+- 一个真实 Model Provider adapter；
+- 最小上下文组装和有界 Agent Loop；
+- `run`、`inspect`、`events` 命令以及固定评测任务。
 
-1. F-0003 EventStore contract, SQLite adapter and projections
-2. F-0006 Tool contract, registry, executor and baseline policy gate
-3. F-0007 Workspace boundary and read tools
-4. F-0008 Atomic write tool and artifacts
-5. F-0004 ModelProvider contract and first production adapter
-6. F-0016 Minimal ContextBuilder, bounded loop, versioned Agent configuration and eval task pack
-7. F-0005 CLI run/inspect/events
+这些工作在 Roadmap 中有稳定 Feature ID，但未创建 Spec 的条目仍只是待办。仓库当前没有 active Plan，
+下一个 P1 Feature 需要由项目所有者确认后开始。
 
-:::caution[当前不能做什么]
-BearAgent 现在可以从内存 Event sequence 推导 Run/Activity 状态并检查预算，但还不能调用真实模型
-完成文件任务，也没有 SQLite EventStore、文件工具、真实 Provider 或执行循环。
-P1 完成后也只承诺执行事实可检查；Checkpoint、崩溃后自动恢复、`UNKNOWN` 处置、Approval 与
-sandbox 分别属于 P2/P3。相关页面如果提前解释设计，必须标记为设计或规划中。
-:::
+## 当前明确不能做
 
-## 当前阶段门
+- 不能调用真实模型或执行完整 Agent Loop；
+- 不能用 SQLite 保存 Run，也不能在进程重启后自动继续；
+- 没有实际文件工具、用户 Approval、sandbox 或服务器 API；
+- 文档站只在本地和 CI 构建，尚未发布到 `docs.bearguin.cn`。
 
-F-0002 已完成；下一个 P1 运行时 Feature 尚未由项目所有者确认，仓库当前没有 active Plan。
-阶段关闭时必须复现真实 CLI 文件任务、非法路径拒绝、预算终止和 Activity/Event/Artifact 检查；
-不能用已接受 Roadmap 或架构图代替这些实现证据。
+F-0002 的确定性重放只说明“同一串 Event 会算出同一状态”。它不是 P2 的崩溃恢复，也没有
+Checkpoint、Attempt 或 `UNKNOWN` 处置。
 
-## 服务器发布时间
+## 文档怎样保持当前
 
-文档站在 P1 期间只本地构建。P1 完成后再单独确认 `docs.bearguin.cn` 的托管、HTTPS、发布权限
-和回滚流程，当前仓库中不保存服务器凭证，也没有部署 Job。
-
-## 文档同步状态
-
-从 F-0015 开始，每个 Feature 都必须同时更新工程 `docs/`、初学者学习路径、开发者文档和本页。
-每个 P 阶段关闭时还要更新[阶段与里程碑](milestones.md)，避免网站只显示功能列表而缺少完整的
-学习与实现脉络。
+每个 Feature 完成时，同时更新工程 `docs/`、相关学习页、开发者入口和本页。只有实现事实变化时
+才修改状态；单纯改写说明不会把规划能力变成当前能力。

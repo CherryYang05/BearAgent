@@ -1,57 +1,49 @@
 ---
-title: Agent 学习路径
-description: 从最小执行循环逐步走向可靠 Agent Runtime。
+title: 从一次任务理解 BearAgent
+description: 沿着同一个本地文件任务，依次理解 Agent、Runtime、Event、状态和预算。
 bearStatus: concept
 sourceRefs:
   - AI Agents in Depth
+  - F-0001
+  - F-0002
 ---
 
-这条路径不是罗列 Agent 产品功能，而是按照工程依赖逐层回答：一个模型调用怎样变成一个可以
-长期维护的 Agent Runtime？
+这条学习路径始终使用同一个例子：用户要求 Agent 阅读仓库文档，并把总结写进 `outputs/`。
+每一页只增加一个问题，避免先背完术语再猜它们如何协作。
 
-:::note[内容状态：通用原理 + BearAgent 学习路线]
-本页安排学习顺序；其中一些 BearAgent 模块仍处于规划阶段。
+:::note[页面会明确标出实现状态]
+学习路径同时讲通用原理、已实现代码和后续设计。出现未来能力时，会直接说明它尚未实现。
 :::
 
 ```mermaid
-flowchart LR
-    A[Chat 与 Agent] --> B[执行循环]
-    B --> C[消息与工具调用]
-    C --> D[Run 与 Activity]
-    D --> E[Event 与状态]
-    E --> F[持久化与恢复]
-    F --> G[权限与沙箱]
-    G --> H[持续追踪与评测]
+flowchart TB
+    A["用户提出文件任务"] --> B["Runtime 组织模型与工具调用"]
+    B --> C["Event 记下已经发生的事实"]
+    C --> D["Reducer 计算当前状态和用量"]
+    D --> E{"还要继续吗？"}
+    E -->|"预算允许"| B
+    E -->|"完成或失败"| F["返回结果和执行记录"]
 ```
 
-## 第一层：Agent 的最小组成
+## 1. 先分清模型、工具和 Runtime
 
-先理解 Model、Context、Tool 和 Environment，然后观察模型如何根据工具结果继续决策。
-从[Agent 基础原理](agent-basics.md)开始。
+[一项 Agent 任务怎样运转](agent-basics.md)从最小执行循环开始。你会看到模型只是提出下一步，
+文件访问、预算和权限都由 Runtime 控制。
 
-## 第二层：稳定的运行时契约
+## 2. 再理解模块之间传什么
 
-当执行跨越多个模型和工具 Activity 时，字符串与任意字典会迅速制造歧义。BearAgent 从
-F-0001 开始稳定 ID、Message、Error 和 Event envelope。先读面向初学者的
-[F-0001 领域契约导读](../architecture/domain-contracts.md)，需要继续看代码时再进入
-[F-0001 开发者实现导读](../development/domain-contracts.md)。
+[BearAgent 内部怎样交换数据](../architecture/domain-contracts.md)解释为什么内部模块使用自己的
+ID、Message、Error 和 Event，而不直接传某个模型 SDK 的对象。
 
-## 第三层：从可检查到可恢复
+## 3. 看状态怎样从事实产生
 
-F-0002 已实现 P1 的 Run/Activity 状态、纯 Reducer 和五维预算门。先阅读
-[Run 状态、Reducer 与预算](runtime-state-and-budgets.md)，再跟着
-[一次 Run 的完整事件演练](run-event-reducer-walkthrough.md)观察模型、Tool、预算和失败怎样连起来。
-相同 Event 可重放仍不等于进程重启后能自动续跑；F-0003、F-0004 与 F-0016 将分别补 EventStore、
-真实 Provider 和 Agent Loop，P2 才增加 Checkpoint、幂等、恢复和 `UNKNOWN`。
+[状态和预算怎样计算](runtime-state-and-budgets.md)先解释 Event 和 Reducer 的分工，再说明模型次数、
+token、费用、时间和工具次数在什么时刻记账。
 
-## 第四层：安全与质量
+## 4. 跟完一条具体执行记录
 
-P3 学习权限、用户审批和隔离执行。评测则从 P1 就开始：先记录固定任务与执行路径，P2 增加中断
-恢复演练，P3 增加越权与隔离测试，P5 再把这些证据做成持续比较系统。它们共同回答 Agent
-“能否以允许的方式持续完成任务”，而不只是“偶尔能不能给出好答案”。
+[逐条读懂一次 Run](run-event-reducer-walkthrough.md)把一个模型调用、一次读文件和一次预算拒绝连在
+一起。读完后再去看代码，会更容易理解每种 Event 为什么存在。
 
-## 每个 Feature 如何进入学习路径
-
-后续每个 Feature 完成时，本学习路径都会增加或更新对应概念、前置知识和实现状态；开发者文档
-则同步代码入口、契约和测试证据。一个 Feature 只有两条路径与[当前状态](../project/status.md)
-都更新后，才算完成文档关闭。
+当前这条路径覆盖 F-0001 和 F-0002。SQLite 保存、真实模型、文件工具和完整 Agent Loop 仍是
+P1 的后续工作；崩溃恢复和授权分别属于 P2、P3。

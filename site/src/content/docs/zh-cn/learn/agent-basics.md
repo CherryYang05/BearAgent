@@ -1,56 +1,56 @@
 ---
-title: Agent 基础原理
-description: 用 Model、Context、Tool、Environment 和 Runtime 理解最小 Agent。
+title: 一项 Agent 任务怎样运转
+description: 用一次文件研究任务分清模型、上下文、工具、外部环境和 Runtime。
 bearStatus: concept
 sourceRefs:
   - AI Agents in Depth Chapter 1
   - AI Agents in Depth Chapter 2
 ---
 
-一个实用的工程抽象是：Agent 由模型、上下文和工具组成，并通过 Runtime 与外部环境形成闭环。
+假设用户让 Agent 比较三份设计文档并写一份总结。模型不能自己打开硬盘文件；它只能根据当前
+看到的内容，请求一个读文件工具。Runtime 检查请求、执行工具、把结果放回下一次模型输入，
+直到模型给出最终答案或任务必须停止。
 
-:::note[内容状态：通用原理]
-本页解释通用 Agent 概念；BearAgent 的具体实现状态以[当前状态](../project/status.md)为准。
+:::note[通用原理]
+本页讲的是 Agent 系统通常怎样分工，不表示 BearAgent 已经接通真实模型和文件工具。
 :::
 
-## 五个部分分别做什么
-
-| 部分 | 职责 | 不应该负责 |
-|---|---|---|
-| Model | 根据当前观察选择下一步输出或工具调用 | 持久化事实、授予权限 |
-| Context | 组织当前决策所需的信息 | 充当完整数据库或审计日志 |
-| Tool | 读取或改变外部环境 | 绕过 Runtime 直接获得宿主权限 |
-| Environment | 文件、数据库、网页、用户等真实世界状态 | 被误认为模型上下文本身 |
-| Runtime / Harness | 维护循环、状态、预算、验证和安全边界 | 把 Provider SDK 变成领域模型 |
-
-## 最小闭环
+## 一次循环里谁做什么
 
 ```mermaid
 sequenceDiagram
-    participant U as User
+    participant U as 用户
     participant R as Runtime
-    participant M as Model
-    participant T as Tool
+    participant M as 模型
+    participant T as 文件工具
 
-    U->>R: 提交目标
-    R->>M: Context + Tool definitions
-    M-->>R: Tool call
-    R->>T: 验证并执行
-    T-->>R: Tool result
-    R->>M: 更新 Context
-    M-->>R: Final answer
-    R-->>U: 结果与 Artifact
+    U->>R: 阅读 docs 并生成总结
+    R->>M: 目标、相关上下文、可用工具
+    M-->>R: 请求读取 architecture.md
+    R->>R: 检查路径、预算和权限
+    R->>T: 执行已允许的请求
+    T-->>R: 返回文件内容或错误
+    R->>M: 把结果加入下一次上下文
+    M-->>R: 继续调用工具或给出答案
+    R-->>U: 结果、产物和执行记录
 ```
 
-关键不是模型“会调用函数”这一瞬间，而是 Runtime 能否验证请求、限制资源、记录事实，并在失败时
-给出明确状态。模型输出和工具输出都只是输入数据，不能自行改变权限边界。
+模型（Model）负责从当前信息中选择下一步。上下文（Context）是这一次选择所需的信息。工具
+（Tool）真正读取或改变外部环境。Runtime 把这些步骤组织成循环，并负责验证、状态、预算和权限。
 
-## 为什么 Context 不是 Event Store
+外部环境不等于上下文。一个仓库可以有几万个文件，但模型在某一刻只需要看到其中一小部分。
+同样，上下文也不是完整历史记录：它可以为了下一次决策被筛选或压缩，已经发生的事实则应单独保存。
 
-Context 是模型在某个决策点看到的信息视图，可以被压缩或重组；Event Store 保存已经发生的
-不可变事实，用于审计和重建状态。两者可能共享部分内容，但目的完全不同。
+## 为什么不能让模型自己决定权限
 
-## 延伸阅读
+模型输出只是数据。文件内容、网页或工具结果都可能包含诱导指令，所以“系统提示词里写了不要
+越权”不构成真正的安全边界。模型可以请求写文件，Runtime 必须根据规范化后的路径和已有授权
+独立决定是否允许。
 
-- [《深入理解 AI Agent》第 1 章](https://bojieli.github.io/ai-agent-book/book/chapter1/)
-- [《深入理解 AI Agent》第 2 章](https://bojieli.github.io/ai-agent-book/book/chapter2/)
+BearAgent 把这条原则写成架构限制：所有外部操作都要经过统一的工具执行入口；Prompt、Skill、
+模型输出和工具输出都不能给自己增加权限。
+
+## 接下来读什么
+
+下一页先看[BearAgent 内部怎样交换数据](../architecture/domain-contracts.md)，再看
+[状态和预算怎样计算](runtime-state-and-budgets.md)。

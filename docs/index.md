@@ -1,44 +1,45 @@
-# BearAgent 文档
+# BearAgent 工程文档
 
-BearAgent 的目标是让个人 Agent 在本地可靠地完成长任务：每一步可查看，失败后不乱重试，危险操作必须获得授权。首个场景是仓库与本地文档研究，P1 只在限定工作区读取资料并向 `outputs/**` 写入结果。
+这组文档保存 BearAgent 的产品范围、技术决定、功能要求和实施记录。第一次进入仓库时，按下面的
+顺序阅读即可；不需要先把所有 ADR 和 Spec 看完。
 
-公开站点位于 [`site/`](../site/README.md)，同时维护初学者学习路径和开发者文档；P1 期间只在本地预览和构建。本目录继续作为工程设计与项目治理的 Source of Truth，站点内容必须从这里、代码和测试派生。
+## 先读四份
 
-## 阅读顺序
+1. [产品定位](project/product-positioning.md)：BearAgent 为谁解决什么问题，第一版为什么保持很小；
+2. [总体架构](architecture/overview.md)：一次 Run 经过哪些模块，当前实现和后续设计怎样区分；
+3. [项目路线图](project/roadmap.md)：每个阶段交付什么，怎样用真实结果关闭；
+4. 当前 Feature 的 [Spec](specs/README.md)、相关 [ADR](adr/README.md) 和 [Plan](plans/README.md)。
 
-1. [产品定位](project/product-positioning.md)：为谁解决什么问题、与其他 Agent 的差异以及怎样证明差异化。
-2. [总体架构](architecture/overview.md)：项目边界、核心对象、状态机、事件、工具、权限、持久化和安全设计。
-3. [路线图](project/roadmap.md)：每个阶段给用户什么、明确不做什么、怎样证明和何时算完成。
-4. [AI 辅助开发 SOP](development/ai-development-sop.md)：如何让 ChatGPT/Codex 参与需求、设计、实现、测试和文档同步。
-5. [Feature Specs](specs/README.md)：每个阶段有哪些功能，以及各功能的需求和状态。
-6. [Implementation Plans](plans/README.md)：当前 Feature 做到哪个可验证切片。
-7. [部署策略](deployment/self-hosting.md)：何时本地运行，何时上服务器，如何通过 1Panel 和子域名发布。
+准备参与开发时再读 [AI 辅助开发流程](development/ai-development-sop.md)。需要部署背景时读
+[本地开发与自托管](deployment/self-hosting.md)。公共学习站位于 [`site/`](../site/README.md)。
 
-## 文档的权威层级
+## 一件事实写在哪里
 
-```text
-用户可观察行为：验收测试 + Feature Spec
-跨模块决策：ADR
-当前系统结构：Architecture 文档
-当前阶段：Roadmap
-当前实现切片：Implementation Plan + 代码和测试
-开发约束：AGENTS.md
-实现细节：代码、类型和迁移文件
-未来意图：Roadmap
-聊天记录：仅作讨论材料，不是 Source of Truth
-```
+| 问题 | 以哪里为准 |
+|---|---|
+| 当前阶段和阶段关闭条件 | Roadmap |
+| 一个 Feature 必须做到什么 | Feature Spec + 验收测试 |
+| 为什么选择某个跨模块方案 | ADR |
+| 当前准备按什么顺序实现 | active Implementation Plan |
+| 模块现在怎样连接 | Architecture + 代码 |
+| 行为是否已经成立 | 代码、测试和可复现命令 |
+| 开发约束和完成标准 | `AGENTS.md` |
+| 面向读者的解释 | `site/`，内容必须能追溯到以上事实 |
 
-发生冲突时，先判断文档描述的是“当前事实”还是“未来计划”。Roadmap 不得覆盖已验收的行为；聊天结论只有进入 Spec/ADR 并提交 Git 后才生效。
+聊天记录只用于讨论。一个结论只有写进仓库并通过相应审查后，才成为项目决定。
 
-## 文档状态
+## 状态是什么意思
 
-文档使用以下状态：
+- `draft`：仍在讨论，不能据此实现；
+- `accepted`：已经同意，可以作为实现依据；
+- `implemented`：代码和验收已经完成；
+- `superseded`：已被新文档替代，保留用于理解历史。
 
-- `draft`：讨论中，不授权实现。
-- `accepted`：可以作为实现依据。
-- `implemented`：实现和验收测试已完成。
-- `superseded`：被新的 Spec/ADR 替代，保留历史。
+ADR 的 `accepted` 只表示决定已经生效，不表示相关 Feature 已经写完。Feature ID 全项目稳定，所属
+阶段写在 Spec 的 `milestone` 中；移动阶段时不重编号。
 
-架构文档只描述当前基线和已经接受的目标边界；尚未决定的方案必须明确标为“开放问题”。
+## 写文档时
 
-Feature ID 在全项目内稳定递增；所属阶段由 Feature Spec 的 `milestone: P<n>` 声明。阶段调整只修改 `milestone`，不重命名 `F-NNNN`。
+先说明具体问题或执行场景，再引入 Runtime、port、adapter、Event、Reducer 等必要术语。保留精确
+术语，不用更长的人造中文短语替换它们；同时避免只有术语而没有行为说明。`docs/` 保持可验收的
+准确性，`site/` 把同一事实组织成连贯的学习和代码阅读路径。

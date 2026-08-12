@@ -1,58 +1,63 @@
 ---
 title: BearAgent 文档
-description: 从 Agent 原理出发，理解一个让本地长任务可查看、可约束、可恢复的运行时。
+description: 从一次本地文件任务开始，理解 BearAgent 怎样记录执行、限制资源并为恢复和授权留出可靠边界。
 template: splash
 hero:
-  tagline: 每一步可查看，失败后不乱重试，危险操作必须获准。
+  tagline: 让长任务的每一步都说得清楚。
   actions:
-    - text: 开始学习
+    - text: 从一次任务开始
       link: /zh-cn/learn/
       icon: right-arrow
       variant: primary
-    - text: 查看当前状态
+    - text: 查看当前进度
       link: /zh-cn/project/status/
       icon: open-book
 bearStatus: mixed
 sourceRefs:
   - F-0001
+  - F-0002
   - F-0015
 ---
 
 import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-## 选择一条路径
+假设你让 Agent 阅读一个仓库，并把结论写到 `outputs/report.md`。模型会决定下一步，但它不应该
+直接决定哪些文件能读、哪些位置能写，也不能在一次调用超时后猜测文件是否已经写好。BearAgent
+要把这些执行问题放到模型之外处理。
 
 <CardGrid>
   <LinkCard
-    title="理解 Agent"
-    description="从 Model、Context、Tool 和执行循环开始建立整体认识。"
+    title="先看一遍任务怎样执行"
+    description="从用户请求、模型调用、文件工具到最终结果，建立完整画面。"
     href="/zh-cn/learn/"
   />
   <LinkCard
-    title="为什么是 BearAgent"
-    description="了解 BearAgent 解决什么问题、先服务谁，以及 P1-P3 怎样逐步证明价值。"
-    href="/zh-cn/project/positioning/"
-  />
-  <LinkCard
-    title="理解架构"
-    description="了解核心执行、外部实现、任务记录和安全边界。"
+    title="再看 Runtime 怎样分工"
+    description="理解核心规则、port、adapter，以及它们为什么不能混在一起。"
     href="/zh-cn/architecture/"
   />
   <LinkCard
-    title="参与开发"
-    description="从代码边界、Feature 工作流和验证证据开始阅读项目。"
+    title="准备修改代码"
+    description="按代码地图找到实现、测试和需要同步的文档。"
     href="/zh-cn/development/"
+  />
+  <LinkCard
+    title="只想知道现在能做什么"
+    description="区分已经实现、P1 仍在建设和更晚的计划。"
+    href="/zh-cn/project/status/"
   />
 </CardGrid>
 
-:::caution[不要把路线图当成当前能力]
-BearAgent 的运行时部分当前只实现了工程基线和 F-0001 领域契约，还不是一个可以完成真实文件任务的 Agent。
-所有教程都会明确标记“通用原理”“已接受设计”“当前实现”或“规划中”。
+:::caution[BearAgent 还不能完成真实 Agent 任务]
+当前代码已经能表示消息、错误、Run、Activity 和 Event，也能从一串 Event 计算状态并检查预算。
+SQLite、真实模型、文件工具和完整执行循环仍未接通。路线图中的名称不是当前功能。
 :::
 
-## BearAgent 负责回答什么
+## BearAgent 想把三件事做可靠
 
-- **做过什么？** 模型调用、工具操作、错误、成本和输出文件都可以查看。
-- **失败后怎么办？** 已确认的操作不重复，无法确认的操作停下来等待处理。
-- **允许做什么？** 模型不能给自己增加权限，危险操作必须经过系统检查和用户批准。
-- **怎样证明？** 用固定任务、自动化测试和故障演练支持每一项产品承诺。
+1. **执行过程能还原。** 用户可以知道模型和工具做过什么、用了多少预算、在哪里失败。
+2. **结果不明时不猜。** 已确认的操作可以继续使用；无法确认的外部写入会停下来处理。
+3. **权限不由模型决定。** 模型可以提出工具请求，但 Runtime 才能允许、询问用户或拒绝。
+
+第一版只做仓库和本地文档研究，并且只允许向 `outputs/**` 写入。这个范围很小，正好可以把
+记录、失败和权限做实，再考虑 Web、MCP、Memory 或多个 Agent。
