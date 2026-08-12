@@ -40,8 +40,9 @@ F-0001 开始稳定 ID、Message、Error 和 Event envelope。先读面向初学
 
 F-0002 已实现 P1 的 Run/Activity 状态、纯 Reducer 和五维预算门。先阅读
 [Run 状态、Reducer 与预算](runtime-state-and-budgets.md)，理解为什么“相同 Event 可重放”仍不等于
-“进程重启后能自动续跑”。F-0003/F-0004 将继续补 EventStore 与 Agent Loop；P2 才增加 Checkpoint、
-幂等、恢复和 `UNKNOWN`。
+“进程重启后能自动续跑”。F-0003 已把 Event 与 projection 原子持久化到 SQLite；继续阅读
+[持久事实与安全恢复的边界](durable-events.md)。F-0004 将补 Agent Loop；P2 才增加 Checkpoint、幂等、
+恢复和 `UNKNOWN`。
 
 ## 第四层：安全与质量
 

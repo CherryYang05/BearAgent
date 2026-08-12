@@ -60,5 +60,6 @@ exclude = [".venv", ".uv-cache", ".python"]
 reportMissingTypeStubs = "warning"
 
 [tool.pytest.ini_options]
-addopts = "-ra --strict-config --strict-markers"
+addopts = "-ra --strict-config --strict-markers --import-mode=importlib"
 testpaths = ["tests"]
+pythonpath = ["."]

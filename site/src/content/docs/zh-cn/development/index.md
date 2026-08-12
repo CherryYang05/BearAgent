@@ -28,6 +28,7 @@ Spec、ADR、代码和测试仍是事实来源，这里负责建立阅读顺序�
 
 - [F-0001：领域契约实现](domain-contracts.md)：ID、Message、Error、Event envelope 和 schema snapshot。
 - [F-0002：Run reducer 与预算](run-reducer-and-budgets.md)：typed payload、状态转换、usage 与预算门。
+- [F-0003：SQLite EventStore](sqlite-event-store.md)：port、migration、原子 append/projection 与故障边界。
 - [Feature 文档同步规则](feature-documentation.md)：每个 Feature 和每个 P 阶段如何关闭。
 - [本地运行文档站](../guides/local-docs.md)：安装、预览并验证 Starlight 构建。
 

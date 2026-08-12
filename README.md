@@ -22,7 +22,7 @@
 </div>
 
 > [!IMPORTANT]
-> BearAgent 已完成 **P0 Engineering Baseline**，当前处于 **P1 Inspectable Execution**。领域契约与本地文档站已经实现；真实 Model Provider、Agent Loop、文件工具和 SQLite Run 尚不可用，因此它现在还不能执行真实 Agent 任务。
+> BearAgent 已完成 **P0 Engineering Baseline**，当前处于 **P1 Inspectable Execution**。领域契约、Run reducer/预算和 SQLite EventStore 已实现；真实 Model Provider、Agent Loop、文件工具与任务 CLI 尚不可用，因此它现在还不能执行真实 Agent 任务。
 
 ## Why BearAgent
 
@@ -52,12 +52,13 @@ BearAgent 从运行时边界而不是功能数量开始设计。它不是“开�
 
 | Available now | Building in P1 | Deliberately later |
 |---|---|---|
-| Python 3.12 + uv 工程基线 | Run reducer 与执行预算 | P2：checkpoint、resume、retry、`UNKNOWN` |
-| `help`、`version`、`doctor` CLI | EventStore contract + SQLite | P3：Policy、Approval、Sandbox、HTTP/SSE |
-| 类型化 ID、Message、Error、Event envelope | 一个真实 Model Provider 与有界 Agent Loop | P4：Web UI、Skills、MCP、Memory |
+| Python 3.12 + uv 工程基线 | 一个真实 Model Provider 与有界 Agent Loop | P2：checkpoint、resume、retry、`UNKNOWN` |
+| `help`、`version`、`doctor` CLI | Workspace read 与 `outputs/**` 原子写入 | P3：Policy、Approval、Sandbox、HTTP/SSE |
+| 类型化 ID、Message、Error、Event envelope | `run`、`inspect`、`events` CLI | P4：Web UI、Skills、MCP、Memory |
+| Run reducer、预算、SQLite EventStore/projection | Tool registry、executor 与固定策略门 | P5：OpenTelemetry、replay、eval |
 | Fake Model / Tool / In-memory Store | Workspace 只读工具与 `outputs/**` 原子写入 | P5：OpenTelemetry、replay、eval |
-| Ruff、Pyright、pytest、跨平台 CI | `run`、`inspect`、`events` CLI | P6+：Multi-Agent、browser、多 worker |
-| 中文 Starlight 学习与开发文档 | 可追踪的首个本地文件任务 | 仅在真实需求证明后扩展 |
+| Ruff、Pyright、pytest、跨平台 CI | 可追踪的首个本地文件任务 | P6+：Multi-Agent、browser、多 worker |
+| 中文 Starlight 学习与开发文档 | P1 验收与文档收口 | 仅在真实需求证明后扩展 |
 
 当前权威状态见 [Project Roadmap](docs/project/roadmap.md) 和[公开文档状态页](site/src/content/docs/zh-cn/project/status.md)。Roadmap 中出现模块名称不等于它已经实现。
 

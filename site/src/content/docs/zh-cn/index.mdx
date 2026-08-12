@@ -46,7 +46,8 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 </CardGrid>
 
 :::caution[不要把路线图当成当前能力]
-BearAgent 的运行时部分当前只实现了工程基线和 F-0001 领域契约，还不是一个可以完成真实文件任务的 Agent。
+BearAgent 当前已实现工程基线、领域契约、Run reducer/预算和 SQLite EventStore；还不是一个可以
+完成真实文件任务的 Agent，也不支持崩溃后自动续跑。
 所有教程都会明确标记“通用原理”“已接受设计”“当前实现”或“规划中”。
 :::
 

@@ -1,11 +1,19 @@
 """In-memory event store with strict per-Run ordering."""
 
+from bearagent.domain.errors import ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.events import Event
 from bearagent.domain.ids import EventId, RunId
+from bearagent.domain.runs import RunState
+from bearagent.ports.store import (
+    DEFAULT_EVENT_QUERY_LIMIT,
+    EventStoreConflictError,
+    validate_event_query,
+)
+from bearagent.runtime.reducer import reduce_event
 
 
-class EventSequenceError(ValueError):
-    """Raised when an event would break append-only Run ordering."""
+class EventSequenceError(EventStoreConflictError):
+    """Backward-compatible name for an immutable Event identity conflict."""
 
 
 class InMemoryEventStore:
@@ -18,21 +26,41 @@ class InMemoryEventStore:
     def __init__(self) -> None:
         self._events_by_run: dict[RunId, list[Event]] = {}
         self._event_ids: set[EventId] = set()
+        self._states_by_run: dict[RunId, RunState] = {}
 
-    async def append(self, event: Event) -> None:
+    async def append(self, event: Event) -> RunState:
         if event.event_id in self._event_ids:
-            raise EventSequenceError(f"duplicate event_id: {event.event_id}")
+            raise EventSequenceError(
+                ErrorInfo(
+                    category=ErrorCategory.PERSISTENCE,
+                    code=ErrorCode.PERSISTENCE_ERROR,
+                    message="Event identity already exists.",
+                    retryable=False,
+                )
+            )
 
         events = self._events_by_run.setdefault(event.run_id, [])
-        expected_sequence = len(events) + 1
-        if event.sequence != expected_sequence:
-            raise EventSequenceError(
-                f"run {event.run_id!r} expected sequence {expected_sequence}, "
-                f"received {event.sequence}"
-            )
+        previous_state = self._states_by_run.get(event.run_id)
+        state = reduce_event(previous_state, event)
 
         events.append(event)
         self._event_ids.add(event.event_id)
+        self._states_by_run[event.run_id] = state
+        return state
 
-    async def list_events(self, run_id: RunId) -> tuple[Event, ...]:
-        return tuple(self._events_by_run.get(run_id, ()))
+    async def list_events(
+        self,
+        run_id: RunId,
+        *,
+        after_sequence: int = 0,
+        limit: int = DEFAULT_EVENT_QUERY_LIMIT,
+    ) -> tuple[Event, ...]:
+        validate_event_query(after_sequence, limit)
+        return tuple(
+            event
+            for event in self._events_by_run.get(run_id, ())
+            if event.sequence > after_sequence
+        )[:limit]
+
+    async def get_run(self, run_id: RunId) -> RunState | None:
+        return self._states_by_run.get(run_id)

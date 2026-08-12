@@ -1,7 +1,23 @@
 """Framework-independent contracts implemented by BearAgent adapters."""
 
 from bearagent.ports.model import ModelProvider
-from bearagent.ports.store import EventStore
+from bearagent.ports.store import (
+    EventStore,
+    EventStoreConflictError,
+    EventStoreCorruptionError,
+    EventStoreError,
+    EventStoreMigrationError,
+    EventStoreNotInitializedError,
+)
 from bearagent.ports.tools import Tool
 
-__all__ = ["EventStore", "ModelProvider", "Tool"]
+__all__ = [
+    "EventStore",
+    "EventStoreConflictError",
+    "EventStoreCorruptionError",
+    "EventStoreError",
+    "EventStoreMigrationError",
+    "EventStoreNotInitializedError",
+    "ModelProvider",
+    "Tool",
+]

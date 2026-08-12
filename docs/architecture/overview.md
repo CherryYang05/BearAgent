@@ -227,6 +227,20 @@ Activity completion/failure，也不把一次实际 token/费用超额伪装成�
 相同 Event sequence 得到值相等的 `RunState`，但 P1 没有 startup scan、Checkpoint 或自动续跑；
 这些仍属于 P2 safe recovery。
 
+### 7.2 F-0003 已实现的持久事实子集
+
+F-0003 使用标准库 `sqlite3` 实现 EventStore adapter。每次 append 在 `BEGIN IMMEDIATE`
+transaction 内核对已持久 Event/projection sequence，运行同一个 F-0002 reducer，插入完整 Event
+envelope，并更新 normalized Run/Activity projection；任一步失败全部回滚。
+
+当前 schema v1 只包含 `events`、`run_projections`、`activity_projections` 和带 SHA-256 校验的
+`schema_migrations`。SQLite 使用 WAL、foreign keys、`synchronous=FULL` 和有限 busy timeout；
+同一 sequence 的竞争 writer 最多一个提交。Event payload 和 query 有上限，读取到非法 JSON、
+不连续 sequence 或 projection 分叉时 fail closed。
+
+这意味着正常关闭并重开数据库后，已提交事实和真实非终态状态仍可查询；不意味着 Runtime 会扫描
+或继续非终态 Run。Checkpoint、startup recovery、retry、cancel 和 `UNKNOWN` 仍属于 P2。
+
 ## 8. 一次 Run 的标准流程
 
 ```mermaid
@@ -509,24 +523,32 @@ MCP server 和每个 MCP tool 都需要独立启用、schema 校验、timeout、
 
 ### 14.1 最小数据库
 
+F-0003 当前实际 schema：
+
+```text
+events                  append-only source of truth
+run_projections         current Run state and budget projection
+activity_projections    ordered model/tool Activity projection
+schema_migrations       version/name/checksum ledger
+```
+
+后续阶段目标表（尚未实现）：
+
 ```text
 sessions       conversation metadata
-runs           current run projection and version
-events         append-only source of truth
-activities     query projection for model/tool operations
 approvals      pending/resolved approval projection
 checkpoints    state snapshot at event sequence
 artifacts      file metadata, hash, mime, producing activity
-schema_migrations
 ```
 
 重要约束：
 
 - `events(event_id)` 唯一；`events(run_id, sequence)` 唯一。
-- 每个 Run 同一时间只有一个 owner；P1 使用进程内 per-run lock，后续再增加 lease。
+- P1 通过 SQLite `BEGIN IMMEDIATE` 串行化短写 transaction；不实现多进程 owner/lease。
 - Event append 与 projection 更新在一个 transaction 中。
-- SQLite 使用 WAL 模式和 busy timeout；先单进程写入。
+- SQLite 使用 WAL、foreign keys、`synchronous=FULL` 和有限 busy timeout；先单进程写入。
 - JSON payload 有 schema version；迁移文件进入 Git。
+- migration ledger 校验 version/name/SHA-256；进入 main 的 migration 不原地修改。
 - Artifact 大内容放文件系统，SQLite 只存路径、hash 和元数据。
 
 ### 14.2 数据目录
@@ -643,7 +665,7 @@ P1/P2 只能在本机或 SSH tunnel 下使用。公开可访问前必须有：�
 | Async | asyncio/AnyIO | 流式模型与工具调用 |
 | CLI | Typer | 快速形成可用入口 |
 | API | FastAPI + SSE | P3 才引入；对单向 event stream 足够 |
-| Storage | SQLite WAL + aiosqlite + SQL migrations | 无外部服务、事务清晰、适合单用户 |
+| Storage | SQLite WAL + stdlib `sqlite3` + SQL migrations | 无新生产依赖、事务显式、适合单用户 |
 | HTTP | httpx | async、timeout、streaming |
 | Tests | pytest | 单元、契约、集成和故障注入 |
 | Quality | Ruff + Pyright | 快速、可自动化 |

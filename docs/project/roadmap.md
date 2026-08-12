@@ -473,7 +473,7 @@ P3 的关键词是 **authority-first**。Sandbox 是纵深防御，不代替 Pol
 
 1. [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md) — implemented
 2. [F-0002 Run reducer, Activity lifecycle and budgets](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
-3. F-0003 EventStore contract, SQLite adapter and projections
+3. [F-0003 EventStore contract, SQLite adapter and projections](../specs/F-0003-event-store-sqlite-projections.md) — implemented
 4. F-0004 ModelProvider contract, first adapter and bounded loop
 5. F-0005 CLI run/inspect/events
 6. F-0006 Tool contract, registry, executor and baseline policy gate

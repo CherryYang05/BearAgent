@@ -6,13 +6,16 @@ sourceRefs:
   - architecture/overview
   - ADR-0001
   - ADR-0002
+  - F-0002
+  - F-0003
 ---
 
 BearAgent 将不可预测的模型决策放在一个有明确边界的 Runtime 中。核心领域只使用 BearAgent
 自己的类型；模型 SDK、数据库、CLI 和未来的 HTTP API 都位于 Adapter 或 Interface 边界。
 
 :::caution[内容状态：已接受架构，不等于全部实现]
-当前只完成工程基线和 F-0001 领域契约。下图展示 P1-P3 的目标分层。
+当前已完成工程基线、F-0001 领域契约、F-0002 reducer/预算与 F-0003 SQLite EventStore。
+下图其余模块仍展示 P1-P3 的目标分层。
 :::
 
 ```mermaid
@@ -48,4 +51,5 @@ adapters   --------------------^
 4. **Local ownership**：单用户、单进程、SQLite、CLI-first，复杂度按证据增加。
 
 Trace/replay/eval 是这些主线的验证面；Context、Skill、MCP 与 Memory 后置到 P4。下一步可以阅读
-[产品定位](../project/positioning.md)或 [F-0001：为什么先建立领域契约](domain-contracts.md)。
+[产品定位](../project/positioning.md)、[F-0001：为什么先建立领域契约](domain-contracts.md)或
+[持久事实与安全恢复的边界](../learn/durable-events.md)。

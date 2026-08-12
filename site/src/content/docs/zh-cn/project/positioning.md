@@ -10,7 +10,8 @@ sourceRefs:
 BearAgent 是一个**可检查、可恢复、权限外置的 local-first Agent Runtime**，面向希望把长期文件与开发任务交给 AI、又不愿把权限和执行历史交给黑箱的个人开发者与高级用户。
 
 :::caution[内容状态：已接受定位 + 分阶段目标]
-定位描述 BearAgent 要成为的产品。当前只完成工程基线、领域契约和本地文档站，尚不能执行真实 Agent 任务；请同时查看[当前实现状态](status.md)。
+定位描述 BearAgent 要成为的产品。当前已完成工程基线、领域契约、Run reducer/预算、SQLite
+EventStore 和本地文档站，但尚不能执行真实 Agent 任务；请同时查看[当前实现状态](status.md)。
 :::
 
 ## BearAgent 负责回答三个问题

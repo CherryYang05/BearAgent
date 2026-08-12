@@ -6,6 +6,8 @@ sourceRefs:
   - roadmap
   - F-0001
   - F-0002
+  - F-0003
+  - ADR-0003
   - ADR-0009
   - F-0015
 ---
@@ -19,29 +21,29 @@ sourceRefs:
 | P0 工程基线 | 已完成 | Python/uv 骨架、CLI doctor、CI、文档治理和测试 |
 | F-0001 领域契约 | 已实现 | 类型化 ID、Message、Error、Event envelope 和 schema snapshot |
 | F-0002 状态与预算 | 已实现 | Run/Activity schema、12 种 payload、纯 Reducer、五维 budget gate |
+| F-0003 持久事实 | 已实现 | EventStore contract、SQLite WAL、schema v1、原子 Run/Activity projection |
 | F-0015 本地文档站 | 已实现 | Starlight 中文站、本地搜索、Mermaid、学习与架构入口 |
 
 ## P1 运行时 Backlog
 
-以下名称只登记在 Roadmap，尚未创建对应 Spec：
+以下 Feature 尚未实现：
 
-1. F-0003 EventStore contract, SQLite adapter and projections
-2. F-0004 ModelProvider contract, first adapter and bounded loop
-3. F-0005 CLI run/inspect/events
-4. F-0006 Tool contract, registry, executor and baseline policy gate
-5. F-0007 Workspace boundary and read tools
-6. F-0008 Atomic write tool and artifacts
+1. F-0004 ModelProvider contract, first adapter and bounded loop
+2. F-0005 CLI run/inspect/events
+3. F-0006 Tool contract, registry, executor and baseline policy gate
+4. F-0007 Workspace boundary and read tools
+5. F-0008 Atomic write tool and artifacts
 
 :::caution[当前不能做什么]
-BearAgent 现在可以从内存 Event sequence 推导 Run/Activity 状态并检查预算，但还不能调用真实模型
-完成文件任务，也没有 SQLite Run、ToolRegistry 或 Agent Loop。
+BearAgent 现在可以把合法 Event 与 Run/Activity projection 原子写入 SQLite，并在正常重开数据库后
+查询事实，但还不能调用真实模型完成文件任务，也没有 ToolRegistry 或 Agent Loop。
 P1 完成后也只承诺执行事实可检查；Checkpoint、崩溃后自动恢复、`UNKNOWN` 处置、Approval 与
 sandbox 分别属于 P2/P3。相关页面如果提前解释设计，必须标记为设计或规划中。
 :::
 
 ## 当前阶段门
 
-F-0002 已完成；下一个 P1 运行时 Feature 尚未由项目所有者确认，仓库当前没有 active Plan。
+F-0003 已完成；P1 仍未关闭，下一 Feature 必须再次由项目所有者确认后建立 active Plan。
 阶段关闭时必须复现真实 CLI 文件任务、非法路径拒绝、预算终止和 Activity/Event/Artifact 检查；
 不能用已接受 Roadmap 或架构图代替这些实现证据。
 
