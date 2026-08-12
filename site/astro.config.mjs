@@ -37,6 +37,7 @@ export default defineConfig({
           items: [
             { label: '学习路径', slug: 'learn' },
             { label: 'Agent 基础原理', slug: 'learn/agent-basics' },
+            { label: 'Run 状态与预算', slug: 'learn/runtime-state-and-budgets' },
           ],
         },
         {
@@ -52,6 +53,7 @@ export default defineConfig({
             { label: '开发者入口', slug: 'development' },
             { label: 'Feature 文档同步', slug: 'development/feature-documentation' },
             { label: 'F-0001 实现导读', slug: 'development/domain-contracts' },
+            { label: 'F-0002 实现导读', slug: 'development/run-reducer-and-budgets' },
           ],
         },
         {

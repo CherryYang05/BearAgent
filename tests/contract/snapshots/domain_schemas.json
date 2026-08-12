@@ -5,11 +5,370 @@
     "title": "ActivityId",
     "type": "string"
   },
+  "ActivityState": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ActivityKind": {
+        "description": "Kinds of serial operations tracked by the P1 reducer.",
+        "enum": [
+          "model",
+          "tool"
+        ],
+        "title": "ActivityKind",
+        "type": "string"
+      },
+      "ActivityStatus": {
+        "description": "P1 Activity lifecycle states.",
+        "enum": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "ActivityStatus",
+        "type": "string"
+      },
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "budget_exhausted",
+          "provider_error",
+          "tool_error",
+          "persistence_error",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorInfo": {
+        "additionalProperties": false,
+        "description": "Serializable error data that is safe to expose and persist.",
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/ErrorCategory"
+          },
+          "code": {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/$defs/SafeDetailValue"
+            },
+            "maxProperties": 32,
+            "title": "Details",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "ErrorInfo",
+        "type": "object"
+      },
+      "ModelCallId": {
+        "description": "Identify one model call independently of provider request IDs.",
+        "format": "uuid4",
+        "title": "ModelCallId",
+        "type": "string"
+      },
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Immutable state for one model or Tool operation.",
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "kind": {
+        "$ref": "#/$defs/ActivityKind"
+      },
+      "status": {
+        "$ref": "#/$defs/ActivityStatus"
+      },
+      "requested_at": {
+        "format": "date-time",
+        "title": "Requested At",
+        "type": "string"
+      },
+      "started_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Started At"
+      },
+      "completed_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Completed At"
+      },
+      "error": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ErrorInfo"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "model_call_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ModelCallId"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "tool_call_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ToolCallId"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "tool_name": {
+        "anyOf": [
+          {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Tool Name"
+      }
+    },
+    "required": [
+      "activity_id",
+      "kind",
+      "status",
+      "requested_at"
+    ],
+    "title": "ActivityState",
+    "type": "object"
+  },
   "ArtifactId": {
     "description": "Identify one retrievable Run output.",
     "format": "uuid4",
     "title": "ArtifactId",
     "type": "string"
+  },
+  "BudgetExhaustion": {
+    "$defs": {
+      "BudgetDimension": {
+        "description": "Stable dimensions that can block a new Activity request.",
+        "enum": [
+          "model_iterations",
+          "tokens",
+          "cost_microusd",
+          "wall_time_ms",
+          "tool_calls"
+        ],
+        "title": "BudgetDimension",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "A stable explanation for why another Activity cannot be requested.",
+    "properties": {
+      "dimension": {
+        "$ref": "#/$defs/BudgetDimension"
+      },
+      "limit": {
+        "minimum": 0,
+        "title": "Limit",
+        "type": "integer"
+      },
+      "consumed": {
+        "minimum": 0,
+        "title": "Consumed",
+        "type": "integer"
+      },
+      "requested": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Requested",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "dimension",
+      "limit",
+      "consumed"
+    ],
+    "title": "BudgetExhaustion",
+    "type": "object"
+  },
+  "BudgetLimits": {
+    "additionalProperties": false,
+    "description": "Finite limits selected by a trusted Run creation boundary.",
+    "properties": {
+      "max_model_iterations": {
+        "maximum": 100000,
+        "minimum": 0,
+        "title": "Max Model Iterations",
+        "type": "integer"
+      },
+      "max_tokens": {
+        "maximum": 10000000000,
+        "minimum": 0,
+        "title": "Max Tokens",
+        "type": "integer"
+      },
+      "max_cost_microusd": {
+        "maximum": 1000000000000,
+        "minimum": 0,
+        "title": "Max Cost Microusd",
+        "type": "integer"
+      },
+      "max_wall_time_ms": {
+        "maximum": 2678400000,
+        "minimum": 0,
+        "title": "Max Wall Time Ms",
+        "type": "integer"
+      },
+      "max_tool_calls": {
+        "maximum": 1000000,
+        "minimum": 0,
+        "title": "Max Tool Calls",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "max_model_iterations",
+      "max_tokens",
+      "max_cost_microusd",
+      "max_wall_time_ms",
+      "max_tool_calls"
+    ],
+    "title": "BudgetLimits",
+    "type": "object"
+  },
+  "BudgetUsage": {
+    "additionalProperties": false,
+    "description": "Actual usage derived only from accepted Run Events.",
+    "properties": {
+      "model_iterations": {
+        "default": 0,
+        "maximum": 100000,
+        "minimum": 0,
+        "title": "Model Iterations",
+        "type": "integer"
+      },
+      "input_tokens": {
+        "default": 0,
+        "maximum": 10000000000,
+        "minimum": 0,
+        "title": "Input Tokens",
+        "type": "integer"
+      },
+      "output_tokens": {
+        "default": 0,
+        "maximum": 10000000000,
+        "minimum": 0,
+        "title": "Output Tokens",
+        "type": "integer"
+      },
+      "cost_microusd": {
+        "default": 0,
+        "maximum": 1000000000000,
+        "minimum": 0,
+        "title": "Cost Microusd",
+        "type": "integer"
+      },
+      "tool_calls": {
+        "default": 0,
+        "maximum": 1000000,
+        "minimum": 0,
+        "title": "Tool Calls",
+        "type": "integer"
+      }
+    },
+    "title": "BudgetUsage",
+    "type": "object"
   },
   "CausationId": {
     "description": "Identify the command, Activity, or Event that caused a fact.",
@@ -42,6 +401,8 @@
         "description": "Initial stable error codes; later Features may add specific codes.",
         "enum": [
           "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
           "budget_exhausted",
           "provider_error",
           "tool_error",
@@ -80,14 +441,6 @@
       "code": {
         "$ref": "#/$defs/ErrorCode"
       },
-      "details": {
-        "additionalProperties": {
-          "$ref": "#/$defs/SafeDetailValue"
-        },
-        "maxProperties": 32,
-        "title": "Details",
-        "type": "object"
-      },
       "message": {
         "maxLength": 1000,
         "minLength": 1,
@@ -98,6 +451,14 @@
         "default": false,
         "title": "Retryable",
         "type": "boolean"
+      },
+      "details": {
+        "additionalProperties": {
+          "$ref": "#/$defs/SafeDetailValue"
+        },
+        "maxProperties": 32,
+        "title": "Details",
+        "type": "object"
       }
     },
     "required": [
@@ -139,34 +500,21 @@
     "additionalProperties": false,
     "description": "Common envelope for an immutable domain fact.",
     "properties": {
-      "causation_id": {
-        "$ref": "#/$defs/CausationId"
-      },
-      "correlation_id": {
-        "$ref": "#/$defs/CorrelationId"
-      },
       "event_id": {
         "$ref": "#/$defs/EventId"
+      },
+      "run_id": {
+        "$ref": "#/$defs/RunId"
+      },
+      "sequence": {
+        "minimum": 1,
+        "title": "Sequence",
+        "type": "integer"
       },
       "event_type": {
         "pattern": "^[A-Z][A-Za-z0-9]{0,127}$",
         "title": "Event Type",
         "type": "string"
-      },
-      "occurred_at": {
-        "format": "date-time",
-        "title": "Occurred At",
-        "type": "string"
-      },
-      "payload": {
-        "additionalProperties": {
-          "$ref": "#/$defs/JsonValue"
-        },
-        "title": "Payload",
-        "type": "object"
-      },
-      "run_id": {
-        "$ref": "#/$defs/RunId"
       },
       "schema_version": {
         "default": 1,
@@ -174,10 +522,23 @@
         "title": "Schema Version",
         "type": "integer"
       },
-      "sequence": {
-        "minimum": 1,
-        "title": "Sequence",
-        "type": "integer"
+      "occurred_at": {
+        "format": "date-time",
+        "title": "Occurred At",
+        "type": "string"
+      },
+      "causation_id": {
+        "$ref": "#/$defs/CausationId"
+      },
+      "correlation_id": {
+        "$ref": "#/$defs/CorrelationId"
+      },
+      "payload": {
+        "additionalProperties": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "title": "Payload",
+        "type": "object"
       }
     },
     "required": [
@@ -245,26 +606,26 @@
         "additionalProperties": false,
         "description": "A structured tool request emitted by a model adapter.",
         "properties": {
-          "arguments": {
-            "additionalProperties": {
-              "$ref": "#/$defs/JsonValue"
-            },
-            "title": "Arguments",
-            "type": "object"
-          },
           "kind": {
             "const": "tool_call",
             "default": "tool_call",
             "title": "Kind",
             "type": "string"
           },
+          "tool_call_id": {
+            "$ref": "#/$defs/ToolCallId"
+          },
           "name": {
             "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
             "title": "Name",
             "type": "string"
           },
-          "tool_call_id": {
-            "$ref": "#/$defs/ToolCallId"
+          "arguments": {
+            "additionalProperties": {
+              "$ref": "#/$defs/JsonValue"
+            },
+            "title": "Arguments",
+            "type": "object"
           }
         },
         "required": [
@@ -278,6 +639,15 @@
         "additionalProperties": false,
         "description": "A tool observation correlated to its request.",
         "properties": {
+          "kind": {
+            "const": "tool_result",
+            "default": "tool_result",
+            "title": "Kind",
+            "type": "string"
+          },
+          "tool_call_id": {
+            "$ref": "#/$defs/ToolCallId"
+          },
           "content": {
             "maxLength": 1000000,
             "title": "Content",
@@ -287,15 +657,6 @@
             "default": false,
             "title": "Is Error",
             "type": "boolean"
-          },
-          "kind": {
-            "const": "tool_result",
-            "default": "tool_result",
-            "title": "Kind",
-            "type": "string"
-          },
-          "tool_call_id": {
-            "$ref": "#/$defs/ToolCallId"
           }
         },
         "required": [
@@ -309,6 +670,9 @@
     "additionalProperties": false,
     "description": "One provider-neutral message with role-compatible content parts.",
     "properties": {
+      "role": {
+        "$ref": "#/$defs/MessageRole"
+      },
       "parts": {
         "items": {
           "discriminator": {
@@ -335,9 +699,6 @@
         "minItems": 1,
         "title": "Parts",
         "type": "array"
-      },
-      "role": {
-        "$ref": "#/$defs/MessageRole"
       }
     },
     "required": [
@@ -347,11 +708,436 @@
     "title": "Message",
     "type": "object"
   },
+  "ModelCallCompletedPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ModelCallId": {
+        "description": "Identify one model call independently of provider request IDs.",
+        "format": "uuid4",
+        "title": "ModelCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Actual normalized usage for a completed model Activity.",
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "model_call_id": {
+        "$ref": "#/$defs/ModelCallId"
+      },
+      "input_tokens": {
+        "minimum": 0,
+        "title": "Input Tokens",
+        "type": "integer"
+      },
+      "output_tokens": {
+        "minimum": 0,
+        "title": "Output Tokens",
+        "type": "integer"
+      },
+      "cost_microusd": {
+        "minimum": 0,
+        "title": "Cost Microusd",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "activity_id",
+      "model_call_id",
+      "input_tokens",
+      "output_tokens",
+      "cost_microusd"
+    ],
+    "title": "ModelCallCompletedPayload",
+    "type": "object"
+  },
+  "ModelCallFailedPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "budget_exhausted",
+          "provider_error",
+          "tool_error",
+          "persistence_error",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorInfo": {
+        "additionalProperties": false,
+        "description": "Serializable error data that is safe to expose and persist.",
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/ErrorCategory"
+          },
+          "code": {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/$defs/SafeDetailValue"
+            },
+            "maxProperties": 32,
+            "title": "Details",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "ErrorInfo",
+        "type": "object"
+      },
+      "ModelCallId": {
+        "description": "Identify one model call independently of provider request IDs.",
+        "format": "uuid4",
+        "title": "ModelCallId",
+        "type": "string"
+      },
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "additionalProperties": false,
+    "description": "Safe error and any known usage for a failed model Activity.",
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "model_call_id": {
+        "$ref": "#/$defs/ModelCallId"
+      },
+      "error": {
+        "$ref": "#/$defs/ErrorInfo"
+      },
+      "input_tokens": {
+        "minimum": 0,
+        "title": "Input Tokens",
+        "type": "integer"
+      },
+      "output_tokens": {
+        "minimum": 0,
+        "title": "Output Tokens",
+        "type": "integer"
+      },
+      "cost_microusd": {
+        "minimum": 0,
+        "title": "Cost Microusd",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "activity_id",
+      "model_call_id",
+      "error",
+      "input_tokens",
+      "output_tokens",
+      "cost_microusd"
+    ],
+    "title": "ModelCallFailedPayload",
+    "type": "object"
+  },
   "ModelCallId": {
     "description": "Identify one model call independently of provider request IDs.",
     "format": "uuid4",
     "title": "ModelCallId",
     "type": "string"
+  },
+  "ModelCallRequestedPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ModelCallId": {
+        "description": "Identify one model call independently of provider request IDs.",
+        "format": "uuid4",
+        "title": "ModelCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Identity of a model Activity accepted for scheduling.",
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "model_call_id": {
+        "$ref": "#/$defs/ModelCallId"
+      }
+    },
+    "required": [
+      "activity_id",
+      "model_call_id"
+    ],
+    "title": "ModelCallRequestedPayload",
+    "type": "object"
+  },
+  "ModelCallStartedPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ModelCallId": {
+        "description": "Identify one model call independently of provider request IDs.",
+        "format": "uuid4",
+        "title": "ModelCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Identity of a model Activity that has started.",
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "model_call_id": {
+        "$ref": "#/$defs/ModelCallId"
+      }
+    },
+    "required": [
+      "activity_id",
+      "model_call_id"
+    ],
+    "title": "ModelCallStartedPayload",
+    "type": "object"
+  },
+  "RunCreatedPayload": {
+    "$defs": {
+      "BudgetLimits": {
+        "additionalProperties": false,
+        "description": "Finite limits selected by a trusted Run creation boundary.",
+        "properties": {
+          "max_model_iterations": {
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Max Model Iterations",
+            "type": "integer"
+          },
+          "max_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "max_cost_microusd": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Max Cost Microusd",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "maximum": 2678400000,
+            "minimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Max Tool Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_model_iterations",
+          "max_tokens",
+          "max_cost_microusd",
+          "max_wall_time_ms",
+          "max_tool_calls"
+        ],
+        "title": "BudgetLimits",
+        "type": "object"
+      },
+      "SessionId": {
+        "description": "Identify a conversation container.",
+        "format": "uuid4",
+        "title": "SessionId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Trusted configuration captured when a Run is created.",
+    "properties": {
+      "session_id": {
+        "$ref": "#/$defs/SessionId"
+      },
+      "budget_limits": {
+        "$ref": "#/$defs/BudgetLimits"
+      }
+    },
+    "required": [
+      "session_id",
+      "budget_limits"
+    ],
+    "title": "RunCreatedPayload",
+    "type": "object"
+  },
+  "RunFailedPayload": {
+    "$defs": {
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "budget_exhausted",
+          "provider_error",
+          "tool_error",
+          "persistence_error",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorInfo": {
+        "additionalProperties": false,
+        "description": "Serializable error data that is safe to expose and persist.",
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/ErrorCategory"
+          },
+          "code": {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/$defs/SafeDetailValue"
+            },
+            "maxProperties": 32,
+            "title": "Details",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "ErrorInfo",
+        "type": "object"
+      },
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "additionalProperties": false,
+    "description": "Safe failure information for a terminal Run.",
+    "properties": {
+      "error": {
+        "$ref": "#/$defs/ErrorInfo"
+      }
+    },
+    "required": [
+      "error"
+    ],
+    "title": "RunFailedPayload",
+    "type": "object"
   },
   "RunId": {
     "description": "Identify one user-request execution.",
@@ -359,16 +1145,675 @@
     "title": "RunId",
     "type": "string"
   },
+  "RunStartedPayload": {
+    "additionalProperties": false,
+    "description": "Payload for the transition from queued to running.",
+    "properties": {},
+    "title": "RunStartedPayload",
+    "type": "object"
+  },
+  "RunState": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ActivityKind": {
+        "description": "Kinds of serial operations tracked by the P1 reducer.",
+        "enum": [
+          "model",
+          "tool"
+        ],
+        "title": "ActivityKind",
+        "type": "string"
+      },
+      "ActivityState": {
+        "additionalProperties": false,
+        "description": "Immutable state for one model or Tool operation.",
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "kind": {
+            "$ref": "#/$defs/ActivityKind"
+          },
+          "status": {
+            "$ref": "#/$defs/ActivityStatus"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Completed At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "model_call_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ModelCallId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "tool_call_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ToolCallId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "tool_name": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tool Name"
+          }
+        },
+        "required": [
+          "activity_id",
+          "kind",
+          "status",
+          "requested_at"
+        ],
+        "title": "ActivityState",
+        "type": "object"
+      },
+      "ActivityStatus": {
+        "description": "P1 Activity lifecycle states.",
+        "enum": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "ActivityStatus",
+        "type": "string"
+      },
+      "BudgetLimits": {
+        "additionalProperties": false,
+        "description": "Finite limits selected by a trusted Run creation boundary.",
+        "properties": {
+          "max_model_iterations": {
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Max Model Iterations",
+            "type": "integer"
+          },
+          "max_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "max_cost_microusd": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Max Cost Microusd",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "maximum": 2678400000,
+            "minimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Max Tool Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_model_iterations",
+          "max_tokens",
+          "max_cost_microusd",
+          "max_wall_time_ms",
+          "max_tool_calls"
+        ],
+        "title": "BudgetLimits",
+        "type": "object"
+      },
+      "BudgetUsage": {
+        "additionalProperties": false,
+        "description": "Actual usage derived only from accepted Run Events.",
+        "properties": {
+          "model_iterations": {
+            "default": 0,
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Model Iterations",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "default": 0,
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "default": 0,
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "cost_microusd": {
+            "default": 0,
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Cost Microusd",
+            "type": "integer"
+          },
+          "tool_calls": {
+            "default": 0,
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Tool Calls",
+            "type": "integer"
+          }
+        },
+        "title": "BudgetUsage",
+        "type": "object"
+      },
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "budget_exhausted",
+          "provider_error",
+          "tool_error",
+          "persistence_error",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorInfo": {
+        "additionalProperties": false,
+        "description": "Serializable error data that is safe to expose and persist.",
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/ErrorCategory"
+          },
+          "code": {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/$defs/SafeDetailValue"
+            },
+            "maxProperties": 32,
+            "title": "Details",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "ErrorInfo",
+        "type": "object"
+      },
+      "ModelCallId": {
+        "description": "Identify one model call independently of provider request IDs.",
+        "format": "uuid4",
+        "title": "ModelCallId",
+        "type": "string"
+      },
+      "RunId": {
+        "description": "Identify one user-request execution.",
+        "format": "uuid4",
+        "title": "RunId",
+        "type": "string"
+      },
+      "RunStatus": {
+        "description": "P1-visible lifecycle states for one Run.",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "RunStatus",
+        "type": "string"
+      },
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "SessionId": {
+        "description": "Identify a conversation container.",
+        "format": "uuid4",
+        "title": "SessionId",
+        "type": "string"
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Immutable Run projection produced by the pure reducer.",
+    "properties": {
+      "run_id": {
+        "$ref": "#/$defs/RunId"
+      },
+      "session_id": {
+        "$ref": "#/$defs/SessionId"
+      },
+      "status": {
+        "$ref": "#/$defs/RunStatus"
+      },
+      "budget_limits": {
+        "$ref": "#/$defs/BudgetLimits"
+      },
+      "budget_usage": {
+        "$ref": "#/$defs/BudgetUsage"
+      },
+      "activities": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/ActivityState"
+        },
+        "title": "Activities",
+        "type": "array"
+      },
+      "created_at": {
+        "format": "date-time",
+        "title": "Created At",
+        "type": "string"
+      },
+      "started_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Started At"
+      },
+      "completed_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Completed At"
+      },
+      "terminal_error": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ErrorInfo"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_sequence": {
+        "minimum": 1,
+        "title": "Last Sequence",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "run_id",
+      "session_id",
+      "status",
+      "budget_limits",
+      "created_at",
+      "last_sequence"
+    ],
+    "title": "RunState",
+    "type": "object"
+  },
+  "RunSucceededPayload": {
+    "additionalProperties": false,
+    "description": "Payload for a successful terminal transition.",
+    "properties": {},
+    "title": "RunSucceededPayload",
+    "type": "object"
+  },
   "SessionId": {
     "description": "Identify a conversation container.",
     "format": "uuid4",
     "title": "SessionId",
     "type": "string"
   },
+  "ToolCallCompletedPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Identity of a successfully completed Tool Activity.",
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "tool_call_id": {
+        "$ref": "#/$defs/ToolCallId"
+      }
+    },
+    "required": [
+      "activity_id",
+      "tool_call_id"
+    ],
+    "title": "ToolCallCompletedPayload",
+    "type": "object"
+  },
+  "ToolCallFailedPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "budget_exhausted",
+          "provider_error",
+          "tool_error",
+          "persistence_error",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorInfo": {
+        "additionalProperties": false,
+        "description": "Serializable error data that is safe to expose and persist.",
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/ErrorCategory"
+          },
+          "code": {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/$defs/SafeDetailValue"
+            },
+            "maxProperties": 32,
+            "title": "Details",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "ErrorInfo",
+        "type": "object"
+      },
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Safe error for a failed Tool Activity.",
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "tool_call_id": {
+        "$ref": "#/$defs/ToolCallId"
+      },
+      "error": {
+        "$ref": "#/$defs/ErrorInfo"
+      }
+    },
+    "required": [
+      "activity_id",
+      "tool_call_id",
+      "error"
+    ],
+    "title": "ToolCallFailedPayload",
+    "type": "object"
+  },
   "ToolCallId": {
     "description": "Correlate one tool request with its result.",
     "format": "uuid4",
     "title": "ToolCallId",
     "type": "string"
+  },
+  "ToolCallRequestedPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Identity and bounded name of a Tool Activity accepted for scheduling.",
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "tool_call_id": {
+        "$ref": "#/$defs/ToolCallId"
+      },
+      "tool_name": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+        "title": "Tool Name",
+        "type": "string"
+      }
+    },
+    "required": [
+      "activity_id",
+      "tool_call_id",
+      "tool_name"
+    ],
+    "title": "ToolCallRequestedPayload",
+    "type": "object"
+  },
+  "ToolCallStartedPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Identity of a Tool Activity that has started.",
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "tool_call_id": {
+        "$ref": "#/$defs/ToolCallId"
+      }
+    },
+    "required": [
+      "activity_id",
+      "tool_call_id"
+    ],
+    "title": "ToolCallStartedPayload",
+    "type": "object"
   }
 }
