@@ -1,13 +1,14 @@
 ---
 title: 术语表
-description: BearAgent 中稳定使用的核心领域术语。
+description: BearAgent 中稳定使用的核心项目术语及其白话解释。
 bearStatus: design
 sourceRefs:
   - architecture/overview
   - F-0002
 ---
 
-这些术语来自 BearAgent 已接受的架构。文档和代码不应随意引入同义词。
+这些术语来自 BearAgent 已接受的架构。文档第一次使用英文术语时应同时给出中文解释；代码标识
+保持原名，便于读者搜索源码。
 
 | 术语 | 定义 |
 |---|---|
@@ -20,6 +21,9 @@ sourceRefs:
 | Reducer | 按 sequence 把 Event 逐个折叠成 `RunState` 的纯确定性函数，不执行模型、Tool 或 I/O |
 | Budget | 创建 Run 时确定的资源上限，以及由已接受 Event 推导出的实际用量 |
 | Command | 希望系统执行的动作，可以被拒绝 |
+| Port（内部接口） | 核心代码规定“需要什么能力”的接口，不绑定某个外部产品或技术 |
+| Adapter（适配器） | 把数据库、模型 SDK 等外部实现翻译并接到内部接口的代码 |
+| Schema（数据格式） | 数据有哪些字段、字段类型和校验规则；JSON Schema 是这种规则的机器可读版本 |
 | Checkpoint | 某个 Event sequence 上的派生状态快照，可重建 |
 | Artifact | Run 生成并由用户取回的文件或结构化产物 |
 | Receipt | 外部系统返回的、可用于核对操作结果的证据 |

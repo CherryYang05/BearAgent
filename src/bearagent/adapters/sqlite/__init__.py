@@ -1,1 +1,5 @@
-"""The SQLite event store adapter will be introduced in P1."""
+"""SQLite persistence adapter."""
+
+from bearagent.adapters.sqlite.store import SqliteEventStore
+
+__all__ = ["SqliteEventStore"]

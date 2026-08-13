@@ -16,7 +16,7 @@ sourceRefs:
 
 | 范围 | 位置 | 责任 |
 |---|---|---|
-| 状态契约 | `src/bearagent/domain/runs.py` | Run/Activity status、预算 limit/usage 和冻结 state |
+| 状态数据与规则 | `src/bearagent/domain/runs.py` | Run/Activity 状态、预算限额/用量和冻结状态 |
 | Event payload | `src/bearagent/domain/run_events.py` | 12 种 v1 payload 与 type/version 白名单 |
 | Reducer | `src/bearagent/runtime/reducer.py` | sequence、转换、ID、串行 Activity 和 usage fold |
 | Budget gate | `src/bearagent/runtime/budgets.py` | 下一次 Activity 的五维纯预算判断 |
@@ -39,7 +39,7 @@ Reducer 对每个 Event 依次执行：
 未知类型/版本、额外 payload 字段、跨 Run、sequence gap 和非法转换均 fail closed。Pydantic 原始
 校验文本只作为 Python exception cause，公开错误保留稳定 code/message 和安全 details。
 
-## 修改契约前要检查什么
+## 修改状态数据或规则前要检查什么
 
 - 新 Event 是否真的改变 P1 state；如果是，payload、registry、reducer、测试和 snapshot 必须同改；
 - 不兼容 payload 是否需要新 schema version/upcaster，而不是原地改变 v1 含义；

@@ -100,7 +100,7 @@ Roadmap 不用开发天数关闭阶段。每完成一个 Feature 后再滚动估
 
 ## 6. P1：可检查执行
 
-**状态：进行中（2026-08-10 开始）。** [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md)、[F-0002 Run reducer, Activity lifecycle and budgets](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md) 与 [F-0015 Local Starlight documentation site](../specs/F-0015-local-starlight-docs-site.md) 已实现；下一个运行时 Feature 尚未确认。
+**状态：进行中（2026-08-10 开始）。** [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md)、[F-0002 Run reducer, Activity lifecycle and budgets](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md)、[F-0003 EventStore contract, SQLite adapter and projections](../specs/F-0003-event-store-sqlite-projections.md)、[F-0004 ModelProvider contract and first production adapter](../specs/F-0004-model-provider-first-adapter.md) 与 [F-0015 Local Starlight documentation site](../specs/F-0015-local-starlight-docs-site.md) 已实现；下一主 Feature 尚未确认。
 
 ### 6.1 阶段目标
 
@@ -129,14 +129,11 @@ P1 的 Event log 是可检查事实来源，不等于已经具备 Checkpoint 或
 
 #### C. Model Port、最小 ContextBuilder 与 Agent Loop
 
-- 内部 `ModelRequest/ModelEvent` 保持 Provider-neutral；
-- 实现一个真实 Provider adapter，并用 Fake Provider 做确定性 Loop 测试；
-- 最小 ContextBuilder 按稳定层级组装 runtime 规则、当前目标、必要消息、Tool schema 和 ToolResult，并对每层设置 token/字节预算；
-- 大 ToolResult 必须截断或落为 Artifact 引用，不能无限回灌上下文；P1 不做自动摘要 Memory 或复杂 compaction；
-- 内置 Agent 配置固定任务说明、可用工具和完成条件，但不能创建权限；
-- Adapter 负责 SDK 对象翻译、timeout、取消、usage 和错误分类；
-- 只对明确临时错误做有界 retry，参数、权限和上下文超限不得盲重试；
-- Prompt、ContextBuilder、Tool schema、Provider 与模型标识进入可比较 trace metadata，密钥不落盘。
+- F-0004 已让 `ModelRequest/ModelEvent` 不依赖特定模型服务商，并实现首个真实 Responses 适配器；
+- F-0004 已覆盖 SDK 对象翻译、timeout、取消、usage、函数调用和安全错误分类；
+- F-0016 再用 Fake Provider 做确定性 ContextBuilder/Loop 测试，并负责 Activity/Event 调度；
+- Adapter 不自动 retry；F-0016 只对明确临时错误做有界 retry，参数、权限和上下文超限不得盲重试；
+- Prompt、Tool schema、Provider 与模型标识进入可比较 trace metadata，密钥不落盘。
 
 #### D. Tool 与固定权限边界
 
@@ -160,7 +157,7 @@ P1 仍要求每个 ToolRequest 经过统一策略端口。其实现只有固定�
 #### F. 文档与验证
 
 - 为每个已实现 Feature 同步工程 Spec/Plan、初学者路径、开发者导读和当前状态；
-- Event schema snapshot、Provider/Tool contract tests、SQLite integration tests、路径安全测试和 CLI 端到端测试；
+- Event 数据格式快照、模型服务/Tool 共用接口测试、SQLite 集成测试、路径安全测试和 CLI 端到端测试；
 - P1 关闭后再发布静态文档站；Agent Runtime 仍只在本机使用。
 
 ### 6.3 明确不做
@@ -176,7 +173,7 @@ P1 仍要求每个 ToolRequest 经过统一策略端口。其实现只有固定�
 1. **State**：F-0002 Run reducer、Activity lifecycle 与 budgets；
 2. **Facts**：F-0003 EventStore contract、SQLite、projection 与 migration；
 3. **Effects**：F-0006 Tool contract/registry/baseline policy gate，F-0007 只读工具，F-0008 原子写与 Artifact；
-4. **Model**：F-0004 模型接口、首个真实 Adapter 与 contract tests；
+4. **Model boundary**：F-0004 第一个真实 ModelProvider；
 5. **Loop**：F-0016 最小 ContextBuilder、有界执行循环、版本化 Agent 配置与固定评测任务集；
 6. **Product path**：F-0005 `run/inspect/events` CLI 与端到端演示。
 
@@ -266,7 +263,7 @@ bearagent run events <run-id> --json
 | 支持幂等键的远程写 | 使用同一键查询或重试 |
 | 无法确认的外部写 | 标记 `UNKNOWN`，禁止自动假定成功或失败 |
 
-P2 产品中仍不注册任意远程写或 shell；后两行先通过 Port contract、Fake adapter 和恢复测试固定语义，供后续能力复用。
+P2 产品中仍不注册任意远程写或 shell；后两行先通过内部接口规则、替代适配器和恢复测试固定行为，供后续能力复用。
 
 ### 7.4 故障演练
 
@@ -489,11 +486,11 @@ P3 按三道门依次推进，不能因为 API 已经能访问就提前公开部
 
 1. [F-0001 Domain IDs, messages and errors](../specs/F-0001-domain-ids-messages-errors.md) — implemented
 2. [F-0002 Run reducer, Activity lifecycle and budgets](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
-3. F-0003 EventStore contract, SQLite adapter and projections
-4. F-0006 Tool contract, registry, executor and baseline policy gate
-5. F-0007 Workspace boundary and read tools
-6. F-0008 Atomic write tool and artifacts
-7. F-0004 ModelProvider contract and first production adapter
+3. [F-0003 EventStore contract, SQLite adapter and projections](../specs/F-0003-event-store-sqlite-projections.md) — implemented
+4. [F-0004 ModelProvider contract and first production adapter](../specs/F-0004-model-provider-first-adapter.md) — implemented
+5. F-0006 Tool contract, registry, executor and baseline policy gate
+6. F-0007 Workspace boundary and read tools
+7. F-0008 Atomic write tool and artifacts
 8. F-0016 Minimal ContextBuilder, bounded loop, versioned Agent configuration and eval task pack
 9. F-0005 CLI run/inspect/events
 10. [F-0015 Local Starlight documentation site](../specs/F-0015-local-starlight-docs-site.md) — implemented

@@ -40,7 +40,13 @@ P2 依赖 P1 的执行记录，P3 依赖 P2 的恢复规则。后一个阶段不
 - 提供 `run`、`inspect`、`events` 命令；
 - 建立固定任务集：测试用模型必须 5/5，真实模型在固定配置下至少 4/5。
 
-模型接口与执行循环分开验收：F-0004 只负责模型接口和首个真实 Adapter；F-0016 负责最小 ContextBuilder、有界循环、版本化 Agent 配置和评测任务集。
+- Run/Activity 状态、纯 Reducer 和迭代/token/费用/时间/Tool 预算；
+- SQLite EventStore、projection、migration 和 Artifact metadata；
+- 一个不依赖特定模型服务商的真实模型适配器与有界 Agent Loop；
+- 统一 ToolSpec/ToolResult/Registry/Executor 和固定最小策略门；
+- workspace `list/read/search` 与只写 `outputs/**` 的原子 `write_file`；
+- `run/inspect/events` CLI、人类可读与 JSON 输出；
+- 路径、符号链接、超时、大小上限、错误安全、数据格式快照和共用接口测试。
 
 ### 暂时没有
 

@@ -11,7 +11,7 @@ BearAgent 的目标是让个人 Agent 在本地可靠地完成长任务：每一
 3. [路线图](project/roadmap.md)：每个阶段给用户什么、明确不做什么、怎样证明和何时算完成。
 4. [AI 辅助开发 SOP](development/ai-development-sop.md)：如何让 ChatGPT/Codex 参与需求、设计、实现、测试和文档同步。
 5. [Feature Specs](specs/README.md)：每个阶段有哪些功能，以及各功能的需求和状态。
-6. [Implementation Plans](plans/README.md)：当前 Feature 做到哪个可验证切片。
+6. [Implementation Plans](plans/README.md)：当前 Feature 做到哪个可单独验证的实现步骤。
 7. [部署策略](deployment/self-hosting.md)：何时本地运行，何时上服务器，如何通过 1Panel 和子域名发布。
 
 ## 文档的权威层级

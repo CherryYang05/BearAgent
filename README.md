@@ -22,7 +22,7 @@
 </div>
 
 > [!IMPORTANT]
-> BearAgent 已完成 **P0 工程基础**，当前处于 **P1 可检查执行**。领域数据结构和本地文档站已经实现；真实模型、执行循环、文件工具和 SQLite 任务记录尚不可用，因此它现在还不能执行真实 Agent 任务。
+> BearAgent 已完成 **P0 工程基础**，当前处于 **P1 可检查执行**。内部 ID、消息、错误的数据格式与规则，Run 状态计算/预算、SQLite 事件存储和首个真实 Model Provider 已经实现；Agent 执行循环、文件工具与任务 CLI 尚不可用，因此它现在还不能执行真实 Agent 任务。
 
 ## Why BearAgent
 
@@ -44,19 +44,21 @@ BearAgent 先把三个问题做清楚：
 
 两条规则贯穿整个设计：
 
-- 核心执行代码不直接依赖模型厂商、Web 框架、MCP、Docker 或具体数据库，外部实现可以替换。
-- 所有会改变外部世界的操作都经过同一个执行与权限入口，并留下可追溯记录。
+- Runtime Core 只依赖 BearAgent 的内部数据类型与 Port（内部接口），不导入模型 SDK、FastAPI、MCP、Docker 或数据库 Adapter（适配器）。
+- 所有外部副作用都必须经过 Tool Executor 与 Policy；事件是事实，Run/Activity 表、Checkpoint 和索引只是投影或缓存。
 
 ## Project status
 
 | 现在已有 | P1 正在建设 | 明确后置 |
 |---|---|---|
-| Python 3.12 + uv 工程基础 | 任务状态、限制和 SQLite 记录 | P2：中断后的恢复与不确定结果处理 |
-| `help`、`version`、`doctor` 命令 | 一个真实模型和有界执行循环 | P3：审批、隔离执行和安全自托管 |
-| 类型化 ID、消息、错误和事件外壳 | 受限的工作区读取与 `outputs/**` 写入 | P4：Web UI、Skills、MCP、Memory |
-| 测试用模型、工具和内存存储 | `run`、`inspect`、`events` 命令 | P5：跨版本追踪、回放和评测平台 |
-| Ruff、Pyright、pytest、跨平台 CI | 固定任务集与可复现评测记录 | P6+：多个 Agent、浏览器控制、分布式执行 |
-| 中文 Starlight 学习与开发文档 | 可复现的仓库与文档任务集 | 仅在真实需求证明后扩展 |
+| Python 3.12 + uv 工程基线 | 有界 Agent Loop 与 ContextBuilder | P2：checkpoint、resume、retry、`UNKNOWN` |
+| `help`、`version`、`doctor` CLI | Workspace read 与 `outputs/**` 原子写入 | P3：Policy、Approval、Sandbox、HTTP/SSE |
+| 类型化 ID、Message、Error、Event envelope | `run`、`inspect`、`events` CLI | P4：Web UI、Skills、MCP、Memory |
+| Run reducer、预算、SQLite EventStore/projection | Tool registry、executor 与固定策略门 | P5：OpenTelemetry、replay、eval |
+| Fake Model / Tool / In-memory Store | Workspace 只读工具与 `outputs/**` 原子写入 | P5：OpenTelemetry、replay、eval |
+| OpenAI Responses 流式 Model Provider | 可追踪的首个本地文件任务 | P6+：Multi-Agent、browser、多 worker |
+| Ruff、Pyright、pytest、跨平台 CI | P1 验收与文档收口 | 仅在真实需求证明后扩展 |
+| 中文 Starlight 学习与开发文档 | P1 验收与文档收口 | 仅在真实需求证明后扩展 |
 
 当前权威状态见 [Project Roadmap](docs/project/roadmap.md) 和[公开文档状态页](site/src/content/docs/zh-cn/project/status.md)。Roadmap 中出现模块名称不等于它已经实现。
 
@@ -144,10 +146,10 @@ BearAgent/
 
 - [文档索引](docs/index.md)：工程文档的推荐阅读顺序与权威层级。
 - [产品定位](docs/project/product-positioning.md)：目标用户、竞争边界、差异化证据与对外措辞。
-- [总体架构](docs/architecture/overview.md)：领域模型、状态机、持久化、权限和安全边界。
+- [总体架构](docs/architecture/overview.md)：内部数据模型、状态机、持久化、权限和安全边界。
 - [AI 辅助开发 SOP](docs/development/ai-development-sop.md)：从调查到关闭 Feature 的完整流程。
 - [Feature Specs](docs/specs/README.md)：可观察行为、失败语义和验收标准。
-- [Implementation Plans](docs/plans/README.md)：当前 Feature 的可验证纵向切片。
+- [Implementation Plans](docs/plans/README.md)：当前 Feature 中可以单独完成和测试的实现步骤。
 - [Architecture Decision Records](docs/adr/README.md)：跨模块设计决策及其权衡。
 - [本地文档站指南](site/README.md)：Starlight 的预览、构建与内容边界。
 

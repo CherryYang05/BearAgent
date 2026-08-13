@@ -12,7 +12,7 @@
 - `P0`, `P1`, and later milestones live in `docs/project/roadmap.md`.
 - Feature IDs are global and stable. Every Feature Spec must declare `milestone: P<n>`; do not encode the milestone into `F-NNNN` or rename a Feature when it moves.
 - Feature Spec and ADR filenames must begin with their full IDs: `F-NNNN-*.md` and `ADR-NNNN-*.md`.
-- Feature status lives in the Feature Spec. Slice-level progress lives in `docs/plans/PLAN-F-NNNN-*.md`.
+- Feature status lives in the Feature Spec. Progress for each independently verifiable implementation step lives in `docs/plans/PLAN-F-NNNN-*.md`.
 - ADR status records whether a decision is accepted, not whether its implementation is complete.
 - Keep at most one Implementation Plan `active`; reconcile its claims with code and tests before continuing it.
 

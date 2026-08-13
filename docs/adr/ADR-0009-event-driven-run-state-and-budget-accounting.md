@@ -11,7 +11,7 @@ superseded_by: null
 
 ## Context
 
-F-0001 只固定了通用 Event envelope。F-0003 的持久 projection、F-0004 的 Agent Loop 与 F-0005
+F-0001 只固定了通用 Event envelope。F-0003 的持久 projection、F-0004 的 ModelProvider、F-0016 的 Agent Loop 与 F-0005
 的 inspect 都需要共享 Run/Activity 状态和预算。如果 Loop 维护可变计数、Store 维护另一套状态、
 CLI 再从日志文本推断，会产生无法解释的分叉，并让 budget check 在不同入口被绕过。
 
@@ -48,7 +48,7 @@ CLI 再从日志文本推断，会产生无法解释的分叉，并让 budget ch
 
 选择 Option B，并限定如下：
 
-- `RunState` 与 `ActivityState` 是冻结、Provider/Store/Interface 无关的 Pydantic 领域模型。
+- `RunState` 与 `ActivityState` 是冻结且不依赖模型服务、存储或外部入口的 Pydantic 内部数据模型。
 - P1 只实现当前可达状态：Run 的 `QUEUED/RUNNING/SUCCEEDED/FAILED`，Activity 的
   `PENDING/RUNNING/SUCCEEDED/FAILED`。Pause、cancel、approval 和 `UNKNOWN` 由后续 Feature
   通过新 Event/状态显式增加，不提前声称可用。
@@ -86,7 +86,7 @@ CLI 再从日志文本推断，会产生无法解释的分叉，并让 budget ch
 
 ## Migration and rollback
 
-当前不存在持久 Run/Event 数据。接受后一次性新增领域模型、payload、reducer 和 snapshot；回退
+当前不存在持久 Run/Event 数据。接受后一次性新增内部数据模型、事件数据、reducer 和快照；回退
 只需删除新增模块并恢复文档/schema snapshot。F-0003 建立 SQLite v1 后，任何不兼容 payload
 变化必须使用新 schema version/upcaster 和 migration 说明，不能原地改义。
 

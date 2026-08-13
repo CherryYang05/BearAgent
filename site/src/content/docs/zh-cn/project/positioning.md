@@ -10,7 +10,9 @@ sourceRefs:
 > **BearAgent 让个人 Agent 在本地可靠地完成长任务：每一步可查看，失败后不乱重试，危险操作必须获得授权。**
 
 :::caution[内容状态：已接受定位 + 分阶段目标]
-当前只完成工程基础、领域契约和本地文档站，尚不能执行真实 Agent 任务。请同时查看[当前实现状态](status.md)。
+定位描述 BearAgent 要成为的产品。当前已完成工程基线、内部数据格式、Run reducer/预算、SQLite
+EventStore、ModelProvider 和本地文档站，但尚不能执行完整 Agent 任务；请同时查看
+[当前实现状态](status.md)。
 :::
 
 ## 先服务谁

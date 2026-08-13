@@ -47,4 +47,6 @@ P1 将交付一个仓库与本地文档研究助手。它只能在指定工作�
 
 ## 当前能做什么
 
-目前已实现 Provider 无关的 ID、Message、Error、Event envelope 和本地文档站；真实模型、执行循环、文件工具和 SQLite 任务记录仍属于后续 P1 Feature。因此现在最适合做的是阅读领域契约和参与构建，而不是把它当作已经可用的个人助理。
+目前已实现不依赖特定模型服务商的 ID、Message、Error、Event 通用外壳、SQLite EventStore 与真实模型
+适配器；Agent Loop 和工具仍属于后续 P1 Feature。因此现在最适合做的是阅读内部数据规则和参与构建，而不是把它当作
+已经可用的个人助理。

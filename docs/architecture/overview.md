@@ -52,7 +52,7 @@ flowchart TB
 | Runtime / 框架 | LangGraph、Pydantic AI | 持久状态、类型化边界、追踪和代码化评测 | 把第三方框架直接变成 BearAgent 内核 |
 | 基础设施工具 | Inspect、E2B、MCP | Agent 评测、隔离执行和标准化工具连接 | 在执行与权限语义稳定前提前集成 |
 
-调研说明 Agent 的差异主要发生在任务、上下文、工具环境、权限、失败处理和产品入口，而不只是模型循环。BearAgent 选择先把执行记录、恢复决定和权限边界做成自己的稳定契约。详细比较与来源见[产品定位](../project/product-positioning.md)和本文末尾参考资料。
+这些项目证明了不同 Agent 的差异主要发生在任务范围、上下文、工具环境、权限、持久化行为和产品入口，而不只是模型循环。BearAgent 要更早明确运行时事实、恢复规则和权限边界；详细比较与来源见[产品定位](../project/product-positioning.md)和本文末尾参考资料。
 
 ## 3. 范围
 
@@ -239,6 +239,20 @@ Activity completion/failure，也不把一次实际 token/费用超额伪装成�
 相同 Event sequence 得到值相等的 `RunState`，但 P1 没有 startup scan、Checkpoint 或自动续跑；
 这些仍属于 P2 safe recovery。
 
+### 7.2 F-0003 已实现的持久事实子集
+
+F-0003 使用标准库 `sqlite3` 实现 EventStore adapter。每次 append 在 `BEGIN IMMEDIATE`
+transaction 内核对已持久 Event/projection sequence，运行同一个 F-0002 reducer，插入完整 Event
+envelope，并更新 normalized Run/Activity projection；任一步失败全部回滚。
+
+当前 schema v1 只包含 `events`、`run_projections`、`activity_projections` 和带 SHA-256 校验的
+`schema_migrations`。SQLite 使用 WAL、foreign keys、`synchronous=FULL` 和有限 busy timeout；
+同一 sequence 的竞争 writer 最多一个提交。Event payload 和 query 有上限，读取到非法 JSON、
+不连续 sequence 或 projection 分叉时 fail closed。
+
+这意味着正常关闭并重开数据库后，已提交事实和真实非终态状态仍可查询；不意味着 Runtime 会扫描
+或继续非终态 Run。Checkpoint、startup recovery、retry、cancel 和 `UNKNOWN` 仍属于 P2。
+
 ## 8. 一次 Run 的标准流程
 
 ```mermaid
@@ -276,7 +290,7 @@ sequenceDiagram
 
 每次关键状态转换与对应 Event 必须在同一个 SQLite transaction 内提交。SSE token 可以实时发出，但不逐 token 写 WAL；只有完成后的模型响应、usage 和 tool call 被持久化。崩溃时允许丢失尚未完成的 token stream，然后从上一个安全边界重新请求模型。
 
-## 9. Event 与 Command 契约
+## 9. Event 与 Command 的数据格式和规则
 
 ### 9.1 核心 Command
 
@@ -373,17 +387,25 @@ class ModelProvider(Protocol):
     async def stream(self, request: ModelRequest) -> AsyncIterator[ModelEvent]: ...
 ```
 
-`ModelRequest` 包含 messages、tool schemas、model config、deadline、trace context；`ModelEvent` 只允许内部定义的 text delta、tool-call delta/completed、usage、response completed 和 error。
+F-0004 已实现的 `ModelRequest` 包含 model、messages、Tool input schema、最大输出 token、有限 timeout
+与 prompt version；成功 stream 只产生 BearAgent 的 text delta、完整 Tool call 与唯一 completion。
+completion 保存实际模型、finish reason、可选 usage 和 Provider request ID。错误以安全
+`ModelProviderError` 终止 stream，不作为成功 Event 混入。
 
 规则：
 
 - Provider SDK 对象在 adapter 内完成翻译，不能进入 runtime/domain。
-- P1 只实现一个 Provider adapter；第二个 adapter 用 contract tests 验证抽象是否真实。
-- Retry 只处理明确的临时错误；参数错误、权限错误、上下文超限不得盲重试。
-- usage、finish reason、provider request id 和模型标识必须持久化，密钥不得持久化。
+- F-0004 的首个 production adapter 使用官方 OpenAI Python SDK 与 Responses HTTP/SSE streaming；
+  不使用 hosted Tool、Provider conversation、background mode 或 websocket。
+- Adapter 禁用 SDK 自动 retry，只分类 transient/permanent failure；F-0016 的 Runtime 才能基于预算、
+  Activity attempt 与 Event 决定有界 retry。
+- F-0004 暴露 usage、finish reason、Provider request ID 和模型标识；F-0016 才负责把它们持久化，
+  密钥始终不得进入 request/Event/error。
+- Provider 输出不可信；函数名和 JSON object arguments 必须验证，Tool schema 不等于 Grant。
 - Prompt/tool schema 必须做版本标记，保证 trace/eval 可比较。
 
-第一版可选择一个覆盖主要目标模型的 OpenAI-compatible adapter；若首要模型使用 Responses 协议，则实现独立 adapter。不要为了“支持几十家模型”引入一个主导整个领域模型的聚合框架。
+F-0004 不包含 ContextBuilder、Agent Loop、Activity/Event 调度或 CLI Run；它们属于 F-0016/F-0005。
+第二个模型服务适配器仍是后续用共用接口测试验证内部接口是否通用的入口，不在 P1 建兼容矩阵。
 
 ## 12. Tool、Policy 与 Sandbox
 
@@ -525,24 +547,32 @@ MCP server 和每个 MCP tool 都需要独立启用、schema 校验、timeout、
 
 ### 14.1 最小数据库
 
+F-0003 当前实际 schema：
+
+```text
+events                  append-only source of truth
+run_projections         current Run state and budget projection
+activity_projections    ordered model/tool Activity projection
+schema_migrations       version/name/checksum ledger
+```
+
+后续阶段目标表（尚未实现）：
+
 ```text
 sessions       conversation metadata
-runs           current run projection and version
-events         append-only source of truth
-activities     query projection for model/tool operations
 approvals      pending/resolved approval projection
 checkpoints    state snapshot at event sequence
 artifacts      file metadata, hash, mime, producing activity
-schema_migrations
 ```
 
 重要约束：
 
 - `events(event_id)` 唯一；`events(run_id, sequence)` 唯一。
-- 每个 Run 同一时间只有一个 owner；P1 使用进程内 per-run lock，后续再增加 lease。
+- P1 通过 SQLite `BEGIN IMMEDIATE` 串行化短写 transaction；不实现多进程 owner/lease。
 - Event append 与 projection 更新在一个 transaction 中。
-- SQLite 使用 WAL 模式和 busy timeout；先单进程写入。
+- SQLite 使用 WAL、foreign keys、`synchronous=FULL` 和有限 busy timeout；先单进程写入。
 - JSON payload 有 schema version；迁移文件进入 Git。
+- migration ledger 校验 version/name/SHA-256；进入 main 的 migration 不原地修改。
 - Artifact 大内容放文件系统，SQLite 只存路径、hash 和元数据。
 
 ### 14.2 数据目录
@@ -659,9 +689,9 @@ P1/P2 只能在本机或 SSH tunnel 下使用。公开可访问前必须有：�
 | Async | asyncio/AnyIO | 流式模型与工具调用 |
 | CLI | Typer | 快速形成可用入口 |
 | API | FastAPI + SSE | P3 才引入；对单向 event stream 足够 |
-| Storage | SQLite WAL + aiosqlite + SQL migrations | 无外部服务、事务清晰、适合单用户 |
+| Storage | SQLite WAL + stdlib `sqlite3` + SQL migrations | 无新生产依赖、事务显式、适合单用户 |
 | HTTP | httpx | async、timeout、streaming |
-| Tests | pytest | 单元、契约、集成和故障注入 |
+| Tests | pytest | 单元、共用接口、集成和故障注入测试 |
 | Quality | Ruff + Pyright | 快速、可自动化 |
 | Docs | Markdown/MDX + Starlight | 学习型导航、静态搜索和 Mermaid；P1 只本地构建 |
 | Deployment | Docker Compose + 1Panel reverse proxy | 与自有服务器匹配，运维成本低 |
@@ -688,15 +718,15 @@ P1/P2 只能在本机或 SSH tunnel 下使用。公开可访问前必须有：�
 - [ADR-0004](../adr/ADR-0004-policy-outside-model.md)：Policy 位于模型之外；
 - [ADR-0005](../adr/ADR-0005-no-host-shell-execution.md)：host runtime 不执行模型生成 shell；
 - [ADR-0006](../adr/ADR-0006-p0-tooling-and-dependencies.md)：P0 工具与依赖基线；
-- [ADR-0007](../adr/ADR-0007-provider-neutral-domain-schemas.md)：Provider-neutral 领域 schema；
+- [ADR-0007](../adr/ADR-0007-provider-neutral-domain-schemas.md)：不依赖特定模型服务商的内部数据格式；
 - [ADR-0008](../adr/ADR-0008-starlight-public-docs.md)：公共文档站使用 Starlight。
 - [ADR-0009](../adr/ADR-0009-event-driven-run-state-and-budget-accounting.md)：Event 驱动的 Run 状态与预算记账。
+- [ADR-0010](../adr/ADR-0010-openai-responses-first-model-adapter.md)：首个 production Model adapter 使用 OpenAI Responses API。
 
 ADR 的 `accepted` 只表示决策已生效，不表示 Roadmap 中的恢复、Policy、runner 或 API 已经实现。
 
 ## 21. 对应 Feature 开始前仍需决定
 
-- F-0004 前：第一版实际模型协议是 Responses 还是广泛兼容的 Chat Completions；
 - F-0008 前：Artifact 最大保留时间和自动清理策略；
 - F-0012/F-0014 前：目标服务器架构、资源条件以及 Docker/Podman runner 选择；
 - P4 Web UI 前：独立前端还是最小服务端页面；

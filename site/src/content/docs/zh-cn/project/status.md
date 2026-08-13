@@ -6,6 +6,10 @@ sourceRefs:
   - roadmap
   - F-0001
   - F-0002
+  - F-0003
+  - F-0004
+  - ADR-0010
+  - ADR-0003
   - ADR-0009
   - F-0015
 ---
@@ -17,32 +21,33 @@ sourceRefs:
 | 范围 | 状态 | 证据 |
 |---|---|---|
 | P0 工程基线 | 已完成 | Python/uv 骨架、CLI doctor、CI、文档治理和测试 |
-| F-0001 领域契约 | 已实现 | 类型化 ID、Message、Error、Event envelope 和 schema snapshot |
+| F-0001 内部数据格式 | 已实现 | 类型化 ID、Message、Error、Event 通用外壳和 JSON Schema 快照 |
 | F-0002 状态与预算 | 已实现 | Run/Activity schema、12 种 payload、纯 Reducer、五维 budget gate |
+| F-0003 持久事实 | 已实现 | EventStore 接口规则、SQLite WAL、数据格式 v1、原子 Run/Activity 查询视图 |
+| F-0004 模型边界 | 已实现 | 统一内部请求/事件、替代实现、OpenAI Responses 流式适配器、失败分类 |
 | F-0015 本地文档站 | 已实现 | Starlight 中文站、本地搜索、Mermaid、学习与架构入口 |
 
 ## P1 运行时 Backlog
 
-以下名称只登记在 Roadmap，尚未创建对应 Spec：
+以下 Feature 尚未实现：
 
-1. F-0003 EventStore contract, SQLite adapter and projections
-2. F-0006 Tool contract, registry, executor and baseline policy gate
-3. F-0007 Workspace boundary and read tools
-4. F-0008 Atomic write tool and artifacts
-5. F-0004 ModelProvider contract and first production adapter
-6. F-0016 Minimal ContextBuilder, bounded loop, versioned Agent configuration and eval task pack
-7. F-0005 CLI run/inspect/events
+1. F-0006 Tool contract, registry, executor and baseline policy gate
+2. F-0007 Workspace boundary and read tools
+3. F-0008 Atomic write tool and artifacts
+4. F-0016 Minimal ContextBuilder, bounded loop, Agent config and eval task pack
+5. F-0005 CLI run/inspect/events
 
 :::caution[当前不能做什么]
-BearAgent 现在可以从内存 Event sequence 推导 Run/Activity 状态并检查预算，但还不能调用真实模型
-完成文件任务，也没有 SQLite EventStore、文件工具、真实 Provider 或执行循环。
+BearAgent 现在已有可调用真实 OpenAI Responses 流式接口的生产适配器，也能把合法 Event 与
+Run/Activity 查询视图原子写入 SQLite；但两者还没有被 Agent Loop/Application command 连接，
+因此仍不能完成文件任务，也没有 ToolRegistry 或 CLI Run。
 P1 完成后也只承诺执行事实可检查；Checkpoint、崩溃后自动恢复、`UNKNOWN` 处置、Approval 与
 sandbox 分别属于 P2/P3。相关页面如果提前解释设计，必须标记为设计或规划中。
 :::
 
 ## 当前阶段门
 
-F-0002 已完成；下一个 P1 运行时 Feature 尚未由项目所有者确认，仓库当前没有 active Plan。
+F-0004 已完成；P1 仍未关闭，下一 Feature 必须再次由项目所有者确认后建立 active Plan。
 阶段关闭时必须复现真实 CLI 文件任务、非法路径拒绝、预算终止和 Activity/Event/Artifact 检查；
 不能用已接受 Roadmap 或架构图代替这些实现证据。
 

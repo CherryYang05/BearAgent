@@ -19,7 +19,7 @@ related_adrs:
 ## 1. Background / Problem
 
 F-0001 提供了类型化 ID、通用 Event envelope 和安全错误，但没有定义具体 Event payload、
-Run/Activity 状态或预算语义。F-0003 的 EventStore、F-0004 的 Agent Loop 和 F-0005 的
+Run/Activity 状态或预算语义。F-0003 的 EventStore、F-0004 的 ModelProvider、F-0016 的 Agent Loop 和 F-0005 的
 `run inspect` 如果各自推断状态或维护计数，会产生不一致的终态、非法转换和预算绕过。
 
 F-0002 先建立一个无 I/O 的状态内核：相同的有序 Event 必须得到相同的不可变 `RunState`，
@@ -33,7 +33,7 @@ F-0002 先建立一个无 I/O 的状态内核：相同的有序 Event 必须得�
 - G-3：提供严格、纯函数式 reducer，从有序 Event 构造或推进同一 `RunState`。
 - G-4：统一模型迭代、token、费用、wall time 和 Tool 次数的预算限制与记账语义。
 - G-5：预算耗尽和非法事件产生稳定、安全、可测试的失败，不静默继续调度。
-- G-6：把新增公共领域契约纳入 JSON schema snapshot/compatibility 基线。
+- G-6：把新增公共内部数据格式纳入 JSON Schema 快照与兼容性基线。
 
 ## 3. Non-goals
 

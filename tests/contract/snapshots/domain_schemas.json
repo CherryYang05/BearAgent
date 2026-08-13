@@ -54,6 +54,14 @@
           "invalid_state_transition",
           "budget_exhausted",
           "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
           "tool_error",
           "persistence_error",
           "internal_error"
@@ -405,6 +413,14 @@
           "invalid_state_transition",
           "budget_exhausted",
           "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
           "tool_error",
           "persistence_error",
           "internal_error"
@@ -615,6 +631,20 @@
           "tool_call_id": {
             "$ref": "#/$defs/ToolCallId"
           },
+          "provider_call_id": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Provider Call Id"
+          },
           "name": {
             "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
             "title": "Name",
@@ -787,6 +817,14 @@
           "invalid_state_transition",
           "budget_exhausted",
           "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
           "tool_error",
           "persistence_error",
           "internal_error"
@@ -967,6 +1005,465 @@
     "title": "ModelCallStartedPayload",
     "type": "object"
   },
+  "ModelCompleted": {
+    "$defs": {
+      "ModelFinishReason": {
+        "description": "Provider-neutral reasons a successful model response stopped.",
+        "enum": [
+          "stop",
+          "tool_calls"
+        ],
+        "title": "ModelFinishReason",
+        "type": "string"
+      },
+      "ModelUsage": {
+        "additionalProperties": false,
+        "description": "Actual token usage reported by a Provider.",
+        "properties": {
+          "input_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "input_tokens",
+          "output_tokens"
+        ],
+        "title": "ModelUsage",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "The unique terminal event for a successful model stream.",
+    "properties": {
+      "kind": {
+        "const": "completed",
+        "default": "completed",
+        "title": "Kind",
+        "type": "string"
+      },
+      "provider_request_id": {
+        "maxLength": 256,
+        "minLength": 1,
+        "title": "Provider Request Id",
+        "type": "string"
+      },
+      "model": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$",
+        "title": "Model",
+        "type": "string"
+      },
+      "finish_reason": {
+        "$ref": "#/$defs/ModelFinishReason"
+      },
+      "usage": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ModelUsage"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "provider_request_id",
+      "model",
+      "finish_reason"
+    ],
+    "title": "ModelCompleted",
+    "type": "object"
+  },
+  "ModelRequest": {
+    "$defs": {
+      "JsonValue": {},
+      "Message": {
+        "additionalProperties": false,
+        "description": "One provider-neutral message with role-compatible content parts.",
+        "properties": {
+          "role": {
+            "$ref": "#/$defs/MessageRole"
+          },
+          "parts": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "text": "#/$defs/TextPart",
+                  "tool_call": "#/$defs/ToolCallPart",
+                  "tool_result": "#/$defs/ToolResultPart"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/TextPart"
+                },
+                {
+                  "$ref": "#/$defs/ToolCallPart"
+                },
+                {
+                  "$ref": "#/$defs/ToolResultPart"
+                }
+              ]
+            },
+            "maxItems": 128,
+            "minItems": 1,
+            "title": "Parts",
+            "type": "array"
+          }
+        },
+        "required": [
+          "role",
+          "parts"
+        ],
+        "title": "Message",
+        "type": "object"
+      },
+      "MessageRole": {
+        "description": "Roles understood by the BearAgent runtime.",
+        "enum": [
+          "system",
+          "user",
+          "assistant",
+          "tool"
+        ],
+        "title": "MessageRole",
+        "type": "string"
+      },
+      "ModelToolDefinition": {
+        "additionalProperties": false,
+        "description": "A bounded function definition that grants no runtime authority.",
+        "properties": {
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "input_schema": {
+            "additionalProperties": {
+              "$ref": "#/$defs/JsonValue"
+            },
+            "title": "Input Schema",
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "input_schema"
+        ],
+        "title": "ModelToolDefinition",
+        "type": "object"
+      },
+      "TextPart": {
+        "additionalProperties": false,
+        "description": "A non-empty text segment.",
+        "properties": {
+          "kind": {
+            "const": "text",
+            "default": "text",
+            "title": "Kind",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 1000000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TextPart",
+        "type": "object"
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      },
+      "ToolCallPart": {
+        "additionalProperties": false,
+        "description": "A structured tool request emitted by a model adapter.",
+        "properties": {
+          "kind": {
+            "const": "tool_call",
+            "default": "tool_call",
+            "title": "Kind",
+            "type": "string"
+          },
+          "tool_call_id": {
+            "$ref": "#/$defs/ToolCallId"
+          },
+          "provider_call_id": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Provider Call Id"
+          },
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "arguments": {
+            "additionalProperties": {
+              "$ref": "#/$defs/JsonValue"
+            },
+            "title": "Arguments",
+            "type": "object"
+          }
+        },
+        "required": [
+          "tool_call_id",
+          "name"
+        ],
+        "title": "ToolCallPart",
+        "type": "object"
+      },
+      "ToolResultPart": {
+        "additionalProperties": false,
+        "description": "A tool observation correlated to its request.",
+        "properties": {
+          "kind": {
+            "const": "tool_result",
+            "default": "tool_result",
+            "title": "Kind",
+            "type": "string"
+          },
+          "tool_call_id": {
+            "$ref": "#/$defs/ToolCallId"
+          },
+          "content": {
+            "maxLength": 1000000,
+            "title": "Content",
+            "type": "string"
+          },
+          "is_error": {
+            "default": false,
+            "title": "Is Error",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "tool_call_id",
+          "content"
+        ],
+        "title": "ToolResultPart",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "A finite, Provider-neutral request for one model Activity.",
+    "properties": {
+      "model": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$",
+        "title": "Model",
+        "type": "string"
+      },
+      "messages": {
+        "items": {
+          "$ref": "#/$defs/Message"
+        },
+        "maxItems": 512,
+        "minItems": 1,
+        "title": "Messages",
+        "type": "array"
+      },
+      "tools": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/ModelToolDefinition"
+        },
+        "maxItems": 128,
+        "title": "Tools",
+        "type": "array"
+      },
+      "max_output_tokens": {
+        "exclusiveMinimum": 0,
+        "maximum": 10000000000,
+        "title": "Max Output Tokens",
+        "type": "integer"
+      },
+      "timeout_ms": {
+        "exclusiveMinimum": 0,
+        "maximum": 600000,
+        "title": "Timeout Ms",
+        "type": "integer"
+      },
+      "prompt_version": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+        "title": "Prompt Version",
+        "type": "string"
+      }
+    },
+    "required": [
+      "model",
+      "messages",
+      "max_output_tokens",
+      "timeout_ms",
+      "prompt_version"
+    ],
+    "title": "ModelRequest",
+    "type": "object"
+  },
+  "ModelTextDelta": {
+    "additionalProperties": false,
+    "description": "One non-empty fragment of assistant text.",
+    "properties": {
+      "kind": {
+        "const": "text_delta",
+        "default": "text_delta",
+        "title": "Kind",
+        "type": "string"
+      },
+      "text": {
+        "maxLength": 4000000,
+        "minLength": 1,
+        "title": "Text",
+        "type": "string"
+      }
+    },
+    "required": [
+      "text"
+    ],
+    "title": "ModelTextDelta",
+    "type": "object"
+  },
+  "ModelToolCall": {
+    "$defs": {
+      "JsonValue": {},
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "One complete, validated function call proposed by a model.",
+    "properties": {
+      "kind": {
+        "const": "tool_call",
+        "default": "tool_call",
+        "title": "Kind",
+        "type": "string"
+      },
+      "tool_call_id": {
+        "$ref": "#/$defs/ToolCallId"
+      },
+      "provider_call_id": {
+        "maxLength": 256,
+        "minLength": 1,
+        "title": "Provider Call Id",
+        "type": "string"
+      },
+      "name": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+        "title": "Name",
+        "type": "string"
+      },
+      "arguments": {
+        "additionalProperties": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "title": "Arguments",
+        "type": "object"
+      }
+    },
+    "required": [
+      "tool_call_id",
+      "provider_call_id",
+      "name",
+      "arguments"
+    ],
+    "title": "ModelToolCall",
+    "type": "object"
+  },
+  "ModelToolDefinition": {
+    "$defs": {
+      "JsonValue": {}
+    },
+    "additionalProperties": false,
+    "description": "A bounded function definition that grants no runtime authority.",
+    "properties": {
+      "name": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+        "title": "Name",
+        "type": "string"
+      },
+      "description": {
+        "maxLength": 4096,
+        "minLength": 1,
+        "title": "Description",
+        "type": "string"
+      },
+      "input_schema": {
+        "additionalProperties": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "title": "Input Schema",
+        "type": "object"
+      }
+    },
+    "required": [
+      "name",
+      "description",
+      "input_schema"
+    ],
+    "title": "ModelToolDefinition",
+    "type": "object"
+  },
+  "ModelUsage": {
+    "additionalProperties": false,
+    "description": "Actual token usage reported by a Provider.",
+    "properties": {
+      "input_tokens": {
+        "maximum": 10000000000,
+        "minimum": 0,
+        "title": "Input Tokens",
+        "type": "integer"
+      },
+      "output_tokens": {
+        "maximum": 10000000000,
+        "minimum": 0,
+        "title": "Output Tokens",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "input_tokens",
+      "output_tokens"
+    ],
+    "title": "ModelUsage",
+    "type": "object"
+  },
   "RunCreatedPayload": {
     "$defs": {
       "BudgetLimits": {
@@ -1061,6 +1558,14 @@
           "invalid_state_transition",
           "budget_exhausted",
           "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
           "tool_error",
           "persistence_error",
           "internal_error"
@@ -1389,6 +1894,14 @@
           "invalid_state_transition",
           "budget_exhausted",
           "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
           "tool_error",
           "persistence_error",
           "internal_error"
@@ -1648,6 +2161,14 @@
           "invalid_state_transition",
           "budget_exhausted",
           "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
           "tool_error",
           "persistence_error",
           "internal_error"
