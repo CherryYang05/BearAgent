@@ -1,29 +1,30 @@
 # Feature Specs
 
-Feature Spec 描述一个可观察行为的目标、非目标、失败语义和验收标准。
+Feature Spec 说明一个功能为什么要做、必须出现哪些行为、失败时用户会看到什么，以及怎样判断完成。
+它不是架构介绍，也不规定实现顺序。
 
-`F-NNNN` 是全项目稳定 ID，所属阶段由每份 Spec Front Matter 的 `milestone: P<n>` 显式声明。Feature 调整阶段时只修改 `milestone`，不得重编号。相关架构决定通过 `related_adrs` 引用；ADR 被接受不代表 Feature 已实现。
+Feature ID `F-NNNN` 在全项目稳定，所属阶段写在 Front Matter 的 `milestone` 中。移动阶段时只修改
+`milestone`，不改 ID。相关 ADR 说明技术决定；ADR 被接受不表示 Feature 已实现。
 
-流程：
+状态顺序：
 
 ```text
 draft -> accepted -> implemented -> superseded
 ```
 
-使用 [Feature Spec 模板](../templates/feature-spec.md)。Feature Spec 文件名统一为 `F-NNNN-<slug>.md`，与 Front Matter 的 `spec_id` 保持一致。
+新 Spec 使用 [Feature Spec 模板](../templates/feature-spec.md)，文件名为 `F-NNNN-<slug>.md`。
 
-## P0：Engineering Baseline
+## P0：工程基础
 
-- [F-0000: P0 Engineering Baseline](F-0000-p0-engineering-baseline.md)
+- [F-0000：建立可安装、可测试的工程基础](F-0000-p0-engineering-baseline.md) — implemented
 
-## P1+
+## P1：可检查执行
 
-### P1：可检查执行
+- [F-0001：统一内部 ID、Message、Error 和 Event 外壳](F-0001-domain-ids-messages-errors.md) — implemented
+- [F-0002：从 Event 计算 Run/Activity 状态和预算](F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
+- [F-0003：使用 SQLite 原子保存 Event 和 projection](F-0003-event-store-sqlite-projections.md) — implemented
+- [F-0004：建立模型内部接口和首个生产 adapter](F-0004-model-provider-first-adapter.md) — implemented
+- [F-0015：建立本地中文文档站](F-0015-local-starlight-docs-site.md) — implemented
 
-- [F-0001: Domain IDs, messages and errors](F-0001-domain-ids-messages-errors.md) — implemented
-- [F-0002: Run reducer, Activity lifecycle and budgets](F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
-- [F-0003: EventStore contract, SQLite adapter and projections](F-0003-event-store-sqlite-projections.md) — implemented
-- [F-0004: ModelProvider internal interface and first production adapter](F-0004-model-provider-first-adapter.md) — implemented
-- [F-0015: Local Starlight documentation site](F-0015-local-starlight-docs-site.md) — implemented
-
-其余计划中的 Feature 及 milestone 映射见 [Roadmap 的 Feature Backlog](../project/roadmap.md#12-第一批-feature-backlog)；开始实现前才从模板创建 Spec，并在这里按 `milestone` 分组登记。
+其余计划 Feature 见[路线图 Backlog](../project/roadmap.md#11-feature-backlog)。未创建 Spec 的名称只是
+计划范围，不能授权实现。

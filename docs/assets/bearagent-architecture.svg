@@ -126,9 +126,9 @@
       <rect class="card-now" y="7" width="255" height="120" rx="14"/>
       <rect x="14" y="18" width="34" height="34" rx="10" fill="#e0f5e9"/>
       <path d="M24 35h14M31 28v14" class="icon" stroke="#2f9e68"/>
-      <text x="20" y="73" class="card-title">Domain Contracts</text>
+      <text x="20" y="73" class="card-title">BearAgent Data &amp; State</text>
       <text x="20" y="96" class="card-note">IDs · Message · Error</text>
-      <text x="20" y="113" class="card-note">Event envelope</text>
+      <text x="20" y="113" class="card-note">Event · reducer · budgets</text>
       <rect x="193" y="24" width="46" height="22" rx="11" fill="#dff4e8"/>
       <text x="216" y="39" text-anchor="middle" class="phase" fill="#237a50">NOW</text>
     </g>
@@ -159,9 +159,9 @@
       <rect class="card" y="7" width="250" height="120" rx="14"/>
       <rect x="14" y="18" width="34" height="34" rx="10" fill="#f0ebfa"/>
       <path d="M20 35a11 11 0 1 0 4-8M20 24v11h11" class="icon" stroke="#6c4eb4"/>
-      <text x="20" y="73" class="card-title">Reducer &amp; Recovery</text>
-      <text x="20" y="96" class="card-note">safe-boundary resume</text>
-      <text x="20" y="113" class="card-note">cancel · retry</text>
+      <text x="20" y="73" class="card-title">Recovery Coordinator</text>
+      <text x="20" y="96" class="card-note">resume from saved facts</text>
+      <text x="20" y="113" class="card-note">attempt · cancel · UNKNOWN</text>
       <rect x="188" y="24" width="46" height="22" rx="11" fill="#e9f2f7"/>
       <text x="211" y="39" text-anchor="middle" class="phase" fill="#3e718d">P2</text>
     </g>
@@ -251,7 +251,7 @@
       <rect x="14" y="18" width="34" height="34" rx="10" fill="#fff0e4"/>
       <path d="M22 33c3-9 15-9 18 0-3 9-15 9-18 0zM26 41h10" class="icon" stroke="#dc6b20" transform="translate(0 2)"/>
       <text x="20" y="73" class="card-title">Model Provider</text>
-      <text x="20" y="96" class="card-note">provider-neutral port</text>
+      <text x="20" y="96" class="card-note">BearAgent model interface</text>
       <text x="20" y="113" class="card-note">one real adapter first</text>
       <rect x="193" y="24" width="46" height="22" rx="11" fill="#e8eef8"/>
       <text x="216" y="39" text-anchor="middle" class="phase" fill="#526b8d">P1</text>
@@ -314,7 +314,7 @@
       <rect x="14" y="18" width="34" height="34" rx="10" fill="#dff4e8"/>
       <path d="M24 27h20M24 35h20M24 43h13" class="icon" stroke="#2f9e68"/>
       <text x="22" y="72" class="card-title">Immutable Events</text>
-      <text x="22" y="94" class="card-note">envelope now</text>
+      <text x="22" y="94" class="card-note">types and reducer now</text>
       <text x="22" y="112" class="card-note">durable log in P1</text>
       <rect x="143" y="24" width="46" height="22" rx="11" fill="#dff4e8"/>
       <text x="166" y="39" text-anchor="middle" class="phase" fill="#237a50">NOW</text>

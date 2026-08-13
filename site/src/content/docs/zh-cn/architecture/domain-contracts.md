@@ -1,67 +1,68 @@
 ---
-title: F-0001：为什么先统一内部数据格式
-description: 通过稳定 ID、Message、Error 和 Event 通用外壳隔离运行时与外部 SDK。
+title: BearAgent 内部怎样交换数据
+description: 为什么 Runtime 使用自己的 ID、消息、错误和 Event，而不是直接传模型 SDK 对象。
 bearStatus: implemented
 sourceRefs:
   - F-0001
+  - F-0003
+  - F-0004
   - ADR-0007
 ---
 
-F-0001 是 BearAgent 在 P1 完成的第一个 Feature。它没有实现 Agent Loop，而是先回答一个更基础的
-问题：后续模块之间用什么语言交流？
+真实模型返回一个 SDK 对象，SQLite 最终保存 JSON，命令行又要显示错误。如果三处直接交换任意
+字典，很快就会出现三种 `run_id`、三套消息字段和互不兼容的错误格式。
 
-:::tip[内容状态：当前已实现]
-本页描述的 ID、Message、Error 和 Event 通用外壳已有代码、测试与 JSON Schema 快照。
-本页的内部数据格式与规则已实现；F-0003 SQLite 与 F-0004 ModelProvider 也已实现各自适配器，但 Tool 与
-Agent Loop 仍未实现。
+F-0001 的解决办法很朴素：进入 Runtime 之前，把外部数据翻译成 BearAgent 自己定义的数据类型；
+离开 Runtime 时，再由对应 adapter 翻译出去。
+
+:::tip[这部分已经实现]
+类型化 ID、Message、Error、通用 Event 外壳和 JSON schema 快照已有代码与测试。F-0003 与 F-0004
+已经分别让 SQLite 和 OpenAI Responses adapter 在边界完成显式翻译；完整 Agent Loop 仍未实现。
 :::
-
-## 为什么不能继续传字符串和字典
-
-如果 CLI、运行时、模型服务和 EventStore 都自行定义 `run_id`、消息和错误结构，同一个概念会
-逐渐出现不同字段、不同限制和不同 JSON 形式。模型 SDK 的响应类型也可能渗透进运行时，
-让更换模型或持久化旧事件变得困难。
-
-F-0001 因此建立四组不依赖特定模型服务商的内部数据格式与规则。
-
-## 1. 不透明 ID
-
-`SessionId`、`RunId`、`ActivityId`、`EventId` 等 ID 是不同类型的 UUID4。代码不能因为它们最终
-序列化为字符串，就把 Run ID 误传到 Activity ID 的位置，也不能依赖 UUID 文本进行业务排序。
-
-## 2. Message
-
-Message 明确区分 `system`、`user`、`assistant` 和 `tool` 消息角色，并用类型标识字段区分
-`text`、`tool_call`、`tool_result` 内容块。模型服务适配器负责把外部 SDK 对象翻译成这些内部类型。
-
-## 3. 安全 Error
-
-错误包含稳定的类别、代码和“是否可重试”标志。可序列化详情拒绝常见敏感字段并限制
-大小；原始异常与堆栈不能直接进入面向用户的领域错误。
-
-## 4. Event 通用外壳
-
-Event 具有 `event_id`、`run_id`、顺序号、数据格式版本、带时区时间、因果关联、链路关联
-和 JSON 数据。它提供后续 EventStore 的通用外壳，但具体 Run 事件仍由后续 Feature 定义。
-
-## 这对后续架构有什么价值
 
 ```mermaid
 flowchart LR
-    SDK[Provider SDK object] --> AD[Provider adapter]
-    AD --> MSG[BearAgent Message]
-    MSG --> RT[Runtime core]
-    RT --> EVT[BearAgent Event]
-    EVT --> SA[Storage adapter]
+    SDK["模型 SDK 响应"] --> MA["模型 adapter"]
+    MA --> M["BearAgent Message"]
+    M --> R["Runtime"]
+    R --> E["BearAgent Event"]
+    E --> SA["存储 adapter"]
+    SA --> DB["SQLite JSON"]
 ```
 
-外部格式可以变化，但运行时内部的语言保持稳定。这样才能为模型服务、EventStore、Tool 和 CLI
-分别添加实现，而不让某一个外部框架主导整个内部数据模型。
+## 四类数据各解决一个具体问题
 
-## 从哪里看代码
+### ID 防止把对象认错
 
-- 领域实现：`src/bearagent/domain/`
-- JSON Schema 快照（数据格式快照）：`tests/snapshots/domain_schemas.json`
+`RunId` 和 `ActivityId` 最终都能写成 UUID 字符串，但它们不是同一个概念。使用不同类型后，
+代码和静态检查可以发现把 Run ID 传到 Activity 参数中的错误。排序依靠 Event sequence 或时间，
+不依赖 UUID 文本。
+
+### Message 表示模型真正需要看到的内容
+
+Message 区分 system、user、assistant 和 tool 四种角色。内容目前只有文本、工具请求和工具结果。
+某个 Provider 使用什么响应类、字段名或流式事件，由它自己的 adapter 处理。
+
+### Error 只保存可以安全传播的信息
+
+错误包含稳定分类、代码、是否可重试和经过筛选的详情。原始异常、堆栈、认证头和密钥不会直接
+进入可序列化错误。这样 CLI、Event 和日志可以共享错误含义，同时减少意外泄露。
+
+### Event 说明一条事实属于哪里
+
+每条 Event 都有自身 ID、Run ID、sequence、类型、版本、带时区时间和 JSON payload。F-0001 只
+建立这个通用外壳；“模型调用完成”或“Run 失败”等具体 payload 由后续 Feature 增加。
+
+## 这项决定的准确边界
+
+ADR-0007 规定：**BearAgent 模块之间只交换 BearAgent 自己的数据类型，模型 SDK 对象必须在
+adapter 边界完成翻译。** 它没有要求所有外部系统使用相同格式，也没有把这些内部类型承诺为
+第三方 Python SDK。
+
+## 验证入口
+
+- 代码：`src/bearagent/domain/`
+- JSON schema 快照：`tests/contract/snapshots/domain_schemas.json`
 - 单元与安全测试：`tests/unit/`、`tests/security/`
-- 工程需求：`docs/specs/F-0001-domain-ids-messages-errors.md`
-- 设计理由：`docs/adr/ADR-0007-provider-neutral-domain-schemas.md`
+- 需求：[F-0001](https://github.com/CherryYang05/BearAgent/blob/main/docs/specs/F-0001-domain-ids-messages-errors.md)
+- 决策：[ADR-0007](https://github.com/CherryYang05/BearAgent/blob/main/docs/adr/ADR-0007-provider-neutral-domain-schemas.md)

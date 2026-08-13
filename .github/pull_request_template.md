@@ -20,6 +20,7 @@
 - [ ] Site developer documentation updated
 - [ ] Site current status or milestone summary updated
 - [ ] Content distinguishes concepts, accepted design, implemented behavior, and plans
+- [ ] Changed prose was read in context; terms are introduced through concrete behavior rather than mechanical replacement
 - [ ] External references use primary sources and do not imply BearAgent already supports their capabilities
 
 Every Feature PR must address all documentation surfaces. If no dedicated page is added, name the existing page or index that was updated.

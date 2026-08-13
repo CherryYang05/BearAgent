@@ -1,6 +1,6 @@
 ---
-title: BearAgent 架构概览
-description: BearAgent 的分层、依赖方向和当前实现边界。
+title: Runtime 各部分怎样协作
+description: 从一次文件任务理解核心规则、port、adapter 和外部系统之间的边界。
 bearStatus: mixed
 sourceRefs:
   - architecture/overview
@@ -8,50 +8,68 @@ sourceRefs:
   - ADR-0002
   - F-0002
   - F-0003
+  - F-0004
 ---
 
-BearAgent 将不可预测的模型决策放在一个有明确边界的运行时中。核心层只使用 BearAgent
-自己的类型；模型 SDK、数据库、CLI 和未来的 HTTP API 都位于适配器（Adapter）或外部入口
-（Interface）边界。
+模型请求读取 `docs/architecture/overview.md` 时，BearAgent 需要检查路径、调用文件工具、保存结果，
+再把内容交给下一次模型调用。这条路径跨过多个模块，但每个模块只负责其中一段。
 
-:::caution[内容状态：已接受架构，不等于全部实现]
-当前已完成工程基线、F-0001 内部数据格式、F-0002 reducer/预算、F-0003 SQLite EventStore 与
-F-0004 ModelProvider boundary。
-下图其余模块仍展示 P1-P3 的目标分层。
+:::caution[图中包含尚未实现的连接]
+当前已实现领域类型、Run/Activity 状态、Reducer、预算检查、SQLite EventStore 和首个 OpenAI
+Responses adapter。工具执行、ContextBuilder 和完整 Agent Loop 仍在 P1 计划中；权限审批和隔离
+环境属于 P3。
 :::
 
 ```mermaid
 flowchart TB
-    U[User] --> I[CLI / Future API]
-    I --> A[Application commands]
-    A --> R[Runtime core]
-    R --> C[Context builder]
-    R --> M[Model port]
-    R --> P[Policy port]
-    R --> T[Tool executor]
-    R --> E[Event store]
-    M --> MA[Provider adapter]
-    T --> WA[Workspace tools]
-    E --> SQ[SQLite adapter]
+    U["用户命令"] --> A["Application<br/>解释用户要启动或查询什么"]
+    A --> R["Runtime<br/>推进 Run、检查预算、安排下一次 Activity"]
+    R --> MP["Model port"]
+    R --> TP["Tool port"]
+    R --> EP["Event store port"]
+    MP --> MA["模型 adapter<br/>翻译具体 SDK"]
+    TP --> TA["文件工具 adapter<br/>访问受限工作区"]
+    EP --> SA["SQLite adapter<br/>保存 Event"]
 ```
 
-## 依赖方向
+## 先理解 port 和 adapter
 
-```text
-interfaces -> application -> domain/runtime ports
-adapters   --------------------^
-```
+`port` 是 Runtime 向外部能力提出的要求，例如“发送模型请求”或“按顺序保存 Event”。它只描述
+Runtime 需要什么，不包含 OpenAI SDK 或 SQLite 的具体做法。
 
-外层实现依赖内层规则。运行时核心不导入模型服务 SDK、Starlight、数据库适配器、FastAPI
-或 UI。外部对象必须在适配器边界翻译为内部类型。
+`adapter` 是满足该要求的一种实现。真实模型 adapter 调用模型服务，测试 adapter 返回预设内容；
+SQLite adapter 写数据库，内存 adapter 只在测试里保存数据。
 
-## 架构先解决四件事
+这两个词保留下来，是因为它们能准确区分“核心需要的行为”和“外部系统怎样做到”。它们不是为了
+给普通函数换一个更高级的名字。
 
-1. **过程可查**：每次模型和工具操作、预算、错误和输出文件都能关联起来。
-2. **恢复有依据**：已确认的操作不重复，无法确认的操作明确停住。
-3. **权限在模型之外**：模型只能提出请求，运行时负责允许、询问或拒绝。
-4. **数据由用户掌握**：第一版使用单用户、单进程、SQLite 和命令行，复杂度按真实需求增加。
+## 同一组测试怎样约束不同实现
 
-Trace/replay/eval 是这些主线的验证面；Context、Skill、MCP 与 Memory 后置到 P4。下一步可以阅读
-[产品定位](../project/positioning.md)、[F-0001：为什么先统一内部数据格式](domain-contracts.md)或
-[持久事实与安全恢复的边界](../learn/durable-events.md)。
+假设 Event store 规定：同一个 Run 的 sequence 必须从 1 连续增加。测试会把完全相同的用例分别
+跑在内存实现和 SQLite 实现上：
+
+- 追加 sequence 1、2、3，两种实现都应成功；
+- 跳过 2 直接追加 3，两种实现都应拒绝；
+- 读取时，两种实现都按同样顺序返回 Event。
+
+这样，调用方换用 SQLite 后不用改变使用方式。所谓 `contract suite`，就是这组所有实现都必须
+通过的测试。它检验可观察行为，而不是检验实现内部写得是否相似。
+
+## 依赖为什么只能朝里面
+
+Runtime 只能使用 BearAgent 自己的 ID、Message、Error、Event 和 port。具体模型 SDK、数据库连接、
+CLI 框架和未来的 Web API 都在外层。外层可以导入核心，核心不能反过来导入外层。
+
+因此更换模型服务或存储方式时，需要修改的是 adapter；Run 状态、预算和权限规则不会被某个 SDK
+的数据类型带着一起变化。
+
+## Runtime 长期负责什么
+
+1. 记录每次模型和工具操作，使过程可以查询；
+2. 根据 Event 计算状态，并在下一次 Activity 前检查预算；
+3. 所有外部操作都经过同一个工具执行和权限入口；
+4. 中断后只根据已保存事实继续，结果不明时停下；
+5. 第一版保持单用户、单进程和 SQLite，直到实际压力要求更复杂的部署。
+
+继续阅读[BearAgent 内部怎样交换数据](domain-contracts.md)，或从
+[开发者入口](../development/)进入代码。

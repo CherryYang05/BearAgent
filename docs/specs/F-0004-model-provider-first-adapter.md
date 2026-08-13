@@ -6,7 +6,7 @@ milestone: P1
 owner: CherryYang05
 created: 2026-08-13
 last_updated: 2026-08-13
-implemented_in: null
+implemented_in: "PR #7"
 related_adrs:
   - ADR-0007
   - ADR-0010

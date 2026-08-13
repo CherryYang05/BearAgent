@@ -5,7 +5,7 @@ spec_id: F-0001
 milestone: P1
 owner: CherryYang05
 created: 2026-08-10
-last_updated: 2026-08-10
+last_updated: 2026-08-13
 implemented_in: "PR #2"
 related_adrs:
   - ADR-0001
@@ -13,144 +13,130 @@ related_adrs:
   - ADR-0007
 ---
 
-# Feature: Domain IDs, messages and errors
+# F-0001：统一内部 ID、Message、Error 和 Event 外壳
 
-## 1. Background / Problem
+## 1. 为什么现在要做
 
-P0 提供的 `str` ID、字符串消息和最小 Event 只用于测试底座。P1 后续的 Run、
-ModelProvider、EventStore、Tool 和 CLI 如果继续各自定义字符串与字典，会产生不可兼容的
-跨模块契约，也无法稳定生成 JSON schema 或阻止 Provider 类型泄漏。
+P0 用字符串 ID、字符串消息和最小 Event 支撑测试。如果 Run、模型、存储、Tool 和 CLI 继续各自
+定义字典，同一个概念会出现不同字段，模型 SDK 类型也会进入 Runtime，旧 JSON 很难保持兼容。
 
-## 2. Goals
+F-0001 先规定 BearAgent 模块之间交换哪些数据。外部系统在 adapter 处翻译，Runtime 不接收 SDK
+response 或数据库对象。
 
-- G-1：为 P1 核心领域实体提供不透明、类型化且可注入生成器的 UUID4 ID。
-- G-2：定义只包含文本、工具调用和工具结果，且不依赖特定模型服务商的 Message。
-- G-3：定义稳定、可安全展示的错误分类、错误码和错误信息结构。
-- G-4：补全版本化 Event envelope 的通用字段，并保持 Event 不可变。
-- G-5：为公共内部数据格式建立 JSON Schema 快照与兼容性基线。
+## 2. 本次交付
 
-## 3. Non-goals
+- G-1：不同领域对象使用不同的 UUID4 ID 类型，并能替换 ID 生成器；
+- G-2：定义只含文本、工具请求和工具结果的 Message；
+- G-3：定义可以安全进入 CLI、Event 和日志的 Error；
+- G-4：补全不可变、带版本的 Event 通用字段；
+- G-5：提交公共类型的 JSON schema 快照，用于审查兼容性变化。
 
-- NG-1：不实现 Run reducer、状态转换或预算执行。
-- NG-2：不实现 SQLite、migration、projection 或恢复。
-- NG-3：不实现真实 ModelProvider、ToolRegistry、文件工具或 CLI Run。
-- NG-4：不支持图片、音频或其他多模态消息。
-- NG-5：不定义具体 Event payload；具体 Event 与 projection 由后续 Feature 扩展。
+## 3. 本次不做
 
-## 4. Terms and assumptions
+Run 状态、Reducer、预算、SQLite、恢复、真实模型、Tool、文件访问和 Run CLI 均不在本 Feature。
+Message 暂不支持图片、音频或其他多模态内容。具体 Event payload 由后续 Feature 添加。
 
-- ID 是不透明值；调用方不得依赖 UUID 文本中的时间、排序或其他业务含义。
-- “安全错误信息”是允许进入 CLI、Event 和日志的摘要，不包含原始异常、堆栈、凭证或
-  完整敏感输入。
-- P1 Message 只覆盖文本 Agent Loop 所需的文本、工具调用和工具结果。
+## 4. 需要先说明的约定
 
-## 5. User scenarios
+ID 是不透明值，代码不能依赖 UUID 文本排序或时间含义。安全 Error 只保存稳定摘要，不含原始异常、
+堆栈、凭证和完整敏感输入。P1 Message 只覆盖文本 Agent Loop 需要的内容。
 
-### Scenario A：跨模块关联
+## 5. 使用场景
 
-Given application 创建一个 Run，When EventStore、ModelProvider 和 CLI 传递其标识，Then
-它们使用同一个 `RunId` 领域类型而不是各自定义的字符串或 SDK 类型。
+### 同一个 Run 跨模块传递
 
-### Scenario B：不依赖特定模型服务商的消息
+Application 创建 Run 后，存储、模型和 CLI 都使用同一个 `RunId` 类型。把 `ActivityId` 传入需要
+`RunId` 的位置应被类型或运行时校验发现。
 
-Given assistant 请求一次工具调用，When adapter 翻译该响应，Then runtime 只接收 BearAgent
-定义的 Message part，且可以用 `ToolCallId` 将结果关联回请求。
+### 模型响应进入 Runtime
 
-### Scenario C：安全错误输出
+模型 SDK 返回工具调用后，adapter 把它转换成 BearAgent Message。Runtime 只看到内部 part，并用
+`ToolCallId` 把后续结果关联回请求。
 
-Given 外部边界返回异常，When application 构造可展示错误，Then只保留稳定错误码、分类、
-可重试标志和经过筛选的安全上下文，不暴露原始异常或 secret 字段。
+### 错误安全传播
 
-## 6. Functional requirements
+外部调用抛出异常后，adapter/application 创建稳定 Error，只保留 category、code、retryable、
+message 和筛选后的上下文；原始异常不进入序列化数据。
 
-- FR-1：至少定义 `SessionId`、`RunId`、`ActivityId`、`EventId`、`ArtifactId`、
-  `ModelCallId`、`ToolCallId`、`CausationId` 和 `CorrelationId`。
-- FR-2：ID 只能保存 UUID4；生产代码通过可替换的 `IdGenerator` 创建 ID。
-- FR-3：Message role 只允许 `system/user/assistant/tool`。
-- FR-4：Message part 使用带 discriminator 的 `text/tool_call/tool_result` 内部 schema。
-- FR-5：system/user 只允许文本；assistant 允许文本或工具调用；tool 只允许工具结果。
-- FR-6：错误分类至少覆盖 validation、budget、provider、tool、persistence、internal。
-- FR-7：错误详情拒绝常见 secret/authorization 字段名，并限制展示文本与详情大小。
-- FR-8：Event envelope 包含架构基线要求的 ID、sequence、event type、schema version、
-  occurred time、causation、correlation 和 JSON payload。
-- FR-9：所有公共领域 model 拒绝未知字段，实例冻结，并能序列化为 JSON 基础类型。
+## 6. 必须满足的行为
 
-## 7. Interfaces
+- FR-1：定义 Session、Run、Activity、Event、Artifact、ModelCall、ToolCall、Causation、Correlation ID；
+- FR-2：ID 只接受 UUID4，生产代码通过可替换 `IdGenerator` 创建；
+- FR-3：Message role 只允许 system、user、assistant、tool；
+- FR-4：Message part 使用可区分的 text、tool_call、tool_result 类型；
+- FR-5：system/user 只含文本，assistant 含文本或工具请求，tool 只含工具结果；
+- FR-6：Error category 至少覆盖 validation、budget、provider、tool、persistence、internal；
+- FR-7：Error detail 拒绝常见敏感字段，并限制文本和容器大小；
+- FR-8：Event 包含 ID、Run、sequence、类型、版本、时间、causation、correlation 和 JSON payload；
+- FR-9：公共 model 拒绝未知字段、实例冻结并可序列化为 JSON 基础类型。
 
-本 Feature 新增或冻结以下内部 Python 契约：
+## 7. 对外入口和模块连接
 
 ```text
-domain.ids: opaque ID types + IdGenerator
-domain.messages: MessageRole + Message + Message parts
-domain.errors: ErrorCategory + ErrorCode + ErrorInfo + BearAgentError
-domain.events: versioned Event envelope
+domain.ids       各种 ID + IdGenerator
+domain.messages  Message role + Message parts
+domain.errors    Error category/code/info + BearAgentError
+domain.events    所有 Event 共用的外壳
 ```
 
-这些类型是内部跨端口契约，不承诺作为独立第三方 Python SDK 的公开 API。
+这些是 BearAgent 内部接口，不承诺作为第三方 Python SDK。Provider adapter 和存储 adapter 都要
+显式翻译外部数据。
 
-## 8. State and data model
+## 8. 状态和保存的数据
 
-- ID 的 JSON 形式是规范化的小写连字符 UUID 字符串。
-- Event `sequence` 从 1 开始；`schema_version` 从 1 开始。
-- `occurred_at` 必须包含时区并在序列化时规范化为 UTC。
-- Event payload 只能包含 JSON 值；Pydantic/Provider/数据库对象不得进入 payload。
-- F-0003 负责 SQLite 列类型、索引、transaction 和 migration。
+ID 写成规范化的小写连字符 UUID。Event sequence 和 schema version 从 1 开始，时间必须带时区并
+规范化为 UTC。payload 只能包含 JSON 值。F-0003 再决定 SQLite 列、索引、transaction 和 migration。
 
-## 9. Failure and recovery semantics
+## 9. 失败时会发生什么
 
-- 非 UUID4、空 Message、非法 role/part 组合、无时区时间和非 JSON payload 在构造边界失败。
-- 领域校验失败不会自动重试。
-- `BearAgentError` 的字符串形式只输出 `ErrorInfo.message`；原始异常只能作为 Python
-  exception cause 存在，不进入序列化领域数据。
-- 本 Feature 不提供 crash recovery。
+非 UUID4、空 Message、非法 role/part、无时区时间、非 JSON payload 和未知字段都在构造入口失败，
+不自动重试。`BearAgentError.__str__` 只显示安全 message；原始异常只可作为 Python cause。
+本 Feature 没有崩溃恢复。
 
-## 10. Security and privacy
+## 10. 安全与隐私
 
-- Message、Event payload 和错误详情均视为不可信输入并执行结构校验。
-- Error details 拒绝 `authorization`、`cookie`、`password`、`secret`、`token`、
-  `api_key` 等敏感字段名。
-- 内部数据格式不包含模型服务 SDK 响应、认证请求头或原始异常字段。
-- 结构限制只减少意外泄露；调用方仍不得把 secret 放入安全 message 文本。
+Message、Event payload 和 Error detail 都按不可信输入校验。Error detail 拒绝 authorization、cookie、
+password、secret、token、api_key 等键。领域类型不包含 SDK response、认证头和原始 exception。
 
-## 11. Observability
+结构限制只能减少误泄露，调用方仍不得把密钥写进普通 message 文本。
 
-- Event envelope 的 `run_id`、`correlation_id`、`causation_id` 和 sequence 为后续结构化日志与
-  Activity 检查提供关联字段。
-- 错误包含稳定 category/code/retryable，后续可以聚合而不解析自由文本。
+## 11. 怎样检查执行过程
 
-## 12. Rollout and rollback
+Event 的 Run、correlation、causation 和 sequence 为后续查询提供关联；Error 的 category、code 和
+retryable 可直接聚合，不需要解析自由文本。
 
-- 一次性替换 P0 测试契约；P0 明确不承诺这些内部类型兼容。
-- 暂无持久数据库，因此回退只需回退代码和 lockfile，不涉及数据 migration。
-- F-0003 冻结持久化 schema 后，Event envelope 的变更必须增加 schema version/upcaster。
+## 12. 上线与回退
 
-## 13. Acceptance criteria
+没有持久数据库，P0 测试类型可以一次性替换。回退代码和 lockfile 即可。F-0003 建立持久 schema
+后，不兼容 Event 变化必须使用新版本和迁移/upcaster。
 
-- AC-1：每种 ID 可由 UUID4 创建、JSON 序列化和按具体类型比较；非法或非 UUID4 输入失败。
-- AC-2：合法的文本、工具调用和工具结果 Message 可 JSON round-trip，非法 role/part 组合失败。
-- AC-3：ErrorInfo 提供稳定分类、错误码和 retryable；敏感详情键、未知字段和超限内容失败。
-- AC-4：Event envelope 包含全部通用字段，拒绝非法 sequence、无时区时间和非 JSON payload。
-- AC-5：领域模块不 import Provider SDK、Typer、SQLite 或 adapter。
-- AC-6：ID、Message、ErrorInfo 和 Event 的 JSON schema 与已提交 snapshot 一致。
-- AC-7：受影响的 P0 fake model/store 与 ports 迁移到新的领域类型，现有行为测试继续通过。
+## 13. 验收标准
 
-## 14. Test plan
+- AC-1：每种 ID 可创建、JSON 序列化并按具体类型比较；非法 UUID 失败；
+- AC-2：合法 Message 可 JSON 往返，非法 role/part 失败；
+- AC-3：Error 提供稳定字段，敏感键、未知字段和超限内容失败；
+- AC-4：Event 具有全部通用字段，非法 sequence、无时区时间和非 JSON payload 失败；
+- AC-5：domain 不导入 Provider SDK、Typer、SQLite 或 adapter；
+- AC-6：ID、Message、Error 和 Event schema 与提交快照一致；
+- AC-7：Fake model/store 和 ports 使用新类型，原有行为测试继续通过。
 
-- Unit：ID 生成/解析、消息组合、错误限制、Event 验证和 JSON round-trip。
-- Contract：公共 JSON schema snapshot/compatibility。
-- Integration：P0 fake model/store 使用新领域类型。
-- Recovery：不适用；没有持久存储或恢复行为。
-- Security：敏感错误详情键、未知字段、非 JSON payload 和 Provider 类型泄漏检查。
-- Eval/manual：不适用；没有真实模型行为。
+## 14. 验证方式
 
-## 15. Documentation impact
+- Unit：ID、消息组合、Error 限制、Event 校验和 JSON 往返；
+- Contract：公共 JSON schema 快照；
+- Integration：P0 Fake model/store 使用新类型；
+- Security：敏感 Error 键、未知字段、非 JSON payload 和 Provider 类型泄漏；
+- Recovery/Eval：不适用。
 
-- [x] Architecture
-- [x] ADR
-- [ ] User docs
-- [ ] Deployment docs
-- [x] Generated reference
+## 15. 文档同步
 
-## 16. Open questions
+- [x] Engineering docs
+- [x] Architecture / ADR
+- [x] Site learning path
+- [x] Site developer guide
+- [x] Site status
+- [x] Generated schema snapshot
 
-None. P1 kickoff 已确认 UUID4、消息范围和错误安全边界。
+## 16. 尚未决定的问题
+
+无。UUID4、消息范围和 Error 安全边界已确认。

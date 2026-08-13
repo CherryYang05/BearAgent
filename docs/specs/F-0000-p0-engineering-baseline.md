@@ -5,64 +5,64 @@ spec_id: F-0000
 milestone: P0
 owner: CherryYang05
 created: 2026-08-09
-last_updated: 2026-08-09
+last_updated: 2026-08-13
 implemented_in: initial repository commit
 related_adrs:
   - ADR-0006
 ---
 
-# Feature: P0 Engineering Baseline
+# F-0000：建立可安装、可测试的工程基础
 
-## 1. Background / Problem
+## 1. 为什么现在要做
 
-BearAgent 已有架构、路线图和开发 SOP，但缺少可安装的 Python 包、稳定命令、测试基线、CI 和 Git 历史。继续开发 P1 会让 AI 在没有自动约束的情况下自行创造结构。
+BearAgent 已经有架构和路线图，但没有可安装的 Python 包、稳定 CLI、测试、CI 和自动边界检查。
+如果直接开始 P1，后续代码会在没有可执行约束的情况下自行形成结构。
 
-## 2. Goals
+## 2. 本次交付
 
-- G-1：建立 Python 3.12 + uv 的可复现工程和 lockfile。
-- G-2：建立与架构一致的 domain/runtime/application/ports/adapters/interfaces 边界。
-- G-3：提供 `bearagent --help`、`bearagent --version` 和 `bearagent doctor [--json]`。
-- G-4：提供 FakeModelProvider、FakeTool 和 InMemoryEventStore 作为后续测试基础。
-- G-5：在本地和 CI 运行 lint、type check、tests、import boundary 和文档链接检查。
-- G-6：更新 README，使干净环境可以完成安装和验证。
+- G-1：Python 3.12 + uv 的可复现环境和 lockfile；
+- G-2：与架构一致的 domain、runtime、application、ports、adapters、interfaces 边界；
+- G-3：`help`、`version`、`doctor [--json]` 命令；
+- G-4：Fake model、Fake tool 和内存 Event store，供后续确定性测试使用；
+- G-5：本地与 CI 的格式、lint、类型、测试、依赖边界和文档链接检查；
+- G-6：一份可以从干净环境执行的 README。
 
-## 3. Non-goals
+## 3. 本次不做
 
-- NG-1：不实现真实模型调用、Agent Loop 或 SQLite。
-- NG-2：不实现文件工具、Policy、Approval、Sandbox、HTTP API 或 Web UI。
-- NG-3：不引入 Pydantic/FastAPI/aiosqlite/httpx；它们在对应 Feature 使用时再加入。
-- NG-4：不决定 P1 使用 Responses 还是 Chat Completions。
+真实模型、Agent Loop、SQLite、文件工具、Policy、Approval、sandbox、HTTP API 和 Web UI 都不在 P0。
+Pydantic、FastAPI、aiosqlite、httpx 也要等到实际 Feature 使用时再引入。P0 不决定 P1 的模型协议。
 
-## 4. Terms and assumptions
+## 4. 需要先说明的约定
 
-- Fake 是测试 adapter，不进入生产 bootstrap。
-- InMemoryEventStore 只保证单进程测试语义，不代表最终 SQLite schema。
-- Python patch version 由 uv 在 `3.12` 系列内解析，仓库拒绝 3.13+。
+Fake 只用于测试，不进入生产组装。内存 Event store 只保证单进程测试行为，不预设最终 SQLite
+schema。Python patch version 由 uv 在 3.12 系列中选择，仓库拒绝 3.13+。
 
-## 5. User scenarios
+## 5. 使用场景
 
-### Scenario A：新环境启动
+### 新环境安装
 
-Given 一台安装了 uv 的机器，When 开发者执行 README 中的同步和验证命令，Then 项目安装成功且所有检查通过。
+开发者在一台只安装了 uv 的机器上执行 README 命令，项目能够安装，并通过全部基础检查。
 
-### Scenario B：环境诊断
+### 环境诊断
 
-Given BearAgent 已安装，When 执行 `bearagent doctor --json`，Then 返回机器可读的版本、Python、平台和工作目录信息，且不写入用户文件。
+`bearagent doctor --json` 返回机器可读的 BearAgent、Python、平台和工作目录信息，不写用户文件，
+也不读取或打印环境变量值。
 
-### Scenario C：AI 修改边界
+### 核心依赖边界
 
-Given runtime/domain/ports 的依赖约束，When 核心模块引入 FastAPI、MCP、Docker、provider SDK 或 adapter，Then architecture test 失败。
+如果 domain、runtime 或 ports 导入 FastAPI、MCP、Docker、Provider SDK 或 adapter，architecture
+test 必须失败。
 
-## 6. Functional requirements
+## 6. 必须满足的行为
 
-- FR-1：包使用 `src/bearagent` layout，并能通过 console script 和 `python -m bearagent` 启动。
-- FR-2：`doctor` 同时支持人类文本和 JSON，字段结构有测试。
-- FR-3：Fake model/tool 记录收到的请求并返回预设结果。
-- FR-4：InMemoryEventStore 按 Run 保存 Event，拒绝同一 Run 的非连续 sequence。
-- FR-5：CI 在 Windows 和 Ubuntu 的 Python 3.12 上运行核心检查。
-- FR-6：文档检查拒绝不存在的本地 Markdown 链接。
+- FR-1：使用 `src/bearagent` layout，console script 和 `python -m bearagent` 都能启动；
+- FR-2：`doctor` 同时提供人类文本和稳定 JSON 字段；
+- FR-3：Fake model/tool 记录请求并返回预设结果；
+- FR-4：内存 Event store 按 Run 保存 Event，拒绝非连续 sequence；
+- FR-5：Windows 和 Ubuntu 的 Python 3.12 CI 都运行核心检查；
+- FR-6：文档检查汇总并拒绝不存在的本地 Markdown 链接。
 
-## 7. Interfaces
+## 7. 对外入口和模块连接
 
 ```text
 bearagent --help
@@ -72,59 +72,56 @@ bearagent doctor --json
 python -m bearagent doctor --json
 ```
 
-P0 的 Python ports 是内部测试契约，不承诺向后兼容；进入 P1 后由对应 Feature Spec 冻结。
+P0 的 Python port 是后续测试底座，不承诺第三方兼容；P1 由对应 Spec 冻结具体数据和行为。
 
-## 8. State and data model
+## 8. 状态和保存的数据
 
-P0 不持久化生产状态。测试 Event 只包含 `event_id/run_id/sequence/event_type/payload`。最终 Event envelope 由 F-0001/F-0003 定义。
+P0 不保存生产数据。测试 Event 只有最小 ID、Run、sequence、类型和 payload；F-0001/F-0003 后续
+定义完整 Event 和数据库。
 
-## 9. Failure and recovery semantics
+## 9. 失败时会发生什么
 
-- Python 版本不在 3.12 系列时，`doctor` 返回失败项并以非零码退出。
-- InMemoryEventStore sequence 冲突抛出明确异常，不静默覆盖。
-- 文档链接检查汇总全部错误后非零退出。
-- P0 不涉及副作用恢复或 `UNKNOWN` Activity。
+Python 不是 3.12 时，`doctor` 返回失败项并以非零码结束。sequence 冲突抛出明确异常，不覆盖旧
+Event。文档检查报告全部坏链后失败。P0 没有恢复或 `UNKNOWN` 行为。
 
-## 10. Security and privacy
+## 10. 安全与隐私
 
-- `doctor` 不读取或打印环境变量值、Git credential、API key 或主机敏感文件。
-- Fake adapter 不进行网络或 shell 调用。
-- CI 不需要任何 secret。
+`doctor` 不打印环境变量、Git credential、API key 或敏感文件。Fake adapter 不访问网络或 shell，
+CI 不需要 secret。
 
-## 11. Observability
+## 11. 怎样检查执行过程
 
-P0 只输出 CLI 诊断；结构化运行日志在 P1 定义。
+P0 只有 CLI 诊断输出；结构化 Run 日志由 P1 定义。
 
-## 12. Rollout and rollback
+## 12. 上线与回退
 
-全部是新工程文件，无状态迁移。回滚为恢复提交前文件；lockfile 与 pyproject 必须同批变更。
+全部是新工程文件，没有数据迁移。回退代码时 `pyproject.toml` 和 `uv.lock` 必须一起恢复。
 
-## 13. Acceptance criteria
+## 13. 验收标准
 
-- AC-1：`uv sync --all-groups` 成功并生成 `uv.lock`。
-- AC-2：`uv run bearagent --help`、`uv run bearagent doctor` 和 JSON 形式均成功。
-- AC-3：Ruff、Pyright、pytest 和文档检查全部通过。
-- AC-4：tests 覆盖 CLI、Fake adapters、InMemoryEventStore sequence 和 import boundary。
-- AC-5：GitHub Actions 定义 Windows/Ubuntu Python 3.12 验证。
-- AC-6：README 包含定位、范围、开发安装、验证、目录、路线图和文档入口。
+- AC-1：`uv sync --all-groups` 成功并生成 lockfile；
+- AC-2：CLI help、doctor 和 JSON 形式均成功；
+- AC-3：Ruff、Pyright、pytest 和文档检查通过；
+- AC-4：测试覆盖 CLI、Fake adapter、内存 store sequence 和 import boundary；
+- AC-5：GitHub Actions 覆盖 Windows/Ubuntu Python 3.12；
+- AC-6：README 包含定位、当前范围、安装、验证、代码入口、路线图和文档入口。
 
-## 14. Test plan
+## 14. 验证方式
 
-- Unit：doctor payload、Fake adapters、InMemoryEventStore。
-- Contract：P0 只验证 fake 对 port 的结构一致性。
-- Integration：console script 与 `python -m`。
-- Recovery：None。
-- Security：doctor 输出不包含环境值；import boundary。
-- Manual：在 uv 管理的 Python 3.12 环境执行完整命令。
+- Unit：doctor payload、Fake adapter、内存 Event store；
+- Contract：Fake 对 P0 port 的行为；
+- Integration：console script 与 `python -m`；
+- Security：doctor 不暴露环境值，核心 import boundary 生效；
+- Recovery/Eval：不适用。
 
-## 15. Documentation impact
+## 15. 文档同步
 
 - [x] Architecture
 - [x] ADR
-- [x] User docs
-- [ ] Deployment docs
+- [x] README
+- [ ] Deployment
 - [ ] Generated reference
 
-## 16. Open questions
+## 16. 尚未决定的问题
 
-None。P1 模型协议和最终许可证继续保留为架构开放问题。
+无。模型协议和许可证留给后续 Feature。
