@@ -41,6 +41,7 @@ export default defineConfig({
             { label: '逐条读懂一次 Run', slug: 'learn/run-event-reducer-walkthrough' },
             { label: '持久事实与安全恢复', slug: 'learn/durable-events' },
             { label: '为什么模型需要独立边界', slug: 'learn/model-provider-boundary' },
+            { label: 'Tool 请求为什么要过四道检查', slug: 'learn/tool-execution-boundary' },
           ],
         },
         {
@@ -59,6 +60,7 @@ export default defineConfig({
             { label: 'F-0002：修改状态和预算', slug: 'development/run-reducer-and-budgets' },
             { label: 'F-0003：SQLite EventStore', slug: 'development/sqlite-event-store' },
             { label: 'F-0004：ModelProvider', slug: 'development/model-provider' },
+            { label: 'F-0006：Tool 执行边界', slug: 'development/tool-execution-boundary' },
           ],
         },
         {

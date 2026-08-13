@@ -62,6 +62,11 @@
           "provider_invalid_request",
           "provider_refused",
           "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
           "tool_error",
           "persistence_error",
           "internal_error"
@@ -421,6 +426,11 @@
           "provider_invalid_request",
           "provider_refused",
           "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
           "tool_error",
           "persistence_error",
           "internal_error"
@@ -825,6 +835,11 @@
           "provider_invalid_request",
           "provider_refused",
           "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
           "tool_error",
           "persistence_error",
           "internal_error"
@@ -1464,6 +1479,81 @@
     "title": "ModelUsage",
     "type": "object"
   },
+  "PolicyDecision": {
+    "$defs": {
+      "PolicyOutcome": {
+        "description": "P1 Policy outcomes.",
+        "enum": [
+          "allow",
+          "deny"
+        ],
+        "title": "PolicyOutcome",
+        "type": "string"
+      },
+      "PolicyReason": {
+        "description": "Stable reasons for the P1 fixed Policy decision.",
+        "enum": [
+          "allowed",
+          "tool_not_allowed",
+          "side_effect_denied"
+        ],
+        "title": "PolicyReason",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "A safe Policy result that contains no request argument copy.",
+    "properties": {
+      "outcome": {
+        "$ref": "#/$defs/PolicyOutcome"
+      },
+      "reason": {
+        "$ref": "#/$defs/PolicyReason"
+      }
+    },
+    "required": [
+      "outcome",
+      "reason"
+    ],
+    "title": "PolicyDecision",
+    "type": "object"
+  },
+  "PreparedToolRequest": {
+    "$defs": {
+      "JsonValue": {},
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Tool request after pure, Tool-specific validation and normalization.",
+    "properties": {
+      "tool_call_id": {
+        "$ref": "#/$defs/ToolCallId"
+      },
+      "name": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+        "title": "Name",
+        "type": "string"
+      },
+      "arguments": {
+        "additionalProperties": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "title": "Arguments",
+        "type": "object"
+      }
+    },
+    "required": [
+      "tool_call_id",
+      "name"
+    ],
+    "title": "PreparedToolRequest",
+    "type": "object"
+  },
   "RunCreatedPayload": {
     "$defs": {
       "BudgetLimits": {
@@ -1566,6 +1656,11 @@
           "provider_invalid_request",
           "provider_refused",
           "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
           "tool_error",
           "persistence_error",
           "internal_error"
@@ -1902,6 +1997,11 @@
           "provider_invalid_request",
           "provider_refused",
           "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
           "tool_error",
           "persistence_error",
           "internal_error"
@@ -2169,6 +2269,11 @@
           "provider_invalid_request",
           "provider_refused",
           "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
           "tool_error",
           "persistence_error",
           "internal_error"
@@ -2335,6 +2440,285 @@
       "tool_call_id"
     ],
     "title": "ToolCallStartedPayload",
+    "type": "object"
+  },
+  "ToolRequest": {
+    "$defs": {
+      "JsonValue": {},
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Untrusted model request for one named Tool.",
+    "properties": {
+      "tool_call_id": {
+        "$ref": "#/$defs/ToolCallId"
+      },
+      "name": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+        "title": "Name",
+        "type": "string"
+      },
+      "arguments": {
+        "additionalProperties": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "title": "Arguments",
+        "type": "object"
+      }
+    },
+    "required": [
+      "tool_call_id",
+      "name"
+    ],
+    "title": "ToolRequest",
+    "type": "object"
+  },
+  "ToolResult": {
+    "$defs": {
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "budget_exhausted",
+          "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
+          "tool_error",
+          "persistence_error",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorInfo": {
+        "additionalProperties": false,
+        "description": "Serializable error data that is safe to expose and persist.",
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/ErrorCategory"
+          },
+          "code": {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/$defs/SafeDetailValue"
+            },
+            "maxProperties": 32,
+            "title": "Details",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "ErrorInfo",
+        "type": "object"
+      },
+      "JsonValue": {},
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      },
+      "ToolStatus": {
+        "description": "Terminal outcome of one Tool call.",
+        "enum": [
+          "succeeded",
+          "failed"
+        ],
+        "title": "ToolStatus",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Bounded structured result correlated with one Tool request.",
+    "properties": {
+      "tool_call_id": {
+        "$ref": "#/$defs/ToolCallId"
+      },
+      "status": {
+        "$ref": "#/$defs/ToolStatus"
+      },
+      "data": {
+        "additionalProperties": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "title": "Data",
+        "type": "object"
+      },
+      "error": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ErrorInfo"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "tool_call_id",
+      "status"
+    ],
+    "title": "ToolResult",
+    "type": "object"
+  },
+  "ToolSpec": {
+    "$defs": {
+      "JsonValue": {},
+      "ToolRetrySafety": {
+        "description": "Whether a later runtime may safely retry a Tool call.",
+        "enum": [
+          "not_safe",
+          "safe"
+        ],
+        "title": "ToolRetrySafety",
+        "type": "string"
+      },
+      "ToolSideEffect": {
+        "description": "Trusted description of what a registered Tool can change.",
+        "enum": [
+          "read_only",
+          "workspace_write",
+          "external_write",
+          "code_execution"
+        ],
+        "title": "ToolSideEffect",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Trusted registration data and resource limits for one Tool.",
+    "properties": {
+      "name": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+        "title": "Name",
+        "type": "string"
+      },
+      "description": {
+        "maxLength": 4096,
+        "minLength": 1,
+        "title": "Description",
+        "type": "string"
+      },
+      "input_schema": {
+        "additionalProperties": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "title": "Input Schema",
+        "type": "object"
+      },
+      "output_schema": {
+        "additionalProperties": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "title": "Output Schema",
+        "type": "object"
+      },
+      "side_effect": {
+        "$ref": "#/$defs/ToolSideEffect"
+      },
+      "timeout_ms": {
+        "exclusiveMinimum": 0,
+        "maximum": 600000,
+        "title": "Timeout Ms",
+        "type": "integer"
+      },
+      "max_input_bytes": {
+        "exclusiveMinimum": 0,
+        "maximum": 1000000,
+        "title": "Max Input Bytes",
+        "type": "integer"
+      },
+      "max_output_bytes": {
+        "exclusiveMinimum": 0,
+        "maximum": 4000000,
+        "title": "Max Output Bytes",
+        "type": "integer"
+      },
+      "retry_safety": {
+        "$ref": "#/$defs/ToolRetrySafety"
+      }
+    },
+    "required": [
+      "name",
+      "description",
+      "input_schema",
+      "output_schema",
+      "side_effect",
+      "timeout_ms",
+      "max_input_bytes",
+      "max_output_bytes",
+      "retry_safety"
+    ],
+    "title": "ToolSpec",
     "type": "object"
   }
 }

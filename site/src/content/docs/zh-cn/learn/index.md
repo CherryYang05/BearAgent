@@ -8,6 +8,7 @@ sourceRefs:
   - F-0002
   - F-0003
   - F-0004
+  - F-0006
 ---
 
 这条学习路径始终使用同一个例子：用户要求 Agent 阅读仓库文档，并把总结写进 `outputs/`。
@@ -57,5 +58,11 @@ Event 和 projection，以及为什么数据库能够重开仍不等于 Runtime 
 [为什么模型服务需要独立边界](model-provider-boundary.md)沿着 F-0004 的流式请求说明 SDK 对象、
 Provider tool call ID、usage 和异常怎样被翻译成 BearAgent 内部数据。
 
-当前这条路径覆盖 F-0001 至 F-0004。文件工具、ContextBuilder 和完整 Agent Loop 仍是 P1 的后续
-工作；崩溃恢复和授权分别属于 P2、P3。
+## 7. 看一次 Tool 请求怎样通过检查和权限
+
+[一个 Tool 请求为什么要过四道检查](tool-execution-boundary.md)用读取 `docs/index.md` 的请求解释
+Registry、`prepare`、Policy 和 Executor。你会看到参数错误和权限拒绝为什么必须发生在 Tool 真正
+执行之前。
+
+当前这条路径覆盖已实现的 F-0001 至 F-0004 和 F-0006。具体文件 Tool、ContextBuilder 和完整
+Agent Loop 仍是 P1 的后续工作；崩溃恢复和用户授权分别属于 P2、P3。

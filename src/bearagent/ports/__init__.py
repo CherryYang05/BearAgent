@@ -1,6 +1,7 @@
 """Framework-independent contracts implemented by BearAgent adapters."""
 
 from bearagent.ports.model import ModelProvider, ModelProviderError
+from bearagent.ports.policy import ToolPolicy
 from bearagent.ports.store import (
     EventStore,
     EventStoreConflictError,
@@ -21,4 +22,5 @@ __all__ = [
     "ModelProvider",
     "ModelProviderError",
     "Tool",
+    "ToolPolicy",
 ]

@@ -64,6 +64,11 @@ class ErrorCode(StrEnum):
     PROVIDER_INVALID_REQUEST = "provider_invalid_request"
     PROVIDER_REFUSED = "provider_refused"
     PROVIDER_PROTOCOL_ERROR = "provider_protocol_error"
+    TOOL_NOT_FOUND = "tool_not_found"
+    TOOL_INVALID_INPUT = "tool_invalid_input"
+    TOOL_PERMISSION_DENIED = "tool_permission_denied"
+    TOOL_TIMEOUT = "tool_timeout"
+    TOOL_OUTPUT_TOO_LARGE = "tool_output_too_large"
     TOOL_ERROR = "tool_error"
     PERSISTENCE_ERROR = "persistence_error"
     INTERNAL_ERROR = "internal_error"
@@ -83,6 +88,11 @@ _CODE_CATEGORIES = {
     ErrorCode.PROVIDER_INVALID_REQUEST: ErrorCategory.PROVIDER,
     ErrorCode.PROVIDER_REFUSED: ErrorCategory.PROVIDER,
     ErrorCode.PROVIDER_PROTOCOL_ERROR: ErrorCategory.PROVIDER,
+    ErrorCode.TOOL_NOT_FOUND: ErrorCategory.TOOL,
+    ErrorCode.TOOL_INVALID_INPUT: ErrorCategory.TOOL,
+    ErrorCode.TOOL_PERMISSION_DENIED: ErrorCategory.TOOL,
+    ErrorCode.TOOL_TIMEOUT: ErrorCategory.TOOL,
+    ErrorCode.TOOL_OUTPUT_TOO_LARGE: ErrorCategory.TOOL,
     ErrorCode.TOOL_ERROR: ErrorCategory.TOOL,
     ErrorCode.PERSISTENCE_ERROR: ErrorCategory.PERSISTENCE,
     ErrorCode.INTERNAL_ERROR: ErrorCategory.INTERNAL,

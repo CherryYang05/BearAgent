@@ -60,7 +60,18 @@ from bearagent.domain.runs import (
     RunState,
     RunStatus,
 )
-from bearagent.domain.tools import ToolRequest, ToolResult, ToolStatus
+from bearagent.domain.tools import (
+    PolicyDecision,
+    PolicyOutcome,
+    PolicyReason,
+    PreparedToolRequest,
+    ToolRequest,
+    ToolResult,
+    ToolRetrySafety,
+    ToolSideEffect,
+    ToolSpec,
+    ToolStatus,
+)
 
 __all__ = [
     "ActivityId",
@@ -99,6 +110,10 @@ __all__ = [
     "ModelToolDefinition",
     "ModelUsage",
     "OpaqueId",
+    "PolicyDecision",
+    "PolicyOutcome",
+    "PolicyReason",
+    "PreparedToolRequest",
     "RunId",
     "RunCreatedPayload",
     "RunFailedPayload",
@@ -117,6 +132,9 @@ __all__ = [
     "ToolRequest",
     "ToolResult",
     "ToolResultPart",
+    "ToolRetrySafety",
+    "ToolSideEffect",
+    "ToolSpec",
     "ToolStatus",
     "Uuid4IdGenerator",
 ]

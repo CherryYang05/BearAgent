@@ -1,8 +1,8 @@
 ---
 title: BearAgent Architecture Baseline
 status: accepted
-version: 0.4
-last_verified: 2026-08-13
+version: 0.5
+last_verified: 2026-08-14
 ---
 
 # BearAgent 总体架构
@@ -48,16 +48,17 @@ flowchart TB
 | 状态规则 | P1 Run/Activity 状态、12 种具体 Event、纯 Reducer 和五类预算检查 |
 | 持久事实 | EventStore port、SQLite WAL、显式 migration、Run/Activity projection 和事务回滚 |
 | 模型边界 | ModelProvider port、确定性测试 adapter 和首个 OpenAI Responses 流式 adapter |
+| Tool 执行边界 | 有界 Tool 数据、精确 Registry、默认拒绝 Policy 和统一 ToolExecutor |
 | 测试替身 | Fake model、Fake tool、内存 Event store |
 | 文档 | 工程 `docs/` 与本地 Starlight 学习/开发者站点 |
 
-当前可以把 Event 原子写入 SQLite 并查询 projection，也可以通过独立 adapter 调用 OpenAI Responses
-流式接口；两者尚未由 Agent Loop 接成一次用户可运行的文件任务。持久事实仍不等于进程重启后会
-自动继续。
+当前可以把 Event 原子写入 SQLite 并查询 projection，可以通过独立 adapter 调用 OpenAI Responses
+流式接口，也可以让测试 Tool 经过 Registry、Policy 和 Executor。三条边界尚未由 Agent Loop 接成
+一次用户可运行的文件任务。持久事实仍不等于进程重启后会自动继续。
 
 ### 3.2 已接受但尚未接通
 
-- P1：文件工具、统一 Tool executor、ContextBuilder、有界 Agent Loop 和 Run CLI；
+- P1：具体文件工具、ContextBuilder、有界 Agent Loop 和 Run CLI；
 - P2：Checkpoint、Attempt、暂停/继续/取消、恢复协调和 `UNKNOWN` 处置；
 - P3：Grant、Policy、Approval、隔离 runner、HTTP API、认证和备份恢复；
 - P4：Skill、MCP、Web UI、Memory 和受控联网；
@@ -240,18 +241,24 @@ SDK 自动重试被禁用，工具调用参数必须是有界 JSON object，流�
 
 ### 10.1 统一 Tool 路径
 
-每个 Tool 声明输入/输出 schema、副作用类别、所需 Grant、timeout、输出上限和重试方式。`ToolResult`
-返回结构化状态、内容、Artifact、Receipt、耗时和安全 Error，不只返回任意字符串。
+F-0006 已建立统一入口，但还没有注册真实文件 Tool。每个 Tool 先用 `ToolSpec` 声明输入/输出 schema、
+副作用类别、timeout、输出上限和未来能否安全重试。`ToolResult` 返回结构化 JSON 或安全 Error，
+不只返回任意字符串。
 
 ```text
 模型提出 ToolRequest
-  -> Runtime 规范化路径和参数
-  -> Policy 返回 ALLOW / ASK / DENY
-  -> ToolExecutor 执行
-  -> Event 记录结果
+  -> Registry 精确查找 Tool
+  -> Tool.prepare 校验并规范化参数
+  -> P1 Policy 返回 ALLOW / DENY
+  -> ToolExecutor 限时执行并检查结果大小
 ```
 
-所有外部副作用都走这条路径，adapter 不能绕过。
+Registry 拒绝重名和模糊匹配。P1 Policy 默认拒绝，只允许程序启动时列出的名称，并且始终拒绝
+外部写入和代码执行。timeout、异常和超大结果会变成不同的安全 Error；Executor 不自动重试。
+`CancelledError` 原样传播。
+
+F-0016 接入 Agent Loop 时负责把请求、Policy 决定和执行结果写成 Event。F-0007/F-0008 的具体文件
+Tool 必须通过这条路径注册，不能另开旁路。P3 再加入 Grant、`ASK` 和 Approval。
 
 ### 10.2 P1 文件范围
 

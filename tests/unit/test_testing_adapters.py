@@ -2,6 +2,7 @@ import asyncio
 from datetime import UTC, datetime
 
 import pytest
+from tests.tool_fixtures import build_tool_request, build_tool_spec
 
 from bearagent.adapters.testing import (
     EventSequenceError,
@@ -20,7 +21,7 @@ from bearagent.domain.model import (
     ModelTextDelta,
 )
 from bearagent.domain.runs import BudgetLimits
-from bearagent.domain.tools import ToolRequest, ToolResult, ToolStatus
+from bearagent.domain.tools import ToolStatus
 from bearagent.runtime.reducer import RunReducerError
 
 
@@ -54,15 +55,17 @@ def test_fake_model_returns_configured_events_and_records_request() -> None:
 
 
 def test_fake_tool_returns_configured_result_and_records_request() -> None:
-    async def exercise() -> ToolResult:
-        expected = ToolResult(ToolStatus.SUCCEEDED, content="done")
-        tool = FakeTool("example", expected)
-        request = ToolRequest("example", {"value": 1})
-        result = await tool.execute(request)
-        assert tool.requests == [request]
-        return result
+    async def exercise() -> str:
+        tool = FakeTool(build_tool_spec(name="example"), data={"content": "done"})
+        request = build_tool_request(name="example", arguments={"value": 1})
+        prepared = tool.prepare(request)
+        result = await tool.execute(prepared)
+        assert tool.prepare_requests == [request]
+        assert tool.requests == [prepared]
+        assert result.status is ToolStatus.SUCCEEDED
+        return str(result.data["content"])
 
-    assert asyncio.run(exercise()).content == "done"
+    assert asyncio.run(exercise()) == "done"
 
 
 def test_in_memory_store_enforces_contiguous_run_sequences() -> None:
