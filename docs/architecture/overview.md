@@ -46,15 +46,18 @@ flowchart TB
 | 工程基础 | Python 3.12、uv、CLI doctor、Ruff、Pyright、pytest、CI 和 import boundary 测试 |
 | 内部数据 | 类型化 ID、Message、Error、通用 Event 外壳和 JSON schema 快照 |
 | 状态规则 | P1 Run/Activity 状态、12 种具体 Event、纯 Reducer 和五类预算检查 |
+| 持久事实 | EventStore port、SQLite WAL、显式 migration、Run/Activity projection 和事务回滚 |
+| 模型边界 | ModelProvider port、确定性测试 adapter 和首个 OpenAI Responses 流式 adapter |
 | 测试替身 | Fake model、Fake tool、内存 Event store |
 | 文档 | 工程 `docs/` 与本地 Starlight 学习/开发者站点 |
 
-当前 Reducer 可以从内存 Event 序列计算状态，但还没有 SQLite、真实 Provider、文件工具或 Agent
-Loop。相同 Event 得到相同状态，不等于进程重启后会自动继续。
+当前可以把 Event 原子写入 SQLite 并查询 projection，也可以通过独立 adapter 调用 OpenAI Responses
+流式接口；两者尚未由 Agent Loop 接成一次用户可运行的文件任务。持久事实仍不等于进程重启后会
+自动继续。
 
 ### 3.2 已接受但尚未接通
 
-- P1：SQLite Event store、模型 adapter、文件工具、统一 Tool executor、有界 Agent Loop 和 Run CLI；
+- P1：文件工具、统一 Tool executor、ContextBuilder、有界 Agent Loop 和 Run CLI；
 - P2：Checkpoint、Attempt、暂停/继续/取消、恢复协调和 `UNKNOWN` 处置；
 - P3：Grant、Policy、Approval、隔离 runner、HTTP API、认证和备份恢复；
 - P4：Skill、MCP、Web UI、Memory 和受控联网；
@@ -217,7 +220,7 @@ Runtime 启动后扫描非终态 Run，从最近可用 Checkpoint 加后续 Even
 
 BearAgent 不承诺任意外部 API exactly-once，也不假装可以从任意 Python 调用栈继续。
 
-## 9. 模型接入（P1 目标）
+## 9. 模型接入（F-0004 已实现边界）
 
 `ModelProvider` port 接受 BearAgent 的 `ModelRequest`，返回内部 `ModelEvent`。具体 adapter 负责：
 
@@ -226,8 +229,10 @@ BearAgent 不承诺任意外部 API exactly-once，也不假装可以从任意 P
 - 把文本、工具调用、usage、finish reason 和错误翻译回来；
 - 记录 Provider request ID、模型和配置版本，但不保存密钥。
 
-P1 只实现一个真实 adapter，并使用 Fake Provider 让 Agent Loop 测试保持确定。第二个 adapter 出现时，
-两者运行同一组模型行为测试，以发现 port 是否遗漏了实际差异。
+F-0004 已实现首个 OpenAI Responses 流式 adapter，并使用确定性替代实现与契约测试约束内部接口。
+SDK 自动重试被禁用，工具调用参数必须是有界 JSON object，流中只有文本增量、完整工具调用和唯一
+完成事件可以进入 Runtime。ContextBuilder 与 Agent Loop 仍未接通；第二个生产 adapter 出现时，
+需要运行同一组模型行为测试，以发现 port 是否遗漏了实际差异。
 
 参数错误、权限错误和上下文超限不能盲目重试。只有明确的临时错误允许有限重试。
 
@@ -280,21 +285,32 @@ Skill 是版本化说明包，不是权限；其中脚本默认不可执行。Me
 
 接入 Skill、Memory 或 MCP 都不能改变 Runtime 的 ToolRequest、Policy 和 Event 路径。
 
-## 12. SQLite 与本地数据（P1/P2 目标）
+## 12. SQLite 与本地数据（F-0003 已实现子集；P2 扩展）
+
+F-0003 当前 schema v1 已经包含：
+
+```text
+events                  只追加的事实
+run_projections         当前 Run 查询状态
+activity_projections    当前 Activity 查询状态
+schema_migrations       带名称和 SHA-256 的 migration ledger
+```
+
+Event insert、Reducer 校验和 projection update 在同一个 `BEGIN IMMEDIATE` transaction 中完成。
+SQLite 使用 WAL、foreign keys、`synchronous=FULL` 和有限 busy timeout；读取遇到非法 JSON、sequence
+缺口或 projection 分叉时直接失败。正常关闭并重开数据库后可以查询已提交事实，但 Runtime 还不会
+扫描或继续非终态 Run。
+
+后续阶段会在同一事实基础上增加：
 
 ```text
 sessions       对话元数据
-runs           当前 Run 查询状态
-events         只追加的事实
-activities     模型/工具操作查询状态
 approvals      P3 等待和处理结果
 checkpoints    某个 sequence 的状态快照
 artifacts      文件路径、hash、类型和来源 Activity
-schema_migrations
 ```
 
-`event_id` 全局唯一，`run_id + sequence` 唯一。P1 使用进程内 per-Run lock，SQLite 开启 WAL 和
-busy timeout。Artifact 大内容放文件系统，数据库只保存元数据。
+`event_id` 全局唯一，`run_id + sequence` 唯一。Artifact 大内容将放文件系统，数据库只保存元数据。
 
 建议数据目录：
 
@@ -397,7 +413,6 @@ runner 隔离、日志脱敏和备份恢复演练。
 
 对应 Feature 开始前仍需决定：
 
-- F-0004：第一版真实模型使用 Responses 还是广泛兼容的 Chat Completions；
 - F-0008：Artifact 保留时间和自动清理；
 - F-0012/F-0014：服务器资源与 Docker/Podman runner；
 - P4 Web UI：独立前端还是最小服务端页面；

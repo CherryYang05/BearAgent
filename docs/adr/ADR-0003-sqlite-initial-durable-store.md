@@ -2,6 +2,7 @@
 title: "ADR-0003: Use SQLite for the first durable store"
 status: accepted
 date: 2026-08-09
+last_updated: 2026-08-12
 ---
 
 # ADR-0003：第一版使用 SQLite 保存执行记录

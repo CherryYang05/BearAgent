@@ -4,6 +4,7 @@ description: 先理解 Event 与 Reducer 的分工，再看下一次模型或工
 bearStatus: implemented
 sourceRefs:
   - F-0002
+  - F-0003
   - ADR-0009
 ---
 
@@ -11,8 +12,8 @@ sourceRefs:
 SQLite 查询和命令行也可能算出不同结果。F-0002 选择先记录发生过的事实，再用同一段代码计算状态。
 
 :::note[这部分已经实现]
-Run、Activity、12 种 Event payload、Reducer 和预算检查已有代码和测试。它们目前只处理内存中的
-Event 序列；SQLite 和崩溃后继续执行尚未实现。
+Run、Activity、12 种 Event payload、Reducer 和预算检查已有代码和测试。F-0003 已让同一套规则
+同时服务内存与 SQLite EventStore；崩溃后的启动扫描、Checkpoint 和继续执行仍未实现。
 :::
 
 ## Event 记录事实，Reducer 计算结果

@@ -4,6 +4,8 @@ description: 为什么 Runtime 使用自己的 ID、消息、错误和 Event，�
 bearStatus: implemented
 sourceRefs:
   - F-0001
+  - F-0003
+  - F-0004
   - ADR-0007
 ---
 
@@ -14,8 +16,8 @@ F-0001 的解决办法很朴素：进入 Runtime 之前，把外部数据翻译�
 离开 Runtime 时，再由对应 adapter 翻译出去。
 
 :::tip[这部分已经实现]
-类型化 ID、Message、Error、通用 Event 外壳和 JSON schema 快照已有代码与测试。真实模型和
-SQLite adapter 仍未实现。
+类型化 ID、Message、Error、通用 Event 外壳和 JSON schema 快照已有代码与测试。F-0003 与 F-0004
+已经分别让 SQLite 和 OpenAI Responses adapter 在边界完成显式翻译；完整 Agent Loop 仍未实现。
 :::
 
 ```mermaid
@@ -60,7 +62,7 @@ adapter 边界完成翻译。** 它没有要求所有外部系统使用相同格
 ## 验证入口
 
 - 代码：`src/bearagent/domain/`
-- JSON schema 快照：`tests/snapshots/domain_schemas.json`
+- JSON schema 快照：`tests/contract/snapshots/domain_schemas.json`
 - 单元与安全测试：`tests/unit/`、`tests/security/`
 - 需求：[F-0001](https://github.com/CherryYang05/BearAgent/blob/main/docs/specs/F-0001-domain-ids-messages-errors.md)
 - 决策：[ADR-0007](https://github.com/CherryYang05/BearAgent/blob/main/docs/adr/ADR-0007-provider-neutral-domain-schemas.md)

@@ -24,7 +24,17 @@ from bearagent.domain.messages import (
     ToolCallPart,
     ToolResultPart,
 )
-from bearagent.domain.model import ModelEvent, ModelEventKind, ModelRequest
+from bearagent.domain.model import (
+    ModelCompleted,
+    ModelEvent,
+    ModelEventKind,
+    ModelFinishReason,
+    ModelRequest,
+    ModelTextDelta,
+    ModelToolCall,
+    ModelToolDefinition,
+    ModelUsage,
+)
 from bearagent.domain.run_events import (
     ModelCallCompletedPayload,
     ModelCallFailedPayload,
@@ -74,6 +84,7 @@ __all__ = [
     "Message",
     "ModelEvent",
     "ModelEventKind",
+    "ModelFinishReason",
     "MessagePart",
     "MessageRole",
     "ModelCallId",
@@ -82,6 +93,11 @@ __all__ = [
     "ModelCallRequestedPayload",
     "ModelCallStartedPayload",
     "ModelRequest",
+    "ModelCompleted",
+    "ModelTextDelta",
+    "ModelToolCall",
+    "ModelToolDefinition",
+    "ModelUsage",
     "OpaqueId",
     "RunId",
     "RunCreatedPayload",

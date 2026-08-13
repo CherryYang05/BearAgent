@@ -23,6 +23,8 @@ sourceRefs:
 
 - [F-0001：内部数据类型](domain-contracts.md)——ID、Message、Error、Event 以及模型 adapter 的翻译边界；
 - [F-0002：状态和预算](run-reducer-and-budgets.md)——具体 Event、Reducer、预算检查和修改顺序；
+- [F-0003：SQLite EventStore](sqlite-event-store.md)——transaction、migration、projection 和故障测试；
+- [F-0004：ModelProvider](model-provider.md)——Responses 流式翻译、资源上限和安全错误；
 - [Feature 完成时怎样更新文档](feature-documentation.md)——哪些事实写在 `docs/`，哪些解释写在站点；
 - [本地运行文档站](../guides/local-docs.md)——安装、构建和检查 Starlight。
 

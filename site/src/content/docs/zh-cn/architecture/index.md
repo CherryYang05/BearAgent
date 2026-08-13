@@ -6,14 +6,18 @@ sourceRefs:
   - architecture/overview
   - ADR-0001
   - ADR-0002
+  - F-0002
+  - F-0003
+  - F-0004
 ---
 
 模型请求读取 `docs/architecture/overview.md` 时，BearAgent 需要检查路径、调用文件工具、保存结果，
 再把内容交给下一次模型调用。这条路径跨过多个模块，但每个模块只负责其中一段。
 
 :::caution[图中包含尚未实现的连接]
-当前已实现领域类型、Run/Activity 状态、Reducer 和预算检查。SQLite、真实模型、工具执行和完整
-Agent Loop 仍在 P1 计划中；权限审批和隔离环境属于 P3。
+当前已实现领域类型、Run/Activity 状态、Reducer、预算检查、SQLite EventStore 和首个 OpenAI
+Responses adapter。工具执行、ContextBuilder 和完整 Agent Loop 仍在 P1 计划中；权限审批和隔离
+环境属于 P3。
 :::
 
 ```mermaid

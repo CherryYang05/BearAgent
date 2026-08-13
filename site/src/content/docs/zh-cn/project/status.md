@@ -6,6 +6,8 @@ sourceRefs:
   - roadmap
   - F-0001
   - F-0002
+  - F-0003
+  - F-0004
   - F-0015
 ---
 
@@ -19,14 +21,14 @@ BearAgent 当前还不能调用真实模型完成文件任务。已经写入路�
 | P0 工程基础 | Python/uv 安装、CLI `doctor`、Ruff、Pyright、pytest、CI 和模块依赖检查 |
 | F-0001 内部数据类型 | ID、Message、Error 和通用 Event 可以校验、冻结、JSON 往返并生成 schema 快照 |
 | F-0002 状态和预算规则 | 12 种 Event 可以推导 Run/Activity 状态；五类预算在新 Activity 前检查 |
+| F-0003 SQLite EventStore | Event 与 Run/Activity projection 原子提交；migration、重开、并发和损坏读取有测试 |
+| F-0004 模型边界 | Provider-neutral 请求/事件、确定性 adapter 和 OpenAI Responses 流式 adapter |
 | F-0015 本地文档站 | 中文 Starlight 页面、搜索和 Mermaid 可以在本地构建 |
 
 ## P1 还需要接通
 
-- Event store 和 SQLite 保存；
 - 工具接口、统一执行入口和固定权限规则；
 - 工作区读取、搜索和 `outputs/**` 原子写入；
-- 一个真实 Model Provider adapter；
 - 最小上下文组装和有界 Agent Loop；
 - `run`、`inspect`、`events` 命令以及固定评测任务。
 
@@ -35,8 +37,9 @@ BearAgent 当前还不能调用真实模型完成文件任务。已经写入路�
 
 ## 当前明确不能做
 
-- 不能调用真实模型或执行完整 Agent Loop；
-- 不能用 SQLite 保存 Run，也不能在进程重启后自动继续；
+- 不能从 CLI 启动一次真实模型文件任务或执行完整 Agent Loop；
+- SQLite 可以保存 Event 和 projection，但进程重启后不会自动继续 Run；
+- 模型 adapter 可以翻译一次 Responses 流，但尚未由 ContextBuilder 或 Runtime 调度；
 - 没有实际文件工具、用户 Approval、sandbox 或服务器 API；
 - 文档站只在本地和 CI 构建，尚未发布到 `docs.bearguin.cn`。
 

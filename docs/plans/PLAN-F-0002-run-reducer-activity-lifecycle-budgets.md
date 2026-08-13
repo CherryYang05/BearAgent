@@ -45,7 +45,7 @@ F-0002 与 ADR-0009 已接受，没有开放问题，也没有其他 active 主 
 - 接入关系：候选 request 先检查预算，允许后才成为 Event；模型结果返回时记录实际 usage；
 - 重点测试：零值、边界、候选次数、全局 token/费用/deadline、失败 usage 和实际超额；
 - 验证：`uv run pytest tests/unit/test_budgets.py tests/unit/test_run_reducer.py`；
-- 回退：移除预算检查和记账，F-0003/F-0004 尚未依赖。
+- 回退：在 F-0002 实现当时可移除预算检查和记账，因为 F-0003/F-0004 尚未开始依赖这些契约。
 
 ### 第 4 步：更新快照、文档并关闭 Feature
 

@@ -13,7 +13,8 @@
 
 > [!IMPORTANT]
 > BearAgent 当前还不能执行真实 Agent 任务。仓库已经实现内部数据类型、Run/Activity 状态、Event
-> Reducer、预算检查和本地文档站；SQLite、真实模型、文件工具和完整 Agent Loop 仍在 P1 计划中。
+> Reducer、预算检查、SQLite EventStore、首个 OpenAI Responses adapter 和本地文档站；文件工具、
+> ContextBuilder、完整 Agent Loop 与 Run CLI 仍在 P1 计划中。
 
 ## 从一个文件任务说起
 
@@ -45,12 +46,13 @@ BearAgent 不以复刻 Manus、Claude Code 或堆叠模型、工具和 Agent 角
 
 | 已有代码 | P1 还要接通 | 更晚再做 |
 |---|---|---|
-| Python 3.12 + uv 工程与 CI | SQLite Event store | P2：崩溃恢复、Attempt、`UNKNOWN` |
-| `help`、`version`、`doctor` | 一个真实模型 adapter | P3：Approval、隔离执行、安全自托管 |
-| 类型化 ID、Message、Error、Event | 受限文件工具与 `outputs/**` 写入 | P4：Skill、MCP、Web、Memory |
-| Run/Activity 状态与五类预算 | 有界 Agent Loop | P5：持续追踪与跨版本评测 |
-| 测试用模型、工具和内存存储 | `run`、`inspect`、`events` | P6+：多个 Agent、浏览器、分布式执行 |
-| 中文 Starlight 文档站 | 固定任务集与可复现结果 | 只有真实需求出现后再扩展 |
+| Python 3.12 + uv 工程与 CI | Tool 接口、Registry 与统一 executor | P2：崩溃恢复、Attempt、`UNKNOWN` |
+| `help`、`version`、`doctor` | 工作区读取、搜索与 `outputs/**` 写入 | P3：Approval、隔离执行、安全自托管 |
+| 类型化 ID、Message、Error、Event | `outputs/**` 原子写入与 Artifact | P4：Skill、MCP、Web、Memory |
+| Run/Activity 状态与五类预算 | ContextBuilder 与有界 Agent Loop | P5：持续追踪与跨版本评测 |
+| SQLite EventStore、projection 与 migration | `run`、`inspect`、`events` | P6+：多个 Agent、浏览器、分布式执行 |
+| ModelProvider port 与 OpenAI Responses adapter | 固定任务集与可复现结果 | 只有真实需求出现后再扩展 |
+| 中文 Starlight 文档站 | 端到端固定任务集 | 只有真实需求出现后再扩展 |
 
 当前事实见[路线图](docs/project/roadmap.md)和[公开状态页](site/src/content/docs/zh-cn/project/status.md)。
 

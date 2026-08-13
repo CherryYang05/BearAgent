@@ -39,6 +39,8 @@ export default defineConfig({
             { label: '一项 Agent 任务怎样运转', slug: 'learn/agent-basics' },
             { label: '状态和预算怎样计算', slug: 'learn/runtime-state-and-budgets' },
             { label: '逐条读懂一次 Run', slug: 'learn/run-event-reducer-walkthrough' },
+            { label: '持久事实与安全恢复', slug: 'learn/durable-events' },
+            { label: '为什么模型需要独立边界', slug: 'learn/model-provider-boundary' },
           ],
         },
         {
@@ -55,6 +57,8 @@ export default defineConfig({
             { label: 'Feature 怎样更新文档', slug: 'development/feature-documentation' },
             { label: 'F-0001：修改内部数据', slug: 'development/domain-contracts' },
             { label: 'F-0002：修改状态和预算', slug: 'development/run-reducer-and-budgets' },
+            { label: 'F-0003：SQLite EventStore', slug: 'development/sqlite-event-store' },
+            { label: 'F-0004：ModelProvider', slug: 'development/model-provider' },
           ],
         },
         {

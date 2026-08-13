@@ -14,7 +14,8 @@ superseded_by: null
 Agent Loop、SQLite 查询状态和 `run inspect` 都需要知道 Run 做到哪里、还剩多少预算。如果 Loop
 维护一套可变计数，数据库再维护一套状态，CLI 从日志文本推断第三套结果，异常后就可能互相矛盾。
 
-F-0003 尚未建立持久 schema，此时统一状态和记账规则不需要迁移已有 Run 数据。
+作出该决定时 F-0003 尚未建立持久 schema，因此统一状态和记账规则不需要迁移已有 Run 数据。
+F-0003 后来直接让 SQLite adapter 复用同一 Reducer。
 
 ## 比较过的方案
 

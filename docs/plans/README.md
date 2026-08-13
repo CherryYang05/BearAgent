@@ -24,4 +24,6 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 
 - [PLAN-F-0001：内部 ID、Message、Error 和 Event](PLAN-F-0001-domain-ids-messages-errors.md)
 - [PLAN-F-0002：Run/Activity 状态和预算](PLAN-F-0002-run-reducer-activity-lifecycle-budgets.md)
+- [PLAN-F-0003：EventStore、SQLite 和 projection](PLAN-F-0003-event-store-sqlite-projections.md)
+- [PLAN-F-0004：ModelProvider 和首个生产 adapter](PLAN-F-0004-model-provider-first-adapter.md)
 - [PLAN-F-0015：本地 Starlight 文档站](PLAN-F-0015-local-starlight-docs-site.md)

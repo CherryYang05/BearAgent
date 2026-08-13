@@ -16,6 +16,14 @@ from bearagent.domain.ids import (
     ToolCallId,
 )
 from bearagent.domain.messages import Message
+from bearagent.domain.model import (
+    ModelCompleted,
+    ModelRequest,
+    ModelTextDelta,
+    ModelToolCall,
+    ModelToolDefinition,
+    ModelUsage,
+)
 from bearagent.domain.run_events import (
     ModelCallCompletedPayload,
     ModelCallFailedPayload,
@@ -51,11 +59,17 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     Event,
     EventId,
     Message,
+    ModelCompleted,
     ModelCallCompletedPayload,
     ModelCallFailedPayload,
     ModelCallId,
     ModelCallRequestedPayload,
     ModelCallStartedPayload,
+    ModelRequest,
+    ModelTextDelta,
+    ModelToolCall,
+    ModelToolDefinition,
+    ModelUsage,
     RunId,
     RunCreatedPayload,
     RunFailedPayload,

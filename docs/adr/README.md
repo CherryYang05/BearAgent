@@ -12,6 +12,7 @@ ADR 只记录影响多个模块、以后难以反转的技术决定。标题直�
 - [ADR-0007：BearAgent 模块之间只交换 BearAgent 数据类型](ADR-0007-provider-neutral-domain-schemas.md)
 - [ADR-0008：公共文档站使用 Starlight](ADR-0008-starlight-public-docs.md)
 - [ADR-0009：Run 状态和预算都从 Event 计算](ADR-0009-event-driven-run-state-and-budget-accounting.md)
+- [ADR-0010：首个生产模型 adapter 使用 OpenAI Responses](ADR-0010-openai-responses-first-model-adapter.md)
 
 新决定使用 [ADR 模板](../templates/adr.md)。被新决定替代的 ADR 不删除，改为 `superseded` 并链接
 到替代它的文档。

@@ -10,30 +10,47 @@ from bearagent.adapters.testing import (
     InMemoryEventStore,
 )
 from bearagent.domain.events import Event
-from bearagent.domain.ids import CausationId, CorrelationId, EventId, RunId
+from bearagent.domain.ids import CausationId, CorrelationId, EventId, RunId, SessionId
 from bearagent.domain.messages import Message, MessageRole, TextPart
-from bearagent.domain.model import ModelEvent, ModelEventKind, ModelRequest
+from bearagent.domain.model import (
+    ModelCompleted,
+    ModelEvent,
+    ModelFinishReason,
+    ModelRequest,
+    ModelTextDelta,
+)
+from bearagent.domain.runs import BudgetLimits
 from bearagent.domain.tools import ToolRequest, ToolResult, ToolStatus
+from bearagent.runtime.reducer import RunReducerError
 
 
 def test_fake_model_returns_configured_events_and_records_request() -> None:
     async def exercise() -> tuple[ModelEvent, ...]:
         provider = FakeModelProvider(
             [
-                ModelEvent(ModelEventKind.TEXT_DELTA, "hello"),
-                ModelEvent(ModelEventKind.COMPLETED),
+                ModelTextDelta(text="hello"),
+                ModelCompleted(
+                    provider_request_id="fake-response",
+                    model="fake-model",
+                    finish_reason=ModelFinishReason.STOP,
+                ),
             ]
         )
         request = ModelRequest(
-            messages=(Message(role=MessageRole.USER, parts=(TextPart(text="hi"),)),)
+            model="fake-model",
+            messages=(Message(role=MessageRole.USER, parts=(TextPart(text="hi"),)),),
+            max_output_tokens=100,
+            timeout_ms=5_000,
+            prompt_version="test-v1",
         )
         events = tuple([event async for event in provider.stream(request)])
         assert provider.requests == [request]
         return events
 
     events = asyncio.run(exercise())
+    assert isinstance(events[0], ModelTextDelta)
     assert events[0].text == "hello"
-    assert events[-1].kind is ModelEventKind.COMPLETED
+    assert isinstance(events[-1], ModelCompleted)
 
 
 def test_fake_tool_returns_configured_result_and_records_request() -> None:
@@ -67,7 +84,7 @@ def test_in_memory_store_rejects_sequence_gaps() -> None:
         store = InMemoryEventStore()
         await store.append(build_event(run_id=RunId.new(), sequence=2, event_type="RunStarted"))
 
-    with pytest.raises(EventSequenceError, match="expected sequence 1"):
+    with pytest.raises(RunReducerError, match="First Run Event must have sequence 1"):
         asyncio.run(exercise())
 
 
@@ -78,7 +95,7 @@ def test_in_memory_store_rejects_duplicate_event_ids_across_runs() -> None:
         await store.append(build_event(event_id=event_id, run_id=RunId.new()))
         await store.append(build_event(event_id=event_id, run_id=RunId.new()))
 
-    with pytest.raises(EventSequenceError, match="duplicate event_id"):
+    with pytest.raises(EventSequenceError, match="Event identity already exists"):
         asyncio.run(exercise())
 
 
@@ -89,12 +106,27 @@ def build_event(
     sequence: int = 1,
     event_type: str = "RunCreated",
 ) -> Event:
-    return Event(
-        event_id=event_id or EventId.new(),
-        run_id=run_id,
-        sequence=sequence,
-        event_type=event_type,
-        occurred_at=datetime(2026, 8, 10, tzinfo=UTC),
-        causation_id=CausationId.new(),
-        correlation_id=CorrelationId.new(),
+    payload: dict[str, object] = {}
+    if event_type == "RunCreated":
+        payload = {
+            "session_id": str(SessionId.new()),
+            "budget_limits": BudgetLimits(
+                max_model_iterations=10,
+                max_tokens=10_000,
+                max_cost_microusd=1_000_000,
+                max_wall_time_ms=60_000,
+                max_tool_calls=10,
+            ).model_dump(mode="json"),
+        }
+    return Event.model_validate(
+        {
+            "event_id": event_id or EventId.new(),
+            "run_id": run_id,
+            "sequence": sequence,
+            "event_type": event_type,
+            "occurred_at": datetime(2026, 8, 10, tzinfo=UTC),
+            "causation_id": CausationId.new(),
+            "correlation_id": CorrelationId.new(),
+            "payload": payload,
+        }
     )

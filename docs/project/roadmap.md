@@ -67,8 +67,8 @@ Feature 可以根据 Spec、Plan、测试和文档流程推进。
 
 ## 5. P1：可检查执行
 
-**状态：进行中（2026-08-10 开始）。** F-0001、F-0002 和 F-0015 已实现；下一个 Runtime Feature
-尚未确认，仓库没有 active Plan。
+**状态：进行中（2026-08-10 开始）。** F-0001、F-0002、F-0003、F-0004 和 F-0015 已实现；
+下一个 Runtime Feature 尚未确认，仓库没有 active Plan。
 
 ### 5.1 用户结果
 
@@ -97,6 +97,9 @@ F-0002 已完成这一部分。
 
 P1 的 Event log 用于检查事实，不包含 Checkpoint 或启动恢复。
 
+F-0003 已完成 EventStore port、SQLite adapter、schema v1 和 projection。正常重开数据库后仍能
+查询已提交事实，但 Runtime 不会自动扫描或继续非终态 Run。
+
 #### 模型和 Agent Loop
 
 - 一个真实 Provider adapter，外部 SDK 对象在边界翻译；
@@ -107,6 +110,9 @@ P1 的 Event log 用于检查事实，不包含 Checkpoint 或启动恢复。
 - Prompt、模型、Tool schema 和 Agent 配置版本进入 trace，密钥不保存。
 
 P1 不做自动摘要 Memory 或复杂上下文压缩。
+
+F-0004 已完成 Provider-neutral 模型数据与 port、确定性测试 adapter 和首个 OpenAI Responses 流式
+adapter。它还没有被 ContextBuilder、Agent Loop 或 CLI 调用，因此不等于用户已经能运行真实任务。
 
 #### 受限文件工具
 
@@ -137,11 +143,11 @@ P1 的 Policy 是固定允许/拒绝规则。用户 Approval 属于 P3。
 ### 5.4 推荐 Feature 顺序
 
 1. F-0002：Run/Activity 状态、Reducer 和预算——已实现；
-2. F-0003：Event store、SQLite、projection 和 migration；
-3. F-0006：Tool 接口、Registry、executor 和固定 Policy；
-4. F-0007：workspace 边界和只读工具；
-5. F-0008：`outputs/**` 原子写和 Artifact；
-6. F-0004：模型接口和首个真实 adapter；
+2. F-0003：Event store、SQLite、projection 和 migration——已实现；
+3. F-0004：模型接口和首个真实 adapter——已实现；
+4. F-0006：Tool 接口、Registry、executor 和固定 Policy；
+5. F-0007：workspace 边界和只读工具；
+6. F-0008：`outputs/**` 原子写和 Artifact；
 7. F-0016：ContextBuilder、有界 Loop、版本化 Agent 配置和任务集；
 8. F-0005：`run/inspect/events` CLI 与端到端演示。
 
@@ -326,11 +332,11 @@ Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；
 
 1. [F-0001：内部 ID、Message 和 Error](../specs/F-0001-domain-ids-messages-errors.md) — implemented
 2. [F-0002：Run/Activity 状态和预算](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
-3. F-0003：Event store、SQLite、projection 和 migration
+3. [F-0003：Event store、SQLite、projection 和 migration](../specs/F-0003-event-store-sqlite-projections.md) — implemented
 4. F-0006：Tool 接口、Registry、executor 和固定 Policy
 5. F-0007：workspace 边界和只读工具
 6. F-0008：原子写和 Artifact
-7. F-0004：模型接口和首个真实 adapter
+7. [F-0004：模型接口和首个真实 adapter](../specs/F-0004-model-provider-first-adapter.md) — implemented
 8. F-0016：ContextBuilder、有界 Loop、Agent 配置和评测任务
 9. F-0005：`run/inspect/events` CLI
 10. [F-0015：本地 Starlight 文档站](../specs/F-0015-local-starlight-docs-site.md) — implemented

@@ -41,4 +41,5 @@ uv run pytest tests/contract/test_domain_schemas.py
 uv run pyright
 ```
 
-这些测试覆盖数据结构和边界，不代表 SQLite、真实模型或完整执行循环已经可用。
+这些测试覆盖 F-0001 数据结构和边界。SQLite 与模型 adapter 已分别由 F-0003、F-0004 实现并有
+独立契约/集成测试，但完整执行循环仍未接通。
