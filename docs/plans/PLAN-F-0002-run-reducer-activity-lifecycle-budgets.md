@@ -18,46 +18,46 @@ Related Spec: `docs/specs/F-0002-run-reducer-activity-lifecycle-budgets.md`
 - F-0002 open questions remain empty or are resolved in the Spec.
 - No other main Implementation Plan is `active`.
 
-所有前置条件已于 2026-08-11 满足；全部切片已完成，仓库恢复为无 `active` 主 Plan。
+所有前置条件已于 2026-08-11 满足；全部实现步骤已完成，仓库恢复为无 `active` 主 Plan。
 
-## Vertical slices
+## 可单独完成和测试的实现步骤
 
-### Slice 1: Run lifecycle and schema baseline
+### 第一步：Run 生命周期与数据格式基线
 
 - Status：completed。
-- Domain/contracts：Run/budget 状态模型、RunCreated/Started/Succeeded/Failed v1 payload。
-- Adapter/interface：公共 schema registry/export；无 adapter I/O。
+- 内部数据与规则：Run/预算状态模型、RunCreated/Started/Succeeded/Failed v1 数据。
+- 接口与外部实现：公共数据格式清单与导出；无适配器 I/O。
 - Tests：创建、启动、成功/失败、非法 sequence/terminal、冻结与 JSON round-trip。
 - Verification command：`uv run pytest tests/unit/test_run_reducer.py tests/contract/test_domain_schemas.py`。
-- Rollback point：删除新增 Run 模型和 payload，恢复 schema snapshot；无持久数据。
+- 安全回退点：删除新增 Run 模型和事件数据，恢复 JSON Schema 快照；无持久数据。
 
-### Slice 2: Serial Model and Tool Activity lifecycle
+### 第二步：串行 Model 与 Tool Activity 生命周期
 
 - Status：completed。
-- Domain/contracts：Activity state、Model/Tool request/start/completed/failed payload 与严格 reducer。
-- Adapter/interface：runtime reducer public functions；不接真实 Provider/Tool。
+- 内部数据与规则：Activity 状态、Model/Tool 请求/开始/完成/失败事件数据与严格 reducer。
+- 接口与外部实现：运行时 reducer 公共函数；不接真实模型服务或 Tool。
 - Tests：两类 Activity 全转换、单 active 约束、ID 唯一性、跨 Run/未知 Event 拒绝和确定性 fold。
 - Verification command：`uv run pytest tests/unit/test_run_reducer.py tests/security/test_run_events.py`。
-- Rollback point：保留 Slice 1 的 Run lifecycle，移除 Activity payload/reducer 分支。
+- 安全回退点：保留第一步的 Run 生命周期，移除 Activity 事件数据/reducer 分支。
 
-### Slice 3: Budget gate and usage accounting
+### 第三步：预算门与用量记账
 
 - Status：completed。
-- Domain/contracts：五类 limit/usage、BudgetExhaustion 与稳定错误码。
-- Adapter/interface：纯 `check_activity_budget`；reducer 在 Activity request 使用同一规则。
+- 内部数据与规则：五类限额/用量、BudgetExhaustion 与稳定错误码。
+- 接口与外部实现：纯函数 `check_activity_budget`；reducer 在 Activity 请求时使用同一规则。
 - Tests：零值/边界/超限、相关次数门槛、全局 token/费用/deadline、失败 usage 与已开始 Activity
   跨 deadline/实际超额。
 - Verification command：`uv run pytest tests/unit/test_budgets.py tests/unit/test_run_reducer.py`。
-- Rollback point：移除 budget gate 与记账分支；F-0003/F-0004 尚未依赖。
+- 安全回退点：移除预算门与记账分支；F-0003/F-0004 尚未依赖。
 
-### Slice 4: Documentation and Feature close
+### 第四步：文档与 Feature 关闭
 
 - Status：completed。
-- Domain/contracts：生成并审查最终 schema snapshot；确认无 Provider/Store 类型泄漏。
-- Adapter/interface：domain/runtime exports 与 import boundary 检查。
+- 内部数据与规则：生成并审查最终 JSON Schema 快照；确认无模型服务/存储实现类型泄漏。
+- 接口与外部实现：内部数据/运行时导出与导入边界检查。
 - Tests：完整 DoD、docs link 和 Starlight build。
 - Verification command：见 Final verification。
-- Rollback point：在 F-0003 开始前整体回退 F-0002；无 migration。
+- 安全回退点：在 F-0003 开始前整体回退 F-0002；无数据迁移。
 
 实现关闭时同步：
 

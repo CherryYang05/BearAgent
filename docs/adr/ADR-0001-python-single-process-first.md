@@ -23,5 +23,5 @@ P0-P3 使用固定版本 Python、一个 API/runtime 进程和 asyncio。CLI/API
 ## Consequences
 
 - 交付快、测试和模型生态成熟；单进程的并发和隔离上限可接受。
-- 必须通过端口和 adapter 控制 Python 动态性，使用 Pyright/Pydantic/contract tests。
+- 必须通过内部接口和适配器控制 Python 动态性，使用 Pyright、Pydantic 和共用接口测试。
 - 出现多 worker、长 timer 或 SQLite 写竞争的真实证据后重新评估。

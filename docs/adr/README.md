@@ -8,6 +8,7 @@ ADR 记录已经接受、跨模块且代价较高的技术决定。新决定从�
 - [ADR-0004: 权限策略位于模型之外](ADR-0004-policy-outside-model.md)
 - [ADR-0005: Host runtime 不执行模型生成 shell](ADR-0005-no-host-shell-execution.md)
 - [ADR-0006: P0 工具链与依赖基线](ADR-0006-p0-tooling-and-dependencies.md)
-- [ADR-0007: Provider 无关的领域 schema](ADR-0007-provider-neutral-domain-schemas.md)
+- [ADR-0007: 不依赖特定模型服务商的内部数据格式](ADR-0007-provider-neutral-domain-schemas.md)
 - [ADR-0008: 公共文档站使用 Starlight](ADR-0008-starlight-public-docs.md)
 - [ADR-0009: Event 驱动的 Run 状态与预算记账](ADR-0009-event-driven-run-state-and-budget-accounting.md)
+- [ADR-0010: 首个模型服务适配器使用 OpenAI Responses API](ADR-0010-openai-responses-first-model-adapter.md)

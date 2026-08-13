@@ -18,52 +18,52 @@ Related Spec: `docs/specs/F-0015-local-starlight-docs-site.md`
 - Starlight、中文优先和 P1 期间仅本地部署已确认。
 - 分支从 F-0001 的已完成提交创建。
 
-## Vertical slices
+## 可单独完成和测试的实现步骤
 
-### Slice 1: 文档治理与站点边界
+### 第一步：文档治理与站点边界
 
 - Status：completed。
-- Domain/contracts：定义 `docs/` 工程事实与 `site/` 公共教学内容的职责。
-- Adapter/interface：登记 F-0015、ADR-0008、Plan 和 Roadmap。
+- 内部数据与规则：定义 `docs/` 工程事实与 `site/` 公共教学内容的职责。
+- 接口与外部实现：登记 F-0015、ADR-0008、Plan 和 Roadmap。
 - Tests：工程 Markdown 链接检查。
 - Verification command：`uv run python scripts/check_docs.py`。
-- Rollback point：删除新增治理文档和索引登记，不影响 F-0001。
+- 安全回退点：删除新增治理文档和索引登记，不影响 F-0001。
 
-### Slice 2: 可重复的本地 Starlight 构建
+### 第二步：可重复的本地 Starlight 构建
 
 - Status：completed。
-- Domain/contracts：定义站点目录、中文路由和本地命令。
-- Adapter/interface：Starlight、Pagefind、Mermaid 和 npm scripts。
+- 内部数据与规则：定义站点目录、中文路由和本地命令。
+- 接口与外部实现：Starlight、Pagefind、Mermaid 和 npm 脚本。
 - Tests：lockfile 安装、生产构建、静态输出检查。
 - Verification command：`npm --prefix=site ci` 和 `npm run build --prefix=site`。
-- Rollback point：删除 `site/`；不涉及 Python 依赖或运行时数据。
+- 安全回退点：删除 `site/`；不涉及 Python 依赖或运行时数据。
 
-### Slice 3: 第一批学习与架构内容
+### 第三步：第一批学习与架构内容
 
 - Status：completed。
-- Domain/contracts：页面状态区分原理、设计、当前实现和规划。
-- Adapter/interface：首页、导航、学习路径、架构、F-0001、状态与来源页。
+- 内部数据与规则：页面状态区分原理、设计、当前实现和规划。
+- 接口与外部实现：首页、导航、学习路径、架构、F-0001、状态与来源页。
 - Tests：Starlight build、路由存在性和人工导航检查。
 - Verification command：`npm run build --prefix=site`。
-- Rollback point：保留站点骨架，逐页回退内容。
+- 安全回退点：保留站点骨架，逐页回退内容。
 
-### Slice 4: CI、文档同步与关闭
+### 第四步：CI、文档同步与关闭
 
 - Status：completed。
-- Domain/contracts：无运行时变化。
-- Adapter/interface：CI 只构建不部署；README/SOP/Architecture 与当前事实同步。
+- 内部数据与规则：无运行时变化。
+- 接口与外部实现：CI 只构建不部署；README/SOP/Architecture 与当前事实同步。
 - Tests：完整 Python 质量检查、测试、工程文档链接和站点构建。
 - Verification command：Definition of Done 全部命令。
-- Rollback point：移除 Node CI job，保留可本地使用的站点。
+- 安全回退点：移除 Node CI 任务，保留可本地使用的站点。
 
-### Slice 5: Feature 与里程碑双轨文档治理
+### 第五步：Feature 与里程碑双轨文档治理
 
 - Status：completed。
-- Domain/contracts：每个 Feature 同步工程事实、初学者路径、开发者文档与当前状态；每个 P 阶段额外同步阶段总结。
-- Adapter/interface：AGENTS、SOP、Feature/Plan/PR 模板、开发者导航、F-0001 开发导读和阶段页。
+- 内部数据与规则：每个 Feature 同步工程事实、初学者路径、开发者文档与当前状态；每个 P 阶段额外同步阶段总结。
+- 接口与外部实现：AGENTS、SOP、Feature/Plan/PR 模板、开发者导航、F-0001 开发导读和阶段页。
 - Tests：Starlight build、工程链接检查、双轨页面与侧边栏路由检查。
 - Verification command：`npm run build --prefix=site` 和完整 Definition of Done。
-- Rollback point：回退治理与新增页面，不影响 Runtime 数据或 F-0001 契约。
+- 安全回退点：回退治理与新增页面，不影响运行时数据或 F-0001 内部数据格式。
 
 ## Cross-cutting checks
 

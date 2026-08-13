@@ -10,7 +10,7 @@ last_updated: 2026-08-12
 ## Context
 
 项目需要事务性 Event append、projection、migration 和简单备份，但初期只有单用户单进程。
-F-0003 开始前，Event/reducer 已成为稳定领域契约，现在必须冻结 SQLite transaction、migration、
+F-0003 开始前，Event/reducer 已成为稳定的内部数据规则，现在必须确定 SQLite 事务、数据迁移、
 concurrency 和 adapter 边界，否则 Store、Loop 与 inspect 会各自形成不兼容的数据模型。
 
 ## Decision drivers
@@ -66,7 +66,7 @@ F-0003 前不存在生产 Run 数据，从空数据库应用 schema v1。进入 
 
 ## Validation
 
-- InMemory/SQLite 共用 contract suite，证明 port 语义不由 adapter 决定；
+- 内存版/SQLite 版共用同一套接口测试，证明内部接口的行为不由某个适配器决定；
 - 重开数据库验证 Event/projection durability 与 reducer 值等价；
 - trigger/failure injection 验证 Event insert 后 projection failure 整体回滚；
 - 并发相同 sequence 验证最多一个 writer 提交；

@@ -38,13 +38,14 @@ export default defineConfig({
             { label: '学习路径', slug: 'learn' },
             { label: 'Agent 基础原理', slug: 'learn/agent-basics' },
             { label: 'Run 状态与预算', slug: 'learn/runtime-state-and-budgets' },
+            { label: '模型 Provider 边界', slug: 'learn/model-provider-boundary' },
           ],
         },
         {
           label: 'BearAgent 架构',
           items: [
             { label: '架构概览', slug: 'architecture' },
-            { label: 'F-0001：领域契约', slug: 'architecture/domain-contracts' },
+            { label: 'F-0001：内部数据格式', slug: 'architecture/domain-contracts' },
           ],
         },
         {
@@ -54,6 +55,7 @@ export default defineConfig({
             { label: 'Feature 文档同步', slug: 'development/feature-documentation' },
             { label: 'F-0001 实现导读', slug: 'development/domain-contracts' },
             { label: 'F-0002 实现导读', slug: 'development/run-reducer-and-budgets' },
+            { label: 'F-0004 实现导读', slug: 'development/model-provider' },
           ],
         },
         {

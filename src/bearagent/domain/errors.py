@@ -56,6 +56,14 @@ class ErrorCode(StrEnum):
     INVALID_STATE_TRANSITION = "invalid_state_transition"
     BUDGET_EXHAUSTED = "budget_exhausted"
     PROVIDER_ERROR = "provider_error"
+    PROVIDER_TIMEOUT = "provider_timeout"
+    PROVIDER_RATE_LIMITED = "provider_rate_limited"
+    PROVIDER_UNAVAILABLE = "provider_unavailable"
+    PROVIDER_AUTHENTICATION = "provider_authentication"
+    PROVIDER_PERMISSION_DENIED = "provider_permission_denied"
+    PROVIDER_INVALID_REQUEST = "provider_invalid_request"
+    PROVIDER_REFUSED = "provider_refused"
+    PROVIDER_PROTOCOL_ERROR = "provider_protocol_error"
     TOOL_ERROR = "tool_error"
     PERSISTENCE_ERROR = "persistence_error"
     INTERNAL_ERROR = "internal_error"
@@ -67,6 +75,14 @@ _CODE_CATEGORIES = {
     ErrorCode.INVALID_STATE_TRANSITION: ErrorCategory.VALIDATION,
     ErrorCode.BUDGET_EXHAUSTED: ErrorCategory.BUDGET,
     ErrorCode.PROVIDER_ERROR: ErrorCategory.PROVIDER,
+    ErrorCode.PROVIDER_TIMEOUT: ErrorCategory.PROVIDER,
+    ErrorCode.PROVIDER_RATE_LIMITED: ErrorCategory.PROVIDER,
+    ErrorCode.PROVIDER_UNAVAILABLE: ErrorCategory.PROVIDER,
+    ErrorCode.PROVIDER_AUTHENTICATION: ErrorCategory.PROVIDER,
+    ErrorCode.PROVIDER_PERMISSION_DENIED: ErrorCategory.PROVIDER,
+    ErrorCode.PROVIDER_INVALID_REQUEST: ErrorCategory.PROVIDER,
+    ErrorCode.PROVIDER_REFUSED: ErrorCategory.PROVIDER,
+    ErrorCode.PROVIDER_PROTOCOL_ERROR: ErrorCategory.PROVIDER,
     ErrorCode.TOOL_ERROR: ErrorCategory.TOOL,
     ErrorCode.PERSISTENCE_ERROR: ErrorCategory.PERSISTENCE,
     ErrorCode.INTERNAL_ERROR: ErrorCategory.INTERNAL,

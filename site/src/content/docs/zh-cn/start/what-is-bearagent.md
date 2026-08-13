@@ -41,6 +41,6 @@ Coding Agent。完整说明见[产品定位](../project/positioning.md)。
 
 ## 当前能做什么
 
-目前已实现 Provider 无关的 ID、Message、Error 和 Event envelope；真实模型、Agent Loop、工具和
-SQLite 仍属于后续 P1 Feature。因此现在最适合做的是阅读领域契约和参与构建，而不是把它当作
+目前已实现不依赖特定模型服务商的 ID、Message、Error、Event 通用外壳、SQLite EventStore 与真实模型
+适配器；Agent Loop 和工具仍属于后续 P1 Feature。因此现在最适合做的是阅读内部数据规则和参与构建，而不是把它当作
 已经可用的个人助理。

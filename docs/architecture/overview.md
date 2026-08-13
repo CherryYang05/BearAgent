@@ -44,7 +44,7 @@ Trace/replay/eval 是前三条主线的验证面；Context、Skill、MCP 与 Mem
 
 DeepTutor 当前将单次 Tool 和接管整个 turn 的多阶段 Capability 分开，并让入口通过统一 orchestrator 路由；它的 Memory 使用 L1 事件、L2 surface facts、L3 cross-surface synthesis，并保留来源链。Proma 把 Provider、workspace、Skills、MCP、会话持久化和权限体验放在 local-first 桌面产品里。Manus 则明确把文件系统当可恢复的外部上下文，并把每个任务放在隔离 sandbox 中。
 
-这些项目证明了不同 Agent 的差异主要发生在任务域、上下文、工具环境、权限、持久语义和产品入口，而不只是模型循环。BearAgent 要更早把运行时事实、恢复语义和权限边界做成显式契约；详细比较与来源见[产品定位](../project/product-positioning.md)和本文末尾参考资料。
+这些项目证明了不同 Agent 的差异主要发生在任务范围、上下文、工具环境、权限、持久化行为和产品入口，而不只是模型循环。BearAgent 要更早明确运行时事实、恢复规则和权限边界；详细比较与来源见[产品定位](../project/product-positioning.md)和本文末尾参考资料。
 
 ## 3. 范围
 
@@ -278,7 +278,7 @@ sequenceDiagram
 
 每次关键状态转换与对应 Event 必须在同一个 SQLite transaction 内提交。SSE token 可以实时发出，但不逐 token 写 WAL；只有完成后的模型响应、usage 和 tool call 被持久化。崩溃时允许丢失尚未完成的 token stream，然后从上一个安全边界重新请求模型。
 
-## 9. Event 与 Command 契约
+## 9. Event 与 Command 的数据格式和规则
 
 ### 9.1 核心 Command
 
@@ -375,17 +375,25 @@ class ModelProvider(Protocol):
     async def stream(self, request: ModelRequest) -> AsyncIterator[ModelEvent]: ...
 ```
 
-`ModelRequest` 包含 messages、tool schemas、model config、deadline、trace context；`ModelEvent` 只允许内部定义的 text delta、tool-call delta/completed、usage、response completed 和 error。
+F-0004 已实现的 `ModelRequest` 包含 model、messages、Tool input schema、最大输出 token、有限 timeout
+与 prompt version；成功 stream 只产生 BearAgent 的 text delta、完整 Tool call 与唯一 completion。
+completion 保存实际模型、finish reason、可选 usage 和 Provider request ID。错误以安全
+`ModelProviderError` 终止 stream，不作为成功 Event 混入。
 
 规则：
 
 - Provider SDK 对象在 adapter 内完成翻译，不能进入 runtime/domain。
-- P1 只实现一个 Provider adapter；第二个 adapter 用 contract tests 验证抽象是否真实。
-- Retry 只处理明确的临时错误；参数错误、权限错误、上下文超限不得盲重试。
-- usage、finish reason、provider request id 和模型标识必须持久化，密钥不得持久化。
+- F-0004 的首个 production adapter 使用官方 OpenAI Python SDK 与 Responses HTTP/SSE streaming；
+  不使用 hosted Tool、Provider conversation、background mode 或 websocket。
+- Adapter 禁用 SDK 自动 retry，只分类 transient/permanent failure；F-0016 的 Runtime 才能基于预算、
+  Activity attempt 与 Event 决定有界 retry。
+- F-0004 暴露 usage、finish reason、Provider request ID 和模型标识；F-0016 才负责把它们持久化，
+  密钥始终不得进入 request/Event/error。
+- Provider 输出不可信；函数名和 JSON object arguments 必须验证，Tool schema 不等于 Grant。
 - Prompt/tool schema 必须做版本标记，保证 trace/eval 可比较。
 
-第一版可选择一个覆盖主要目标模型的 OpenAI-compatible adapter；若首要模型使用 Responses 协议，则实现独立 adapter。不要为了“支持几十家模型”引入一个主导整个领域模型的聚合框架。
+F-0004 不包含 ContextBuilder、Agent Loop、Activity/Event 调度或 CLI Run；它们属于 F-0016/F-0005。
+第二个模型服务适配器仍是后续用共用接口测试验证内部接口是否通用的入口，不在 P1 建兼容矩阵。
 
 ## 12. Tool、Policy 与 Sandbox
 
@@ -517,7 +525,7 @@ ToolRegistry
 └── MCPToolProvider
 ```
 
-MCP server 和每个 MCP tool 都需要独立启用、schema 校验、timeout、输出上限和 Grant。接入 MCP 不改变核心 ToolRequest/ToolResult/Policy/Event 契约。
+MCP server 和每个 MCP tool 都需要独立启用、输入格式校验、超时、输出上限和 Grant。接入 MCP 不改变核心 ToolRequest/ToolResult/Policy/Event 的数据格式与规则。
 
 ## 14. SQLite 与文件布局
 
@@ -667,7 +675,7 @@ P1/P2 只能在本机或 SSH tunnel 下使用。公开可访问前必须有：�
 | API | FastAPI + SSE | P3 才引入；对单向 event stream 足够 |
 | Storage | SQLite WAL + stdlib `sqlite3` + SQL migrations | 无新生产依赖、事务显式、适合单用户 |
 | HTTP | httpx | async、timeout、streaming |
-| Tests | pytest | 单元、契约、集成和故障注入 |
+| Tests | pytest | 单元、共用接口、集成和故障注入测试 |
 | Quality | Ruff + Pyright | 快速、可自动化 |
 | Docs | Markdown/MDX + Starlight | 学习型导航、静态搜索和 Mermaid；P1 只本地构建 |
 | Deployment | Docker Compose + 1Panel reverse proxy | 与自有服务器匹配，运维成本低 |
@@ -694,15 +702,15 @@ P1/P2 只能在本机或 SSH tunnel 下使用。公开可访问前必须有：�
 - [ADR-0004](../adr/ADR-0004-policy-outside-model.md)：Policy 位于模型之外；
 - [ADR-0005](../adr/ADR-0005-no-host-shell-execution.md)：host runtime 不执行模型生成 shell；
 - [ADR-0006](../adr/ADR-0006-p0-tooling-and-dependencies.md)：P0 工具与依赖基线；
-- [ADR-0007](../adr/ADR-0007-provider-neutral-domain-schemas.md)：Provider-neutral 领域 schema；
+- [ADR-0007](../adr/ADR-0007-provider-neutral-domain-schemas.md)：不依赖特定模型服务商的内部数据格式；
 - [ADR-0008](../adr/ADR-0008-starlight-public-docs.md)：公共文档站使用 Starlight。
 - [ADR-0009](../adr/ADR-0009-event-driven-run-state-and-budget-accounting.md)：Event 驱动的 Run 状态与预算记账。
+- [ADR-0010](../adr/ADR-0010-openai-responses-first-model-adapter.md)：首个 production Model adapter 使用 OpenAI Responses API。
 
 ADR 的 `accepted` 只表示决策已生效，不表示 Roadmap 中的恢复、Policy、runner 或 API 已经实现。
 
 ## 21. 对应 Feature 开始前仍需决定
 
-- F-0004 前：第一版实际模型协议是 Responses 还是广泛兼容的 Chat Completions；
 - F-0008 前：Artifact 最大保留时间和自动清理策略；
 - F-0012/F-0014 前：目标服务器架构、资源条件以及 Docker/Podman runner 选择；
 - P4 Web UI 前：独立前端还是最小服务端页面；

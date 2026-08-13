@@ -24,10 +24,10 @@ ModelProvider、EventStore、Tool 和 CLI 如果继续各自定义字符串与�
 ## 2. Goals
 
 - G-1：为 P1 核心领域实体提供不透明、类型化且可注入生成器的 UUID4 ID。
-- G-2：定义只包含文本、工具调用和工具结果的 Provider 无关 Message。
+- G-2：定义只包含文本、工具调用和工具结果，且不依赖特定模型服务商的 Message。
 - G-3：定义稳定、可安全展示的错误分类、错误码和错误信息结构。
 - G-4：补全版本化 Event envelope 的通用字段，并保持 Event 不可变。
-- G-5：为公共领域 schema 建立 JSON schema snapshot/compatibility 基线。
+- G-5：为公共内部数据格式建立 JSON Schema 快照与兼容性基线。
 
 ## 3. Non-goals
 
@@ -51,7 +51,7 @@ ModelProvider、EventStore、Tool 和 CLI 如果继续各自定义字符串与�
 Given application 创建一个 Run，When EventStore、ModelProvider 和 CLI 传递其标识，Then
 它们使用同一个 `RunId` 领域类型而不是各自定义的字符串或 SDK 类型。
 
-### Scenario B：Provider 无关消息
+### Scenario B：不依赖特定模型服务商的消息
 
 Given assistant 请求一次工具调用，When adapter 翻译该响应，Then runtime 只接收 BearAgent
 定义的 Message part，且可以用 `ToolCallId` 将结果关联回请求。
@@ -109,7 +109,7 @@ domain.events: versioned Event envelope
 - Message、Event payload 和错误详情均视为不可信输入并执行结构校验。
 - Error details 拒绝 `authorization`、`cookie`、`password`、`secret`、`token`、
   `api_key` 等敏感字段名。
-- 领域 schema 不包含 Provider SDK response、authorization header 或原始 exception 字段。
+- 内部数据格式不包含模型服务 SDK 响应、认证请求头或原始异常字段。
 - 结构限制只减少意外泄露；调用方仍不得把 secret 放入安全 message 文本。
 
 ## 11. Observability

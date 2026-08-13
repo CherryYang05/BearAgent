@@ -36,7 +36,7 @@ flowchart TD
     end
 
     subgraph C["③ 实现 Implement"]
-        C1["docs/plans/PLAN-F-NNNN-*.md<br/>拆分纵向切片"]
+        C1["docs/plans/PLAN-F-NNNN-*.md<br/>拆成可单独验证的步骤"]
         C2["测试先行<br/>最小实现"]
         C3["Ruff / Pyright / Pytest"]
         C1 --> C2 --> C3
@@ -77,7 +77,7 @@ flowchart TD
 | 目标、非目标、场景、验收 | `docs/specs/F-NNNN-*.md` |
 | 当前 Feature 的实现切片 | `docs/plans/PLAN-F-NNNN-*.md` |
 | 跨模块选择及取舍 | `docs/adr/ADR-NNNN-*.md` |
-| 当前系统分层和契约 | `docs/architecture/*.md` |
+| 当前系统分层、内部接口和数据规则 | `docs/architecture/*.md` |
 | AI/贡献者稳定工作约定 | `AGENTS.md` |
 | 实际类型、schema、CLI/API | 代码、迁移、自动生成 reference |
 | 行为是否成立 | 自动化测试和可复现验收记录 |
@@ -119,7 +119,7 @@ Feature ID `F-NNNN` 在全项目内稳定递增，所属阶段由 Spec 的 `mile
 输出：
 1. 当前行为和证据路径；
 2. 与目标之间的差距；
-3. 受影响的领域对象、持久化、权限和公开契约；
+3. 受影响的内部对象、持久化、权限和公开接口或数据规则；
 4. 失败场景与安全风险；
 5. 仍需我决定的问题。
 不要根据聊天记忆猜测仓库事实。
@@ -156,7 +156,7 @@ ADR 必须记录 rejected alternatives，防止数周后另一个 AI 再次建�
 
 ### 4.6 第 4 步：实现计划
 
-计划以可以独立验证的纵向切片组织，而不是“先写全部 model，再写全部 API”。例如：
+计划按“可以单独完成和测试的实现步骤”组织，而不是“先写全部 model，再写全部 API”。例如：
 
 ```text
 1. 领域类型 + reducer 单元测试
@@ -177,14 +177,14 @@ ADR 必须记录 rejected alternatives，防止数周后另一个 AI 再次建�
 推荐 prompt：
 
 ```text
-只实现计划中的下一纵向切片。
+只实现计划中的下一个可单独验证步骤。
 保持现有边界，不引入未被 Spec/ADR 接受的新概念或生产依赖。
 先写/更新能证明验收条件的测试，再完成最小实现。
 遇到 Spec 缺口时暂停设计决策，在 Spec 中记录，不要用代码偷偷决定。
 完成后运行范围匹配的验证，并报告实际命令和结果。
 ```
 
-一个 diff 过大时，先停在可验证切片，而不是让 AI 一次性生成几千行后再整体调试。
+一个 diff 过大时，先停在一个可以单独验证的实现步骤，而不是让 AI 一次性生成几千行后再整体调试。
 
 ### 4.8 第 6 步：验证与反向审查
 
@@ -214,7 +214,7 @@ ADR 必须记录 rejected alternatives，防止数周后另一个 AI 再次建�
 - 补上 `implemented_in` commit/PR（有后填写）；
 - 更新架构文档中已经改变的当前事实；
 - 更新 `site/` 初学者学习路径：解释本 Feature 对应的 Agent 原理、前置知识和当前成熟度；
-- 更新 `site/` 开发者文档：解释代码入口、契约、失败/安全语义和验证证据；
+- 更新 `site/` 开发者文档：解释代码入口、接口与数据规则、失败/安全行为和验证证据；
 - 更新站点当前状态页；关闭 `P<n>` 时再同步学习地图、开发者架构总结和阶段结果；
 - 添加 migration/rollback 说明；
 - 把验证命令和结果写进 PR/变更记录，不把瞬时测试输出长期复制进架构文档；
@@ -222,7 +222,7 @@ ADR 必须记录 rejected alternatives，防止数周后另一个 AI 再次建�
 
 ## 5. 防止文档漂移的具体机制
 
-### 5.1 文档写稳定契约，不抄实现
+### 5.1 文档写稳定规则，不抄实现细节
 
 不在手写文档维护完整函数签名、每个配置默认值或目录中每个文件的清单。这些最容易漂移，应从代码 schema、CLI `--help`、OpenAPI 或配置模型自动生成。
 
@@ -268,7 +268,7 @@ P0/P1 建立：
 - CLI/OpenAPI/config reference 生成后 `git diff --exit-code`；
 - 公共 Event/Tool schema 的 snapshot/compatibility test。
 
-CI 不能判断设计是否正确，但可以阻止最常见的格式、链接、生成物和契约漂移。
+CI 不能判断设计是否正确，但可以阻止最常见的格式、链接、生成物和接口规则漂移。
 
 ### 5.6 每个里程碑做一次 Reality Check
 
@@ -285,7 +285,7 @@ CI 不能判断设计是否正确，但可以阻止最常见的格式、链接�
 | 层 | 重点 |
 |---|---|
 | Unit | reducer、budget、policy match、path validation、context selection |
-| Contract | 每个 ModelProvider、Tool、SandboxBackend 的统一契约 |
+| 共用接口测试 | 每个 ModelProvider、Tool、SandboxBackend 都必须遵守的统一接口规则 |
 | Integration | SQLite transaction、migration、artifact、API/CLI |
 | Recovery | 在每个持久化边界 kill/restart；幂等与 `UNKNOWN` |
 | Security | traversal、symlink、approval tamper、SSRF、secret redaction |

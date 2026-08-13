@@ -16,6 +16,7 @@ from bearagent.domain.ids import ToolCallId
 
 MAX_MESSAGE_PARTS = 128
 MAX_TEXT_CHARS = 1_000_000
+MAX_PROVIDER_CALL_ID_CHARS = 256
 TOOL_NAME_PATTERN = r"^[A-Za-z][A-Za-z0-9_.-]{0,127}$"
 
 
@@ -47,6 +48,9 @@ class ToolCallPart(DomainModel):
 
     kind: Literal["tool_call"] = "tool_call"
     tool_call_id: ToolCallId
+    provider_call_id: str | None = Field(
+        default=None, min_length=1, max_length=MAX_PROVIDER_CALL_ID_CHARS
+    )
     name: str = Field(pattern=TOOL_NAME_PATTERN)
     arguments: Mapping[str, JsonValue] = Field(default_factory=dict)
 
@@ -63,6 +67,13 @@ class ToolCallPart(DomainModel):
     @field_serializer("arguments")
     def serialize_arguments(self, value: Mapping[str, JsonValue]) -> dict[str, JsonValue]:
         return thaw_json_mapping(value)
+
+    @field_validator("provider_call_id")
+    @classmethod
+    def reject_blank_provider_call_id(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("provider_call_id must not be blank")
+        return value
 
 
 class ToolResultPart(DomainModel):

@@ -20,43 +20,43 @@ Related Spec: `docs/specs/F-0003-event-store-sqlite-projections.md`
 
 所有前置条件已于 2026-08-12 满足。
 
-## Vertical slices
+## 可单独完成和测试的实现步骤
 
-### Slice 1: Store port and shared contract behavior
+### 第一步：存储内部接口与共用行为
 
 - Status：completed。
-- Domain/contracts：append 返回 RunState；bounded Event query；Run projection query；安全 Store errors。
-- Adapter/interface：升级 InMemory adapter，建立 SQLite/InMemory 参数化 contract suite。
+- 内部数据与规则：append 返回 RunState；有上限的 Event 查询；Run 查询视图；安全存储错误。
+- 接口与外部实现：升级内存适配器，建立 SQLite/内存版参数化共用接口测试。
 - Tests：合法 lifecycle、sequence/ID/transition 拒绝、query bounds、projection 等价。
 - Verification command：`uv run pytest tests/contract/test_event_store_contract.py tests/unit/test_testing_adapters.py`。
-- Rollback point：恢复原两方法 port/InMemory adapter；没有数据库文件或 migration。
+- 安全回退点：恢复原两方法内部接口和内存适配器；没有数据库文件或数据迁移。
 
-### Slice 2: SQLite migration and durable Event log
+### 第二步：SQLite 数据迁移与持久 Event 日志
 
 - Status：completed。
-- Domain/contracts：schema v1、migration ledger/version/hash、Event row serialization。
-- Adapter/interface：`SqliteEventStore.initialize/append/list_events`，WAL/foreign key/busy timeout。
+- 内部数据与规则：数据库格式 v1、迁移记录/版本/校验值、Event 数据行序列化。
+- 接口与外部实现：`SqliteEventStore.initialize/append/list_events`，WAL/外键/忙等待超时。
 - Tests：空库/重复初始化、重开持久性、完整 envelope round-trip、version/hash 失败。
 - Verification command：`uv run pytest tests/integration/test_sqlite_event_store.py -k "migration or reopen or event"`。
-- Rollback point：删除 adapter/migration 与临时测试数据库；main 尚无用户 schema。
+- 安全回退点：删除适配器/迁移与临时测试数据库；main 尚无用户数据格式。
 
-### Slice 3: Transactional Run and Activity projections
+### 第三步：同一事务中的 Run 与 Activity 查询视图
 
 - Status：completed。
-- Domain/contracts：RunState/ActivityState 与 normalized rows 的双向映射；Event max sequence 核对。
-- Adapter/interface：同 transaction reducer + Event insert + projection upsert；`get_run`。
+- 内部数据与规则：RunState/ActivityState 与规范化数据行的双向映射；Event 最大顺序号核对。
+- 接口与外部实现：同一事务中完成 reducer、Event 插入和查询视图更新；`get_run`。
 - Tests：projection/reducer 等价、并发同 sequence、insert 后 projection failure 回滚、corruption。
 - Verification command：`uv run pytest tests/contract/test_event_store_contract.py tests/integration/test_sqlite_event_store.py tests/security/test_sqlite_event_store.py`。
-- Rollback point：整体回退 schema v1；不保留只有 Event 没有 projection 的部分实现。
+- 安全回退点：整体回退数据库格式 v1；不保留只有 Event 没有查询视图的部分实现。
 
-### Slice 4: Documentation and Feature close
+### 第四步：文档与 Feature 关闭
 
 - Status：completed。
-- Domain/contracts：审查 port、SQL schema、migration 和错误边界无 SQLite/provider 泄漏。
-- Adapter/interface：同步 exports/package data；确认 F-0005 只需 port contract。
+- 内部数据与规则：审查内部接口、SQL 数据格式、迁移和错误边界无 SQLite/模型服务类型泄漏。
+- 接口与外部实现：同步导出与安装包数据；确认 F-0005 只需依赖内部接口规则。
 - Tests：完整 DoD、wheel 内容、docs links 和 Starlight build。
 - Verification command：见 Final verification。
-- Rollback point：F-0004/F-0005 开始前整体回退 F-0003 与空数据库。
+- 安全回退点：F-0004/F-0005 开始前整体回退 F-0003 与空数据库。
 
 关闭时同步 architecture、Spec/Plan/ADR/index、站点初学者持久化说明、开发者代码地图和当前状态。
 
@@ -87,8 +87,8 @@ uv build
 git diff --check
 ```
 
-Expected observable results：所有命令退出码为 0；SQLite migration SQL 包含在 wheel；contract suite
-同时覆盖 InMemory/SQLite；故障注入后 Event/projection 均无部分提交；站点明确 F-0003 只提供
+预期可观察结果：所有命令退出码为 0；SQLite 迁移 SQL 包含在安装包；共用接口测试
+同时覆盖内存版/SQLite 版；故障注入后 Event/查询视图均无部分提交；站点明确 F-0003 只提供
 durable inspectable facts，不提供自动恢复。
 
 结果（2026-08-12）：91 tests passed；Ruff、Ruff format、Pyright、uv lock、53 个 Markdown
