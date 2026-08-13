@@ -1,13 +1,13 @@
 ---
 title: 产品定位
-description: BearAgent 为谁解决什么问题、与其他 Agent 的差异以及如何证明差异化。
+description: BearAgent 为谁解决什么问题，以及怎样证明产品承诺。
 bearStatus: mixed
 sourceRefs:
   - product-positioning
   - roadmap
 ---
 
-BearAgent 是一个**可检查、可恢复、权限外置的 local-first Agent Runtime**，面向希望把长期文件与开发任务交给 AI、又不愿把权限和执行历史交给黑箱的个人开发者与高级用户。
+> **BearAgent 让个人 Agent 在本地可靠地完成长任务：每一步可查看，失败后不乱重试，危险操作必须获得授权。**
 
 :::caution[内容状态：已接受定位 + 分阶段目标]
 定位描述 BearAgent 要成为的产品。当前已完成工程基线、内部数据格式、Run reducer/预算、SQLite
@@ -15,35 +15,40 @@ EventStore、ModelProvider 和本地文档站，但尚不能执行完整 Agent �
 [当前实现状态](status.md)。
 :::
 
-## BearAgent 负责回答三个问题
+## 先服务谁
 
-1. **发生了什么？** 模型与 Tool Activity、预算、错误和 Artifact 都有结构化事实。
-2. **这件事允许发生吗？** 权限来自 Runtime Grant 与 Policy，不来自 Prompt、模型或 Tool 输出。
-3. **失败后从哪里继续？** 只从持久安全边界恢复；不能确认的副作用进入 `UNKNOWN`。
+BearAgent 首先服务愿意在本机或自己的服务器上运行 Agent 的个人开发者、研究者和高级用户。第一个场景是仓库与本地文档研究：读取限定目录中的资料，比较内容，并把结果写入 `outputs/**`。
 
-## 它不是什么
+P1 不做联网搜索，也不把 BearAgent 包装成全能个人助理。
 
-- 不是以模型、Tool、渠道和角色数量取胜的“万能 Agent”；
-- 不是 Manus、Claude Code 或其他产品的开源复刻；
-- 虽然首个任务域包含仓库文件，但不把长期定位限制为 Coding Agent；
-- P1-P3 不是通用 Agent framework、企业多租户平台或无代码 Workflow builder。
+## BearAgent 负责什么
 
-BearAgent 选择的是一个更窄的产品楔子：**最小但可信的个人 Agent 执行底座**。
+1. **过程可查**：模型和工具做过什么、用了多少预算、哪里失败、生成了什么文件。
+2. **恢复有依据**：已确认完成的操作不重复；无法判断结果时停下来，不用猜测继续。
+3. **权限在模型之外**：模型只能请求工具，真正的允许、询问或拒绝由运行时决定。
 
-## 差异化怎样被证明
+```mermaid
+flowchart TB
+    A["仓库与本地文档研究助手<br/>告诉用户能完成什么"] --> R["BearAgent Runtime<br/>负责执行、记录、恢复和权限"]
+    R --> I["模型、文件、SQLite、隔离环境和 MCP"]
+```
 
-| 阶段 | 用户价值 | 可复现证据 |
+## 与其他 Agent 有什么不同
+
+BearAgent 不声称其他项目没有持久化、审批或沙箱。Proma、Manus、Claude Code 更靠近完整产品；DeepTutor 服务教学场景；LangGraph、Pydantic AI 更适合搭建和编排 Agent；Inspect、E2B、MCP 分别解决评测、隔离执行或工具连接。
+
+BearAgent 选择负责一个更窄的边界：在个人可维护的本地系统里，用同一份执行记录说明任务做过什么、为什么继续或停下，以及每个动作为什么被允许。
+
+## 怎样证明
+
+| 阶段 | 用户看到的变化 | 主要证据 |
 |---|---|---|
-| P1 Inspectable Execution | 一个真实本地 Run 有界、受限、过程可查 | CLI 文件任务；路径拒绝；预算终止；Activity/Event/Artifact 视图 |
-| P2 Safe Recovery | 崩溃后从安全边界继续，不重复已确认副作用 | kill-point、Checkpoint 重建、幂等、receipt 与 `UNKNOWN` 演练 |
-| P3 Governed Self-hosting | 模型只能在授权与隔离边界内行动 | Approval 篡改阻断、runner secret/host 隔离、备份恢复与 HTTPS |
+| P1 可检查执行 | 固定本地任务可以完成，过程和失败可查看 | 任务集、路径拒绝、预算终止、完整执行记录 |
+| P2 失败恢复 | 中断后只从可确认的位置继续 | 多个中断点、状态重建、不重复写入、不确定操作停住 |
+| P3 权限与隔离 | 危险动作必须获准，代码隔离运行 | 参数篡改被拒绝、密钥隔离、备份恢复 |
+| P4 日常使用 | 依次加入 Skill、MCP、Web 和 Memory | 扩展仍经过原有权限和记录路径 |
+| P5 持续评测 | 跨版本比较质量、成本和安全回归 | 固定数据集、执行路径断言和发布报告 |
 
-在对应证据完成前，公开文档只能说“设计为”或“规划中”，不能把目标写成当前能力。
+评测从 P1 就开始。P5 负责把前面阶段积累的任务、恢复和安全证据变成持续比较的平台。
 
-## 为什么还值得自己写 Agent
-
-基础模型循环已经很容易搭建，差异却越来越集中在循环之外：任务域、上下文与数据所有权、工具执行环境、权限、崩溃恢复、产品入口和评测标准。不同 Agent 选择了不同责任边界，才会产生大量看起来相似、实质不同的项目。
-
-BearAgent 不把“自己实现循环”当作价值；它选择对**执行事实、运行时权限和失败恢复**负责，并用故障与安全测试持续证明这条边界。
-
-工程层面的完整定位、参考项目比较和对外措辞见仓库中的[产品定位](https://github.com/CherryYang05/BearAgent/blob/main/docs/project/product-positioning.md)，详细交付顺序见[阶段与里程碑](milestones.md)。
+工程层面的完整说明见仓库中的[产品定位](https://github.com/CherryYang05/BearAgent/blob/main/docs/project/product-positioning.md)，交付顺序见[阶段与里程碑](milestones.md)。

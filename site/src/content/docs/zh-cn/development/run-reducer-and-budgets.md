@@ -9,7 +9,8 @@ sourceRefs:
 ---
 
 面向初学者的[Run 状态、Reducer 与预算](../learn/runtime-state-and-budgets.md)解释了为什么要把
-状态事实和调度决策分开。本页说明 F-0002 的实现入口与修改约束。
+状态事实和调度决策分开；[一次 Run 的事件演练](../learn/run-event-reducer-walkthrough.md)逐步展示
+每个 Event 产生的状态。本页说明 F-0002 的实现入口与修改约束。
 
 ## 代码地图
 

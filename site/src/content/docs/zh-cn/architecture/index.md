@@ -45,12 +45,12 @@ adapters   --------------------^
 外层实现依赖内层规则。运行时核心不导入模型服务 SDK、Starlight、数据库适配器、FastAPI
 或 UI。外部对象必须在适配器边界翻译为内部类型。
 
-## 四条架构主线
+## 架构先解决四件事
 
-1. **Inspectable execution**：Run、Activity、Event、预算和 Artifact 让执行可解释。
-2. **Honest recovery**：Checkpoint、幂等、receipt 和 `UNKNOWN` 让恢复语义真实。
-3. **Authority outside the model**：Grant、Policy、Approval、Workspace 和 Sandbox 约束副作用。
-4. **Local ownership**：单用户、单进程、SQLite、CLI-first，复杂度按证据增加。
+1. **过程可查**：每次模型和工具操作、预算、错误和输出文件都能关联起来。
+2. **恢复有依据**：已确认的操作不重复，无法确认的操作明确停住。
+3. **权限在模型之外**：模型只能提出请求，运行时负责允许、询问或拒绝。
+4. **数据由用户掌握**：第一版使用单用户、单进程、SQLite 和命令行，复杂度按真实需求增加。
 
 Trace/replay/eval 是这些主线的验证面；Context、Skill、MCP 与 Memory 后置到 P4。下一步可以阅读
 [产品定位](../project/positioning.md)、[F-0001：为什么先统一内部数据格式](domain-contracts.md)或

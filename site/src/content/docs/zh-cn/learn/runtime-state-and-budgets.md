@@ -15,8 +15,22 @@ F-0002 把这两个问题拆成无 I/O 的确定性规则：Event 描述已经�
 
 :::note[内容状态：已实现]
 本页描述的 P1 Run/Activity reducer 与预算规则已有代码、schema snapshot 和测试证据。
-SQLite 持久化、Agent Loop 和崩溃后自动恢复仍分别属于后续 Feature。
+SQLite 持久化、真实 Provider、Agent Loop 和崩溃后自动恢复仍分别属于后续 Feature。
 :::
+
+## Reducer 为什么叫这个名字
+
+`reduce` 在函数式编程里表示“把一串值逐个合并成一个结果”，也常叫 `fold`。BearAgent 反复应用
+同一条规则：
+
+```text
+state(n) = reduce_event(state(n-1), event(n))
+```
+
+所以 `reduce_events([event1, event2, ...])` 最终把一串 Event **折叠**为一个 `RunState`。这里的
+“reduce”不是删除或压缩 Event；Event 仍是事实，Reducer 只计算它们在当前 sequence 上代表的状态。
+它不读写数据库、不调用模型或 Tool，也不原地修改旧 state，因此相同 Event sequence 会得到值相等
+的结果。
 
 ## 状态怎样产生
 
@@ -57,5 +71,6 @@ usage 超过 limit；Runtime 必须记录这个事实，并阻止后续 Activity
 P1 没有 SQLite startup scan、Checkpoint、attempt、cancel、receipt 或 `UNKNOWN`。这些语义必须在
 P2 通过持久边界和故障注入另行证明。
 
-继续阅读：[F-0002 开发者实现导读](../development/run-reducer-and-budgets.md)和
+下一步用[一次 Run 的完整事件演练](run-event-reducer-walkthrough.md)观察每个 Event 怎样改变状态，
+再阅读 [F-0002 开发者实现导读](../development/run-reducer-and-budgets.md)和
 [当前实现状态](../project/status.md)。

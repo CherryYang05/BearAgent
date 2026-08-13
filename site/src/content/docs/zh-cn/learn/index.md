@@ -21,7 +21,7 @@ flowchart LR
     D --> E[Event 与状态]
     E --> F[持久化与恢复]
     F --> G[权限与沙箱]
-    G --> H[Trace 与 Eval]
+    G --> H[持续追踪与评测]
 ```
 
 ## 第一层：Agent 的最小组成
@@ -48,7 +48,8 @@ F-0002 已实现 P1 的 Run/Activity 状态、纯 Reducer 和五维预算门。�
 
 ## 第四层：安全与质量
 
-P3 学习 Grant、Policy、Approval 和 Sandbox；之后再进入 Trace、Replay 和 Eval。它们回答的是 Agent
+P3 学习权限、用户审批和隔离执行。评测则从 P1 就开始：先记录固定任务与执行路径，P2 增加中断
+恢复演练，P3 增加越权与隔离测试，P5 再把这些证据做成持续比较系统。它们共同回答 Agent
 “能否以允许的方式持续完成任务”，而不只是“偶尔能不能给出好答案”。
 
 ## 每个 Feature 如何进入学习路径

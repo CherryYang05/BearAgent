@@ -1,6 +1,6 @@
 # BearAgent 文档
 
-BearAgent 的目标是构建一个可检查、可恢复、权限外置的 local-first Agent Runtime：小而完整，并可以从本地平滑迁移到自托管服务器。
+BearAgent 的目标是让个人 Agent 在本地可靠地完成长任务：每一步可查看，失败后不乱重试，危险操作必须获得授权。首个场景是仓库与本地文档研究，P1 只在限定工作区读取资料并向 `outputs/**` 写入结果。
 
 公开站点位于 [`site/`](../site/README.md)，同时维护初学者学习路径和开发者文档；P1 期间只在本地预览和构建。本目录继续作为工程设计与项目治理的 Source of Truth，站点内容必须从这里、代码和测试派生。
 
@@ -8,7 +8,7 @@ BearAgent 的目标是构建一个可检查、可恢复、权限外置的 local-
 
 1. [产品定位](project/product-positioning.md)：为谁解决什么问题、与其他 Agent 的差异以及怎样证明差异化。
 2. [总体架构](architecture/overview.md)：项目边界、核心对象、状态机、事件、工具、权限、持久化和安全设计。
-3. [路线图](project/roadmap.md)：P1-P3 每阶段做什么、明确不做什么、如何演示和何时算完成。
+3. [路线图](project/roadmap.md)：每个阶段给用户什么、明确不做什么、怎样证明和何时算完成。
 4. [AI 辅助开发 SOP](development/ai-development-sop.md)：如何让 ChatGPT/Codex 参与需求、设计、实现、测试和文档同步。
 5. [Feature Specs](specs/README.md)：每个阶段有哪些功能，以及各功能的需求和状态。
 6. [Implementation Plans](plans/README.md)：当前 Feature 做到哪个可单独验证的实现步骤。

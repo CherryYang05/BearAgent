@@ -1,126 +1,122 @@
 ---
 title: BearAgent Product Positioning
 status: accepted
-version: 0.1
+version: 0.3
 last_verified: 2026-08-11
 ---
 
 # BearAgent 产品定位
 
-## 1. 定位结论
+## 1. 一句话说明
 
-一句话：
+> **BearAgent 是一个本地优先的个人 Agent 运行时：它先让仓库与文档类长任务真正跑通，再确保每一步可查看、失败后不乱重试、危险操作必须获得授权。**
 
-> BearAgent 是一个可检查、可恢复、权限外置的 local-first Agent Runtime，面向希望把长期文件与开发任务交给 AI、又不愿把权限和执行历史交给黑箱的个人开发者与高级用户。
+这里的“本地优先”表示任务、记录和产物默认由用户自己的电脑或服务器保存；“运行时”表示 BearAgent 负责执行和约束 Agent，而不是只提供一组让开发者自行拼装的函数。
 
-英文短句：
+BearAgent 遵守一个简单原则：
 
-> An inspectable, crash-resumable and authority-first local Agent Runtime.
+> 知道操作结果时才继续；无法确认时就停下来说明情况，不把猜测当成成功。
 
-BearAgent 不用“支持多少模型、工具和角色”定义自己，而要持续回答三个问题：
+我们把这称为“失败语义诚实”。它不是宣传口号，而是 P2 必须用进程中断和重复执行测试证明的行为。
 
-1. **发生了什么？** 每个模型与工具 Activity 都有结构化事实、结果、成本和 Artifact。
-2. **这件事允许发生吗？** 权限来自运行时 Grant 与 Policy，不来自 Prompt、模型或 Tool 输出。
-3. **失败后从哪里继续？** Runtime 只从已持久化的安全边界恢复；不能确认的副作用进入 `UNKNOWN`，不伪装成 exactly-once。
+## 2. BearAgent 解决什么问题
 
-这三个问题分别由 P1 的可检查执行、P2 的安全恢复、P3 的权限与隔离逐步证明。
+一次模型调用很容易演示。任务持续几分钟、调用多个工具并修改文件后，系统必须回答：
 
-## 2. 目标用户与首个任务
+1. **做过什么？** 用户能看到模型调用、工具操作、错误、消耗和最终产物。
+2. **失败后怎么办？** 已确认完成的操作不重复；能安全重试的操作才重试；无法判断的操作停下来等待处理。
+3. **允许做什么？** 模型只能提出请求，真正的权限由运行时检查。
 
-### 2.1 首要用户
+P1、P2、P3 分别证明这三件事。没有代码、测试和可复现演练支持时，只能说“计划这样做”，不能说已经可靠、可恢复或安全。
 
-- 希望在自己的电脑或服务器上运行 Agent 的个人开发者、研究者和高级用户；
-- 愿意用 CLI 和可读配置换取本地控制、可调试性与可扩展性；
-- 需要让 Agent 处理仓库、文档和技术研究任务，但不能接受无边界文件访问或不可解释的后台动作；
-- 希望通过代码、事件、测试和故障演练真正理解 Agent Runtime，而不是只组装一个聊天界面。
+## 3. 为谁做，先做什么
 
-### 2.2 首个 Job to be Done
+首要用户是愿意在本机或自己的服务器上运行 Agent 的个人开发者、研究者和高级用户。他们需要处理仓库、文档和技术资料，也在意数据所有权、调试能力和文件访问边界。
 
-> 在一个明确限定的 workspace 中，让 Agent 读取和检索资料、生成受控 Artifact；任务很长或进程中断时仍能解释已经发生的动作，并在安全边界继续；危险动作只有得到精确授权后才能执行。
+第一个可用场景是“仓库与本地文档研究助手”：
 
-P1-P3 不以非技术普通消费者、企业多租户管理员或无代码工作流搭建者为首要用户。
+> 在一个明确限定的工作区中，阅读仓库和本地文档，查找相关内容，比较多个来源，并把报告或说明写入 `outputs/**`。
 
-## 3. BearAgent 属于什么，也不属于什么
+P1 不包含联网搜索。相同的本地任务集会继续用于 P2 的中断恢复测试和 P3 的授权、隔离测试。这样，Runtime 的建设始终对应一个用户能理解的结果，而不是一组互不相连的底层模块。
 
-| 类别 | 主要竞争点 | BearAgent 的选择 |
+## 4. 产品怎样分层
+
+```mermaid
+flowchart TB
+    A["仓库与本地文档研究助手<br/>告诉用户可以完成什么"] --> R["BearAgent Runtime<br/>负责执行、记录、恢复和权限"]
+    R --> I["外部实现<br/>模型、文件、SQLite、隔离环境、MCP"]
+```
+
+几个容易混淆的概念在 BearAgent 中有明确边界：
+
+| 概念 | 简单解释 |
+|---|---|
+| Agent | 一份包含模型、可用工具、说明和限制的配置；运行时可以根据当前情况选择下一步 |
+| Workflow | 由代码预先确定顺序的多阶段流程 |
+| Skill | 可复用的说明和知识，不会自动获得权限 |
+| Tool | 真正执行读取、写入或其他动作的接口 |
+| Runtime | 运行上述内容，并负责限制、记录、恢复和授权的系统 |
+
+BearAgent 第一版只有一个 Agent，不做多个角色互相聊天。需要稳定步骤时使用 Workflow，需要复用说明时使用 Skill，需要改变外部世界时必须通过 Tool。
+
+## 5. 为什么不直接使用另一个 Agent
+
+不同 Agent 的差异已经不只在模型循环，而在它们愿意为哪一部分结果负责：
+
+- [Proma](https://github.com/proma-ai/Proma)、Claude Code 和 [Manus](https://manus.im/blog/manus-sandbox) 更靠近完整产品，重视工作区、工具和交互体验；
+- [DeepTutor](https://github.com/HKUDS/DeepTutor) 针对教学任务组织流程、资料和评测；
+- [CodeWhale](https://github.com/Hmbown/CodeWhale) 与 [Claw Code](https://github.com/ultraworkers/claw-code) 更关注编码 Agent 的控制面或行为兼容；
+- [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview)、[Pydantic AI](https://pydantic.dev/docs/ai/overview/) 等框架帮助开发者更快搭建和编排 Agent；
+- [Inspect](https://inspect.aisi.org.uk/)、[E2B](https://www.e2b.dev/docs) 和 [MCP](https://modelcontextprotocol.io/) 分别解决评测、隔离执行或工具连接的一部分问题。
+
+BearAgent 不需要重复它们已经做好的产品表面，也不声称“持久化、审批或沙箱只有 BearAgent 才有”。它选择负责一个更窄的边界：
+
+> **在个人可维护的本地系统里，用同一份执行记录说明任务做过什么、为什么继续或停下，以及每个动作为什么被允许。**
+
+因此，BearAgent 与 LangGraph 的差异不能只写成“支持持久执行”。LangGraph 已经提供持久状态、恢复和人工介入。BearAgent 要用更具体的证据证明外部写入的结果判断、模型外授权和本地单机维护，而不是比较功能数量。
+
+参考项目只用于发现问题和比较设计，不能证明 BearAgent 已经实现对应能力。完整来源与使用边界见[资料来源](../../site/src/content/docs/zh-cn/reference/sources.md)。
+
+## 6. 每个阶段给用户什么
+
+| 阶段 | 用户能感受到的变化 | 怎样证明 |
 |---|---|---|
-| Agent 应用 | UI、渠道、开箱即用功能和场景覆盖 | P1-P3 不争应用功能数量，先做可信执行底座 |
-| Coding Agent harness | 代码检索、补丁、终端、模型路由和开发体验 | 首个任务域包含仓库，但不把 BearAgent 限定成编码产品 |
-| 垂直 Agent | 教学、研究、客服等领域效果和专有数据 | 不在早期绑定单一垂直业务；用稳定 Runtime 承载后续 Skill/Workflow |
-| Agent framework / SDK | 让开发者快速组装 Agent | BearAgent 不是通用编排库优先，而是一个可直接运行、持久化和治理执行的 Runtime |
-| BearAgent | 可检查执行、诚实恢复、权限外置和本地所有权 | 用可复现故障与安全证据证明，而不是用功能清单证明 |
+| P1 可检查执行 | 助手能完成固定的本地仓库与文档任务，过程和失败可查看 | 固定任务集、路径越界拒绝、预算终止、完整执行记录 |
+| P2 失败恢复 | 进程中断后只从可确认的位置继续 | 多个中断点、状态重建、不重复已完成写入、不确定操作停住 |
+| P3 权限与隔离 | 危险动作必须获准，代码只能在隔离环境运行 | 参数篡改被拒绝、隔离环境读不到密钥和宿主目录、备份恢复成功 |
+| P4 日常使用 | 先加载版本化 Skill，再接受控 MCP，随后改善 Web 和 Memory 体验 | 所有扩展仍走同一权限和记录路径，Memory 可查看来源并删除 |
+| P5 持续评测 | 模型、提示词和工具变化后，可以看到质量、成本和安全回归 | 固定数据集、执行路径断言、跨版本报告 |
 
-因此，BearAgent 的产品楔子不是“另一个万能 Agent”，而是：
+评测不是到 P5 才开始。P1 记录任务基线，P2 增加恢复演练，P3 增加安全演练；P5 负责把已有证据变成可持续比较的平台。
 
-> **最小但可信的个人 Agent 执行底座。**
+## 7. 有意保持的边界
 
-## 4. 为什么很多人仍在写自己的 Agent
+P1 至 P3 固定为：
 
-模型 SDK 已经让基础 `model -> tool -> model` 循环变得容易，但真正的产品差异已经转移到循环之外：
+- 单用户、单 Agent、单进程、SQLite 和命令行优先；
+- 一个真实模型、有限的文件工具和 `outputs/**` 写入边界；
+- 所有外部操作经过统一执行与权限检查；
+- 主 Runtime 进程不直接执行模型生成的 shell 命令；
+- 不承诺无法证明的 exactly-once，也不宣传“绝对安全”。
 
-- **任务域**：教学、编码、研究、运营各自需要不同 Tool、Context 和完成标准；
-- **执行环境**：本机、容器、远程 VM、浏览器或企业系统决定可做什么以及风险多大；
-- **上下文与数据所有权**：文件、会话、Memory、凭据和合规要求无法由同一种托管方式满足；
-- **权限与恢复语义**：审批、幂等、receipt、未知提交结果和崩溃恢复很难由 Prompt 代替；
-- **交互与分发**：CLI、桌面、Web、IM、IDE 和 API 面向不同工作习惯；
-- **工程与社区动机**：Agent 是理解模型、工具、系统和产品交界面的高密度项目。
+Web UI、Memory、任意联网、浏览器控制、Multi-Agent、多用户、插件市场和分布式 worker 都放在稳定内核之后。P4 先验证 Skill，再验证 MCP；两者不是同一种扩展，也不能互相替代。
 
-所以“自己写 Agent”本身不是差异化。真正的差异在于选定一个值得负责的系统边界，并拿出可验证证据。BearAgent 选择对**执行事实、运行时权限和失败恢复**负责。
+## 8. 对外怎样表达
 
-## 5. 从参考项目吸收什么
+推荐：
 
-外部项目用于发现需求与比较设计，不能证明 BearAgent 已经实现对应能力。
+- “让个人 Agent 在本地可靠地完成长任务”；
+- “每一步可查看，失败后不乱重试，危险操作必须获得授权”；
+- “首个场景是仓库与本地文档研究助手”；
+- “当前能力以状态页、代码和测试为准”。
 
-| 参考 | 它重点优化什么 | BearAgent 吸收 | BearAgent 不复制 |
-|---|---|---|---|
-| [Proma](https://github.com/proma-ai/Proma) | local-first 桌面工作区、Provider/Skill/MCP 集成与交互体验 | workspace 所有权、Adapter 思维、后台任务和权限交互需要产品化 | Electron 全栈、渠道广度和“集成数量”优先级 |
-| [DeepTutor](https://github.com/HKUDS/DeepTutor) | 教育场景中的统一 Agent Loop、多阶段 Capability、Memory 与评测 | Tool 与多阶段 Workflow 分层、来源链、领域评测思维 | 教学产品表面、多 RAG 引擎和大量业务 Capability |
-| [Manus](https://manus.im/blog/manus-sandbox) | 每任务隔离计算机与文件系统外部上下文 | 隔离执行、文件作为可恢复上下文、失败证据保留 | P1 就引入完整云 VM、浏览器和大而全工具环境 |
-| [CodeWhale](https://github.com/Hmbown/CodeWhale) | Coding Agent 的多模型控制面、授权层级与并行工作流 | 授权优先级必须明确、并行/分支工作区需要可审计 | 在持久语义尚未统一时先扩张模型 fleet 和并行宽度 |
-| Claude Code 2.1.88 source-map snapshots（[Janlaywss](https://github.com/Janlaywss/cloud-code) / [Rito-w](https://github.com/Rito-w/claude-code)） | 成熟 Coding Agent 的查询循环、权限、沙箱和 JSONL 会话工程 | Adapter、权限 UX、会话检查和兼容性测试的工程细节 | 把 SDK 类型、CLI 产品形态或 transcript 启发式恢复变成 Runtime 内核 |
-| [Claw Code](https://github.com/ultraworkers/claw-code) | 以 Rust 重实现 Claude Code 行为的兼容性与 parity 工程 | 机器可读输出、行为对照和小步 parity 验证 | 以复刻另一个产品为 BearAgent 的产品目标 |
+避免：
 
-两个公开的 `cloud-code` / `claude-code` 仓库围绕同一 2.1.88 source-map 提取快照，不应当作两个独立 Agent 样本；Claw Code 则明确是 Rust 重实现项目。它们适合代码阅读和行为对照，不是 BearAgent 的官方上游或事实来源。
-
-## 6. 差异化必须变成证据
-
-| 阶段 | 用户可感知价值 | 必须公开的旗舰证据 |
-|---|---|---|
-| P1：Inspectable Execution | 本地文件任务有界完成，过程与失败可检查 | 一次真实 CLI Run；非法路径与预算耗尽被明确拒绝；完整 Activity/Event/Artifact 视图 |
-| P2：Safe Recovery | 进程退出不等于任务和副作用语义丢失 | 多个 kill point 的恢复演练；删除 Checkpoint 后重建；`UNKNOWN` 人工处置路径 |
-| P3：Governed Self-hosting | Agent 只能在授予的权限和隔离环境中行动 | 审批参数篡改被拒绝；runner 读不到宿主/secrets；空目录备份恢复演练 |
-
-没有这些证据时，只能说“设计为”或“规划中”，不能说 BearAgent 已经可靠、可恢复或安全。
-
-## 7. 产品边界与取舍
-
-P1-P3 坚持：
-
-- 单用户、单 Agent、单进程、SQLite、CLI-first；
-- 一个真实 Provider，串行 Tool 调用，有限的 workspace 工具；
-- Event 是事实，projection 与 Checkpoint 可重建；
-- 所有副作用经统一 ToolExecutor 与 Policy；
-- host runtime 永不执行模型生成 shell；
-- 不以 exactly-once、全自动恢复或“完全安全”作为宣传语。
-
-明确后置到稳定内核之后：Web UI、MCP、Skills、Memory、任意 HTTP、浏览器/电脑控制、Multi-Agent、多用户、插件市场和分布式 worker。
-
-## 8. 对外表达规范
-
-推荐表达：
-
-- “可检查、可恢复、权限外置的本地优先 Agent Runtime”；
-- “P1-P3 正在逐步实现，当前能力见状态页”；
-- “从安全边界恢复，不承诺任意外部副作用 exactly-once”；
-- “小而完整：先证明执行、恢复和权限，再扩展体验与生态”。
-
-避免表达：
-
-- “开源 Manus / Claude Code 替代品”；
+- “开源 Manus”或“Claude Code 替代品”；
 - “全能个人助理”或“支持所有模型和工具”；
-- “绝对安全”“永不丢任务”“exactly-once”；
-- 把 Roadmap、已接受 ADR 或参考项目能力写成当前实现。
+- “绝对安全”“永不丢任务”或“保证 exactly-once”；
+- 把路线图、设计文档或参考项目的能力写成当前实现。
 
-## 9. 与路线图的关系
+## 9. 与其他文档的关系
 
-本文件回答“为谁解决什么问题、为什么值得存在”；[总体架构](../architecture/overview.md)回答“哪些技术边界长期成立”；[路线图](roadmap.md)回答“按什么顺序交付并如何验收”。任何新增功能都应先说明它强化了哪条定位证据，还是仅增加了能力宽度。
+本文件回答“为谁解决什么问题”；[总体架构](../architecture/overview.md)回答“哪些技术边界长期成立”；[路线图](roadmap.md)回答“按什么顺序交付并怎样验收”。新增功能应先说明它强化了哪一项用户承诺，还是只增加了功能数量。
