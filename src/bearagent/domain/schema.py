@@ -45,6 +45,13 @@ from bearagent.domain.runs import (
     BudgetUsage,
     RunState,
 )
+from bearagent.domain.tools import (
+    PolicyDecision,
+    PreparedToolRequest,
+    ToolRequest,
+    ToolResult,
+    ToolSpec,
+)
 
 PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     ActivityId,
@@ -70,6 +77,8 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     ModelToolCall,
     ModelToolDefinition,
     ModelUsage,
+    PolicyDecision,
+    PreparedToolRequest,
     RunId,
     RunCreatedPayload,
     RunFailedPayload,
@@ -82,6 +91,9 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     ToolCallFailedPayload,
     ToolCallRequestedPayload,
     ToolCallStartedPayload,
+    ToolRequest,
+    ToolResult,
+    ToolSpec,
 )
 
 

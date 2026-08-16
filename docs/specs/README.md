@@ -24,6 +24,7 @@ draft -> accepted -> implemented -> superseded
 - [F-0002：从 Event 计算 Run/Activity 状态和预算](F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
 - [F-0003：使用 SQLite 原子保存 Event 和 projection](F-0003-event-store-sqlite-projections.md) — implemented
 - [F-0004：建立模型内部接口和首个生产 adapter](F-0004-model-provider-first-adapter.md) — implemented
+- [F-0006：所有 Tool 请求经过同一个执行和权限入口](F-0006-tool-registry-executor-policy.md) — implemented
 - [F-0015：建立本地中文文档站](F-0015-local-starlight-docs-site.md) — implemented
 
 其余计划 Feature 见[路线图 Backlog](../project/roadmap.md#11-feature-backlog)。未创建 Spec 的名称只是

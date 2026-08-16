@@ -1,8 +1,8 @@
 ---
 title: BearAgent Roadmap
 status: accepted
-version: 0.6
-last_verified: 2026-08-13
+version: 0.7
+last_verified: 2026-08-14
 ---
 
 # BearAgent 项目路线图
@@ -124,6 +124,9 @@ adapter。它还没有被 ContextBuilder、Agent Loop 或 CLI 调用，因此不
 
 P1 的 Policy 是固定允许/拒绝规则。用户 Approval 属于 P3。
 
+F-0006 已完成有界 Tool 数据、精确 Registry、默认拒绝 Policy 和统一 ToolExecutor。当前还没有实际
+文件 Tool，也没有 Agent Loop 把 Tool 请求或结果写成 Event。
+
 #### CLI 和固定任务
 
 - `bearagent run` 启动 Run，并输出模型文本、Tool 状态和最终 Artifact；
@@ -145,7 +148,7 @@ P1 的 Policy 是固定允许/拒绝规则。用户 Approval 属于 P3。
 1. F-0002：Run/Activity 状态、Reducer 和预算——已实现；
 2. F-0003：Event store、SQLite、projection 和 migration——已实现；
 3. F-0004：模型接口和首个真实 adapter——已实现；
-4. F-0006：Tool 接口、Registry、executor 和固定 Policy；
+4. F-0006：Tool 接口、Registry、executor 和固定 Policy——已实现；
 5. F-0007：workspace 边界和只读工具；
 6. F-0008：`outputs/**` 原子写和 Artifact；
 7. F-0016：ContextBuilder、有界 Loop、版本化 Agent 配置和任务集；
@@ -333,7 +336,7 @@ Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；
 1. [F-0001：内部 ID、Message 和 Error](../specs/F-0001-domain-ids-messages-errors.md) — implemented
 2. [F-0002：Run/Activity 状态和预算](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
 3. [F-0003：Event store、SQLite、projection 和 migration](../specs/F-0003-event-store-sqlite-projections.md) — implemented
-4. F-0006：Tool 接口、Registry、executor 和固定 Policy
+4. [F-0006：Tool 接口、Registry、executor 和固定 Policy](../specs/F-0006-tool-registry-executor-policy.md) — implemented
 5. F-0007：workspace 边界和只读工具
 6. F-0008：原子写和 Artifact
 7. [F-0004：模型接口和首个真实 adapter](../specs/F-0004-model-provider-first-adapter.md) — implemented
