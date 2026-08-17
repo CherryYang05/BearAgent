@@ -1,4 +1,5 @@
 import asyncio
+import os
 import threading
 from pathlib import Path
 from typing import IO, Any, cast
@@ -87,6 +88,16 @@ def test_boundary_rejects_file_replaced_between_check_and_open(
     boundary = WorkspaceBoundary(tmp_path)
     original_open = Path.open
     replaced = False
+
+    # Linux may immediately reuse the removed file's inode. Force that outcome so
+    # this regression test also exercises the metadata comparison on Windows.
+    def reuse_file_identity(
+        _expected: os.stat_result,
+        _observed: os.stat_result,
+    ) -> bool:
+        return True
+
+    monkeypatch.setattr(os.path, "samestat", reuse_file_identity)
 
     def replacing_open(path: Path, *args: Any, **kwargs: Any) -> IO[Any]:
         nonlocal replaced

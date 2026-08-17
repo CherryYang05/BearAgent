@@ -122,7 +122,7 @@ uv lock --check
 uv run ruff check src tests scripts/check_docs.py
 uv run ruff format --check src tests scripts/check_docs.py
 uv run pyright src tests scripts/check_docs.py
-uv run pytest --basetemp=.pytest_cache/f0007-final
+uv run pytest
 uv run python scripts/check_docs.py
 npm.cmd run build --prefix=site
 uv build
@@ -133,8 +133,13 @@ git diff --check
 通过前，不得把 Plan 标记为 `completed` 或把 Spec 标记为 `implemented`；ADR 的 `accepted` 只表示
 决定已经生效，不表示实现完成。
 
-2026-08-16 实际结果：`uv lock --check`、Ruff、Pyright、pytest 203 项通过且 1 项跳过、86 个
+2026-08-16 实际结果：`uv lock --check`、Ruff、Pyright、pytest 203 项通过且 1 项跳过、67 个
 Markdown 文件链接、Starlight 28 页构建、sdist/wheel 构建、wheel 隔离导入和 `git diff --check`
 均通过。Windows 当前用户
 没有创建 symlink 的权限，因此实际 symlink 用例跳过；junction 分类、最终对象替换和所有路径字符串
 拒绝在 Windows 通过，symlink 用例会在支持该能力的 Ubuntu CI 中运行。
+
+2026-08-17 CI 跟进：Ubuntu 暴露了文件删除重建后可能立即复用 inode 的差异。文件边界因此在
+`samestat` 之外比较稳定元数据，回归测试会确定性模拟该复用。pytest 的缓存和临时目录也固定在
+仓库内已忽略的 `.pytest-state` 与 `.pytest-tmp`，避免 Windows 系统 Temp ACL 让 `uv run pytest`
+产生批量 setup errors。文档检查同时忽略 pytest 生成目录，避免把测试夹具误计为工程文档。

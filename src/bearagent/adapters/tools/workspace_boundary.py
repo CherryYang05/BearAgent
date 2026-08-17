@@ -157,11 +157,12 @@ class WorkspaceBoundary:
             opened_stat = os.fstat(handle.fileno())
             current_stat = self._safe_lstat(resolved.path)
             # No content is read until both checks agree. This closes the common
-            # check/open race where the final path is replaced with a link.
+            # check/open race where the final path is replaced. File systems may
+            # immediately reuse an inode, so dev/inode equality alone is not enough.
             if (
                 _is_link_like(resolved.path, current_stat)
-                or not os.path.samestat(resolved.stat_result, opened_stat)
-                or not os.path.samestat(resolved.stat_result, current_stat)
+                or not _same_open_file_snapshot(resolved.stat_result, opened_stat)
+                or not _same_path_file_snapshot(resolved.stat_result, current_stat)
             ):
                 raise WorkspaceBoundaryError(
                     ErrorCode.WORKSPACE_PATH_DENIED,
@@ -312,6 +313,34 @@ def _portable_child_path(parent: str, name: str) -> str | None:
         return normalize_workspace_path(raw_path)
     except ValueError:
         return None
+
+
+def _same_open_file_snapshot(
+    expected: os.stat_result,
+    observed: os.stat_result,
+) -> bool:
+    """Compare identity and metadata shared reliably by path stat and fstat."""
+    return os.path.samestat(expected, observed) and (
+        expected.st_mode,
+        expected.st_size,
+        expected.st_mtime_ns,
+        expected.st_nlink,
+    ) == (
+        observed.st_mode,
+        observed.st_size,
+        observed.st_mtime_ns,
+        observed.st_nlink,
+    )
+
+
+def _same_path_file_snapshot(
+    expected: os.stat_result,
+    observed: os.stat_result,
+) -> bool:
+    """Compare two path snapshots, including change time when both use stat."""
+    return _same_open_file_snapshot(expected, observed) and (
+        expected.st_ctime_ns == observed.st_ctime_ns
+    )
 
 
 def _is_link_like(path: Path, path_stat: os.stat_result) -> bool:
