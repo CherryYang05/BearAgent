@@ -2,9 +2,10 @@
 
 import os
 import stat
+import tempfile
 import time
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO, Literal
@@ -48,6 +49,18 @@ class _ResolvedWorkspacePath:
     relative_path: str
     path: Path
     stat_result: os.stat_result
+
+
+@dataclass(frozen=True, slots=True)
+class StagedWorkspaceOutput:
+    """One complete temporary output that has not reached its target name."""
+
+    relative_path: str
+    parent_relative_path: str
+    target_path: Path
+    temporary_path: Path
+    parent_stat: os.stat_result
+    temporary_stat: os.stat_result
 
 
 class WorkspaceBoundaryError(Exception):
@@ -97,6 +110,15 @@ def normalize_workspace_path(raw_path: str) -> str:
     return normalized
 
 
+def normalize_output_path(raw_path: str) -> str:
+    """Return one normalized file path strictly below outputs/."""
+    normalized = normalize_workspace_path(raw_path)
+    segments = normalized.split("/")
+    if len(segments) < 2 or segments[0] != "outputs":
+        raise ValueError("output path must name a file below outputs")
+    return normalized
+
+
 class WorkspaceBoundary:
     """Resolve and open ordinary files without following workspace links."""
 
@@ -136,6 +158,114 @@ class WorkspaceBoundary:
     def file_size(self, relative_path: str) -> int:
         """Return the current verified regular-file size."""
         return self.resolve_file(relative_path).stat_result.st_size
+
+    def stage_output(
+        self,
+        relative_path: str,
+        data: bytes,
+        *,
+        deadline: float,
+    ) -> StagedWorkspaceOutput:
+        """Write and fsync a same-directory temporary file without changing the target."""
+        normalized = normalize_output_path(relative_path)
+        segments = normalized.split("/")
+        parent_relative = "/".join(segments[:-1])
+        parent = self._ensure_output_directory(parent_relative, deadline=deadline)
+        target = parent.path / segments[-1]
+        self._validate_output_target(target)
+        _check_deadline(deadline)
+
+        temporary_path: Path | None = None
+        descriptor: int | None = None
+        try:
+            descriptor, raw_temporary_path = tempfile.mkstemp(
+                prefix=".bearagent-",
+                suffix=".tmp",
+                dir=parent.path,
+            )
+            temporary_path = Path(raw_temporary_path)
+            with os.fdopen(descriptor, "wb") as handle:
+                descriptor = None
+                for offset in range(0, len(data), 64 * 1_024):
+                    _check_deadline(deadline)
+                    handle.write(data[offset : offset + 64 * 1_024])
+                handle.flush()
+                os.fsync(handle.fileno())
+
+            temporary_stat = self._safe_lstat(temporary_path)
+            current_parent_stat = self._safe_lstat(parent.path)
+            if (
+                _is_link_like(temporary_path, temporary_stat)
+                or not stat.S_ISREG(temporary_stat.st_mode)
+                or _is_link_like(parent.path, current_parent_stat)
+                or not os.path.samestat(parent.stat_result, current_parent_stat)
+            ):
+                raise WorkspaceBoundaryError(
+                    ErrorCode.WORKSPACE_PATH_DENIED,
+                    "Workspace output path changed while content was staged.",
+                )
+            _check_deadline(deadline)
+            return StagedWorkspaceOutput(
+                relative_path=normalized,
+                parent_relative_path=parent_relative,
+                target_path=target,
+                temporary_path=temporary_path,
+                parent_stat=parent.stat_result,
+                temporary_stat=temporary_stat,
+            )
+        except WorkspaceBoundaryError:
+            _discard_temporary_path(temporary_path)
+            raise
+        except OSError as error:
+            _discard_temporary_path(temporary_path)
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_ACCESS_FAILED,
+                "Workspace output could not be staged.",
+            ) from error
+        finally:
+            if descriptor is not None:
+                with suppress(OSError):
+                    os.close(descriptor)
+
+    def commit_output(self, staged: StagedWorkspaceOutput, *, deadline: float) -> None:
+        """Atomically replace one target with a complete staged output."""
+        _check_deadline(deadline)
+        parent = self.resolve_directory(staged.parent_relative_path)
+        if not os.path.samestat(staged.parent_stat, parent.stat_result):
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_PATH_DENIED,
+                "Workspace output directory changed before commit.",
+            )
+        temporary_stat = self._safe_lstat(staged.temporary_path)
+        if (
+            _is_link_like(staged.temporary_path, temporary_stat)
+            or not stat.S_ISREG(temporary_stat.st_mode)
+            or not _same_path_file_snapshot(staged.temporary_stat, temporary_stat)
+        ):
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_PATH_DENIED,
+                "Workspace temporary output changed before commit.",
+            )
+        self._validate_output_target(staged.target_path)
+        _check_deadline(deadline)
+
+        # No await occurs around this only target-changing operation. A timed-out
+        # staging worker can therefore leave a temporary file, but cannot commit it.
+        try:
+            os.replace(staged.temporary_path, staged.target_path)
+        except OSError as error:
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_ACCESS_FAILED,
+                "Workspace output could not be committed.",
+            ) from error
+
+    @staticmethod
+    def discard_output(staged: StagedWorkspaceOutput) -> None:
+        """Best-effort removal that refuses to unlink a replaced temporary object."""
+        with suppress(OSError):
+            current_stat = os.stat(staged.temporary_path, follow_symlinks=False)
+            if _same_path_file_snapshot(staged.temporary_stat, current_stat):
+                os.unlink(staged.temporary_path)
 
     @contextmanager
     def open_binary(self, relative_path: str) -> Generator[BinaryIO, None, None]:
@@ -283,6 +413,84 @@ class WorkspaceBoundary:
             ) from error
         return _ResolvedWorkspacePath(normalized, current, current_stat)
 
+    def _ensure_output_directory(
+        self,
+        relative_path: str,
+        *,
+        deadline: float,
+    ) -> _ResolvedWorkspacePath:
+        normalized = normalize_workspace_path(relative_path)
+        if normalized != "outputs" and not normalized.startswith("outputs/"):
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_PATH_DENIED,
+                "Workspace output directory is outside outputs.",
+            )
+        self._assert_root_identity()
+        current = self._root
+        current_stat = self._root_stat
+        for segment in normalized.split("/"):
+            _check_deadline(deadline)
+            current = current / segment
+            try:
+                current_stat = os.stat(current, follow_symlinks=False)
+            except FileNotFoundError:
+                try:
+                    current.mkdir()
+                except FileExistsError:
+                    pass
+                except OSError as error:
+                    raise WorkspaceBoundaryError(
+                        ErrorCode.WORKSPACE_ACCESS_FAILED,
+                        "Workspace output directory could not be created.",
+                    ) from error
+                current_stat = self._safe_lstat(current)
+            except OSError as error:
+                raise WorkspaceBoundaryError(
+                    ErrorCode.WORKSPACE_ACCESS_FAILED,
+                    "Workspace output directory could not be inspected.",
+                ) from error
+            if _is_link_like(current, current_stat):
+                raise WorkspaceBoundaryError(
+                    ErrorCode.WORKSPACE_PATH_DENIED,
+                    "Workspace output path cannot pass through a link or reparse point.",
+                )
+            if not stat.S_ISDIR(current_stat.st_mode):
+                raise WorkspaceBoundaryError(
+                    ErrorCode.WORKSPACE_WRONG_TYPE,
+                    "Workspace output path contains a non-directory parent.",
+                )
+
+        try:
+            current.resolve(strict=True).relative_to(self._root)
+        except (OSError, RuntimeError, ValueError) as error:
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_PATH_DENIED,
+                "Workspace output directory resolves outside the configured root.",
+            ) from error
+        return _ResolvedWorkspacePath(normalized, current, current_stat)
+
+    @staticmethod
+    def _validate_output_target(path: Path) -> None:
+        try:
+            target_stat = os.stat(path, follow_symlinks=False)
+        except FileNotFoundError:
+            return
+        except OSError as error:
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_ACCESS_FAILED,
+                "Workspace output target could not be inspected.",
+            ) from error
+        if _is_link_like(path, target_stat):
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_PATH_DENIED,
+                "Workspace output target cannot be a link or reparse point.",
+            )
+        if not stat.S_ISREG(target_stat.st_mode):
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_WRONG_TYPE,
+                "Workspace output target is not a regular file.",
+            )
+
     def _assert_root_identity(self) -> None:
         root_stat = self._safe_lstat(self._root)
         if _is_link_like(self._root, root_stat) or not os.path.samestat(self._root_stat, root_stat):
@@ -354,3 +562,18 @@ def _is_link_like(path: Path, path_stat: os.stat_result) -> bool:
         return path.is_junction()
     except OSError:
         return True
+
+
+def _check_deadline(deadline: float) -> None:
+    if time.monotonic() >= deadline:
+        raise WorkspaceBoundaryError(
+            ErrorCode.TOOL_TIMEOUT,
+            "Workspace Tool reached its execution deadline.",
+        )
+
+
+def _discard_temporary_path(path: Path | None) -> None:
+    if path is None:
+        return
+    with suppress(OSError):
+        os.unlink(path)

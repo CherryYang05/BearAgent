@@ -1,7 +1,8 @@
 import asyncio
+from collections.abc import Mapping
 from pathlib import Path
 
-from bearagent.adapters.tools import build_workspace_read_tools
+from bearagent.adapters.tools import build_workspace_read_tools, build_workspace_tools
 from bearagent.domain.ids import ToolCallId
 from bearagent.domain.tools import (
     PolicyDecision,
@@ -81,3 +82,39 @@ def test_executor_default_policy_denies_before_workspace_execute(tmp_path: Path)
 
     assert result.status is ToolStatus.FAILED
     assert "secret" not in result.model_dump_json()
+
+
+def test_executor_writes_then_reads_one_complete_artifact(tmp_path: Path) -> None:
+    tools = build_workspace_tools(tmp_path)
+    registry = ToolRegistry(tools)
+    policy = RecordingFixedPolicy([spec.name for spec in registry.specs])
+    executor = ToolExecutor(registry, policy)
+
+    async def exercise() -> None:
+        write = await executor.execute(
+            ToolRequest(
+                tool_call_id=ToolCallId.new(),
+                name="workspace.write",
+                arguments={
+                    "path": r"outputs\reports\intro.md",
+                    "content": "# BearAgent\n完整结果。\n",
+                },
+            )
+        )
+        read = await executor.execute(
+            ToolRequest(
+                tool_call_id=ToolCallId.new(),
+                name="workspace.read",
+                arguments={"path": "outputs/reports/intro.md"},
+            )
+        )
+
+        assert write.status is ToolStatus.SUCCEEDED
+        assert read.status is ToolStatus.SUCCEEDED
+        assert read.data["text"] == "# BearAgent\n完整结果。\n"
+        assert policy.requests[-2].arguments["path"] == "outputs/reports/intro.md"
+        artifact = write.data["artifact"]
+        assert isinstance(artifact, Mapping)
+        assert artifact["path"] == "outputs/reports/intro.md"
+
+    asyncio.run(exercise())

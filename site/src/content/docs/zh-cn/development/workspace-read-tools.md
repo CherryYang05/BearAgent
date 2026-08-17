@@ -32,7 +32,7 @@ Tool.prepare(raw arguments)
 | `adapters/tools/workspace_list.py` | 一层目录和 offset 分页 |
 | `adapters/tools/workspace_read.py` | 完整行分页和 `next_start_line` |
 | `adapters/tools/workspace_search.py` | 按路径稳定排序的普通字符串递归搜索 |
-| `adapters/tools/__init__.py` | 围绕同一个 boundary 构造三个 Tool |
+| `adapters/tools/__init__.py` | 保留三个只读 Tool 工厂，并围绕同一个 boundary 构造四个 workspace Tool |
 | `domain/errors.py` | workspace 稳定 ErrorCode |
 
 三个 Tool 共享 boundary 和结果辅助函数，但互不调用。`domain`、`ports` 和 `runtime` 也不导入这些
@@ -87,5 +87,6 @@ Windows 普通用户可能没有创建 symlink 的权限，因此该项会在本
 3. 三个 Tool 共用 boundary，不把文件系统检查复制到各自模块；
 4. Agent Loop 只能调用 `ToolExecutor`，不能直接调用具体 adapter。
 
-F-0007 不写 Event、不修改 SQLite，也不实现 `outputs/**` 写入。不要在维护只读 Tool 时顺手加入 F-0008
-或 F-0016 的行为。
+F-0007 仍只负责读取，不写 Event，也不修改 SQLite。F-0008 的写入实现复用同一 boundary，但保持在
+独立模块；详见[原子输出与 Artifact 实现导读](atomic-output-artifacts.md)。F-0016 才负责 Agent Loop 和
+Event 接线。

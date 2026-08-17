@@ -50,16 +50,17 @@ flowchart TB
 | 模型边界 | ModelProvider port、确定性测试 adapter 和首个 OpenAI Responses 流式 adapter |
 | Tool 执行边界 | 有界 Tool 数据、精确 Registry、默认拒绝 Policy 和统一 ToolExecutor |
 | workspace 只读边界 | 一层目录列出、分段 UTF-8 读取、普通字符串搜索和跨平台路径拒绝 |
+| workspace 输出边界 | `outputs/**` UTF-8 原子创建/替换、Artifact 元数据和失败前旧目标保护 |
 | 测试替身 | Fake model、Fake tool、内存 Event store |
 | 文档 | 工程 `docs/` 与本地 Starlight 学习/开发者站点 |
 
 当前可以把 Event 原子写入 SQLite 并查询 projection，可以通过独立 adapter 调用 OpenAI Responses
-流式接口，也可以让三个真实 workspace Tool 经过 Registry、Policy 和 Executor。一条 Agent Loop
+流式接口，也可以让四个真实 workspace Tool 经过 Registry、Policy 和 Executor。一条 Agent Loop
 尚未把这些边界接成用户可运行的文件任务。持久事实仍不等于进程重启后会自动继续。
 
 ### 3.2 已接受但尚未接通
 
-- P1：`outputs/**` 原子写、ContextBuilder、有界 Agent Loop 和 Run CLI；
+- P1：ContextBuilder、有界 Agent Loop 和 Run CLI；
 - P2：Checkpoint、Attempt、暂停/继续/取消、恢复协调和 `UNKNOWN` 处置；
 - P3：Grant、Policy、Approval、隔离 runner、HTTP API、认证和备份恢复；
 - P4：Skill、MCP、Web UI、Memory 和受控联网；
@@ -258,9 +259,8 @@ Registry 拒绝重名和模糊匹配。P1 Policy 默认拒绝，只允许程序�
 外部写入和代码执行。timeout、异常和超大结果会变成不同的安全 Error；Executor 不自动重试。
 `CancelledError` 原样传播。
 
-F-0007 的三个只读 Tool 已通过这条路径运行测试。F-0016 接入 Agent Loop 时负责把请求、Policy
-决定和执行结果写成 Event。F-0008 写入 Tool 也必须通过同一入口，不能另开旁路。P3 再加入 Grant、
-`ASK` 和 Approval。
+F-0007 的三个只读 Tool 和 F-0008 的 `workspace.write` 已通过这条路径运行测试。F-0016 接入 Agent
+Loop 时负责把请求、Policy 决定和执行结果写成 Event。P3 再加入 Grant、`ASK` 和 Approval。
 
 ### 10.2 P1 文件范围
 
@@ -269,8 +269,9 @@ Policy 前统一成 `/`；adapter 再用当前平台的 `Path` 连接根目录�
 symlink、junction、特殊文件和检查/打开身份不一致都会失败。目录、文件、行、搜索范围、结果和时间
 都有可信上限。
 
-F-0008 才增加 `write_file`：写入只允许 `outputs/**`，使用同目录临时文件和原子 replace，并拒绝
-越界 rename。F-0007 不写文件、不保存 Event，也不自动重试。
+F-0008 增加 `workspace.write`：只接受有限 UTF-8 文本并写入 `outputs/**`。Tool 在目标目录写完整
+临时文件并 `fsync`，复核路径和期限后用一次 `os.replace` 提交；成功结果只返回 Artifact ID、规范化
+路径、类型、编码、字节数和 SHA-256。它不保存 Event、不自动重试，也不自动清理成功 Artifact。
 
 P1 Policy 只有固定允许/拒绝规则。P3 才增加可配置 Grant 和用户 Approval。
 
@@ -323,7 +324,9 @@ checkpoints    某个 sequence 的状态快照
 artifacts      文件路径、hash、类型和来源 Activity
 ```
 
-`event_id` 全局唯一，`run_id + sequence` 唯一。Artifact 大内容将放文件系统，数据库只保存元数据。
+`event_id` 全局唯一，`run_id + sequence` 唯一。F-0008 已把 Artifact 文件写入 workspace 的
+`outputs/**`，但元数据当前只存在于 ToolResult；F-0016 才把来源和元数据接入 Event，后续数据库只
+保存元数据。
 
 建议数据目录：
 
@@ -424,9 +427,9 @@ runner 隔离、日志脱敏和备份恢复演练。
 
 已经接受的决定见 [ADR 索引](../adr/README.md)。ADR 生效不表示功能已经实现。
 
-对应 Feature 开始前仍需决定：
+F-0008 已通过 ADR-0012 决定：P1 不设置 Artifact TTL，也不自动清理成功文件；崩溃残留和 reconcile
+留给 P2。对应后续 Feature 开始前仍需决定：
 
-- F-0008：Artifact 保留时间和自动清理；
 - F-0012/F-0014：服务器资源与 Docker/Podman runner；
 - P4 Web UI：独立前端还是最小服务端页面；
 - 公开发布：Apache-2.0 或 AGPL-3.0。

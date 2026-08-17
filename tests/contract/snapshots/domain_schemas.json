@@ -249,6 +249,71 @@
     "title": "ActivityState",
     "type": "object"
   },
+  "Artifact": {
+    "$defs": {
+      "ArtifactEncoding": {
+        "description": "Encoding used by a text Artifact.",
+        "enum": [
+          "utf-8"
+        ],
+        "title": "ArtifactEncoding",
+        "type": "string"
+      },
+      "ArtifactId": {
+        "description": "Identify one retrievable Run output.",
+        "format": "uuid4",
+        "title": "ArtifactId",
+        "type": "string"
+      },
+      "ArtifactKind": {
+        "description": "Stable high-level representation of one Artifact.",
+        "enum": [
+          "text"
+        ],
+        "title": "ArtifactKind",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Bounded metadata for one retrievable output, without access authority.",
+    "properties": {
+      "artifact_id": {
+        "$ref": "#/$defs/ArtifactId"
+      },
+      "path": {
+        "maxLength": 4096,
+        "minLength": 1,
+        "title": "Path",
+        "type": "string"
+      },
+      "kind": {
+        "$ref": "#/$defs/ArtifactKind"
+      },
+      "encoding": {
+        "$ref": "#/$defs/ArtifactEncoding"
+      },
+      "size_bytes": {
+        "minimum": 0,
+        "title": "Size Bytes",
+        "type": "integer"
+      },
+      "sha256": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Sha256",
+        "type": "string"
+      }
+    },
+    "required": [
+      "artifact_id",
+      "path",
+      "kind",
+      "encoding",
+      "size_bytes",
+      "sha256"
+    ],
+    "title": "Artifact",
+    "type": "object"
+  },
   "ArtifactId": {
     "description": "Identify one retrievable Run output.",
     "format": "uuid4",

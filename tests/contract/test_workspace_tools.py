@@ -1,7 +1,7 @@
 import asyncio
 from pathlib import Path
 
-from bearagent.adapters.tools import build_workspace_read_tools
+from bearagent.adapters.tools import build_workspace_read_tools, build_workspace_tools
 from bearagent.domain.ids import ToolCallId
 from bearagent.domain.tools import ToolRequest, ToolSideEffect, ToolStatus
 
@@ -43,3 +43,19 @@ def test_each_workspace_tool_returns_correlated_result(tmp_path: Path) -> None:
             assert result.status is ToolStatus.SUCCEEDED
 
     asyncio.run(exercise())
+
+
+def test_all_workspace_tool_specs_include_one_bounded_write(tmp_path: Path) -> None:
+    tools = build_workspace_tools(tmp_path)
+
+    assert [tool.spec.name for tool in tools] == [
+        "workspace.list",
+        "workspace.read",
+        "workspace.search",
+        "workspace.write",
+    ]
+    write_spec = tools[-1].spec
+    assert write_spec.side_effect is ToolSideEffect.WORKSPACE_WRITE
+    assert write_spec.retry_safety.value == "not_safe"
+    assert write_spec.input_schema["type"] == "object"
+    assert write_spec.output_schema["type"] == "object"
