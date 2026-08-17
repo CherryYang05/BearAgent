@@ -42,6 +42,7 @@ export default defineConfig({
             { label: '持久事实与安全恢复', slug: 'learn/durable-events' },
             { label: '为什么模型需要独立边界', slug: 'learn/model-provider-boundary' },
             { label: 'Tool 请求为什么要过四道检查', slug: 'learn/tool-execution-boundary' },
+            { label: 'Windows 和 Unix 路径怎样统一', slug: 'learn/workspace-read-boundary' },
           ],
         },
         {
@@ -61,6 +62,7 @@ export default defineConfig({
             { label: 'F-0003：SQLite EventStore', slug: 'development/sqlite-event-store' },
             { label: 'F-0004：ModelProvider', slug: 'development/model-provider' },
             { label: 'F-0006：Tool 执行边界', slug: 'development/tool-execution-boundary' },
+            { label: 'F-0007：workspace 只读 Tool', slug: 'development/workspace-read-tools' },
           ],
         },
         {

@@ -13,8 +13,8 @@
 
 > [!IMPORTANT]
 > BearAgent 当前还不能执行真实 Agent 任务。仓库已经实现内部数据类型、Run/Activity 状态、Event
-> Reducer、预算检查、SQLite EventStore、首个 OpenAI Responses adapter、统一 Tool 执行边界和本地文档站；文件工具、
-> ContextBuilder、完整 Agent Loop 与 Run CLI 仍在 P1 计划中。
+> Reducer、预算检查、SQLite EventStore、首个 OpenAI Responses adapter、统一 Tool 执行边界、受限
+> workspace 只读工具和本地文档站；原子写入、ContextBuilder、完整 Agent Loop 与 Run CLI 仍在 P1 计划中。
 
 ## 从一个文件任务说起
 
@@ -46,13 +46,14 @@ BearAgent 不以复刻 Manus、Claude Code 或堆叠模型、工具和 Agent 角
 
 | 已有代码 | P1 还要接通 | 更晚再做 |
 |---|---|---|
-| Python 3.12 + uv 工程与 CI | 工作区读取、搜索与 `outputs/**` 写入 | P2：崩溃恢复、Attempt、`UNKNOWN` |
-| `help`、`version`、`doctor` | 工作区读取、搜索与 `outputs/**` 写入 | P3：Approval、隔离执行、安全自托管 |
-| 类型化 ID、Message、Error、Event | `outputs/**` 原子写入与 Artifact | P4：Skill、MCP、Web、Memory |
+| Python 3.12 + uv 工程与 CI | `outputs/**` 原子写入与 Artifact | P2：崩溃恢复、Attempt、`UNKNOWN` |
+| `help`、`version`、`doctor` | `run`、`inspect`、`events` | P3：Approval、隔离执行、安全自托管 |
+| 类型化 ID、Message、Error、Event | ContextBuilder 和版本化 Agent 配置 | P4：Skill、MCP、Web、Memory |
 | Run/Activity 状态与五类预算 | ContextBuilder 与有界 Agent Loop | P5：持续追踪与跨版本评测 |
-| SQLite EventStore、projection 与 migration | `run`、`inspect`、`events` | P6+：多个 Agent、浏览器、分布式执行 |
+| SQLite EventStore、projection 与 migration | Tool Activity Event 接线 | P6+：多个 Agent、浏览器、分布式执行 |
 | ModelProvider port 与 OpenAI Responses adapter | 固定任务集与可复现结果 | 只有真实需求出现后再扩展 |
-| Tool Registry、固定 Policy 与统一 Executor | 具体文件 Tool 与 Agent Loop 接线 | 只有真实需求出现后再扩展 |
+| Tool Registry、固定 Policy、统一 Executor | `outputs/**` 写入 Tool | 只有真实需求出现后再扩展 |
+| `workspace.list/read/search` 与路径边界 | 只读 Tool 与 Agent Loop 接线 | 只有真实需求出现后再扩展 |
 | 中文 Starlight 文档站 | 端到端固定任务集 | 只有真实需求出现后再扩展 |
 
 当前事实见[路线图](docs/project/roadmap.md)和[公开状态页](site/src/content/docs/zh-cn/project/status.md)。

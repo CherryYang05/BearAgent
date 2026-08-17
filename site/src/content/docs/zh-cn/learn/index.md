@@ -9,6 +9,7 @@ sourceRefs:
   - F-0003
   - F-0004
   - F-0006
+  - F-0007
 ---
 
 这条学习路径始终使用同一个例子：用户要求 Agent 阅读仓库文档，并把总结写进 `outputs/`。
@@ -64,5 +65,11 @@ Provider tool call ID、usage 和异常怎样被翻译成 BearAgent 内部数据
 Registry、`prepare`、Policy 和 Executor。你会看到参数错误和权限拒绝为什么必须发生在 Tool 真正
 执行之前。
 
-当前这条路径覆盖已实现的 F-0001 至 F-0004 和 F-0006。具体文件 Tool、ContextBuilder 和完整
-Agent Loop 仍是 P1 的后续工作；崩溃恢复和用户授权分别属于 P2、P3。
+## 8. 看 Windows 和 Unix 路径怎样进入同一边界
+
+[Windows 和 Unix 路径为什么先变成同一种写法](workspace-read-boundary.md)从
+`docs\guide.md` 和 `docs/guide.md` 解释 F-0007 怎样让 Policy 只看一种路径，再由当前平台读取真实
+文件。页面也说明 list、read、search 的分页、链接拒绝和资源上限。
+
+当前这条路径覆盖已实现的 F-0001 至 F-0004、F-0006 和 F-0007。`outputs/**` 写入、ContextBuilder
+和完整 Agent Loop 仍是 P1 的后续工作；崩溃恢复和用户授权分别属于 P2、P3。
