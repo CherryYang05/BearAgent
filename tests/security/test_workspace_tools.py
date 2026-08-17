@@ -1,5 +1,6 @@
 import asyncio
 import os
+import stat
 import threading
 from pathlib import Path
 from typing import IO, Any, cast
@@ -44,15 +45,30 @@ def test_executor_rejects_escaping_paths_without_echoing_them(tmp_path: Path, pa
     assert path not in result.model_dump_json()
 
 
-def test_boundary_never_follows_workspace_symlink(tmp_path: Path) -> None:
+def test_boundary_never_follows_workspace_symlink(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     outside = tmp_path.parent / f"{tmp_path.name}-outside.txt"
     outside.write_text("outside secret", encoding="utf-8")
     link = tmp_path / "linked.txt"
     try:
         link.symlink_to(outside)
-    except OSError as error:
-        pytest.skip(f"symlink creation is unavailable: {error}")
-    boundary = WorkspaceBoundary(tmp_path)
+    except OSError:
+        # Ordinary Windows accounts may lack symlink privileges. Keep Ubuntu on
+        # the real filesystem path, and exercise the same classification branch
+        # deterministically instead of weakening coverage with a skip.
+        link.write_text("untrusted placeholder", encoding="utf-8")
+        boundary = WorkspaceBoundary(tmp_path)
+        link_mode = os.stat(link, follow_symlinks=False).st_mode
+        original_is_link = stat.S_ISLNK
+
+        def classify_placeholder_as_link(mode: int) -> bool:
+            return mode == link_mode or original_is_link(mode)
+
+        monkeypatch.setattr(stat, "S_ISLNK", classify_placeholder_as_link)
+    else:
+        boundary = WorkspaceBoundary(tmp_path)
 
     with pytest.raises(WorkspaceBoundaryError) as captured:
         boundary.resolve_file("linked.txt")
