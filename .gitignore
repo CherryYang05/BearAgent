@@ -6,6 +6,8 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.pytest-state/
+.pytest-tmp/
 .ruff_cache/
 .coverage
 htmlcov/

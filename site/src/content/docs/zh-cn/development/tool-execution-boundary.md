@@ -57,5 +57,6 @@ FakeTool 检查了这个顺序。
 - `tests/integration/test_tool_executor.py`：完整顺序和正常失败；
 - `tests/security/test_tool_executor.py`：timeout、取消、异常、超大输出和敏感信息。
 
-F-0007 接入第一个真实 Tool 时，应让同一组接口和 Executor 测试继续成立。F-0016 接线时，只调用
+F-0007 已让三个真实 workspace Tool 运行同一条 Executor 路径。具体路径检查见
+[F-0007 workspace 只读 Tool 实现导读](workspace-read-tools.md)。F-0016 接线时，只调用
 `ToolExecutor.execute`，并负责把前后状态写成 Tool Activity Event。

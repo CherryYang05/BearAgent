@@ -10,6 +10,7 @@ sourceRefs:
   - F-0003
   - F-0004
   - F-0006
+  - F-0007
 ---
 
 模型请求读取 `docs/architecture/overview.md` 时，BearAgent 需要检查路径、调用文件工具、保存结果，
@@ -17,8 +18,8 @@ sourceRefs:
 
 :::caution[图中包含尚未实现的连接]
 当前已实现领域类型、Run/Activity 状态、Reducer、预算检查、SQLite EventStore、首个 OpenAI
-Responses adapter，以及 Registry、固定 Policy 和统一 ToolExecutor。具体文件 Tool、ContextBuilder
-和完整 Agent Loop 仍在 P1 计划中；用户审批和隔离环境属于 P3。
+Responses adapter、Registry、固定 Policy、统一 ToolExecutor，以及三个 workspace 只读 Tool。
+ContextBuilder 和完整 Agent Loop 仍在 P1 计划中；用户审批和隔离环境属于 P3。
 :::
 
 ```mermaid

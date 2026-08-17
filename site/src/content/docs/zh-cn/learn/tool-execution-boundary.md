@@ -11,9 +11,9 @@ sourceRefs:
 假设模型提出：用 `workspace.read` 读取 `docs/index.md`。模型只是提出请求，它不能因为自己写出了
 这个名称，就获得读文件权限。BearAgent 会让请求依次经过四个位置。
 
-:::caution[当前还没有真实文件 Tool]
-F-0006 已实现下面的名单、参数检查、固定 Policy 和 Executor。F-0007 才会接入目录列出、文件读取和
-搜索；F-0016 才会把它们接进 Agent Loop。
+:::note[真实只读 Tool 已经接在这条入口后]
+F-0007 已实现目录列出、UTF-8 文件读取和普通字符串搜索，并通过下面的名单、参数检查、固定 Policy
+和 Executor。F-0016 才会把它们接进 Agent Loop。
 :::
 
 ```mermaid
@@ -35,8 +35,8 @@ flowchart TB
 
 ## prepare 先把参数整理清楚
 
-每个 Tool 的 `prepare` 负责检查自己的参数，并把等价写法整理成一种形式。以后文件 Tool 可以在
-这里把 `docs/./index.md` 整理为 `docs/index.md`。
+每个 Tool 的 `prepare` 负责检查自己的参数，并把等价写法整理成一种形式。F-0007 会把
+`docs\index.md`、`docs/./index.md` 都整理为 `docs/index.md`。
 
 `prepare` 不能读文件、联网或写数据库。它只处理数据。参数不合法时，请求在这里结束，Policy 和
 真正的执行方法都不会运行。
@@ -67,8 +67,9 @@ Policy 看到的是 `prepare` 整理后的参数。因此不会出现“权限�
 
 ## 这还不是完整文件任务
 
-F-0006 只建好了统一入口。现在没有 Tool 会真的打开 `docs/index.md`，也没有 Agent Loop 调用
-Executor，更没有 CLI 展示 Tool Activity。接下来 F-0007/F-0008 接入受限文件 Tool，F-0016 再把
+F-0006 建好了统一入口，F-0007 已让三个只读 Tool 真正打开受限 workspace。现在仍没有 Agent Loop
+自动调用 Executor，也没有 CLI 展示 Tool Activity。F-0008 接入 `outputs/**` 原子写，F-0016 再把
 请求和结果写成 Event。
 
-想看实现位置，可以继续阅读 [F-0006 Tool 执行边界实现导读](../development/tool-execution-boundary.md)。
+想看路径怎样检查，可以继续阅读
+[Windows 和 Unix 路径为什么先变成同一种写法](workspace-read-boundary.md)。

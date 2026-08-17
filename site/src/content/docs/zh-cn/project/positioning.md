@@ -11,8 +11,9 @@ BearAgent 想让个人 Agent 在本地可靠地完成长任务：用户能看清
 重试，危险操作也不能只因为模型提出了请求就被执行。
 
 :::caution[这是产品方向，不是当前功能清单]
-当前已完成工程基础、内部数据类型、状态与预算规则、SQLite EventStore、首个模型 adapter 和本地
-文档站。文件工具与完整 Agent Loop 尚未接通，真实文件任务还不能执行。
+当前已完成工程基础、内部数据类型、状态与预算规则、SQLite EventStore、首个模型 adapter、统一
+ToolExecutor、workspace 只读 Tool 和本地文档站。写入 Tool 与完整 Agent Loop 尚未接通，真实文件
+任务还不能执行。
 :::
 
 ## 第一个用户和第一个任务

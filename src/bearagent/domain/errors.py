@@ -70,6 +70,12 @@ class ErrorCode(StrEnum):
     TOOL_TIMEOUT = "tool_timeout"
     TOOL_OUTPUT_TOO_LARGE = "tool_output_too_large"
     TOOL_ERROR = "tool_error"
+    WORKSPACE_PATH_DENIED = "workspace_path_denied"
+    WORKSPACE_NOT_FOUND = "workspace_not_found"
+    WORKSPACE_WRONG_TYPE = "workspace_wrong_type"
+    WORKSPACE_NOT_TEXT = "workspace_not_text"
+    WORKSPACE_LIMIT_EXCEEDED = "workspace_limit_exceeded"
+    WORKSPACE_ACCESS_FAILED = "workspace_access_failed"
     PERSISTENCE_ERROR = "persistence_error"
     INTERNAL_ERROR = "internal_error"
 
@@ -94,6 +100,12 @@ _CODE_CATEGORIES = {
     ErrorCode.TOOL_TIMEOUT: ErrorCategory.TOOL,
     ErrorCode.TOOL_OUTPUT_TOO_LARGE: ErrorCategory.TOOL,
     ErrorCode.TOOL_ERROR: ErrorCategory.TOOL,
+    ErrorCode.WORKSPACE_PATH_DENIED: ErrorCategory.TOOL,
+    ErrorCode.WORKSPACE_NOT_FOUND: ErrorCategory.TOOL,
+    ErrorCode.WORKSPACE_WRONG_TYPE: ErrorCategory.TOOL,
+    ErrorCode.WORKSPACE_NOT_TEXT: ErrorCategory.TOOL,
+    ErrorCode.WORKSPACE_LIMIT_EXCEEDED: ErrorCategory.TOOL,
+    ErrorCode.WORKSPACE_ACCESS_FAILED: ErrorCategory.TOOL,
     ErrorCode.PERSISTENCE_ERROR: ErrorCategory.PERSISTENCE,
     ErrorCode.INTERNAL_ERROR: ErrorCategory.INTERNAL,
 }

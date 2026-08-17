@@ -26,6 +26,7 @@ sourceRefs:
 - [F-0003：SQLite EventStore](sqlite-event-store.md)——transaction、migration、projection 和故障测试；
 - [F-0004：ModelProvider](model-provider.md)——Responses 流式翻译、资源上限和安全错误；
 - [F-0006：Tool 执行边界](tool-execution-boundary.md)——Registry、参数准备、默认拒绝 Policy 和统一 Executor；
+- [F-0007：workspace 只读 Tool](workspace-read-tools.md)——跨平台路径边界、list/read/search 和安全测试；
 - [Feature 完成时怎样更新文档](feature-documentation.md)——哪些事实写在 `docs/`，哪些解释写在站点；
 - [本地运行文档站](../guides/local-docs.md)——安装、构建和检查 Starlight。
 

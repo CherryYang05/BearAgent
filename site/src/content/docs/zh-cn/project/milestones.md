@@ -30,9 +30,10 @@ P1 要接通 SQLite、一个真实模型、受限文件工具、有结束条件�
 `events` 命令。写入范围固定为 `outputs/**`。完成时，固定测试模型必须完成全部 5 个任务，真实
 模型在固定配置下至少完成 4 个，并且非法路径和预算耗尽都有清楚的失败记录。
 
-当前已经完成 SQLite EventStore、首个 OpenAI Responses adapter，以及 Registry、固定 Policy 和
-统一 ToolExecutor；它们仍未由 Agent Loop 接成一次 Run。受限文件工具、ContextBuilder、Agent Loop
-和 Run CLI 接通后，才会形成阶段要求的用户结果。
+当前已经完成 SQLite EventStore、首个 OpenAI Responses adapter、Registry、固定 Policy、统一
+ToolExecutor，以及 workspace 目录列出、UTF-8 读取和普通字符串搜索。它们仍未由 Agent Loop 接成
+一次 Run。`outputs/**` 写入、ContextBuilder、Agent Loop 和 Run CLI 接通后，才会形成阶段要求的
+用户结果。
 
 P1 只保证已经保存的事实可以查看。进程退出后不会自动继续。
 
