@@ -18,6 +18,9 @@ sourceRefs:
   - F-0002
   - F-0003
   - F-0004
+  - F-0006
+  - F-0007
+  - F-0008
   - F-0015
 ---
 
@@ -52,8 +55,9 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
 :::caution[BearAgent 还不能完成真实 Agent 任务]
 当前代码已经能表示消息、错误、Run、Activity 和 Event，也能从一串 Event 计算状态并检查预算。
-Event 可以原子写入 SQLite，OpenAI Responses adapter 也能把流式响应翻译成内部事件；但文件工具、
-ContextBuilder、完整执行循环和 Run CLI 仍未接通。路线图中的名称不是当前功能。
+Event 可以原子写入 SQLite，OpenAI Responses adapter 也能翻译流式响应，四个 workspace Tool 能在
+统一权限入口后读文件或原子写 `outputs/**`；但 ContextBuilder、完整执行循环、Tool Event 接线和
+Run CLI 仍未接通。路线图中的名称不是当前功能。
 :::
 
 ## BearAgent 想把三件事做可靠

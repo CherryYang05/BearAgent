@@ -1,8 +1,8 @@
 ---
 title: BearAgent Roadmap
 status: accepted
-version: 0.7
-last_verified: 2026-08-14
+version: 0.8
+last_verified: 2026-08-17
 ---
 
 # BearAgent 项目路线图
@@ -67,8 +67,8 @@ Feature 可以根据 Spec、Plan、测试和文档流程推进。
 
 ## 5. P1：可检查执行
 
-**状态：进行中（2026-08-10 开始）。** F-0001、F-0002、F-0003、F-0004、F-0006 和 F-0015 已
-实现；F-0007 也已实现。下一个 P1 Feature 尚未确认，仓库没有 active Plan。
+**状态：进行中（2026-08-10 开始）。** F-0001、F-0002、F-0003、F-0004、F-0006、F-0007、F-0008
+和 F-0015 已实现。下一个 P1 Feature 尚未确认，仓库没有 active Plan。
 
 ### 5.1 用户结果
 
@@ -125,8 +125,9 @@ adapter。它还没有被 ContextBuilder、Agent Loop 或 CLI 调用，因此不
 P1 的 Policy 是固定允许/拒绝规则。用户 Approval 属于 P3。
 
 F-0006 已完成有界 Tool 数据、精确 Registry、默认拒绝 Policy 和统一 ToolExecutor。F-0007 已完成
-`workspace.list`、`workspace.read`、`workspace.search` 和跨平台路径边界。当前仍没有写入 Tool，
-也没有 Agent Loop 把 Tool 请求或结果写成 Event。
+`workspace.list`、`workspace.read`、`workspace.search` 和跨平台路径边界。F-0008 已完成只写
+`outputs/**` 的 `workspace.write`、同目录原子提交和 Artifact 元数据。当前仍没有 Agent Loop 把
+Tool 请求或结果写成 Event。
 
 #### CLI 和固定任务
 
@@ -151,7 +152,7 @@ F-0006 已完成有界 Tool 数据、精确 Registry、默认拒绝 Policy 和�
 3. F-0004：模型接口和首个真实 adapter——已实现；
 4. F-0006：Tool 接口、Registry、executor 和固定 Policy——已实现；
 5. [F-0007：workspace 边界和只读工具](../specs/F-0007-workspace-read-tools.md)——已实现；
-6. F-0008：`outputs/**` 原子写和 Artifact；
+6. [F-0008：`outputs/**` 原子写和 Artifact](../specs/F-0008-atomic-output-artifacts.md)——已实现；
 7. F-0016：ContextBuilder、有界 Loop、版本化 Agent 配置和任务集；
 8. F-0005：`run/inspect/events` CLI 与端到端演示。
 
@@ -339,7 +340,7 @@ Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；
 3. [F-0003：Event store、SQLite、projection 和 migration](../specs/F-0003-event-store-sqlite-projections.md) — implemented
 4. [F-0006：Tool 接口、Registry、executor 和固定 Policy](../specs/F-0006-tool-registry-executor-policy.md) — implemented
 5. [F-0007：workspace 边界和只读工具](../specs/F-0007-workspace-read-tools.md) — implemented
-6. F-0008：原子写和 Artifact
+6. [F-0008：原子写和 Artifact](../specs/F-0008-atomic-output-artifacts.md) — implemented
 7. [F-0004：模型接口和首个真实 adapter](../specs/F-0004-model-provider-first-adapter.md) — implemented
 8. F-0016：ContextBuilder、有界 Loop、Agent 配置和评测任务
 9. F-0005：`run/inspect/events` CLI

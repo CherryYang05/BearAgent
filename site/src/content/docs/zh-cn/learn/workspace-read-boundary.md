@@ -78,6 +78,7 @@ F-0007 保守地拒绝所有 symlink 和 junction。这样会失去一些仓库�
 
 三个只读 Tool、路径边界、资源限制和安全错误已有代码与测试，也能经过 F-0006 Registry、固定 Policy
 和 Executor。当前还没有 Agent Loop 自动请求它们，也没有 CLI 启动完整文件任务。写入
-`outputs/**` 属于 F-0008。
+`outputs/**` 已由 F-0008 的独立 Tool 实现，但还没有接入这条完整任务路径。
 
-接下来可以阅读 [F-0007 workspace 只读 Tool 实现导读](../development/workspace-read-tools.md)。
+接下来可以阅读[为什么不能直接覆盖输出文件](atomic-output-boundary.md)，或进入
+[F-0007 workspace 只读 Tool 实现导读](../development/workspace-read-tools.md)。

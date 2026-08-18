@@ -1,5 +1,6 @@
 """Framework-independent BearAgent domain types."""
 
+from bearagent.domain.artifacts import Artifact, ArtifactEncoding, ArtifactKind
 from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.events import Event
 from bearagent.domain.ids import (
@@ -78,7 +79,10 @@ __all__ = [
     "ActivityKind",
     "ActivityState",
     "ActivityStatus",
+    "Artifact",
+    "ArtifactEncoding",
     "ArtifactId",
+    "ArtifactKind",
     "BearAgentError",
     "BudgetDimension",
     "BudgetExhaustion",

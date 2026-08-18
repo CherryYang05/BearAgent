@@ -15,6 +15,8 @@ ADR 只记录影响多个模块、以后难以反转的技术决定。标题直�
 - [ADR-0010：首个生产模型 adapter 使用 OpenAI Responses](ADR-0010-openai-responses-first-model-adapter.md)
 - [ADR-0011：workspace Tool 只接受可移植相对路径，并且不跟随链接](ADR-0011-workspace-relative-paths-no-links.md)
   — accepted
+- [ADR-0012：P1 输出先原子替换，再由用户管理 Artifact 生命周期](ADR-0012-atomic-user-managed-output-artifacts.md)
+  — accepted
 
 新决定使用 [ADR 模板](../templates/adr.md)。被新决定替代的 ADR 不删除，改为 `superseded` 并链接
 到替代它的文档。

@@ -10,6 +10,7 @@ sourceRefs:
   - F-0004
   - F-0006
   - F-0007
+  - F-0008
 ---
 
 这条学习路径始终使用同一个例子：用户要求 Agent 阅读仓库文档，并把总结写进 `outputs/`。
@@ -71,5 +72,11 @@ Registry、`prepare`、Policy 和 Executor。你会看到参数错误和权限�
 `docs\guide.md` 和 `docs/guide.md` 解释 F-0007 怎样让 Policy 只看一种路径，再由当前平台读取真实
 文件。页面也说明 list、read、search 的分页、链接拒绝和资源上限。
 
-当前这条路径覆盖已实现的 F-0001 至 F-0004、F-0006 和 F-0007。`outputs/**` 写入、ContextBuilder
-和完整 Agent Loop 仍是 P1 的后续工作；崩溃恢复和用户授权分别属于 P2、P3。
+## 9. 看完整结果怎样一次出现
+
+[为什么不能直接覆盖输出文件](atomic-output-boundary.md)沿着 `outputs/intro.md` 解释同目录临时文件、
+`fsync`、原子 replace 和 Artifact。你会看到“目标没有半份内容”为什么仍不等于崩溃恢复或
+exactly-once。
+
+当前这条路径覆盖已实现的 F-0001 至 F-0004、F-0006 至 F-0008。ContextBuilder 和完整 Agent Loop
+仍是 P1 的后续工作；崩溃恢复和用户授权分别属于 P2、P3。

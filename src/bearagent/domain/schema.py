@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel
 
+from bearagent.domain.artifacts import Artifact
 from bearagent.domain.errors import ErrorInfo
 from bearagent.domain.events import Event
 from bearagent.domain.ids import (
@@ -56,6 +57,7 @@ from bearagent.domain.tools import (
 PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     ActivityId,
     ActivityState,
+    Artifact,
     ArtifactId,
     BudgetExhaustion,
     BudgetLimits,
