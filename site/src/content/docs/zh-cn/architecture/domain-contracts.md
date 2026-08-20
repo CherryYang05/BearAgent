@@ -17,7 +17,8 @@ F-0001 的解决办法很朴素：进入 Runtime 之前，把外部数据翻译�
 
 :::tip[这部分已经实现]
 类型化 ID、Message、Error、通用 Event 外壳和 JSON schema 快照已有代码与测试。F-0003 与 F-0004
-已经分别让 SQLite 和 OpenAI Responses adapter 在边界完成显式翻译；完整 Agent Loop 仍未实现。
+已经分别让 SQLite 和 OpenAI Responses adapter 在边界完成显式翻译；F-0016 的 Agent Loop 只通过
+这些 BearAgent 类型和 port 接线。
 :::
 
 ```mermaid

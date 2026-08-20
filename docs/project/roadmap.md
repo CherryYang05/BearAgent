@@ -67,8 +67,8 @@ Feature 可以根据 Spec、Plan、测试和文档流程推进。
 
 ## 5. P1：可检查执行
 
-**状态：进行中（2026-08-10 开始）。** F-0001、F-0002、F-0003、F-0004、F-0006、F-0007、F-0008
-和 F-0015 已实现。下一个 P1 Feature 尚未确认，仓库没有 active Plan。
+**状态：进行中（2026-08-10 开始）。** F-0001、F-0002、F-0003、F-0004、F-0006、F-0007、F-0008、
+F-0015 和 F-0016 已实现。P1 还需由 F-0005 接通 CLI、查询入口和真实模型退出演练。
 
 ### 5.1 用户结果
 
@@ -105,14 +105,15 @@ F-0003 已完成 EventStore port、SQLite adapter、schema v1 和 projection。�
 - 一个真实 Provider adapter，外部 SDK 对象在边界翻译；
 - Fake Provider 驱动确定性 Loop 测试；
 - ContextBuilder 按稳定顺序组织 Runtime 规则、目标、必要消息、Tool schema 和 ToolResult；
-- 每层有 token/字节限制，大结果截断或保存为 Artifact 引用；
+- Context 和 ToolResult 有明确字符/byte 上限，大结果使用确定性 preview；
 - Agent Loop 有明确结束条件，并在每次 Activity 前检查预算；
 - Prompt、模型、Tool schema 和 Agent 配置版本进入 trace，密钥不保存。
 
 P1 不做自动摘要 Memory 或复杂上下文压缩。
 
 F-0004 已完成 Provider-neutral 模型数据与 port、确定性测试 adapter 和首个 OpenAI Responses 流式
-adapter。它还没有被 ContextBuilder、Agent Loop 或 CLI 调用，因此不等于用户已经能运行真实任务。
+adapter。F-0016 已由 ContextBuilder 和 AgentLoop 调用该 port；生产 adapter 与 CLI 的组装仍未完成，
+因此还不等于用户已经能运行真实任务。
 
 #### 受限文件工具
 
@@ -126,8 +127,8 @@ P1 的 Policy 是固定允许/拒绝规则。用户 Approval 属于 P3。
 
 F-0006 已完成有界 Tool 数据、精确 Registry、默认拒绝 Policy 和统一 ToolExecutor。F-0007 已完成
 `workspace.list`、`workspace.read`、`workspace.search` 和跨平台路径边界。F-0008 已完成只写
-`outputs/**` 的 `workspace.write`、同目录原子提交和 Artifact 元数据。当前仍没有 Agent Loop 把
-Tool 请求或结果写成 Event。
+`outputs/**` 的 `workspace.write`、同目录原子提交和 Artifact 元数据。F-0016 已让 AgentLoop 只调用
+ToolExecutor 的记录式入口，并把原始/规范化请求、Policy 决定和 ToolResult 写成 v2 Event。
 
 #### CLI 和固定任务
 
@@ -135,7 +136,10 @@ Tool 请求或结果写成 Event。
 - `run inspect` 显示状态、预算、usage、Error 和 Artifact；
 - `run events` 按 sequence 输出事实；
 - 人类输出与 `--json` 调用同一 application command；
-- 固定任务集记录任务版本、模型、Prompt、Tool 版本、预算、结果和执行路径。
+ - 固定任务集记录任务版本、模型、Prompt、Tool 版本、预算、结果和执行路径。
+
+F-0016 已交付五个版本化 Fake Provider 任务，并在内存/SQLite Store 上验证 5/5。本节剩余工作是
+F-0005 的 CLI、查询输出和真实模型演练。
 
 ### 5.3 P1 明确不做
 
@@ -153,7 +157,8 @@ Tool 请求或结果写成 Event。
 4. F-0006：Tool 接口、Registry、executor 和固定 Policy——已实现；
 5. [F-0007：workspace 边界和只读工具](../specs/F-0007-workspace-read-tools.md)——已实现；
 6. [F-0008：`outputs/**` 原子写和 Artifact](../specs/F-0008-atomic-output-artifacts.md)——已实现；
-7. F-0016：ContextBuilder、有界 Loop、版本化 Agent 配置和任务集；
+7. [F-0016：ContextBuilder、有界 Loop、版本化 Agent 配置和任务集](../specs/F-0016-bounded-context-agent-loop.md)
+   ——已实现；
 8. F-0005：`run/inspect/events` CLI 与端到端演示。
 
 每次只激活一个主 Feature。可以根据依赖调整顺序，但不能并行铺开整个 Backlog。
@@ -342,7 +347,7 @@ Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；
 5. [F-0007：workspace 边界和只读工具](../specs/F-0007-workspace-read-tools.md) — implemented
 6. [F-0008：原子写和 Artifact](../specs/F-0008-atomic-output-artifacts.md) — implemented
 7. [F-0004：模型接口和首个真实 adapter](../specs/F-0004-model-provider-first-adapter.md) — implemented
-8. F-0016：ContextBuilder、有界 Loop、Agent 配置和评测任务
+8. [F-0016：ContextBuilder、有界 Loop、Agent 配置和评测任务](../specs/F-0016-bounded-context-agent-loop.md) — implemented
 9. F-0005：`run/inspect/events` CLI
 10. [F-0015：本地 Starlight 文档站](../specs/F-0015-local-starlight-docs-site.md) — implemented
 

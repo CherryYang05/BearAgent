@@ -18,7 +18,7 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 
 ## 当前计划
 
-当前没有 active Plan。下一个 Feature 需要由项目所有者确认后再激活。
+当前没有 active 主 Plan。
 
 ## 已完成计划
 
@@ -30,3 +30,4 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 - [PLAN-F-0007：实现有界的 workspace 只读 Tool](PLAN-F-0007-workspace-read-tools.md)
 - [PLAN-F-0008：实现 outputs 原子写入和 Artifact 元数据](PLAN-F-0008-atomic-output-artifacts.md)
 - [PLAN-F-0015：本地 Starlight 文档站](PLAN-F-0015-local-starlight-docs-site.md)
+- [PLAN-F-0016：实现有界 Context 和串行 Agent Loop](PLAN-F-0016-bounded-context-agent-loop.md)

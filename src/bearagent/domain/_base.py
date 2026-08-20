@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, JsonValue
 
 MAX_JSON_DEPTH = 32
 MAX_JSON_NODES = 10_000
+MAX_EMBEDDED_JSON_NODES = 9_000
 
 
 class DomainModel(BaseModel):
@@ -17,20 +18,30 @@ class DomainModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True)
 
 
-def validate_json_object(value: object) -> dict[str, object]:
+def validate_json_object(
+    value: object,
+    *,
+    max_nodes: int = MAX_JSON_NODES,
+) -> dict[str, object]:
     """Validate an ordinary JSON object with bounded depth and node count."""
     if not isinstance(value, Mapping):
         raise ValueError("value must be a JSON object")
     materialized = dict(cast(Mapping[object, object], value))
-    _validate_json_value(materialized)
+    _validate_json_value(materialized, max_nodes=max_nodes)
     return cast(dict[str, object], materialized)
 
 
-def _validate_json_value(value: object, *, depth: int = 0, nodes: list[int] | None = None) -> None:
+def _validate_json_value(
+    value: object,
+    *,
+    depth: int = 0,
+    nodes: list[int] | None = None,
+    max_nodes: int = MAX_JSON_NODES,
+) -> None:
     if nodes is None:
         nodes = [0]
     nodes[0] += 1
-    if nodes[0] > MAX_JSON_NODES:
+    if nodes[0] > max_nodes:
         raise ValueError("JSON value exceeds the node limit")
     if depth > MAX_JSON_DEPTH:
         raise ValueError("JSON value exceeds the nesting limit")
@@ -43,13 +54,13 @@ def _validate_json_value(value: object, *, depth: int = 0, nodes: list[int] | No
         return
     if isinstance(value, list):
         for item in cast(list[object], value):
-            _validate_json_value(item, depth=depth + 1, nodes=nodes)
+            _validate_json_value(item, depth=depth + 1, nodes=nodes, max_nodes=max_nodes)
         return
     if isinstance(value, dict):
         for key, item in cast(dict[object, object], value).items():
             if not isinstance(key, str):
                 raise ValueError("JSON object keys must be strings")
-            _validate_json_value(item, depth=depth + 1, nodes=nodes)
+            _validate_json_value(item, depth=depth + 1, nodes=nodes, max_nodes=max_nodes)
         return
     raise ValueError(f"JSON contains unsupported value: {type(value).__name__}")
 

@@ -36,7 +36,7 @@ Tool.prepare(raw arguments)
 | `domain/errors.py` | workspace 稳定 ErrorCode |
 
 三个 Tool 共享 boundary 和结果辅助函数，但互不调用。`domain`、`ports` 和 `runtime` 也不导入这些
-adapter。F-0016 以后只需要把工厂结果注册到 `ToolRegistry`，不需要了解文件系统细节。
+adapter。F-0016 把工厂结果注册到 `ToolRegistry` 后，Agent Loop 不需要了解文件系统细节。
 
 ## 两次检查不能合并
 
@@ -88,5 +88,5 @@ Windows 普通用户可能没有创建 symlink 的权限，因此该项会在本
 4. Agent Loop 只能调用 `ToolExecutor`，不能直接调用具体 adapter。
 
 F-0007 仍只负责读取，不写 Event，也不修改 SQLite。F-0008 的写入实现复用同一 boundary，但保持在
-独立模块；详见[原子输出与 Artifact 实现导读](atomic-output-artifacts.md)。F-0016 才负责 Agent Loop 和
+独立模块；详见[原子输出与 Artifact 实现导读](atomic-output-artifacts.md)。F-0016 负责 Agent Loop 和
 Event 接线。

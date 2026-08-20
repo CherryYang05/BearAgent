@@ -9,7 +9,7 @@ from bearagent.ports.store import (
     EventStoreConflictError,
     validate_event_query,
 )
-from bearagent.runtime.reducer import reduce_event
+from bearagent.runtime.reducer import reduce_event, validate_event_history
 
 
 class EventSequenceError(EventStoreConflictError):
@@ -41,6 +41,7 @@ class InMemoryEventStore:
 
         events = self._events_by_run.setdefault(event.run_id, [])
         previous_state = self._states_by_run.get(event.run_id)
+        validate_event_history(events, event)
         state = reduce_event(previous_state, event)
 
         events.append(event)

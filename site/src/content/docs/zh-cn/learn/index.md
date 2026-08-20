@@ -11,6 +11,7 @@ sourceRefs:
   - F-0006
   - F-0007
   - F-0008
+  - F-0016
 ---
 
 这条学习路径始终使用同一个例子：用户要求 Agent 阅读仓库文档，并把总结写进 `outputs/`。
@@ -78,5 +79,10 @@ Registry、`prepare`、Policy 和 Executor。你会看到参数错误和权限�
 `fsync`、原子 replace 和 Artifact。你会看到“目标没有半份内容”为什么仍不等于崩溃恢复或
 exactly-once。
 
-当前这条路径覆盖已实现的 F-0001 至 F-0004、F-0006 至 F-0008。ContextBuilder 和完整 Agent Loop
-仍是 P1 的后续工作；崩溃恢复和用户授权分别属于 P2、P3。
+## 10. 把模型、Tool 和 Event 接成一次 Run
+
+[一次文件任务怎样走完整条执行链](agent-loop-file-task.md)把前面的边界接起来。你会看到 Context
+怎样只从已提交 Event 重建、外部调用为什么发生在 started Event 之后，以及 Tool 失败怎样回到模型。
+
+当前这条路径覆盖已实现的 F-0001 至 F-0004、F-0006 至 F-0008 和 F-0016。生产 Run CLI 仍属于
+F-0005；崩溃恢复和用户授权分别属于 P2、P3。

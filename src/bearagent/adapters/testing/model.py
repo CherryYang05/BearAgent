@@ -32,3 +32,19 @@ class FakeModelProvider:
             yield event
         if self._failure is not None:
             raise self._failure
+
+
+class ScriptedFakeModelProvider:
+    """Replay one finite Provider-neutral event stream per model request."""
+
+    def __init__(self, streams: Iterable[Iterable[ModelEvent]]) -> None:
+        self._streams = tuple(tuple(stream) for stream in streams)
+        self.requests: list[ModelRequest] = []
+
+    async def stream(self, request: ModelRequest) -> AsyncIterator[ModelEvent]:
+        index = len(self.requests)
+        self.requests.append(request)
+        if index >= len(self._streams):
+            raise RuntimeError("Fake model script is exhausted")
+        for event in self._streams[index]:
+            yield event

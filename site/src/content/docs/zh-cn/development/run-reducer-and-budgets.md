@@ -8,8 +8,8 @@ sourceRefs:
   - domain schema snapshot
 ---
 
-F-0002 把状态计算集中在一处。数据库以后保存 Event，Agent Loop 以后决定何时请求下一次调用，
-CLI 以后显示状态；三者都必须使用这里的规则，不能各自维护一套计数和状态转换。
+F-0002 把状态计算集中在一处。数据库保存 Event，F-0016 Agent Loop 决定何时请求下一次调用，
+F-0005 CLI 以后显示状态；三者都必须使用这里的规则，不能各自维护一套计数和状态转换。
 
 ## 从一条 Event 追代码
 
@@ -54,5 +54,5 @@ uv run ruff check .
 uv run pyright
 ```
 
-生成快照后先审查 diff，再运行完整测试。F-0002 没有实现 Event store、Agent Loop、真实模型调用、
-工具执行或启动恢复。
+生成快照后先审查 diff，再运行完整测试。F-0002 自身没有实现 Event store、Agent Loop、真实模型
+调用、工具执行或启动恢复；后续 F-0003 至 F-0016 已接通其中一部分，启动恢复仍属于 P2。

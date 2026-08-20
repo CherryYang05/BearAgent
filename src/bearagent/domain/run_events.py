@@ -1,17 +1,28 @@
 """Typed v1 payloads for Events that change P1 Run state."""
 
 from types import MappingProxyType
+from typing import Self
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
-from bearagent.domain._base import DomainModel
+from bearagent.domain._base import DomainModel, thaw_json_mapping
+from bearagent.domain.agent import AgentConfig, ContextBuildReport
 from bearagent.domain.errors import ErrorInfo
 from bearagent.domain.events import Event
 from bearagent.domain.ids import ActivityId, ModelCallId, SessionId, ToolCallId
-from bearagent.domain.messages import TOOL_NAME_PATTERN
+from bearagent.domain.messages import TOOL_NAME_PATTERN, Message, MessageRole, ToolCallPart
+from bearagent.domain.model import (
+    MAX_PROVIDER_IDENTIFIER_CHARS,
+    MODEL_NAME_PATTERN,
+    ModelFinishReason,
+    ModelRequest,
+)
 from bearagent.domain.runs import BudgetLimits
+from bearagent.domain.tools import ToolExecutionRecord, ToolRequest, ToolStatus
 
 RUN_EVENT_SCHEMA_VERSION = 1
+RUN_EVENT_SCHEMA_VERSION_V2 = 2
+LATEST_RUN_EVENT_SCHEMA_VERSION = RUN_EVENT_SCHEMA_VERSION_V2
 
 
 class RunCreatedPayload(DomainModel):
@@ -100,6 +111,110 @@ class ToolCallFailedPayload(DomainModel):
     error: ErrorInfo
 
 
+class RunCreatedPayloadV2(RunCreatedPayload):
+    """Trusted objective and Agent configuration captured for a new Run."""
+
+    objective: str = Field(min_length=1, max_length=1_000_000)
+    agent_config: AgentConfig
+
+
+class RunStartedPayloadV2(RunStartedPayload):
+    """v2 Run start marker."""
+
+
+class RunSucceededPayloadV2(RunSucceededPayload):
+    """v2 successful terminal marker."""
+
+
+class RunFailedPayloadV2(RunFailedPayload):
+    """v2 failed terminal marker."""
+
+
+class ModelCallRequestedPayloadV2(ModelCallRequestedPayload):
+    """Exact Provider-neutral request built from committed facts."""
+
+    request: ModelRequest
+    context_report: ContextBuildReport
+
+
+class ModelCallStartedPayloadV2(ModelCallStartedPayload):
+    """v2 model Activity start marker."""
+
+
+class ModelCallCompletedPayloadV2(ModelCallCompletedPayload):
+    """Complete assistant output and Provider metadata for one model Activity."""
+
+    message: Message
+    provider_request_id: str = Field(min_length=1, max_length=MAX_PROVIDER_IDENTIFIER_CHARS)
+    provider_model: str = Field(pattern=MODEL_NAME_PATTERN)
+    finish_reason: ModelFinishReason
+
+    @model_validator(mode="after")
+    def require_finish_reason_to_match_message(self) -> Self:
+        if self.message.role is not MessageRole.ASSISTANT:
+            raise ValueError("model completion requires an assistant message")
+        tool_calls = tuple(part for part in self.message.parts if isinstance(part, ToolCallPart))
+        if self.finish_reason is ModelFinishReason.TOOL_CALLS and not tool_calls:
+            raise ValueError("tool_calls finish requires at least one Tool call")
+        if self.finish_reason is ModelFinishReason.STOP and tool_calls:
+            raise ValueError("stop finish cannot contain Tool calls")
+        return self
+
+
+class ModelCallFailedPayloadV2(ModelCallFailedPayload):
+    """Safe model failure plus the amount of discarded partial output."""
+
+    discarded_output_chars: int = Field(default=0, ge=0, strict=True)
+
+
+class ToolCallRequestedPayloadV2(ToolCallRequestedPayload):
+    """The exact untrusted Tool request emitted by the model."""
+
+    request: ToolRequest
+
+    @model_validator(mode="after")
+    def require_request_identity(self) -> Self:
+        if self.request.tool_call_id != self.tool_call_id:
+            raise ValueError("Tool request identity must match its Activity payload")
+        if self.request.name != self.tool_name:
+            raise ValueError("Tool request name must match its Activity payload")
+        return self
+
+
+class ToolCallStartedPayloadV2(ToolCallStartedPayload):
+    """v2 Tool Activity start marker."""
+
+
+class ToolCallCompletedPayloadV2(ToolCallCompletedPayload):
+    """Complete Tool execution evidence for a successful Activity."""
+
+    execution: ToolExecutionRecord
+
+    @model_validator(mode="after")
+    def require_successful_execution(self) -> Self:
+        if self.execution.request.tool_call_id != self.tool_call_id:
+            raise ValueError("Tool execution identity must match its Activity payload")
+        if self.execution.result.status is not ToolStatus.SUCCEEDED:
+            raise ValueError("completed Tool Activity requires a successful result")
+        return self
+
+
+class ToolCallFailedPayloadV2(ToolCallFailedPayload):
+    """Complete Tool execution evidence for a failed Activity."""
+
+    execution: ToolExecutionRecord
+
+    @model_validator(mode="after")
+    def require_failed_execution(self) -> Self:
+        if self.execution.request.tool_call_id != self.tool_call_id:
+            raise ValueError("Tool execution identity must match its Activity payload")
+        if self.execution.result.status is not ToolStatus.FAILED:
+            raise ValueError("failed Tool Activity requires a failed result")
+        if self.execution.result.error != self.error:
+            raise ValueError("Tool failure Error must match its execution result")
+        return self
+
+
 type RunEventPayload = (
     RunCreatedPayload
     | RunStartedPayload
@@ -113,6 +228,18 @@ type RunEventPayload = (
     | ToolCallStartedPayload
     | ToolCallCompletedPayload
     | ToolCallFailedPayload
+    | RunCreatedPayloadV2
+    | RunStartedPayloadV2
+    | RunSucceededPayloadV2
+    | RunFailedPayloadV2
+    | ModelCallRequestedPayloadV2
+    | ModelCallStartedPayloadV2
+    | ModelCallCompletedPayloadV2
+    | ModelCallFailedPayloadV2
+    | ToolCallRequestedPayloadV2
+    | ToolCallStartedPayloadV2
+    | ToolCallCompletedPayloadV2
+    | ToolCallFailedPayloadV2
 )
 
 
@@ -129,6 +256,18 @@ _PAYLOAD_TYPES = {
     ("ToolCallStarted", RUN_EVENT_SCHEMA_VERSION): ToolCallStartedPayload,
     ("ToolCallCompleted", RUN_EVENT_SCHEMA_VERSION): ToolCallCompletedPayload,
     ("ToolCallFailed", RUN_EVENT_SCHEMA_VERSION): ToolCallFailedPayload,
+    ("RunCreated", RUN_EVENT_SCHEMA_VERSION_V2): RunCreatedPayloadV2,
+    ("RunStarted", RUN_EVENT_SCHEMA_VERSION_V2): RunStartedPayloadV2,
+    ("RunSucceeded", RUN_EVENT_SCHEMA_VERSION_V2): RunSucceededPayloadV2,
+    ("RunFailed", RUN_EVENT_SCHEMA_VERSION_V2): RunFailedPayloadV2,
+    ("ModelCallRequested", RUN_EVENT_SCHEMA_VERSION_V2): ModelCallRequestedPayloadV2,
+    ("ModelCallStarted", RUN_EVENT_SCHEMA_VERSION_V2): ModelCallStartedPayloadV2,
+    ("ModelCallCompleted", RUN_EVENT_SCHEMA_VERSION_V2): ModelCallCompletedPayloadV2,
+    ("ModelCallFailed", RUN_EVENT_SCHEMA_VERSION_V2): ModelCallFailedPayloadV2,
+    ("ToolCallRequested", RUN_EVENT_SCHEMA_VERSION_V2): ToolCallRequestedPayloadV2,
+    ("ToolCallStarted", RUN_EVENT_SCHEMA_VERSION_V2): ToolCallStartedPayloadV2,
+    ("ToolCallCompleted", RUN_EVENT_SCHEMA_VERSION_V2): ToolCallCompletedPayloadV2,
+    ("ToolCallFailed", RUN_EVENT_SCHEMA_VERSION_V2): ToolCallFailedPayloadV2,
 }
 
 RUN_EVENT_PAYLOAD_TYPES = MappingProxyType(_PAYLOAD_TYPES)
@@ -137,4 +276,4 @@ RUN_EVENT_PAYLOAD_TYPES = MappingProxyType(_PAYLOAD_TYPES)
 def parse_run_event_payload(event: Event) -> RunEventPayload:
     """Validate an Event payload against its exact type and schema version."""
     payload_type = RUN_EVENT_PAYLOAD_TYPES[(event.event_type, event.schema_version)]
-    return payload_type.model_validate(event.payload)
+    return payload_type.model_validate(thaw_json_mapping(event.payload))

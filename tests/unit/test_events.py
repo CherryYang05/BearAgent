@@ -4,7 +4,7 @@ from typing import cast
 import pytest
 from pydantic import JsonValue, ValidationError
 
-from bearagent.domain.events import Event
+from bearagent.domain.events import MAX_EVENT_PAYLOAD_BYTES, Event
 from bearagent.domain.ids import CausationId, CorrelationId, EventId, RunId
 
 
@@ -81,3 +81,8 @@ def test_event_rejects_naive_time_and_non_json_payload() -> None:
 def test_event_rejects_unknown_envelope_fields() -> None:
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         build_event(provider_request={"raw": "external"})
+
+
+def test_event_payload_byte_limit_is_part_of_the_domain_contract() -> None:
+    with pytest.raises(ValidationError, match="payload exceeds the byte limit"):
+        build_event(payload={"value": "界" * (MAX_EVENT_PAYLOAD_BYTES // 3 + 1)})

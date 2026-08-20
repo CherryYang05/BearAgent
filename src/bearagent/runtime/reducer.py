@@ -17,8 +17,11 @@ from bearagent.domain.run_events import (
     RunStartedPayload,
     RunSucceededPayload,
     ToolCallCompletedPayload,
+    ToolCallCompletedPayloadV2,
     ToolCallFailedPayload,
+    ToolCallFailedPayloadV2,
     ToolCallRequestedPayload,
+    ToolCallRequestedPayloadV2,
     ToolCallStartedPayload,
     parse_run_event_payload,
 )
@@ -40,8 +43,11 @@ class RunReducerError(BearAgentError):
 def reduce_events(events: Iterable[Event]) -> RunState:
     """Fold a non-empty ordered Event stream into one immutable Run state."""
     state: RunState | None = None
+    prior_events: list[Event] = []
     for event in events:
+        validate_event_history(prior_events, event)
         state = reduce_event(state, event)
+        prior_events.append(event)
     if state is None:
         raise RunReducerError(
             ErrorInfo(
@@ -51,6 +57,32 @@ def reduce_events(events: Iterable[Event]) -> RunState:
             )
         )
     return state
+
+
+def validate_event_history(prior_events: Iterable[Event], event: Event) -> None:
+    """Validate facts that require earlier Event payloads, not projection fields."""
+    if event.event_type not in {"ToolCallCompleted", "ToolCallFailed"}:
+        return
+    if event.schema_version != 2:
+        return
+    history = tuple(prior_events)
+    if len(history) < 2:
+        _fail_event(event, "v2 Tool terminal Event requires its requested Event history.")
+    requested_event = history[-2]
+    if requested_event.event_type != "ToolCallRequested" or requested_event.schema_version != 2:
+        _fail_event(event, "v2 Tool terminal Event does not follow its requested Event.")
+    try:
+        requested = parse_run_event_payload(requested_event)
+        terminal = parse_run_event_payload(event)
+    except (KeyError, ValidationError) as cause:
+        _fail_event(event, "v2 Tool Event history is invalid.", cause=cause)
+    if not isinstance(requested, ToolCallRequestedPayloadV2):
+        _fail_event(event, "v2 Tool requested Event payload is invalid.")
+    if (
+        isinstance(terminal, ToolCallCompletedPayloadV2 | ToolCallFailedPayloadV2)
+        and terminal.execution.request != requested.request
+    ):
+        _fail_event(event, "Tool execution request does not match the requested Activity.")
 
 
 def reduce_event(state: RunState | None, event: Event) -> RunState:

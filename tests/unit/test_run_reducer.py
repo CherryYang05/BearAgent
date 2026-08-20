@@ -27,10 +27,13 @@ from bearagent.domain.run_events import (
     RunSucceededPayload,
     ToolCallCompletedPayload,
     ToolCallFailedPayload,
+    ToolCallFailedPayloadV2,
     ToolCallRequestedPayload,
+    ToolCallRequestedPayloadV2,
     ToolCallStartedPayload,
 )
 from bearagent.domain.runs import ActivityStatus, BudgetLimits, RunState, RunStatus
+from bearagent.domain.tools import ToolExecutionRecord, ToolRequest, ToolResult, ToolStatus
 from bearagent.runtime.reducer import RunReducerError, reduce_event, reduce_events
 
 BASE_TIME = datetime(2026, 8, 11, 8, 0, tzinfo=UTC)
@@ -105,6 +108,70 @@ def tool_error() -> ErrorInfo:
         code=ErrorCode.TOOL_ERROR,
         message="Tool call failed.",
     )
+
+
+def test_v2_tool_terminal_requires_the_exact_requested_tool_request() -> None:
+    run_id, _, events = started_run_events()
+    state = reduce_events(events)
+    activity_id = ActivityId.new()
+    tool_call_id = ToolCallId.new()
+    requested = ToolRequest(
+        tool_call_id=tool_call_id,
+        name="workspace.read",
+        arguments={"path": "docs/requested.md"},
+    )
+    requested_event = make_event(
+        run_id,
+        3,
+        "ToolCallRequested",
+        ToolCallRequestedPayloadV2(
+            activity_id=activity_id,
+            tool_call_id=tool_call_id,
+            tool_name=requested.name,
+            request=requested,
+        ),
+        schema_version=2,
+    )
+    state = reduce_event(state, requested_event)
+    started_event = make_event(
+        run_id,
+        4,
+        "ToolCallStarted",
+        ToolCallStartedPayload(activity_id=activity_id, tool_call_id=tool_call_id),
+        schema_version=2,
+    )
+    state = reduce_event(state, started_event)
+    error = tool_error()
+    different_request = ToolRequest(
+        tool_call_id=tool_call_id,
+        name="workspace.write",
+        arguments={"path": "outputs/report.md", "content": "different"},
+    )
+    terminal = make_event(
+        run_id,
+        5,
+        "ToolCallFailed",
+        ToolCallFailedPayloadV2(
+            activity_id=activity_id,
+            tool_call_id=tool_call_id,
+            error=error,
+            execution=ToolExecutionRecord(
+                request=different_request,
+                reached_adapter=False,
+                result=ToolResult(
+                    tool_call_id=tool_call_id,
+                    status=ToolStatus.FAILED,
+                    error=error,
+                ),
+            ),
+        ),
+        schema_version=2,
+    )
+
+    with pytest.raises(RunReducerError, match="does not match"):
+        reduce_events([*events, requested_event, started_event, terminal])
+
+    assert state.activities[-1].status is ActivityStatus.RUNNING
 
 
 def test_run_lifecycle_is_immutable_and_json_round_trips() -> None:

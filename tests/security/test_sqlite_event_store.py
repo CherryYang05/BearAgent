@@ -78,18 +78,18 @@ def test_payload_and_sqlite_integer_limits_fail_before_writing(tmp_path: Path) -
         database_path = tmp_path / "bounded.sqlite3"
         store = SqliteEventStore(database_path)
         await store.initialize()
-        oversized = run_created_event(RunId.new())
-        values = oversized.model_dump(mode="json")
+        payload_event = run_created_event(RunId.new())
+        values = payload_event.model_dump(mode="json")
         values["payload"]["padding"] = "x" * (4 * 1024 * 1024)
-        oversized = oversized.model_validate(values)
 
         with pytest.raises(ValueError, match="payload exceeds"):
-            await store.append(oversized)
-        sequence_values = run_created_event(RunId.new()).model_dump(mode="json")
+            payload_event.model_validate(values)
+        sequence_event = run_created_event(RunId.new())
+        sequence_values = sequence_event.model_dump(mode="json")
         sequence_values["sequence"] = MAX_EVENT_SEQUENCE + 1
-        oversized_sequence = oversized.model_validate(sequence_values)
+        oversized_sequence = sequence_event.model_validate(sequence_values)
         with pytest.raises(ValueError, match="signed integer range"):
             await store.append(oversized_sequence)
-        assert await store.get_run(oversized.run_id) is None
+        assert await store.get_run(payload_event.run_id) is None
 
     asyncio.run(exercise())
