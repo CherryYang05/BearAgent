@@ -1,8 +1,8 @@
 ---
 title: BearAgent Architecture Baseline
 status: accepted
-version: 0.7
-last_verified: 2026-08-18
+version: 0.8
+last_verified: 2026-08-20
 ---
 
 # BearAgent 总体架构
@@ -53,17 +53,18 @@ flowchart TB
 | workspace 输出边界 | `outputs/**` UTF-8 原子创建/替换、Artifact 元数据和失败前旧目标保护 |
 | Agent 执行链 | 从已提交 Event 构造有界 Context，串行调用模型与 Tool，并把 v2 Activity 事实写回 Store |
 | 固定任务 | 五个版本化文件任务在内存和 SQLite Store 上使用 Fake Provider 完成确定性验证 |
+| 用户入口 | `run/inspect/events` CLI、严格 Run profile、human/JSON renderer 和安全退出码 |
+| 查询 | application query service 只通过 EventStore 读取 projection 与分页 Event，并重建 Artifact 元数据 |
 | 测试替身 | Fake model、Fake tool、内存 Event store |
 | 文档 | 工程 `docs/` 与本地 Starlight 学习/开发者站点 |
 
-当前 application 层的 `AgentLoop` 已把 EventStore、ContextBuilder、ModelProvider 和 ToolExecutor 接成
-串行执行链。测试可用 Fake Provider 配合真实 workspace Tool，在内存或 SQLite Store 中完成文件任务。
-F-0005 尚未组装生产 CLI，因此用户还不能从命令行启动真实模型任务；持久事实也仍不等于进程重启后
-会自动继续。
+`bootstrap.py` 已把 OpenAI adapter、SQLite、workspace Tools、固定 Policy 和 AgentLoop 组装到同一
+生产入口。F-0005 测试注入 Fake Provider，让五个固定任务走这条 production composition，并重开
+SQLite 检查 `inspect/events`。真实模型 API 尚未做退出演练；持久事实也仍不等于进程重启后会自动继续。
 
 ### 3.2 已接受但尚未接通
 
-- P1：Run CLI、inspect/events 查询和真实模型退出演练；
+- P1：决定并执行真实模型 API/4-of-5 gate（若保留），再完成整个里程碑 Reality Check；
 - P2：Checkpoint、Attempt、暂停/继续/取消、恢复协调和 `UNKNOWN` 处置；
 - P3：Grant、Policy、Approval、隔离 runner、HTTP API、认证和备份恢复；
 - P4：Skill、MCP、Web UI、Memory 和受控联网；
@@ -237,8 +238,11 @@ BearAgent 不承诺任意外部 API exactly-once，也不假装可以从任意 P
 
 F-0004 已实现首个 OpenAI Responses 流式 adapter，并使用确定性替代实现与契约测试约束内部接口。
 SDK 自动重试被禁用，工具调用参数必须是有界 JSON object，流中只有文本增量、完整工具调用和唯一
-完成事件可以进入 Runtime。F-0016 的 AgentLoop 已通过该 port 调度模型，但生产 OpenAI adapter 与
-CLI 的组装仍属于 F-0005；第二个生产 adapter 出现时，需要运行同一组模型行为测试。
+完成事件可以进入 Runtime。F-0016 的 AgentLoop 已通过该 port 调度模型，F-0005 又在
+`bootstrap.py` 把首个生产 adapter 接到 CLI。OpenAI SDK client 延迟到首个模型 Activity 真正开始时
+创建；零预算 Run 因此先保存 `budget_exhausted`，缺少凭据则保存安全的
+`provider_authentication`，而不是在 composition 阶段丢失 Run。自动测试始终注入 Fake Provider，
+没有读取真实 key 或发出真实模型请求；第二个生产 adapter 出现时，需要运行同一组模型行为测试。
 
 参数错误、权限错误和上下文超限不能盲目重试。只有明确的临时错误允许有限重试。
 
@@ -359,7 +363,14 @@ bearagent run events <run_id>
 bearagent doctor
 ```
 
-人类可读输出与 `--json` 调用同一 application command，不复制业务逻辑。
+`run` 默认读取当前目录作为 workspace、`data/p1-run-profile.json` 和 `data/bearagent.db`，也允许用
+显式选项覆盖。profile 只有 versioned AgentConfig 和 BudgetLimits；Provider key/base URL 只从环境
+注入。人类可读输出与 `--json` 使用同一个 application result，不复制查询或状态规则。
+
+`inspect` 返回 Reducer projection 和从已提交 v2 Tool Event 重建的 Artifact。`events` 使用有界页、
+sequence cursor 和 `has_more`；默认 human 输出不打印 payload，显式 `--json` 才导出完整 Event。查询
+只调用 EventStore port，数据库不存在时不会创建空库。进程中断后的非终态 Run 会原样显示，不会
+自动恢复或伪造 terminal 状态。
 
 ### 13.2 P3 HTTP/SSE
 

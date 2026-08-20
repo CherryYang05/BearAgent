@@ -11,7 +11,7 @@ from bearagent.adapters.testing import (
 from bearagent.application.agent_loop import AgentLoop
 from bearagent.domain.agent import AgentConfig, ModelPricing, RunInput
 from bearagent.domain.errors import ErrorCategory, ErrorCode, ErrorInfo
-from bearagent.domain.ids import SessionId, ToolCallId
+from bearagent.domain.ids import RunId, SessionId, ToolCallId
 from bearagent.domain.messages import MessageRole, ToolResultPart
 from bearagent.domain.model import (
     ModelCompleted,
@@ -150,6 +150,25 @@ def test_agent_loop_persists_a_text_run_and_deterministic_cost() -> None:
     assert all(event.schema_version == 2 for event in events)
     requested = parse_run_event_payload(events[2])
     assert requested.request == provider.requests[0]  # type: ignore[union-attr]
+
+
+def test_agent_loop_accepts_a_trusted_preallocated_run_id() -> None:
+    provider = ScriptedFakeModelProvider(
+        [[ModelTextDelta(text="done"), completed(ModelFinishReason.STOP)]]
+    )
+    store = InMemoryEventStore()
+    loop = AgentLoop(
+        model_provider=provider,
+        event_store=store,
+        tool_executor=executor(),
+        clock=TickingClock(),
+    )
+    run_id = RunId.new()
+
+    result = asyncio.run(loop.run(run_input(), run_id=run_id))
+
+    assert result.run_id == run_id
+    assert asyncio.run(store.get_run(run_id)) == result.state
 
 
 def test_agent_loop_executes_tool_then_rebuilds_context_for_final_answer() -> None:

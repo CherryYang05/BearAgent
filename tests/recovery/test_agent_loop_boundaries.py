@@ -20,6 +20,7 @@ from bearagent.adapters.testing import (
 )
 from bearagent.adapters.tools import build_workspace_tools
 from bearagent.application.agent_loop import AgentLoop
+from bearagent.application.run_queries import RunQueryService
 from bearagent.domain.agent import AgentConfig, RunInput
 from bearagent.domain.errors import ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.events import Event
@@ -193,6 +194,10 @@ def test_cancellation_propagates_and_keeps_last_committed_activity_non_terminal(
     assert store.committed_events[-1].event_type == "ModelCallStarted"
     assert "ModelCallFailed" not in store.attempted_types
     assert "RunFailed" not in store.attempted_types
+    inspection = asyncio.run(RunQueryService(store).inspect(store.committed_events[0].run_id))
+    assert inspection.state.status.value == "running"
+    assert inspection.state.activities[-1].status.value == "running"
+    assert inspection.artifacts == ()
 
 
 @pytest.mark.parametrize(
@@ -334,3 +339,6 @@ def test_real_workspace_write_is_not_retried_when_terminal_append_fails(
     assert (workspace / "outputs" / "result.md").read_text(encoding="utf-8") == "complete output\n"
     assert store.attempted_types.count("ToolCallCompleted") == 1
     assert "RunFailed" not in store.attempted_types
+    inspection = asyncio.run(RunQueryService(store).inspect(store.committed_events[0].run_id))
+    assert inspection.state.status.value == "running"
+    assert inspection.artifacts == ()

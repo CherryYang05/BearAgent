@@ -44,6 +44,7 @@ export default defineConfig({
             { label: 'Tool 请求为什么要过四道检查', slug: 'learn/tool-execution-boundary' },
             { label: 'Windows 和 Unix 路径怎样统一', slug: 'learn/workspace-read-boundary' },
             { label: '一次文件任务怎样走完整条链', slug: 'learn/agent-loop-file-task' },
+            { label: '从命令行运行并检查 Run', slug: 'learn/run-inspect-events' },
           ],
         },
         {
@@ -66,6 +67,7 @@ export default defineConfig({
             { label: 'F-0007：workspace 只读 Tool', slug: 'development/workspace-read-tools' },
             { label: 'F-0008：原子输出与 Artifact', slug: 'development/atomic-output-artifacts' },
             { label: 'F-0016：有界 Agent Loop', slug: 'development/agent-loop' },
+            { label: 'F-0005：生产 CLI 与查询', slug: 'development/run-cli' },
           ],
         },
         {

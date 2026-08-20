@@ -18,7 +18,7 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 
 ## 当前计划
 
-当前没有 active 主 Plan。
+当前没有 active 主 Plan。P1 的真实模型 API/演练和 Reality Check 将在 F-0005 后单独确认。
 
 ## 已完成计划
 
@@ -31,3 +31,4 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 - [PLAN-F-0008：实现 outputs 原子写入和 Artifact 元数据](PLAN-F-0008-atomic-output-artifacts.md)
 - [PLAN-F-0015：本地 Starlight 文档站](PLAN-F-0015-local-starlight-docs-site.md)
 - [PLAN-F-0016：实现有界 Context 和串行 Agent Loop](PLAN-F-0016-bounded-context-agent-loop.md)
+- [PLAN-F-0005：接通生产 Run、inspect 和 events CLI](PLAN-F-0005-run-inspect-events-cli.md)

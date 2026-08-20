@@ -24,6 +24,7 @@ draft -> accepted -> implemented -> superseded
 - [F-0002：从 Event 计算 Run/Activity 状态和预算](F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
 - [F-0003：使用 SQLite 原子保存 Event 和 projection](F-0003-event-store-sqlite-projections.md) — implemented
 - [F-0004：建立模型内部接口和首个生产 adapter](F-0004-model-provider-first-adapter.md) — implemented
+- [F-0005：从命令行运行文件任务，并查看同一批已保存事实](F-0005-run-inspect-events-cli.md) — implemented
 - [F-0006：所有 Tool 请求经过同一个执行和权限入口](F-0006-tool-registry-executor-policy.md) — implemented
 - [F-0007：把 workspace 中的目录和文本安全地交给 Agent 阅读](F-0007-workspace-read-tools.md) — implemented
 - [F-0008：只把完整结果写进 outputs，并返回可核对的 Artifact](F-0008-atomic-output-artifacts.md) — implemented

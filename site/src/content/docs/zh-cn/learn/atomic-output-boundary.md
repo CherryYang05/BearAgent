@@ -74,6 +74,6 @@ F-0008 所说的原子可见性。
 路径越界、目标不是普通文件或内容超限时，都不会提交目标。
 
 这条写入边界已有创建、替换、路径逃逸、链接、目标变化、`fsync`/replace 失败、timeout 和取消测试。
-F-0016 已实现 Agent Loop 和 Tool Event 接线；Run CLI 仍属于 F-0005。
+F-0016 已实现 Agent Loop 和 Tool Event 接线；F-0005 已让 Run CLI 返回并查询已提交的 Artifact 元数据。
 
 继续阅读[原子输出与 Artifact 实现导读](../development/atomic-output-artifacts.md)，查看代码位置和测试。

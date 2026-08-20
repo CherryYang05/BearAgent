@@ -6,9 +6,15 @@ from bearagent.domain.agent import (
     ContextBuildResult,
     ModelPricing,
     RunInput,
+    RunProfile,
     RunResult,
 )
-from bearagent.domain.artifacts import Artifact, ArtifactEncoding, ArtifactKind
+from bearagent.domain.artifacts import (
+    Artifact,
+    ArtifactEncoding,
+    ArtifactKind,
+    artifact_from_tool_result_data,
+)
 from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.events import Event
 from bearagent.domain.ids import (
@@ -44,6 +50,7 @@ from bearagent.domain.model import (
     ModelToolDefinition,
     ModelUsage,
 )
+from bearagent.domain.queries import EventPage, RunInspection
 from bearagent.domain.run_events import (
     ModelCallCompletedPayload,
     ModelCallCompletedPayloadV2,
@@ -105,6 +112,7 @@ __all__ = [
     "ArtifactEncoding",
     "ArtifactId",
     "ArtifactKind",
+    "artifact_from_tool_result_data",
     "BearAgentError",
     "BudgetDimension",
     "BudgetExhaustion",
@@ -118,6 +126,7 @@ __all__ = [
     "ErrorCode",
     "Event",
     "EventId",
+    "EventPage",
     "ErrorInfo",
     "IdGenerator",
     "Message",
@@ -153,6 +162,8 @@ __all__ = [
     "RunFailedPayload",
     "RunFailedPayloadV2",
     "RunInput",
+    "RunInspection",
+    "RunProfile",
     "RunResult",
     "RunStartedPayload",
     "RunStartedPayloadV2",

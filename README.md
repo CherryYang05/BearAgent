@@ -12,10 +12,9 @@
 </div>
 
 > [!IMPORTANT]
-> BearAgent 当前还不能执行真实 Agent 任务。仓库已经实现内部数据类型、Run/Activity 状态、Event
-> Reducer、预算检查、SQLite EventStore、首个 OpenAI Responses adapter、统一 Tool 执行边界、受限
-> workspace 读写工具、原子输出 Artifact 和本地文档站；ContextBuilder、完整 Agent Loop 与 Run CLI
-> 仍在 P1 计划中。
+> BearAgent 已接通本地 `run/inspect/events` CLI、SQLite、OpenAI Responses adapter、受限 workspace
+> Tools 和有界 Agent Loop。自动验证使用 Fake Provider，尚未用真实模型完成 P1 的 4/5 退出演练，
+> 也还没有 P2 的崩溃恢复；因此 P1 仍是进行中。
 
 ## 从一个文件任务说起
 
@@ -45,17 +44,14 @@ BearAgent 不以复刻 Manus、Claude Code 或堆叠模型、工具和 Agent 角
 
 ## 当前状态
 
-| 已有代码 | P1 还要接通 | 更晚再做 |
+| 已有代码 | P1 还要确认/验证 | 更晚再做 |
 |---|---|---|
-| Python 3.12 + uv 工程与 CI | ContextBuilder 和版本化 Agent 配置 | P2：崩溃恢复、Attempt、`UNKNOWN` |
-| `help`、`version`、`doctor` | `run`、`inspect`、`events` | P3：Approval、隔离执行、安全自托管 |
-| 类型化 ID、Message、Error、Event、Artifact | ContextBuilder 和有界 Agent Loop | P4：Skill、MCP、Web、Memory |
-| Run/Activity 状态与五类预算 | ContextBuilder 与有界 Agent Loop | P5：持续追踪与跨版本评测 |
-| SQLite EventStore、projection 与 migration | Tool Activity Event 接线 | P6+：多个 Agent、浏览器、分布式执行 |
-| ModelProvider port 与 OpenAI Responses adapter | 固定任务集与可复现结果 | 只有真实需求出现后再扩展 |
-| Tool Registry、固定 Policy、统一 Executor | Tool Activity Event 接线 | 只有真实需求出现后再扩展 |
-| `workspace.list/read/search/write` 与路径边界 | 文件 Tool 与 Agent Loop 接线 | 只有真实需求出现后再扩展 |
-| 中文 Starlight 文档站 | 端到端固定任务集 | 只有真实需求出现后再扩展 |
+| Python 3.12、uv、CI 与文档站 | 是否把真实模型 API 演练保留为 P1 关闭门 | P2：崩溃恢复、Attempt、`UNKNOWN` |
+| `doctor`、`run`、`inspect`、`events` | 若保留，完成真实模型固定任务 4/5 | P3：Approval、隔离执行、安全自托管 |
+| 类型化领域数据、Reducer 与五类预算 | 完整执行 P1 Reality Check | P4：Skill、MCP、Web、Memory |
+| SQLite EventStore 与 version 1 migration | 核对文档、安装包和失败演练证据 | P5：持续追踪与跨版本评测 |
+| OpenAI adapter、Agent Loop 和 production composition | 不在 F-0005 内读取真实凭据 | P6+：多个 Agent、浏览器、分布式执行 |
+| Registry、固定 Policy 与受限 workspace Tools |  | 只有真实需求出现后再扩展 |
 
 当前事实见[路线图](docs/project/roadmap.md)和[公开状态页](site/src/content/docs/zh-cn/project/status.md)。
 
@@ -70,6 +66,7 @@ uv python install 3.12
 uv sync --all-groups --locked
 uv run bearagent --help
 uv run bearagent doctor
+uv run bearagent run --help
 ```
 
 机器可读诊断：
@@ -78,6 +75,23 @@ uv run bearagent doctor
 uv run bearagent doctor --json
 uv run python -m bearagent doctor --json
 ```
+
+F-0005 的命令入口已经实现：
+
+```powershell
+uv run bearagent run "整理 workspace 中的资料" --profile data/p1-run-profile.json
+uv run bearagent run inspect <run-id> --json
+uv run bearagent run events <run-id> --after-sequence 0 --limit 100 --json
+```
+
+Run profile 只保存非敏感 `AgentConfig` 和预算；API key/base URL 只能来自进程环境。当前仓库只用
+注入式 Fake Provider 自动验证这条链，真实模型配置和 P1 退出演练将在 F-0005 后单独决定。详见
+[从命令行运行并检查一次 Run](site/src/content/docs/zh-cn/learn/run-inspect-events.md)。
+
+[version 1 安全模板](docs/reference/run-profile-v1.example.json)把预算全部设为 0。复制后执行 `run` 会
+保存一个明确的 `budget_exhausted` Run，但不会创建 OpenAI SDK client、读取凭据或调用模型/Tool。只有
+在确认真实 API 演练方案，并填入真实 model、pricing version、费率和非零预算后，才应把它保存为
+`data/p1-run-profile.json`。
 
 ## 开发和验证
 

@@ -12,6 +12,7 @@ sourceRefs:
   - F-0007
   - F-0008
   - F-0016
+  - F-0005
 ---
 
 这条学习路径始终使用同一个例子：用户要求 Agent 阅读仓库文档，并把总结写进 `outputs/`。
@@ -84,5 +85,10 @@ exactly-once。
 [一次文件任务怎样走完整条执行链](agent-loop-file-task.md)把前面的边界接起来。你会看到 Context
 怎样只从已提交 Event 重建、外部调用为什么发生在 started Event 之后，以及 Tool 失败怎样回到模型。
 
-当前这条路径覆盖已实现的 F-0001 至 F-0004、F-0006 至 F-0008 和 F-0016。生产 Run CLI 仍属于
-F-0005；崩溃恢复和用户授权分别属于 P2、P3。
+## 11. 从终端启动后检查同一批事实
+
+[从命令行运行并检查一次 Run](run-inspect-events.md)说明 Run profile、production composition、
+`inspect/events` 和 human/JSON 输出怎样接到现有 EventStore，而不复制 SQL 或状态规则。
+
+当前这条路径覆盖已实现的 F-0001 至 F-0008、F-0015 和 F-0016。真实模型 P1 退出演练仍待单独
+决定；崩溃恢复和用户授权分别属于 P2、P3。

@@ -90,5 +90,5 @@ F-0016 已由 Agent Loop 把 ToolCallId、来源 Activity、规范化请求和�
 5. `workspace.write` 保持 `WORKSPACE_WRITE/NOT_SAFE`，Executor 不自动重试；
 6. F-0008 不增加 Event、SQLite 状态、delete Tool 或自动清理。
 
-当前 application RunResult 已能返回 Artifact 元数据，但还不能从 CLI 接收用户任务或查询 Artifact；
-这些用户入口属于 F-0005。
+application RunResult 会返回 Artifact 元数据；F-0005 的 CLI 已能启动任务，并由 `run inspect` 从已提交
+Tool Event 重建同一组 Artifact。当前仍没有独立 Artifact 数据库或下载 API。

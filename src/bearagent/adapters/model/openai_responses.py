@@ -13,6 +13,7 @@ from openai import (
     AsyncOpenAI,
     AuthenticationError,
     BadRequestError,
+    OpenAIError,
     PermissionDeniedError,
     RateLimitError,
 )
@@ -82,18 +83,20 @@ class OpenAIResponsesProvider:
             raise ValueError("Pass either a client or client configuration, not both")
         if client is not None and client.max_retries != 0:
             raise ValueError("Injected OpenAI client must disable automatic retries")
-        self._client = client or AsyncOpenAI(
-            api_key=api_key,
-            base_url=base_url,
-            max_retries=0,
-        )
+        # Production credentials come from the process environment. Delay SDK
+        # client creation until a model Activity actually starts so a zero-budget
+        # Run can fail durably without requiring credentials it will never use.
+        self._client = client
+        self._api_key = api_key
+        self._base_url = base_url
 
     async def stream(self, request: ModelRequest) -> AsyncIterator[ModelEvent]:
         terminal_seen = False
         output_chars = 0
         provider_tool_calls: dict[str, tuple[str, str]] = {}
         try:
-            stream = await self._client.responses.create(
+            client = self._client_or_create()
+            stream = await client.responses.create(
                 model=request.model,
                 input=_translate_input(request),
                 tools=_translate_tools(request),
@@ -136,6 +139,25 @@ class OpenAIResponsesProvider:
             raise _classify_sdk_error(cause) from cause
         if not terminal_seen:
             raise _protocol_error("Provider stream ended without a completion event.")
+
+    def _client_or_create(self) -> AsyncOpenAI:
+        if self._client is not None:
+            return self._client
+        try:
+            client = AsyncOpenAI(
+                api_key=self._api_key,
+                base_url=self._base_url,
+                max_retries=0,
+            )
+        except OpenAIError as cause:
+            raise _provider_error(
+                ErrorCode.PROVIDER_AUTHENTICATION,
+                "Model Provider credentials are not configured.",
+                retryable=False,
+                cause=cause,
+            ) from cause
+        self._client = client
+        return client
 
 
 def _translate_input(request: ModelRequest) -> list[ResponseInputItemParam]:

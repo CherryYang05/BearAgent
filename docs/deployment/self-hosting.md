@@ -1,8 +1,8 @@
 ---
 title: Local-first and Self-hosting Strategy
 status: accepted
-version: 0.4
-last_verified: 2026-08-13
+version: 0.5
+last_verified: 2026-08-20
 ---
 
 # 本地开发与自托管
@@ -42,6 +42,19 @@ Production  P3 安全门通过后才启用公网 hostname
 - 不开放 HTTP，不提供 host shell；
 - secret 只在本机环境或 secret store；
 - 文档站本地预览和 CI 构建，不部署。
+
+F-0005 的本地 CLI 默认使用当前目录作为 workspace、`data/p1-run-profile.json` 作为非敏感配置、
+`data/bearagent.db` 作为 EventStore。profile 只含 AgentConfig 与预算，不允许 API key、base URL 或本机
+路径。OpenAI adapter 由 SDK 从 `OPENAI_API_KEY` 和可选 `OPENAI_BASE_URL` 读取环境；这些值不进入
+Event。SDK client 只在首个模型 Activity 开始时创建；凭据缺失会成为持久的
+`provider_authentication` Run failure。自动测试注入 Fake Provider，尚未授权或完成真实模型演练。
+
+仓库中的 [`run-profile-v1.example.json`](../reference/run-profile-v1.example.json) 是 fail-closed 结构
+模板：所有预算为 0，model/pricing 是占位值。它允许 CLI 保存一个 `budget_exhausted` Run，但不会创建
+SDK client 或调用模型/Tool。未确认真实 API 演练方案前，不要把它改成会发起调用的配置。
+
+`run inspect/events` 只打开已经存在的普通数据库文件。不存在的路径不会生成空数据库；损坏或未来
+migration 只返回安全 persistence Error。这里仍是本地命令，不会启动 HTTP 服务。
 
 ### P1 完成后：公开静态文档
 
