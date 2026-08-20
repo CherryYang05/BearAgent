@@ -8,6 +8,8 @@ __pycache__/
 .pytest_cache/
 .pytest-state/
 .pytest-tmp/
+.pytest-state-*/
+.pytest-tmp-*/
 .ruff_cache/
 .coverage
 htmlcov/
@@ -23,6 +25,8 @@ site/dist/
 # Runtime data and secrets
 data/
 outputs/
+!evals/p1/workspaces/replace-existing-output/outputs/
+!evals/p1/workspaces/replace-existing-output/outputs/report.md
 .env
 .env.*
 !.env.example

@@ -22,15 +22,21 @@ IGNORED_DIRECTORIES = {
     "dist",
     "node_modules",
 }
+IGNORED_DIRECTORY_PREFIXES = (".pytest-state-", ".pytest-tmp-")
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 
 
 def markdown_files() -> list[Path]:
     """Return repository Markdown files while excluding generated environments."""
-    return sorted(
-        path
-        for path in ROOT.rglob("*.md")
-        if not any(part in IGNORED_DIRECTORIES for part in path.relative_to(ROOT).parts)
+    return sorted(path for path in ROOT.rglob("*.md") if not _is_ignored(path))
+
+
+def _is_ignored(path: Path) -> bool:
+    parts = path.relative_to(ROOT).parts
+    return any(
+        part in IGNORED_DIRECTORIES
+        or any(part.startswith(prefix) for prefix in IGNORED_DIRECTORY_PREFIXES)
+        for part in parts
     )
 
 

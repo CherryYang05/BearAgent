@@ -14,7 +14,7 @@ sourceRefs:
 
 :::note[规则已实现，完整调度尚未实现]
 下面的 Event、状态变化和预算判断已有 F-0002 代码支持。真实模型、文件工具和负责追加这些 Event
-的 Agent Loop 仍属于后续 Feature。
+的 Agent Loop 已由 F-0016 实现；本页仍只聚焦 Reducer 怎样读取事实。
 :::
 
 ## 开始时有什么限制

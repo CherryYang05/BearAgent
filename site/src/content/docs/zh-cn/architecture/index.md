@@ -12,16 +12,17 @@ sourceRefs:
   - F-0006
   - F-0007
   - F-0008
+  - F-0016
 ---
 
 模型请求读取 `docs/architecture/overview.md` 时，BearAgent 需要检查路径、调用文件工具、保存结果，
 再把内容交给下一次模型调用。这条路径跨过多个模块，但每个模块只负责其中一段。
 
-:::caution[图中包含尚未实现的连接]
+:::caution[图中同时包含当前连接和后续能力]
 当前已实现领域类型、Run/Activity 状态、Reducer、预算检查、SQLite EventStore、首个 OpenAI
 Responses adapter、Registry、固定 Policy、统一 ToolExecutor、三个 workspace 只读 Tool，以及只写
-`outputs/**` 并返回 Artifact 的原子写入 Tool。
-ContextBuilder 和完整 Agent Loop 仍在 P1 计划中；用户审批和隔离环境属于 P3。
+`outputs/**` 并返回 Artifact 的原子写入 Tool。F-0016 已实现 ContextBuilder 和 application Agent Loop。
+生产 CLI 属于 F-0005；用户审批和隔离环境属于 P3。
 :::
 
 ```mermaid

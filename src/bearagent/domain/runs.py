@@ -13,6 +13,11 @@ from bearagent.domain.ids import ActivityId, ModelCallId, RunId, SessionId, Tool
 MAX_MODEL_ITERATIONS = 100_000
 MAX_TOKENS = 10_000_000_000
 MAX_COST_MICROUSD = 1_000_000_000_000
+MAX_MODEL_PRICING_RATE_MICROUSD = 1_000_000_000_000
+MAX_CUMULATIVE_TOKENS = MAX_TOKENS * 2
+MAX_CUMULATIVE_COST_MICROUSD = MAX_COST_MICROUSD + 2 * (
+    (MAX_TOKENS * MAX_MODEL_PRICING_RATE_MICROUSD + 999_999) // 1_000_000
+)
 MAX_WALL_TIME_MS = 2_678_400_000  # 31 days
 MAX_TOOL_CALLS = 1_000_000
 
@@ -66,9 +71,14 @@ class BudgetUsage(DomainModel):
     """Actual usage derived only from accepted Run Events."""
 
     model_iterations: int = Field(default=0, ge=0, le=MAX_MODEL_ITERATIONS, strict=True)
-    input_tokens: int = Field(default=0, ge=0, le=MAX_TOKENS, strict=True)
-    output_tokens: int = Field(default=0, ge=0, le=MAX_TOKENS, strict=True)
-    cost_microusd: int = Field(default=0, ge=0, le=MAX_COST_MICROUSD, strict=True)
+    input_tokens: int = Field(default=0, ge=0, le=MAX_CUMULATIVE_TOKENS, strict=True)
+    output_tokens: int = Field(default=0, ge=0, le=MAX_CUMULATIVE_TOKENS, strict=True)
+    cost_microusd: int = Field(
+        default=0,
+        ge=0,
+        le=MAX_CUMULATIVE_COST_MICROUSD,
+        strict=True,
+    )
     tool_calls: int = Field(default=0, ge=0, le=MAX_TOOL_CALLS, strict=True)
 
     @property

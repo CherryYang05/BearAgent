@@ -48,12 +48,14 @@ def make_event(
     payload: Mapping[str, JsonValue],
     *,
     event_id: EventId | None = None,
+    schema_version: int = 1,
 ) -> Event:
     return Event(
         event_id=event_id or EventId.new(),
         run_id=run_id,
         sequence=sequence,
         event_type=event_type,
+        schema_version=schema_version,
         occurred_at=START_TIME + timedelta(seconds=sequence),
         causation_id=CausationId.new(),
         correlation_id=CorrelationId.new(),

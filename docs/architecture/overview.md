@@ -1,8 +1,8 @@
 ---
 title: BearAgent Architecture Baseline
 status: accepted
-version: 0.6
-last_verified: 2026-08-16
+version: 0.7
+last_verified: 2026-08-18
 ---
 
 # BearAgent 总体架构
@@ -51,16 +51,19 @@ flowchart TB
 | Tool 执行边界 | 有界 Tool 数据、精确 Registry、默认拒绝 Policy 和统一 ToolExecutor |
 | workspace 只读边界 | 一层目录列出、分段 UTF-8 读取、普通字符串搜索和跨平台路径拒绝 |
 | workspace 输出边界 | `outputs/**` UTF-8 原子创建/替换、Artifact 元数据和失败前旧目标保护 |
+| Agent 执行链 | 从已提交 Event 构造有界 Context，串行调用模型与 Tool，并把 v2 Activity 事实写回 Store |
+| 固定任务 | 五个版本化文件任务在内存和 SQLite Store 上使用 Fake Provider 完成确定性验证 |
 | 测试替身 | Fake model、Fake tool、内存 Event store |
 | 文档 | 工程 `docs/` 与本地 Starlight 学习/开发者站点 |
 
-当前可以把 Event 原子写入 SQLite 并查询 projection，可以通过独立 adapter 调用 OpenAI Responses
-流式接口，也可以让四个真实 workspace Tool 经过 Registry、Policy 和 Executor。一条 Agent Loop
-尚未把这些边界接成用户可运行的文件任务。持久事实仍不等于进程重启后会自动继续。
+当前 application 层的 `AgentLoop` 已把 EventStore、ContextBuilder、ModelProvider 和 ToolExecutor 接成
+串行执行链。测试可用 Fake Provider 配合真实 workspace Tool，在内存或 SQLite Store 中完成文件任务。
+F-0005 尚未组装生产 CLI，因此用户还不能从命令行启动真实模型任务；持久事实也仍不等于进程重启后
+会自动继续。
 
 ### 3.2 已接受但尚未接通
 
-- P1：ContextBuilder、有界 Agent Loop 和 Run CLI；
+- P1：Run CLI、inspect/events 查询和真实模型退出演练；
 - P2：Checkpoint、Attempt、暂停/继续/取消、恢复协调和 `UNKNOWN` 处置；
 - P3：Grant、Policy、Approval、隔离 runner、HTTP API、认证和备份恢复；
 - P4：Skill、MCP、Web UI、Memory 和受控联网；
@@ -234,8 +237,8 @@ BearAgent 不承诺任意外部 API exactly-once，也不假装可以从任意 P
 
 F-0004 已实现首个 OpenAI Responses 流式 adapter，并使用确定性替代实现与契约测试约束内部接口。
 SDK 自动重试被禁用，工具调用参数必须是有界 JSON object，流中只有文本增量、完整工具调用和唯一
-完成事件可以进入 Runtime。ContextBuilder 与 Agent Loop 仍未接通；第二个生产 adapter 出现时，
-需要运行同一组模型行为测试，以发现 port 是否遗漏了实际差异。
+完成事件可以进入 Runtime。F-0016 的 AgentLoop 已通过该 port 调度模型，但生产 OpenAI adapter 与
+CLI 的组装仍属于 F-0005；第二个生产 adapter 出现时，需要运行同一组模型行为测试。
 
 参数错误、权限错误和上下文超限不能盲目重试。只有明确的临时错误允许有限重试。
 
@@ -259,8 +262,9 @@ Registry 拒绝重名和模糊匹配。P1 Policy 默认拒绝，只允许程序�
 外部写入和代码执行。timeout、异常和超大结果会变成不同的安全 Error；Executor 不自动重试。
 `CancelledError` 原样传播。
 
-F-0007 的三个只读 Tool 和 F-0008 的 `workspace.write` 已通过这条路径运行测试。F-0016 接入 Agent
-Loop 时负责把请求、Policy 决定和执行结果写成 Event。P3 再加入 Grant、`ASK` 和 Approval。
+F-0007 的三个只读 Tool 和 F-0008 的 `workspace.write` 已通过这条路径运行测试。F-0016 增加了
+ToolExecutor 的记录式返回，并由 AgentLoop 把原始/规范化请求、Policy 决定和完整 ToolResult 写入
+v2 Event。P3 再加入 Grant、`ASK` 和 Approval。
 
 ### 10.2 P1 文件范围
 
@@ -283,13 +287,14 @@ workspace、CPU/内存/PID/时间/输出限制、默认断网，并且不挂 Pro
 
 ## 11. Context、Skill、Memory 和 MCP
 
-### 11.1 P1 ContextBuilder
+### 11.1 P1 ContextBuilder（F-0016 已实现）
 
-P1 以稳定顺序组装 Runtime 规则、Agent 配置、当前目标与预算、必要消息、尚未解决的错误和 Tool
-schema。每层有 token/字节上限。大结果截断或保存为 Artifact 引用；P1 不让模型自动总结历史。
+ContextBuilder 只读取同一 Run 已提交的 v2 Event。它按 Runtime 安全规则、Agent 说明、用户目标和
+历史的稳定顺序构造 `ModelRequest`，并从注册时 `ToolSpec` 生成按名称排序的 Tool schema。
 
-相同已保存输入、Agent 版本和预算应得到相同的上下文计划。截断了什么、为什么截断、引用哪个
-Artifact 都要能够查看。
+单个 ToolResult 超过 byte 上限时会变成带原始大小和有限 preview 的 JSON envelope；完整结果仍保留在
+Event。总 Context 超限时只丢弃最早的完整模型/Tool 交互组，不拆开 Tool call 与结果，也不让模型生成
+隐藏摘要或 Artifact。每次 ModelCallRequested v2 都保存 exact request 和省略/截断报告。
 
 ### 11.2 P4 扩展
 
@@ -325,8 +330,8 @@ artifacts      文件路径、hash、类型和来源 Activity
 ```
 
 `event_id` 全局唯一，`run_id + sequence` 唯一。F-0008 已把 Artifact 文件写入 workspace 的
-`outputs/**`，但元数据当前只存在于 ToolResult；F-0016 才把来源和元数据接入 Event，后续数据库只
-保存元数据。
+`outputs/**`。F-0016 已把包含 Artifact 的完整 ToolResult、来源 ToolCallId 和 ActivityId 写进 v2
+Event；SQLite 继续复用现有 payload JSON 列，没有新增 Artifact 查询表或 migration。
 
 建议数据目录：
 
@@ -339,8 +344,9 @@ data/
 └── backups/
 ```
 
-API key 不进入 Event、workspace 或 Artifact。开发期使用环境变量或本机 secret store；服务器部署时
-只把 secret 挂给 Runtime API，不给 runner。
+Runtime 或 Provider 配置持有的 API key 不会被主动复制进 Event、workspace 或 Artifact。开发期使用
+环境变量或本机 secret store；服务器部署时只把 secret 挂给 Runtime API，不给 runner。用户目标、
+模型参数和 Tool 内容仍按各自 Event 契约保存；这里不是对不可信内容做敏感字面量过滤。
 
 ## 13. 用户入口
 
@@ -386,7 +392,7 @@ P1 从固定任务、结构化日志和 Event 查询开始；P2 增加中断恢�
 - Approval 后参数替换、过期和重放；
 - SSRF、命令注入和 shell escape；
 - 超大输出、无限流和压缩炸弹；
-- 密钥进入 Prompt、日志、Event 或 Artifact；
+- Runtime 自己持有的密钥被复制进 Prompt、日志、Event 或 Artifact；
 - runner 访问宿主、Docker socket、主数据库或 Provider key；
 - 重启后重复删除、发布、付款或远程写入。
 

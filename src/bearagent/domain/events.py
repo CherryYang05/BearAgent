@@ -1,5 +1,6 @@
 """Immutable, versioned facts used across BearAgent ports."""
 
+import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
 
@@ -14,6 +15,7 @@ from bearagent.domain._base import (
 from bearagent.domain.ids import CausationId, CorrelationId, EventId, RunId
 
 EVENT_TYPE_PATTERN = r"^[A-Z][A-Za-z0-9]{0,127}$"
+MAX_EVENT_PAYLOAD_BYTES = 4 * 1024 * 1024
 
 
 class Event(DomainModel):
@@ -44,6 +46,14 @@ class Event(DomainModel):
     @field_validator("payload")
     @classmethod
     def freeze_payload(cls, value: Mapping[str, JsonValue]) -> Mapping[str, JsonValue]:
+        payload_json = json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        if len(payload_json.encode("utf-8")) > MAX_EVENT_PAYLOAD_BYTES:
+            raise ValueError("Event payload exceeds the byte limit")
         return freeze_json_mapping(value)
 
     @field_serializer("payload")

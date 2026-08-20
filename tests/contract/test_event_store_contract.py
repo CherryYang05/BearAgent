@@ -3,12 +3,20 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 
 import pytest
-from tests.store_fixtures import run_created_event, successful_run_events
+from tests.store_fixtures import make_event, payload_json, run_created_event, successful_run_events
 
 from bearagent.adapters.sqlite import SqliteEventStore
 from bearagent.adapters.testing import InMemoryEventStore
-from bearagent.domain.ids import EventId, RunId
+from bearagent.domain.errors import ErrorCategory, ErrorCode, ErrorInfo
+from bearagent.domain.ids import ActivityId, EventId, RunId, ToolCallId
+from bearagent.domain.run_events import (
+    RunStartedPayload,
+    ToolCallFailedPayloadV2,
+    ToolCallRequestedPayloadV2,
+    ToolCallStartedPayload,
+)
 from bearagent.domain.runs import RunState, RunStatus
+from bearagent.domain.tools import ToolExecutionRecord, ToolRequest, ToolResult, ToolStatus
 from bearagent.ports.store import EventStore, EventStoreConflictError
 from bearagent.runtime.reducer import RunReducerError, reduce_events
 
@@ -75,6 +83,92 @@ def test_store_rejects_duplicate_event_identity_globally(
         with pytest.raises(EventStoreConflictError, match="Event identity"):
             await store.append(duplicate)
         assert await store.list_events(duplicate.run_id) == ()
+
+    asyncio.run(exercise())
+
+
+def test_store_rejects_v2_terminal_evidence_for_a_different_request(
+    store_factory: StoreFactory,
+) -> None:
+    async def exercise() -> None:
+        store = await store_factory()
+        run_id = RunId.new()
+        activity_id = ActivityId.new()
+        tool_call_id = ToolCallId.new()
+        requested = ToolRequest(
+            tool_call_id=tool_call_id,
+            name="workspace.read",
+            arguments={"path": "docs/requested.md"},
+        )
+        initial = (
+            run_created_event(run_id),
+            make_event(run_id, 2, "RunStarted", payload_json(RunStartedPayload())),
+            make_event(
+                run_id,
+                3,
+                "ToolCallRequested",
+                payload_json(
+                    ToolCallRequestedPayloadV2(
+                        activity_id=activity_id,
+                        tool_call_id=tool_call_id,
+                        tool_name=requested.name,
+                        request=requested,
+                    )
+                ),
+                schema_version=2,
+            ),
+            make_event(
+                run_id,
+                4,
+                "ToolCallStarted",
+                payload_json(
+                    ToolCallStartedPayload(
+                        activity_id=activity_id,
+                        tool_call_id=tool_call_id,
+                    )
+                ),
+                schema_version=2,
+            ),
+        )
+        for event in initial:
+            await store.append(event)
+        error = ErrorInfo(
+            category=ErrorCategory.TOOL,
+            code=ErrorCode.TOOL_ERROR,
+            message="Tool failed.",
+        )
+        different = ToolRequest(
+            tool_call_id=tool_call_id,
+            name="workspace.write",
+            arguments={"path": "outputs/report.md", "content": "different"},
+        )
+        terminal = make_event(
+            run_id,
+            5,
+            "ToolCallFailed",
+            payload_json(
+                ToolCallFailedPayloadV2(
+                    activity_id=activity_id,
+                    tool_call_id=tool_call_id,
+                    error=error,
+                    execution=ToolExecutionRecord(
+                        request=different,
+                        reached_adapter=False,
+                        result=ToolResult(
+                            tool_call_id=tool_call_id,
+                            status=ToolStatus.FAILED,
+                            error=error,
+                        ),
+                    ),
+                )
+            ),
+            schema_version=2,
+        )
+
+        with pytest.raises(RunReducerError, match="does not match"):
+            await store.append(terminal)
+
+        assert await store.list_events(run_id) == initial
 
     asyncio.run(exercise())
 

@@ -14,7 +14,7 @@ from pydantic import JsonValue, ValidationError
 
 from bearagent.domain._base import thaw_json_mapping
 from bearagent.domain.errors import ErrorCategory, ErrorCode, ErrorInfo
-from bearagent.domain.events import Event
+from bearagent.domain.events import MAX_EVENT_PAYLOAD_BYTES, Event
 from bearagent.domain.ids import RunId
 from bearagent.domain.run_events import parse_run_event_payload
 from bearagent.domain.runs import ActivityState, BudgetLimits, BudgetUsage, RunState
@@ -28,9 +28,8 @@ from bearagent.ports.store import (
     EventStoreNotInitializedError,
     validate_event_query,
 )
-from bearagent.runtime.reducer import reduce_event
+from bearagent.runtime.reducer import reduce_event, validate_event_history
 
-MAX_EVENT_PAYLOAD_BYTES: Final = 4 * 1024 * 1024
 DEFAULT_BUSY_TIMEOUT_MS: Final = 5_000
 MAX_BUSY_TIMEOUT_MS: Final = 60_000
 _MIGRATION_NAME: Final = "0001_initial.sql"
@@ -153,6 +152,10 @@ class SqliteEventStore:
             previous_state = _load_run_projection(connection, event.run_id)
             maximum_sequence = _maximum_sequence(connection, event.run_id)
             _validate_projection_sequence(previous_state, maximum_sequence)
+            validate_event_history(
+                _recent_events(connection, event.run_id, event.sequence, limit=2),
+                event,
+            )
             state = reduce_event(previous_state, event)
             connection.execute(
                 """
@@ -573,6 +576,30 @@ def _write_run_projection(connection: sqlite3.Connection, state: RunState) -> No
 
 def _encode_json(value: Mapping[str, JsonValue]) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _recent_events(
+    connection: sqlite3.Connection,
+    run_id: RunId,
+    before_sequence: int,
+    *,
+    limit: int,
+) -> tuple[Event, ...]:
+    rows = cast(
+        list[tuple[object, ...]],
+        connection.execute(
+            """
+            SELECT event_id, run_id, sequence, event_type, schema_version, occurred_at,
+                   causation_id, correlation_id, payload_json
+            FROM events
+            WHERE run_id = ? AND sequence < ?
+            ORDER BY sequence DESC
+            LIMIT ?
+            """,
+            (str(run_id), before_sequence, limit),
+        ).fetchall(),
+    )
+    return tuple(_event_from_row(row) for row in reversed(rows))
 
 
 def _decode_json_object(value: str) -> dict[str, object]:

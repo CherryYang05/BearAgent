@@ -32,8 +32,9 @@ P1 要接通 SQLite、一个真实模型、受限文件工具、有结束条件�
 
 当前已经完成 SQLite EventStore、首个 OpenAI Responses adapter、Registry、固定 Policy、统一
 ToolExecutor、workspace 目录列出、UTF-8 读取、普通字符串搜索，以及 `outputs/**` 原子写入和
-Artifact 元数据。它们仍未由 Agent Loop 接成一次 Run。ContextBuilder、Agent Loop 和 Run CLI
-接通后，才会形成阶段要求的用户结果。
+Artifact 元数据。F-0016 已用 ContextBuilder 和串行 Agent Loop 把它们接成一次 Run，并让五个
+Fake Provider 任务在内存与 SQLite Store 上通过。P1 还需要 F-0005 的 Run CLI、查询输出和真实模型
+4/5 退出演练，才能形成阶段要求的用户结果。
 
 P1 只保证已经保存的事实可以查看。进程退出后不会自动继续。
 

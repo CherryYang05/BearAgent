@@ -64,8 +64,8 @@ F-0008 所说的原子可见性。
 }
 ```
 
-`path` 只是元数据，不会额外授予文件权限。调用者可以用字节数和 SHA-256 核对具体内容；当前
-Artifact 只存在于 ToolResult，还没有关联 Run/Activity，也不能通过 CLI 查询。
+`path` 只是元数据，不会额外授予文件权限。调用者可以用字节数和 SHA-256 核对具体内容；F-0016
+已把 Artifact 随完整 ToolResult 关联到 Tool Activity Event，但仍不能通过 CLI 或独立 Artifact 表查询。
 
 ## 当前已经实现到哪里
 
@@ -74,6 +74,6 @@ Artifact 只存在于 ToolResult，还没有关联 Run/Activity，也不能通�
 路径越界、目标不是普通文件或内容超限时，都不会提交目标。
 
 这条写入边界已有创建、替换、路径逃逸、链接、目标变化、`fsync`/replace 失败、timeout 和取消测试。
-完整 Agent Loop、Tool Event 接线和 Run CLI 仍未实现。
+F-0016 已实现 Agent Loop 和 Tool Event 接线；Run CLI 仍属于 F-0005。
 
 继续阅读[原子输出与 Artifact 实现导读](../development/atomic-output-artifacts.md)，查看代码位置和测试。

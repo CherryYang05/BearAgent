@@ -67,8 +67,9 @@ Artifact 属于 `domain`，因此 Runtime、Event 或未来 API 可以使用 Bea
 Tool 在暂存前根据规范化路径和内容 bytes 构造 Artifact，并预先确认成功 ToolResult 不超过输出
 上限。Artifact 包含新 UUID4、`text`、`utf-8`、字节数和小写 SHA-256，不包含全文或宿主路径。
 
-当前没有 Artifact Event、SQLite migration 或查询表。F-0016 接入 Agent Loop 时，才负责把
-ToolCallId、来源 Activity、规范化请求和 Artifact 保存成 Event；文件 adapter 不伪造 Run 身份。
+F-0016 已由 Agent Loop 把 ToolCallId、来源 Activity、规范化请求和包含 Artifact 的完整 ToolResult
+保存成 v2 Event；文件 adapter 仍不伪造 Run 身份。SQLite 复用原有 Event JSON 列，没有 migration
+或独立 Artifact 查询表。
 
 ## 测试从哪里看
 
@@ -89,5 +90,5 @@ ToolCallId、来源 Activity、规范化请求和 Artifact 保存成 Event；文
 5. `workspace.write` 保持 `WORKSPACE_WRITE/NOT_SAFE`，Executor 不自动重试；
 6. F-0008 不增加 Event、SQLite 状态、delete Tool 或自动清理。
 
-当前实现证明的是独立文件边界。它还不能从 CLI 接收用户任务，也不能把 Artifact 作为 Run 结果
-查询；这些连接属于 F-0016 和 F-0005。
+当前 application RunResult 已能返回 Artifact 元数据，但还不能从 CLI 接收用户任务或查询 Artifact；
+这些用户入口属于 F-0005。

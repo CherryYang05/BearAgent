@@ -17,6 +17,8 @@ ADR 只记录影响多个模块、以后难以反转的技术决定。标题直�
   — accepted
 - [ADR-0012：P1 输出先原子替换，再由用户管理 Artifact 生命周期](ADR-0012-atomic-user-managed-output-artifacts.md)
   — accepted
+- [ADR-0013：P1 Agent Loop 串行执行，并在外部调用前后保存 Activity 事实](ADR-0013-serial-agent-loop-event-boundaries.md)
+  — accepted
 
 新决定使用 [ADR 模板](../templates/adr.md)。被新决定替代的 ADR 不删除，改为 `superseded` 并链接
 到替代它的文档。

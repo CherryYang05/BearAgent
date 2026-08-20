@@ -7,6 +7,7 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, JsonValue, field_serializer, field_validator, model_validator
 
 from bearagent.domain._base import (
+    MAX_EMBEDDED_JSON_NODES,
     DomainModel,
     freeze_json_mapping,
     thaw_json_mapping,
@@ -57,7 +58,7 @@ class ToolCallPart(DomainModel):
     @field_validator("arguments", mode="before")
     @classmethod
     def require_json_arguments(cls, value: object) -> object:
-        return validate_json_object(value)
+        return validate_json_object(value, max_nodes=MAX_EMBEDDED_JSON_NODES)
 
     @field_validator("arguments")
     @classmethod

@@ -8,12 +8,13 @@ from typing import Self
 from pydantic import Field, JsonValue, field_serializer, field_validator, model_validator
 
 from bearagent.domain._base import (
+    MAX_EMBEDDED_JSON_NODES,
     DomainModel,
     freeze_json_mapping,
     thaw_json_mapping,
     validate_json_object,
 )
-from bearagent.domain.errors import ErrorInfo
+from bearagent.domain.errors import ErrorCode, ErrorInfo
 from bearagent.domain.ids import ToolCallId
 from bearagent.domain.messages import TOOL_NAME_PATTERN
 
@@ -135,7 +136,7 @@ class ToolRequest(DomainModel):
     @field_validator("arguments", mode="before")
     @classmethod
     def require_json_arguments(cls, value: object) -> object:
-        return validate_json_object(value)
+        return validate_json_object(value, max_nodes=MAX_EMBEDDED_JSON_NODES)
 
     @field_validator("arguments")
     @classmethod
@@ -188,6 +189,54 @@ class ToolResult(DomainModel):
                 raise ValueError("failed Tool result requires an error")
             if self.data:
                 raise ValueError("failed Tool result cannot contain data")
+        return self
+
+
+class ToolExecutionRecord(DomainModel):
+    """Provider-neutral evidence produced by the single Tool execution path."""
+
+    request: ToolRequest
+    prepared_request: PreparedToolRequest | None = None
+    policy_decision: PolicyDecision | None = None
+    reached_adapter: bool
+    result: ToolResult
+    persistence_truncated: bool = False
+
+    @model_validator(mode="after")
+    def require_consistent_execution(self) -> Self:
+        if self.result.tool_call_id != self.request.tool_call_id:
+            raise ValueError("Tool result identity must match its request")
+        if self.prepared_request is not None and (
+            self.prepared_request.tool_call_id != self.request.tool_call_id
+            or self.prepared_request.name != self.request.name
+        ):
+            raise ValueError("prepared Tool request identity must match its request")
+        if self.persistence_truncated:
+            if self.prepared_request is not None or self.policy_decision is not None:
+                raise ValueError("truncated persistence evidence cannot contain preparation data")
+            if (
+                self.result.status is not ToolStatus.FAILED
+                or self.result.error is None
+                or self.result.error.code is not ErrorCode.TOOL_OUTPUT_TOO_LARGE
+            ):
+                raise ValueError("truncated persistence evidence requires a bounded failure")
+            return self
+        if self.reached_adapter:
+            if self.prepared_request is None:
+                raise ValueError("adapter execution requires a prepared request")
+            if (
+                self.policy_decision is None
+                or self.policy_decision.outcome is not PolicyOutcome.ALLOW
+            ):
+                raise ValueError("adapter execution requires an allow decision")
+        if (
+            self.policy_decision is not None
+            and self.policy_decision.outcome is PolicyOutcome.DENY
+            and self.reached_adapter
+        ):
+            raise ValueError("a denied Tool request cannot reach its adapter")
+        if self.result.status is ToolStatus.SUCCEEDED and not self.reached_adapter:
+            raise ValueError("a successful Tool result must come from its adapter")
         return self
 
 

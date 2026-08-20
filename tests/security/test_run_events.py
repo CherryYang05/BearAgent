@@ -131,7 +131,7 @@ def test_unknown_event_type_and_schema_version_fail_closed() -> None:
             "activity_id": str(ActivityId.new()),
             "model_call_id": str(ModelCallId.new()),
         },
-        schema_version=2,
+        schema_version=3,
     )
     with pytest.raises(RunReducerError, match="Unsupported") as caught_version:
         reduce_event(state, unknown_version)

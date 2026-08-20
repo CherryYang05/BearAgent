@@ -77,6 +77,21 @@ def test_timeout_calls_tool_once_and_does_not_retry() -> None:
     assert result.error.retryable is False
 
 
+def test_recorded_timeout_marks_that_the_adapter_boundary_was_crossed() -> None:
+    tool = FakeTool(
+        build_tool_spec(timeout_ms=10),
+        data={"content": "late"},
+        delay_seconds=0.1,
+    )
+
+    record = asyncio.run(executor_for(tool).execute_recorded(build_tool_request()))
+
+    assert record.reached_adapter is True
+    assert record.policy_decision is not None
+    assert record.result.error is not None
+    assert record.result.error.code is ErrorCode.TOOL_TIMEOUT
+
+
 def test_execute_exception_is_safe_and_not_retried() -> None:
     secret = "authorization-bearer-secret"
     tool = FakeTool(build_tool_spec(), execute_error=RuntimeError(secret))

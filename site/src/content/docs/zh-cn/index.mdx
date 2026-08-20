@@ -21,6 +21,7 @@ sourceRefs:
   - F-0006
   - F-0007
   - F-0008
+  - F-0016
   - F-0015
 ---
 
@@ -53,11 +54,11 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
   />
 </CardGrid>
 
-:::caution[BearAgent 还不能完成真实 Agent 任务]
-当前代码已经能表示消息、错误、Run、Activity 和 Event，也能从一串 Event 计算状态并检查预算。
-Event 可以原子写入 SQLite，OpenAI Responses adapter 也能翻译流式响应，四个 workspace Tool 能在
-统一权限入口后读文件或原子写 `outputs/**`；但 ContextBuilder、完整执行循环、Tool Event 接线和
-Run CLI 仍未接通。路线图中的名称不是当前功能。
+:::caution[执行链已实现，但生产 CLI 还没有组装]
+当前 application Agent Loop 已从持久 Event 构造 Context，串行调用 ModelProvider 和 ToolExecutor，
+并把完整 v2 Activity 事实写回内存或 SQLite Store。五个 Fake Provider 文件任务已通过。F-0005 尚未
+把真实 Provider、workspace、SQLite 和 `run/inspect/events` CLI 组装起来，所以还不能从命令行运行
+真实 Agent 任务。路线图中的更晚能力也不是当前功能。
 :::
 
 ## BearAgent 想把三件事做可靠

@@ -3,7 +3,7 @@ from pathlib import Path
 
 SOURCE_ROOT = Path(__file__).resolve().parents[2] / "src" / "bearagent"
 CORE_DIRECTORIES = ("domain", "runtime", "ports")
-FORBIDDEN_PREFIXES = (
+OUTER_OR_FRAMEWORK_PREFIXES = (
     "aiosqlite",
     "anthropic",
     "bearagent.adapters",
@@ -17,6 +17,9 @@ FORBIDDEN_PREFIXES = (
     "sqlalchemy",
     "starlette",
     "typer",
+)
+APPLICATION_FORBIDDEN_PREFIXES = tuple(
+    prefix for prefix in OUTER_OR_FRAMEWORK_PREFIXES if prefix != "bearagent.application"
 )
 
 
@@ -36,8 +39,19 @@ def test_core_does_not_import_frameworks_or_outer_layers() -> None:
     for directory in CORE_DIRECTORIES:
         for path in sorted((SOURCE_ROOT / directory).rglob("*.py")):
             for module in imported_modules(path):
-                if module.startswith(FORBIDDEN_PREFIXES):
+                if module.startswith(OUTER_OR_FRAMEWORK_PREFIXES):
                     relative = path.relative_to(SOURCE_ROOT)
                     violations.append(f"{relative}: {module}")
 
     assert not violations, "Forbidden core imports:\n" + "\n".join(violations)
+
+
+def test_application_does_not_import_adapters_frameworks_or_sdks() -> None:
+    violations: list[str] = []
+    for path in sorted((SOURCE_ROOT / "application").rglob("*.py")):
+        for module in imported_modules(path):
+            if module.startswith(APPLICATION_FORBIDDEN_PREFIXES):
+                relative = path.relative_to(SOURCE_ROOT)
+                violations.append(f"{relative}: {module}")
+
+    assert not violations, "Forbidden application imports:\n" + "\n".join(violations)

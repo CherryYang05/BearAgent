@@ -45,5 +45,5 @@ BearAgent Pydantic 数据模型与 `ModelProvider` 内部接口。
 包含敏感信息的响应；`tests/unit/test_model_contracts.py` 覆盖数据格式、深层不可变、历史关联与
 资源上限。公共 JSON Schema 快照同步保存了 F-0004 的内部数据规则。
 
-真实账号与模型可用性不属于默认 CI 证据。F-0016 接入运行时后，才会把模型完成用量
-和安全错误转换成持久 Model Activity Event；F-0005 再提供用户可运行的 CLI。
+真实账号与模型可用性不属于默认 CI 证据。F-0016 已由 Agent Loop 把模型完成用量和安全错误转换成
+持久 Model Activity Event；F-0005 再组装生产 adapter 并提供用户可运行的 CLI。
