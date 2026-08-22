@@ -6,11 +6,11 @@ hero:
   tagline: 让长任务的每一步都说得清楚。
   actions:
     - text: 从一次任务开始
-      link: /zh-cn/learn/
+      link: /BearAgent/zh-cn/learn/
       icon: right-arrow
       variant: primary
     - text: 查看当前进度
-      link: /zh-cn/project/status/
+      link: /BearAgent/zh-cn/project/status/
       icon: open-book
 bearStatus: mixed
 sourceRefs:
@@ -21,7 +21,6 @@ sourceRefs:
   - F-0006
   - F-0007
   - F-0008
-  - F-0016
   - F-0015
   - F-0005
   - F-0017
@@ -35,31 +34,32 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
 <CardGrid>
   <LinkCard
-    title="先看一遍任务怎样执行"
-    description="从用户请求、模型调用、文件工具到最终结果，建立完整画面。"
-    href="/zh-cn/learn/"
+    title="先看 Agent 发展到了哪里"
+    description="了解今天 Agent 擅长什么，以及长任务、评测和安全为什么仍然困难。"
+    href="/BearAgent/zh-cn/learn/"
   />
   <LinkCard
-    title="再看 Runtime 怎样分工"
-    description="理解核心规则、port、adapter，以及它们为什么不能混在一起。"
-    href="/zh-cn/architecture/"
+    title="再看 BearAgent 怎样分工"
+    description="沿一次请求理解 Runtime、EventStore、模型 adapter 和 Tool 执行边界。"
+    href="/BearAgent/zh-cn/architecture/"
   />
   <LinkCard
     title="准备修改代码"
     description="按代码地图找到实现、测试和需要同步的文档。"
-    href="/zh-cn/development/"
+    href="/BearAgent/zh-cn/development/"
   />
   <LinkCard
     title="只想知道现在能做什么"
-    description="区分已经完成的 P1、当前边界和更晚的计划。"
-    href="/zh-cn/project/status/"
+    description="区分已经实现、P1 仍在建设和更晚的计划。"
+    href="/BearAgent/zh-cn/project/status/"
   />
 </CardGrid>
 
-:::note[生产 CLI 已接通，P1 已完成]
-`run/inspect/events` 已把显式选择的模型协议、workspace、SQLite、Policy 和 Agent Loop 组装到同一条
-本地路径。config v1、RunProfile v2、三种 protocol adapter、离线 Reality Check 和 DeepSeek V4
-suite v1.1.1 真实 5/5 均已通过。恢复、Approval 和 sandbox 仍不是当前功能。
+:::caution[BearAgent 还不能完成真实 Agent 任务]
+当前代码已经能表示消息、错误、Run、Activity 和 Event，也能从一串 Event 计算状态并检查预算。
+Event 可以原子写入 SQLite，OpenAI Responses adapter 能翻译流式响应，Tool 请求也已有统一 Registry、
+Policy 和 Executor，四个 workspace Tool 也已通过这条入口；但 ContextBuilder、完整执行循环和 Run
+CLI 仍未接通。路线图中的名称不是当前功能。
 :::
 
 ## BearAgent 想把三件事做可靠

@@ -57,7 +57,7 @@ flowchart TB
 | 用户入口 | `run/inspect/events` CLI、config v1、RunProfile v1/v2、human/JSON renderer 和安全退出码 |
 | 查询 | application query service 只通过 EventStore 读取 projection 与分页 Event，并重建 Artifact 元数据 |
 | 测试替身 | Fake model、Fake tool、内存 Event store |
-| 文档 | 工程 `docs/` 与本地 Starlight 学习/开发者站点 |
+| 文档 | 工程 `docs/` 与可静态发布的 Starlight 学习/开发者站点 |
 
 `bootstrap.py` 根据 catalog 中显式选择的 wire protocol 组装一个模型 adapter，再与 SQLite、
 workspace Tools、固定 Policy 和 AgentLoop 连接。F-0017 的离线测试覆盖三种 adapter、配置选择、
@@ -450,8 +450,8 @@ Policy/Approval、runner 隔离、日志脱敏和备份恢复演练。
 | HTTP | httpx | async、timeout 和 streaming |
 | 测试 | pytest | 覆盖单元、契约、集成和故障注入 |
 | 质量 | Ruff + Pyright | 快速、可自动化 |
-| 文档 | Markdown/MDX + Starlight | 中文学习导航、本地搜索和 Mermaid |
-| 部署 | Docker Compose + 1Panel，P4 引入 | 符合单机自托管范围 |
+| 文档 | Markdown/MDX + Starlight | 中文学习导航、本地搜索、Mermaid 和 GitHub Pages 静态发布 |
+| 部署 | Docker Compose + 1Panel | 符合单机自托管范围 |
 
 第一版不把 LangChain/LangGraph 或 Temporal 作为内核。只有真实需求证明需要多 worker、复杂 timer
 或补偿流程时，才用新 ADR 重新评估。

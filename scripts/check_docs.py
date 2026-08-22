@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -26,18 +27,17 @@ IGNORED_DIRECTORY_PREFIXES = (".pytest-state-", ".pytest-tmp-")
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 
 
-def markdown_files() -> list[Path]:
+def markdown_files(root: Path = ROOT) -> list[Path]:
     """Return repository Markdown files while excluding generated environments."""
-    return sorted(path for path in ROOT.rglob("*.md") if not _is_ignored(path))
-
-
-def _is_ignored(path: Path) -> bool:
-    parts = path.relative_to(ROOT).parts
-    return any(
-        part in IGNORED_DIRECTORIES
-        or any(part.startswith(prefix) for prefix in IGNORED_DIRECTORY_PREFIXES)
-        for part in parts
-    )
+    files: list[Path] = []
+    for directory, directory_names, file_names in os.walk(root, topdown=True):
+        directory_names[:] = sorted(
+            name for name in directory_names if name not in IGNORED_DIRECTORIES
+        )
+        files.extend(
+            Path(directory) / name for name in file_names if name.casefold().endswith(".md")
+        )
+    return sorted(files)
 
 
 def local_link_target(raw_target: str) -> str | None:

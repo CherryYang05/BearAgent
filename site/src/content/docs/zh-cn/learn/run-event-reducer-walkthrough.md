@@ -4,7 +4,6 @@ description: 跟随一个读文件任务，观察 Event 怎样改变状态，以
 bearStatus: mixed
 sourceRefs:
   - F-0002
-  - ADR-0009
   - runtime/reducer.py
   - runtime/budgets.py
 ---
@@ -13,8 +12,8 @@ sourceRefs:
 调用让累计 token 超过上限，所以 Runtime 不再允许新的工具调用，并以预算耗尽结束 Run。
 
 :::note[规则已实现，完整调度尚未实现]
-下面的 Event、状态变化和预算判断已有 F-0002 代码支持。真实模型、文件工具和负责追加这些 Event
-的 Agent Loop 已由 F-0016 实现；本页仍只聚焦 Reducer 怎样读取事实。
+下面的 Event、状态变化和预算判断已有 F-0002 代码支持。真实模型与 workspace Tool 已分别实现；
+负责调用它们并追加这些 Event 的 Agent Loop 仍属于后续 Feature。
 :::
 
 ## 开始时有什么限制
