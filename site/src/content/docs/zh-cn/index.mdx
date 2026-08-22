@@ -23,6 +23,7 @@ sourceRefs:
   - F-0008
   - F-0016
   - F-0015
+  - F-0005
 ---
 
 import { CardGrid, LinkCard } from '@astrojs/starlight/components';
@@ -54,11 +55,10 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
   />
 </CardGrid>
 
-:::caution[执行链已实现，但生产 CLI 还没有组装]
-当前 application Agent Loop 已从持久 Event 构造 Context，串行调用 ModelProvider 和 ToolExecutor，
-并把完整 v2 Activity 事实写回内存或 SQLite Store。五个 Fake Provider 文件任务已通过。F-0005 尚未
-把真实 Provider、workspace、SQLite 和 `run/inspect/events` CLI 组装起来，所以还不能从命令行运行
-真实 Agent 任务。路线图中的更晚能力也不是当前功能。
+:::note[生产 CLI 已接通，P1 仍未关闭]
+`run/inspect/events` 已把 Provider、workspace、SQLite、Policy 和 Agent Loop 组装到同一条本地路径。
+五个固定任务通过 production composition 的离线 Fake Provider 验证；真实模型 4/5 gate 与完整 P1
+Reality Check 尚待下一步决定。路线图中的恢复、Approval 和 sandbox 仍不是当前功能。
 :::
 
 ## BearAgent 想把三件事做可靠

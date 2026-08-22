@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import json
 import shutil
 from pathlib import Path
 from typing import Literal
@@ -12,7 +13,8 @@ from bearagent.adapters.sqlite import SqliteEventStore
 from bearagent.adapters.testing import InMemoryEventStore, ScriptedFakeModelProvider
 from bearagent.adapters.tools import build_workspace_tools
 from bearagent.application.agent_loop import AgentLoop
-from bearagent.domain.agent import AgentConfig, ModelPricing, RunInput, RunResult
+from bearagent.bootstrap import build_run_query_service, build_run_services
+from bearagent.domain.agent import AgentConfig, ModelPricing, RunInput, RunProfile, RunResult
 from bearagent.domain.events import Event
 from bearagent.domain.ids import SessionId, ToolCallId
 from bearagent.domain.model import (
@@ -282,4 +284,73 @@ def test_p1_fixed_task_suite_reaches_5_of_5_on_both_stores(
         assert result.artifacts == ()
         assert "ToolCallFailed" in tuple(event.event_type for event in events)
 
+    assert len(provider.requests) == len(script_for(task))
+
+
+@pytest.mark.parametrize("task", TASKS, ids=lambda task: f"production-{task.task_id}")
+def test_p1_fixed_task_suite_reaches_5_of_5_through_production_composition(
+    task: EvalTask,
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    shutil.copytree(EVAL_ROOT / "workspaces" / task.workspace_fixture, workspace)
+    registry = ToolRegistry(build_workspace_tools(workspace))
+    profile = RunProfile(
+        agent_config=config_for(registry, task),
+        budget_limits=BudgetLimits.model_validate(task.budget.model_dump()),
+    )
+    profile_path = tmp_path / "profile.json"
+    profile_path.write_text(
+        json.dumps(profile.model_dump(mode="json")),
+        encoding="utf-8",
+    )
+    database_path = tmp_path / "state.sqlite3"
+    provider = ScriptedFakeModelProvider(script_for(task))
+
+    async def exercise() -> tuple[RunResult, tuple[Event, ...]]:
+        services = await build_run_services(
+            profile_path=profile_path,
+            workspace_path=workspace,
+            database_path=database_path,
+            model_provider=provider,
+        )
+        result = await services.agent_loop.run(
+            RunInput(
+                session_id=SessionId.new(),
+                objective=task.objective,
+                budget_limits=services.profile.budget_limits,
+                agent_config=services.profile.agent_config,
+            )
+        )
+        reopened_queries = await build_run_query_service(database_path)
+        inspection = await reopened_queries.inspect(result.run_id)
+        page = await reopened_queries.events(result.run_id)
+        assert inspection.state == result.state
+        assert inspection.artifacts == result.artifacts
+        return result, page.events
+
+    result, events = asyncio.run(exercise())
+
+    assert tuple(event.event_type for event in events) == task.expected_event_types
+    requested_calls = tuple(
+        (payload.tool_name, dict(payload.request.arguments))
+        for event in events
+        if isinstance(payload := parse_run_event_payload(event), ToolCallRequestedPayloadV2)
+    )
+    assert requested_calls == tuple((call.name, call.arguments) for call in task.expected_calls)
+    if task.expected_terminal == "succeeded":
+        assert result.state.status is RunStatus.SUCCEEDED
+        assert task.output_content is not None
+        assert task.expected_artifact_path is not None
+        assert (workspace / task.expected_artifact_path).read_text(
+            encoding="utf-8"
+        ) == task.output_content
+        assert (
+            result.artifacts[-1].sha256
+            == hashlib.sha256(task.output_content.encode("utf-8")).hexdigest()
+        )
+    else:
+        assert result.state.status is RunStatus.FAILED
+        assert result.state.terminal_error is not None
+        assert result.state.terminal_error.code.value == "budget_exhausted"
     assert len(provider.requests) == len(script_for(task))

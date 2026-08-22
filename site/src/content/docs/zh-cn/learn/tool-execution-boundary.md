@@ -69,7 +69,7 @@ Policy 看到的是 `prepare` 整理后的参数。因此不会出现“权限�
 
 F-0006 建好了统一入口，F-0007 已让三个只读 Tool 真正打开受限 workspace，F-0008 也让
 `workspace.write` 通过同一入口原子写入 `outputs/**`。F-0016 的 Agent Loop 已调用 Executor 并把请求、
-Policy 决定和结果写成 Event；F-0005 才会用 CLI 展示 Tool Activity。
+Policy 决定和结果写成 Event；F-0005 的 `run` 与 `inspect` 已用同一 RunState 展示 Tool Activity。
 
 想看路径怎样检查，可以继续阅读
 [Windows 和 Unix 路径为什么先变成同一种写法](workspace-read-boundary.md)。

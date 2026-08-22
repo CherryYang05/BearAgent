@@ -19,10 +19,10 @@ sourceRefs:
 再把内容交给下一次模型调用。这条路径跨过多个模块，但每个模块只负责其中一段。
 
 :::caution[图中同时包含当前连接和后续能力]
-当前已实现领域类型、Run/Activity 状态、Reducer、预算检查、SQLite EventStore、首个 OpenAI
-Responses adapter、Registry、固定 Policy、统一 ToolExecutor、三个 workspace 只读 Tool，以及只写
-`outputs/**` 并返回 Artifact 的原子写入 Tool。F-0016 已实现 ContextBuilder 和 application Agent Loop。
-生产 CLI 属于 F-0005；用户审批和隔离环境属于 P3。
+当前已实现领域类型、Run/Activity 状态、Reducer、预算检查、SQLite EventStore、OpenAI Responses
+adapter、Registry、固定 Policy、workspace 读写、Artifact、ContextBuilder 和 application Agent Loop。
+F-0005 已接通 production composition 与 `run/inspect/events`；真实模型退出演练尚未完成，用户审批和
+隔离环境属于 P3。
 :::
 
 ```mermaid

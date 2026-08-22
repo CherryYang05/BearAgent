@@ -8,6 +8,7 @@ from bearagent.domain.agent import (
     ContextBuildResult,
     ModelPricing,
     RunInput,
+    RunProfile,
     RunResult,
 )
 from bearagent.domain.artifacts import Artifact
@@ -33,6 +34,7 @@ from bearagent.domain.model import (
     ModelToolDefinition,
     ModelUsage,
 )
+from bearagent.domain.queries import EventPage, RunInspection
 from bearagent.domain.run_events import (
     ModelCallCompletedPayload,
     ModelCallCompletedPayloadV2,
@@ -90,6 +92,7 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     ContextBuildReport,
     ErrorInfo,
     Event,
+    EventPage,
     EventId,
     Message,
     ModelCompleted,
@@ -116,6 +119,8 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     RunFailedPayload,
     RunFailedPayloadV2,
     RunInput,
+    RunInspection,
+    RunProfile,
     RunStartedPayload,
     RunStartedPayloadV2,
     RunState,

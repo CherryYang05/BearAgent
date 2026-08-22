@@ -1,6 +1,6 @@
 """Versioned Agent configuration and application boundary data."""
 
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import Field, field_validator, model_validator
 
@@ -144,6 +144,14 @@ class RunInput(DomainModel):
         if not value.strip():
             raise ValueError("objective must not be blank")
         return value
+
+
+class RunProfile(DomainModel):
+    """Versioned, non-secret configuration loaded by a trusted interface."""
+
+    schema_version: Literal[1] = 1
+    agent_config: AgentConfig
+    budget_limits: BudgetLimits
 
 
 class RunResult(DomainModel):

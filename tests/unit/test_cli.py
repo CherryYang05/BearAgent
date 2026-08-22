@@ -16,6 +16,15 @@ def test_help_exposes_doctor_command() -> None:
     assert "doctor" in result.stdout
 
 
+def test_run_help_explains_objective_and_query_subcommands() -> None:
+    result = runner.invoke(app, ["run", "--help"])
+
+    assert result.exit_code == 0
+    assert "bearagent run OBJECTIVE" in result.stdout
+    assert "inspect" in result.stdout
+    assert "events" in result.stdout
+
+
 def test_version_matches_installed_package() -> None:
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0

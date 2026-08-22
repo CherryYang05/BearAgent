@@ -13,10 +13,12 @@ sourceRefs:
   - F-0008
   - F-0016
   - F-0015
+  - F-0005
 ---
 
-BearAgent 已有可由 Python 调用的有界 Agent Loop，但还不能从 CLI 启动真实模型文件任务。已经写入
-路线图、架构或 ADR 的更晚设计，不等于已经接通运行入口。
+BearAgent 已有本地 `run/inspect/events` CLI。它把严格 Run profile、OpenAI Responses adapter、SQLite、
+固定 Policy、workspace Tools 和有界 Agent Loop 组装到同一入口。自动验收使用 Fake Provider；没有
+真实模型 4/5 证据，因此 P1 仍未关闭。
 
 ## 已经可以验证
 
@@ -31,22 +33,22 @@ BearAgent 已有可由 Python 调用的有界 Agent Loop，但还不能从 CLI �
 | F-0007 workspace 只读 Tool | 一层目录列出、分段 UTF-8 读取、普通字符串搜索和跨平台路径边界 |
 | F-0008 原子输出与 Artifact | 只向 `outputs/**` 写有限 UTF-8 文本；创建/替换以一次 replace 提交并返回 hash 元数据 |
 | F-0016 有界 Agent Loop | 从已提交 Event 构造 Context，串行调用模型与 Tool，保存 v2 事实；五个 Fake 任务在两种 Store 上通过 |
+| F-0005 生产 CLI 与查询 | `run/inspect/events`、严格 profile、production composition、分页查询和 human/JSON；零预算/缺凭据保留安全 terminal Run；五个任务通过真实 SQLite/Tools + Fake Provider |
 | F-0015 本地文档站 | 中文 Starlight 页面、搜索和 Mermaid 可以在本地构建 |
 
-## P1 还需要接通
+## P1 还需要决定和检查
 
-- `run`、`inspect`、`events` 命令和 production adapter 组装；
-- 使用相同任务定义完成真实模型 4/5 退出演练。
+- 决定真实模型 API/4-of-5 演练是否继续作为 P1 关闭门；
+- 若保留该门，使用同一任务定义、固定配置和预算完成演练；
+- 对整个 P1 做一次 Reality Check，核对代码、测试、安装包、文档和失败边界。
 
-F-0016 已实现。F-0005 在 Roadmap 中有稳定 Feature ID，但开始前仍需按仓库流程确认 Spec、ADR 和
-Plan；没有 Spec 的条目不能授权实现。
+F-0005 的完成只关闭 Feature，不自动关闭里程碑，也不把离线 Fake 5/5 描述成真实模型结果。
 
 ## 当前明确不能做
 
-- 不能从 CLI 启动一次真实模型文件任务，也没有 `inspect/events` 人类输出；
+- CLI 已具备真实 Provider 的装配路径，但当前没有真实 API 演练证据；
 - SQLite 可以保存 Event 和 projection，但进程重启后不会自动继续 Run；
-- application Loop 可以调度 ModelProvider port，但生产 OpenAI adapter 尚未与 CLI、SQLite 和 workspace
-  配置组装；
+- `inspect/events` 只能查看已提交事实，不能 resume、retry 或修复非终态 Run；
 - Tool 请求和 Artifact 已随 v2 Event 写入 Store，但还没有用户 Approval、sandbox、服务器 API 或
   独立 Artifact 查询表；
 - 文档站只在本地和 CI 构建，尚未发布到 `docs.bearguin.cn`。

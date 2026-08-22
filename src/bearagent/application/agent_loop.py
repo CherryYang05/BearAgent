@@ -1,14 +1,13 @@
 """Serial P1 Agent Loop coordinated across persisted Activity boundaries."""
 
 import asyncio
-from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Protocol
 
 from pydantic import BaseModel, ValidationError
 
 from bearagent.domain.agent import RunInput, RunResult
-from bearagent.domain.artifacts import Artifact
+from bearagent.domain.artifacts import Artifact, artifact_from_tool_result_data
 from bearagent.domain.errors import ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.events import Event
 from bearagent.domain.ids import (
@@ -86,12 +85,14 @@ class AgentLoop:
         self._clock = SystemClock() if clock is None else clock
         self._id_generator = Uuid4IdGenerator() if id_generator is None else id_generator
 
-    async def run(self, run_input: RunInput) -> RunResult:
+    async def run(self, run_input: RunInput, *, run_id: RunId | None = None) -> RunResult:
         """Create and drive one Run until it reaches a persisted terminal state."""
         available_tool_names = {spec.name for spec in self._tool_specs}
         if any(name not in available_tool_names for name in run_input.agent_config.tool_names):
             raise ValueError("AgentConfig references a Tool that is not registered")
-        run_id = self._id_generator.new(RunId)
+        # A composition root may allocate the ID for early CLI visibility. The
+        # identifier carries no authority; all execution still starts at append.
+        run_id = self._id_generator.new(RunId) if run_id is None else run_id
         correlation_id = self._id_generator.new(CorrelationId)
         state = await self._append(
             None,
@@ -402,7 +403,7 @@ class AgentLoop:
                     )
                 state = await self._event_store.append(terminal_event)
                 try:
-                    artifact = _artifact_from_execution(
+                    artifact = artifact_from_tool_result_data(
                         execution.request.name, execution.result.data
                     )
                 except ValidationError:
@@ -594,12 +595,3 @@ def _compact_execution_failure(
         ),
         persistence_truncated=True,
     )
-
-
-def _artifact_from_execution(
-    tool_name: str,
-    data: Mapping[str, object],
-) -> Artifact | None:
-    if tool_name != "workspace.write" or "artifact" not in data:
-        return None
-    return Artifact.model_validate(data["artifact"])

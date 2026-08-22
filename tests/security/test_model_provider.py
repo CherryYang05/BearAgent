@@ -4,8 +4,9 @@ from collections.abc import AsyncIterator
 
 import httpx
 import pytest
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, OpenAIError
 
+import bearagent.adapters.model.openai_responses as provider_module
 from bearagent.adapters.model import OpenAIResponsesProvider
 from bearagent.domain.messages import Message, MessageRole, TextPart
 from bearagent.domain.model import ModelEvent, ModelRequest
@@ -162,3 +163,22 @@ def test_provider_stream_error_ignores_untrusted_message() -> None:
 
     assert caught.value.info.retryable is True
     assert "secret-bearing Provider message" not in caught.value.info.model_dump_json()
+
+
+def test_lazy_client_configuration_failure_is_safe(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    secret = "sensitive-local-provider-configuration"
+
+    def fail_client_creation(**_kwargs: object) -> AsyncOpenAI:
+        raise OpenAIError(secret)
+
+    monkeypatch.setattr(provider_module, "AsyncOpenAI", fail_client_creation)
+    provider = OpenAIResponsesProvider()
+
+    with pytest.raises(ModelProviderError) as caught:
+        asyncio.run(collect(provider))
+
+    assert caught.value.info.code.value == "provider_authentication"
+    assert caught.value.info.message == "Model Provider credentials are not configured."
+    assert secret not in caught.value.info.model_dump_json()

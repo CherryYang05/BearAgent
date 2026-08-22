@@ -79,5 +79,5 @@ Event 历史，不给 Run/Activity projection 添加 v2 专属字段，所以 v1
 - `tests/evals/test_p1_agent_loop_tasks.py`：五个任务分别跑内存与 SQLite Store；
 - `tests/integration/test_tool_executor.py`：记录式入口与旧入口共享执行行为。
 
-当前没有 CLI 组装、重启恢复、Approval 或 sandbox。修改 Loop 时，先证明没有旁路已有 port，再更新
-Feature Spec、架构、学习页、开发者页和当前状态。
+F-0005 已用 production composition 和 CLI 调用这条 Loop；重启恢复、Approval 与 sandbox 仍未实现。
+修改 Loop 时，先证明没有旁路已有 port，再更新 Feature Spec、架构、学习页、开发者页和当前状态。

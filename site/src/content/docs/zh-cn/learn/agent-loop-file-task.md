@@ -62,10 +62,11 @@ Tool 次数、token、费用和总时间。
 ## 当前实现与后续能力
 
 F-0016 已提供 Python application 接口，并用五个固定 Fake Provider 任务在内存和 SQLite Store 上验证
-读取、搜索、写入、替换、路径拒绝和预算终止。它还没有生产 CLI；F-0005 才会组装真实 Provider、
-SQLite、workspace Tool 和 `run/inspect/events` 命令。
+读取、搜索、写入、替换、路径拒绝和预算终止。F-0005 已组装 Provider、SQLite、workspace Tools 与
+`run/inspect/events`，并让同一任务集通过 production composition；自动验证仍没有调用真实模型 API。
 
 进程重启后自动继续、Attempt、`UNKNOWN` 和写后 reconcile 属于 P2。用户 Approval、Grant 和 sandbox
 属于 P3。当前的持久边界让失败可检查，但不宣称 exactly-once。
 
-继续阅读[有界 Agent Loop 实现导读](../development/agent-loop.md)，查看代码位置和测试证据。
+继续阅读[从命令行运行并检查一次 Run](run-inspect-events.md)，再到
+[有界 Agent Loop 实现导读](../development/agent-loop.md)查看代码位置和测试证据。

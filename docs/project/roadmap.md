@@ -1,8 +1,8 @@
 ---
 title: BearAgent Roadmap
 status: accepted
-version: 0.8
-last_verified: 2026-08-17
+version: 0.9
+last_verified: 2026-08-20
 ---
 
 # BearAgent 项目路线图
@@ -67,8 +67,9 @@ Feature 可以根据 Spec、Plan、测试和文档流程推进。
 
 ## 5. P1：可检查执行
 
-**状态：进行中（2026-08-10 开始）。** F-0001、F-0002、F-0003、F-0004、F-0006、F-0007、F-0008、
-F-0015 和 F-0016 已实现。P1 还需由 F-0005 接通 CLI、查询入口和真实模型退出演练。
+**状态：进行中（2026-08-10 开始）。** F-0001 至 F-0008、F-0015 和 F-0016 已实现。F-0005 已接通
+CLI、production composition 和查询入口。P1 仍需单独决定真实模型 API/4-of-5 gate，并完成整个
+里程碑 Reality Check；F-0005 完成不会自动关闭 P1。
 
 ### 5.1 用户结果
 
@@ -112,8 +113,9 @@ F-0003 已完成 EventStore port、SQLite adapter、schema v1 和 projection。�
 P1 不做自动摘要 Memory 或复杂上下文压缩。
 
 F-0004 已完成 Provider-neutral 模型数据与 port、确定性测试 adapter 和首个 OpenAI Responses 流式
-adapter。F-0016 已由 ContextBuilder 和 AgentLoop 调用该 port；生产 adapter 与 CLI 的组装仍未完成，
-因此还不等于用户已经能运行真实任务。
+adapter。F-0016 已由 ContextBuilder 和 AgentLoop 调用该 port；F-0005 已在 `bootstrap.py` 组装生产
+adapter、SQLite、Policy 和 workspace Tools。当前自动证据仍来自 Fake Provider，不代表真实模型 gate
+已经通过。
 
 #### 受限文件工具
 
@@ -135,11 +137,13 @@ ToolExecutor 的记录式入口，并把原始/规范化请求、Policy 决定�
 - `bearagent run` 启动 Run，并输出模型文本、Tool 状态和最终 Artifact；
 - `run inspect` 显示状态、预算、usage、Error 和 Artifact；
 - `run events` 按 sequence 输出事实；
-- 人类输出与 `--json` 调用同一 application command；
- - 固定任务集记录任务版本、模型、Prompt、Tool 版本、预算、结果和执行路径。
+- 人类输出与 `--json` 调用同一 application result；
+- 固定任务集记录任务版本、模型、Prompt、Tool 版本、预算、结果和执行路径。
 
-F-0016 已交付五个版本化 Fake Provider 任务，并在内存/SQLite Store 上验证 5/5。本节剩余工作是
-F-0005 的 CLI、查询输出和真实模型演练。
+F-0016 已交付五个版本化 Fake Provider 任务，并在内存/SQLite Store 上验证 5/5。F-0005 让相同任务
+再通过 production composition、真实 SQLite 和 workspace Tools 验证 5/5，并接通 CLI/query 输出。
+OpenAI SDK client 只在首个模型 Activity 开始时创建，因此零预算和缺少凭据都会留下明确、可查询的
+terminal Run。真实模型演练不是 F-0005 的完成门，留给 Feature 后的 P1 决定。
 
 ### 5.3 P1 明确不做
 
@@ -159,7 +163,7 @@ F-0005 的 CLI、查询输出和真实模型演练。
 6. [F-0008：`outputs/**` 原子写和 Artifact](../specs/F-0008-atomic-output-artifacts.md)——已实现；
 7. [F-0016：ContextBuilder、有界 Loop、版本化 Agent 配置和任务集](../specs/F-0016-bounded-context-agent-loop.md)
    ——已实现；
-8. F-0005：`run/inspect/events` CLI 与端到端演示。
+8. [F-0005：`run/inspect/events` CLI 与端到端演示](../specs/F-0005-run-inspect-events-cli.md)——已实现。
 
 每次只激活一个主 Feature。可以根据依赖调整顺序，但不能并行铺开整个 Backlog。
 
@@ -348,7 +352,7 @@ Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；
 6. [F-0008：原子写和 Artifact](../specs/F-0008-atomic-output-artifacts.md) — implemented
 7. [F-0004：模型接口和首个真实 adapter](../specs/F-0004-model-provider-first-adapter.md) — implemented
 8. [F-0016：ContextBuilder、有界 Loop、Agent 配置和评测任务](../specs/F-0016-bounded-context-agent-loop.md) — implemented
-9. F-0005：`run/inspect/events` CLI
+9. [F-0005：`run/inspect/events` CLI](../specs/F-0005-run-inspect-events-cli.md) — implemented
 10. [F-0015：本地 Starlight 文档站](../specs/F-0015-local-starlight-docs-site.md) — implemented
 
 ### P2

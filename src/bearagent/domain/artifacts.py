@@ -1,5 +1,6 @@
 """Provider-neutral metadata for retrievable Run outputs."""
 
+from collections.abc import Mapping
 from enum import StrEnum
 
 from pydantic import Field, field_validator
@@ -43,3 +44,13 @@ class Artifact(DomainModel):
         if any(ord(character) < 32 or ord(character) == 127 for character in value):
             raise ValueError("Artifact path contains a control character")
         return value
+
+
+def artifact_from_tool_result_data(
+    tool_name: str,
+    data: Mapping[str, object],
+) -> Artifact | None:
+    """Recover committed workspace.write metadata without granting file access."""
+    if tool_name != "workspace.write" or "artifact" not in data:
+        return None
+    return Artifact.model_validate(data["artifact"])

@@ -12,8 +12,9 @@ BearAgent 想让个人 Agent 在本地可靠地完成长任务：用户能看清
 
 :::caution[这是产品方向，不是当前功能清单]
 当前已完成工程基础、内部数据类型、状态与预算规则、SQLite EventStore、首个模型 adapter、统一
-ToolExecutor、workspace 读写 Tool、原子输出 Artifact、有界 Agent Loop 和本地文档站。五个离线
-Fake Provider 文件任务已通过；生产 CLI 尚未组装，因此用户还不能启动真实模型任务。
+ToolExecutor、workspace 读写 Tool、原子输出 Artifact、有界 Agent Loop、本地文档站和
+`run/inspect/events` production composition。五个离线 Fake Provider 文件任务已通过；真实模型 P1
+退出演练尚未完成。
 :::
 
 ## 第一个用户和第一个任务
