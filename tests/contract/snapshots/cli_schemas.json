@@ -667,6 +667,42 @@
         "title": "ModelCallId",
         "type": "string"
       },
+      "ModelProtocol": {
+        "description": "An explicitly selected wire protocol implemented by a model adapter.",
+        "enum": [
+          "openai_responses",
+          "openai_chat_completions",
+          "anthropic_messages"
+        ],
+        "title": "ModelProtocol",
+        "type": "string"
+      },
+      "ProviderSelection": {
+        "additionalProperties": false,
+        "description": "Non-secret Provider identity persisted with a Run.",
+        "properties": {
+          "provider_id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$",
+            "title": "Provider Id",
+            "type": "string"
+          },
+          "config_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Config Version",
+            "type": "string"
+          },
+          "protocol": {
+            "$ref": "#/$defs/ModelProtocol"
+          }
+        },
+        "required": [
+          "provider_id",
+          "config_version",
+          "protocol"
+        ],
+        "title": "ProviderSelection",
+        "type": "object"
+      },
       "RunId": {
         "description": "Identify one user-request execution.",
         "format": "uuid4",
@@ -690,6 +726,17 @@
             },
             "title": "Artifacts",
             "type": "array"
+          },
+          "provider_selection": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProviderSelection"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "required": [

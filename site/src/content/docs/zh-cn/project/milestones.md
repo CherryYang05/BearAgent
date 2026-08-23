@@ -4,6 +4,7 @@ description: 每个阶段给用户增加什么能力，以及用什么结果判�
 bearStatus: mixed
 sourceRefs:
   - roadmap
+  - F-0017
 ---
 
 BearAgent 不按“已经写了多少模块”关闭阶段。每个阶段都要在同一组仓库与本地文档任务上给用户
@@ -12,7 +13,7 @@ BearAgent 不按“已经写了多少模块”关闭阶段。每个阶段都要�
 | 阶段 | 当前状态 | 阶段结束时用户得到什么 |
 |---|---|---|
 | P0 工程基础 | 已完成 | 仓库可以安装、测试，开发规则和模块边界明确 |
-| P1 可检查执行 | 进行中 | 文件任务可以完成，模型和工具的过程、预算与失败可以查看 |
+| P1 可检查执行 | 已完成 | 文件任务可以完成，模型和工具的过程、预算与失败可以查看 |
 | P2 失败恢复 | 未开始 | 进程中断后只从能确认的位置继续，结果不明的操作会停住 |
 | P3 权限与隔离 | 未开始 | 危险操作必须获准，代码只在隔离环境运行，服务可以安全自托管 |
 | P4 日常使用 | 未开始 | Skill、MCP、Web 和 Memory 在不绕过原有边界的情况下接入 |
@@ -27,13 +28,14 @@ flowchart TB
 ## P1：完成一次可检查的文件任务
 
 P1 要接通 SQLite、一个真实模型、受限文件工具、有结束条件的 Agent Loop，以及 `run`、`inspect`、
-`events` 命令。写入范围固定为 `outputs/**`。完成时，固定测试模型必须完成全部 5 个任务，真实
-模型在固定配置下至少完成 4 个，并且非法路径和预算耗尽都有清楚的失败记录。
+`events` 命令。写入范围固定为 `outputs/**`。完成时，Fake Provider 必须完成全部 5 个任务；一个
+显式选择的真实配置必须完成四个普通任务与安全 canary，非法路径和预算耗尽也要有清楚记录。
 
-当前已经完成 SQLite EventStore、首个 OpenAI Responses adapter、Registry、固定 Policy、统一
-ToolExecutor、workspace 读写、原子 Artifact、ContextBuilder 和串行 Agent Loop。F-0005 已接通
-`run/inspect/events`、production composition 与查询，并让五个 Fake Provider 任务再次通过真实
-SQLite/workspace 组合。P1 仍要决定并执行真实模型 4/5 gate（若保留），再完成里程碑 Reality Check。
+P1 已完成 SQLite EventStore、三种模型协议 adapter、Registry、固定 Policy、统一 ToolExecutor、
+workspace 读写、原子 Artifact、ContextBuilder、串行 Agent Loop、`run/inspect/events`、Provider
+catalog、RunProfile v2、RunCreated v3 和默认关闭的 live runner。五个 Fake 任务与最终离线 Reality
+Check 通过；suite v1.1.1 又用 DeepSeek V4 经 production 路径完成四个普通任务与安全 canary，并生成
+脱敏 report。
 
 P1 只保证已经保存的事实可以查看。进程退出后不会自动继续。
 

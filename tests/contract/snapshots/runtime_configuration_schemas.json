@@ -1,0 +1,1132 @@
+{
+  "EvalSuite": {
+    "$defs": {
+      "EvalBudget": {
+        "additionalProperties": false,
+        "properties": {
+          "max_model_iterations": {
+            "minimum": 0,
+            "title": "Max Model Iterations",
+            "type": "integer"
+          },
+          "max_tokens": {
+            "minimum": 0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "max_cost_microusd": {
+            "minimum": 0,
+            "title": "Max Cost Microusd",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "minimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "minimum": 0,
+            "title": "Max Tool Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_model_iterations",
+          "max_tokens",
+          "max_cost_microusd",
+          "max_wall_time_ms",
+          "max_tool_calls"
+        ],
+        "title": "EvalBudget",
+        "type": "object"
+      },
+      "EvalRubric": {
+        "additionalProperties": false,
+        "properties": {
+          "required_output_facts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Output Facts",
+            "type": "array"
+          },
+          "exact_output": {
+            "title": "Exact Output",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "required_output_facts",
+          "exact_output"
+        ],
+        "title": "EvalRubric",
+        "type": "object"
+      },
+      "EvalTask": {
+        "additionalProperties": false,
+        "properties": {
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          },
+          "objective": {
+            "title": "Objective",
+            "type": "string"
+          },
+          "workspace_fixture": {
+            "title": "Workspace Fixture",
+            "type": "string"
+          },
+          "agent_config_version": {
+            "title": "Agent Config Version",
+            "type": "string"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "tool_version": {
+            "title": "Tool Version",
+            "type": "string"
+          },
+          "budget": {
+            "$ref": "#/$defs/EvalBudget"
+          },
+          "expected_calls": {
+            "items": {
+              "$ref": "#/$defs/ExpectedCall"
+            },
+            "title": "Expected Calls",
+            "type": "array"
+          },
+          "expected_event_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Expected Event Types",
+            "type": "array"
+          },
+          "expected_terminal": {
+            "enum": [
+              "succeeded",
+              "budget_exhausted"
+            ],
+            "title": "Expected Terminal",
+            "type": "string"
+          },
+          "expected_artifact_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Artifact Path"
+          },
+          "output_content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Content"
+          },
+          "rubric": {
+            "$ref": "#/$defs/EvalRubric"
+          }
+        },
+        "required": [
+          "task_id",
+          "version",
+          "objective",
+          "workspace_fixture",
+          "agent_config_version",
+          "model_version",
+          "prompt_version",
+          "tool_version",
+          "budget",
+          "expected_calls",
+          "expected_event_types",
+          "expected_terminal",
+          "expected_artifact_path",
+          "output_content",
+          "rubric"
+        ],
+        "title": "EvalTask",
+        "type": "object"
+      },
+      "ExpectedCall": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "arguments": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Arguments",
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "arguments"
+        ],
+        "title": "ExpectedCall",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "suite_id": {
+        "title": "Suite Id",
+        "type": "string"
+      },
+      "version": {
+        "title": "Version",
+        "type": "string"
+      },
+      "tasks": {
+        "items": {
+          "$ref": "#/$defs/EvalTask"
+        },
+        "title": "Tasks",
+        "type": "array"
+      }
+    },
+    "required": [
+      "suite_id",
+      "version",
+      "tasks"
+    ],
+    "title": "EvalSuite",
+    "type": "object"
+  },
+  "LiveEvalReport": {
+    "$defs": {
+      "LiveTaskReport": {
+        "additionalProperties": false,
+        "properties": {
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "task_version": {
+            "title": "Task Version",
+            "type": "string"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "terminal_status": {
+            "title": "Terminal Status",
+            "type": "string"
+          },
+          "terminal_error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terminal Error Code"
+          },
+          "provider_models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Provider Models",
+            "type": "array"
+          },
+          "input_tokens": {
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "cost_microusd": {
+            "title": "Cost Microusd",
+            "type": "integer"
+          },
+          "tool_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tool Names",
+            "type": "array"
+          },
+          "artifact_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Path"
+          },
+          "artifact_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Sha256"
+          },
+          "event_count": {
+            "title": "Event Count",
+            "type": "integer"
+          },
+          "output_rubric": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OutputRubricResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checks": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Checks",
+            "type": "object"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "task_id",
+          "task_version",
+          "run_id",
+          "terminal_status",
+          "terminal_error_code",
+          "provider_models",
+          "input_tokens",
+          "output_tokens",
+          "cost_microusd",
+          "tool_names",
+          "artifact_path",
+          "artifact_sha256",
+          "event_count",
+          "output_rubric",
+          "checks",
+          "passed"
+        ],
+        "title": "LiveTaskReport",
+        "type": "object"
+      },
+      "ModelProtocol": {
+        "description": "An explicitly selected wire protocol implemented by a model adapter.",
+        "enum": [
+          "openai_responses",
+          "openai_chat_completions",
+          "anthropic_messages"
+        ],
+        "title": "ModelProtocol",
+        "type": "string"
+      },
+      "OutputRubricResult": {
+        "additionalProperties": false,
+        "properties": {
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "artifact_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Path"
+          },
+          "artifact_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Sha256"
+          },
+          "required_facts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Facts",
+            "type": "array"
+          },
+          "matched_facts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched Facts",
+            "type": "array"
+          },
+          "exact_output_required": {
+            "title": "Exact Output Required",
+            "type": "boolean"
+          },
+          "exact_output_matched": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exact Output Matched"
+          }
+        },
+        "required": [
+          "passed",
+          "artifact_path",
+          "artifact_sha256",
+          "required_facts",
+          "matched_facts",
+          "exact_output_required",
+          "exact_output_matched"
+        ],
+        "title": "OutputRubricResult",
+        "type": "object"
+      },
+      "ProviderSelection": {
+        "additionalProperties": false,
+        "description": "Non-secret Provider identity persisted with a Run.",
+        "properties": {
+          "provider_id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$",
+            "title": "Provider Id",
+            "type": "string"
+          },
+          "config_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Config Version",
+            "type": "string"
+          },
+          "protocol": {
+            "$ref": "#/$defs/ModelProtocol"
+          }
+        },
+        "required": [
+          "provider_id",
+          "config_version",
+          "protocol"
+        ],
+        "title": "ProviderSelection",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "default": 1,
+        "title": "Schema Version",
+        "type": "integer"
+      },
+      "attempt_id": {
+        "title": "Attempt Id",
+        "type": "string"
+      },
+      "created_at": {
+        "format": "date-time",
+        "title": "Created At",
+        "type": "string"
+      },
+      "commit": {
+        "title": "Commit",
+        "type": "string"
+      },
+      "suite_id": {
+        "title": "Suite Id",
+        "type": "string"
+      },
+      "suite_version": {
+        "title": "Suite Version",
+        "type": "string"
+      },
+      "provider_selection": {
+        "$ref": "#/$defs/ProviderSelection"
+      },
+      "configured_model": {
+        "title": "Configured Model",
+        "type": "string"
+      },
+      "pricing_version": {
+        "title": "Pricing Version",
+        "type": "string"
+      },
+      "runtime_estimated_max_cost_microusd": {
+        "title": "Runtime Estimated Max Cost Microusd",
+        "type": "integer"
+      },
+      "authorized_cost_cap_microusd": {
+        "title": "Authorized Cost Cap Microusd",
+        "type": "integer"
+      },
+      "task_reports": {
+        "items": {
+          "$ref": "#/$defs/LiveTaskReport"
+        },
+        "title": "Task Reports",
+        "type": "array"
+      },
+      "reality_check": {
+        "additionalProperties": {
+          "type": "boolean"
+        },
+        "title": "Reality Check",
+        "type": "object"
+      },
+      "verdict": {
+        "title": "Verdict",
+        "type": "string"
+      }
+    },
+    "required": [
+      "attempt_id",
+      "created_at",
+      "commit",
+      "suite_id",
+      "suite_version",
+      "provider_selection",
+      "configured_model",
+      "pricing_version",
+      "runtime_estimated_max_cost_microusd",
+      "authorized_cost_cap_microusd",
+      "task_reports",
+      "reality_check",
+      "verdict"
+    ],
+    "title": "LiveEvalReport",
+    "type": "object"
+  },
+  "LivePreflightReport": {
+    "$defs": {
+      "ModelProtocol": {
+        "description": "An explicitly selected wire protocol implemented by a model adapter.",
+        "enum": [
+          "openai_responses",
+          "openai_chat_completions",
+          "anthropic_messages"
+        ],
+        "title": "ModelProtocol",
+        "type": "string"
+      },
+      "ProviderSelection": {
+        "additionalProperties": false,
+        "description": "Non-secret Provider identity persisted with a Run.",
+        "properties": {
+          "provider_id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$",
+            "title": "Provider Id",
+            "type": "string"
+          },
+          "config_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Config Version",
+            "type": "string"
+          },
+          "protocol": {
+            "$ref": "#/$defs/ModelProtocol"
+          }
+        },
+        "required": [
+          "provider_id",
+          "config_version",
+          "protocol"
+        ],
+        "title": "ProviderSelection",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "default": 1,
+        "title": "Schema Version",
+        "type": "integer"
+      },
+      "suite_id": {
+        "title": "Suite Id",
+        "type": "string"
+      },
+      "suite_version": {
+        "title": "Suite Version",
+        "type": "string"
+      },
+      "commit": {
+        "title": "Commit",
+        "type": "string"
+      },
+      "provider_selection": {
+        "$ref": "#/$defs/ProviderSelection"
+      },
+      "model": {
+        "title": "Model",
+        "type": "string"
+      },
+      "pricing_version": {
+        "title": "Pricing Version",
+        "type": "string"
+      },
+      "task_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Task Ids",
+        "type": "array"
+      },
+      "public_fixture_scope": {
+        "default": "evals/p1/workspaces/**",
+        "title": "Public Fixture Scope",
+        "type": "string"
+      },
+      "runtime_estimated_max_cost_microusd": {
+        "minimum": 0,
+        "title": "Runtime Estimated Max Cost Microusd",
+        "type": "integer"
+      },
+      "authorized_cost_cap_microusd": {
+        "exclusiveMinimum": 0,
+        "title": "Authorized Cost Cap Microusd",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "suite_id",
+      "suite_version",
+      "commit",
+      "provider_selection",
+      "model",
+      "pricing_version",
+      "task_ids",
+      "runtime_estimated_max_cost_microusd",
+      "authorized_cost_cap_microusd"
+    ],
+    "title": "LivePreflightReport",
+    "type": "object"
+  },
+  "ProviderCatalog": {
+    "$defs": {
+      "ModelProtocol": {
+        "description": "An explicitly selected wire protocol implemented by a model adapter.",
+        "enum": [
+          "openai_responses",
+          "openai_chat_completions",
+          "anthropic_messages"
+        ],
+        "title": "ModelProtocol",
+        "type": "string"
+      },
+      "ProviderConfig": {
+        "additionalProperties": false,
+        "description": "One local model service and its explicitly configured models.",
+        "properties": {
+          "provider_id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$",
+            "title": "Provider Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "protocol": {
+            "$ref": "#/$defs/ModelProtocol"
+          },
+          "base_url": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Base Url",
+            "type": "string"
+          },
+          "api_key": {
+            "format": "password",
+            "maxLength": 8192,
+            "minLength": 1,
+            "title": "Api Key",
+            "type": "string",
+            "writeOnly": true
+          },
+          "models": {
+            "items": {
+              "$ref": "#/$defs/ProviderModelConfig"
+            },
+            "maxItems": 128,
+            "minItems": 1,
+            "title": "Models",
+            "type": "array"
+          },
+          "default_model": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$",
+            "title": "Default Model",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider_id",
+          "name",
+          "protocol",
+          "base_url",
+          "api_key",
+          "models",
+          "default_model"
+        ],
+        "title": "ProviderConfig",
+        "type": "object"
+      },
+      "ProviderModelConfig": {
+        "additionalProperties": false,
+        "description": "One explicitly configured model offered by a Provider service.",
+        "properties": {
+          "model_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$",
+            "title": "Model Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name"
+          },
+          "thinking_mode": {
+            "default": "provider_default",
+            "enum": [
+              "provider_default",
+              "disabled"
+            ],
+            "title": "Thinking Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model_id"
+        ],
+        "title": "ProviderModelConfig",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Version 1 bounded catalog of user-configured model services.",
+    "properties": {
+      "schema_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Schema Version",
+        "type": "integer"
+      },
+      "providers": {
+        "items": {
+          "$ref": "#/$defs/ProviderConfig"
+        },
+        "maxItems": 32,
+        "minItems": 1,
+        "title": "Providers",
+        "type": "array"
+      }
+    },
+    "required": [
+      "providers"
+    ],
+    "title": "ProviderCatalog",
+    "type": "object"
+  },
+  "RunProfile": {
+    "$defs": {
+      "AgentConfig": {
+        "additionalProperties": false,
+        "description": "Resolved non-secret Agent snapshot persisted for one Run.",
+        "properties": {
+          "agent_id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "agent_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Agent Version",
+            "type": "string"
+          },
+          "instructions": {
+            "maxLength": 65536,
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "prompt_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "context_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Context Version",
+            "type": "string"
+          },
+          "max_output_tokens": {
+            "exclusiveMinimum": 0,
+            "maximum": 10000000000,
+            "title": "Max Output Tokens",
+            "type": "integer"
+          },
+          "model_timeout_ms": {
+            "exclusiveMinimum": 0,
+            "maximum": 600000,
+            "title": "Model Timeout Ms",
+            "type": "integer"
+          },
+          "max_context_chars": {
+            "exclusiveMinimum": 0,
+            "maximum": 4000000,
+            "title": "Max Context Chars",
+            "type": "integer"
+          },
+          "max_tool_result_bytes": {
+            "maximum": 4000000,
+            "minimum": 128,
+            "title": "Max Tool Result Bytes",
+            "type": "integer"
+          },
+          "tool_names": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 128,
+            "title": "Tool Names",
+            "type": "array"
+          },
+          "model": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$",
+            "title": "Model",
+            "type": "string"
+          },
+          "pricing": {
+            "$ref": "#/$defs/ModelPricing"
+          }
+        },
+        "required": [
+          "agent_id",
+          "agent_version",
+          "instructions",
+          "prompt_version",
+          "context_version",
+          "max_output_tokens",
+          "model_timeout_ms",
+          "max_context_chars",
+          "max_tool_result_bytes",
+          "model",
+          "pricing"
+        ],
+        "title": "AgentConfig",
+        "type": "object"
+      },
+      "BudgetLimits": {
+        "additionalProperties": false,
+        "description": "Finite limits selected by a trusted Run creation boundary.",
+        "properties": {
+          "max_model_iterations": {
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Max Model Iterations",
+            "type": "integer"
+          },
+          "max_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "max_cost_microusd": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Max Cost Microusd",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "maximum": 2678400000,
+            "minimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Max Tool Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_model_iterations",
+          "max_tokens",
+          "max_cost_microusd",
+          "max_wall_time_ms",
+          "max_tool_calls"
+        ],
+        "title": "BudgetLimits",
+        "type": "object"
+      },
+      "ModelPricing": {
+        "additionalProperties": false,
+        "description": "Versioned integer rates used for deterministic local cost estimates.",
+        "properties": {
+          "version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Version",
+            "type": "string"
+          },
+          "input_microusd_per_million_tokens": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Input Microusd Per Million Tokens",
+            "type": "integer"
+          },
+          "output_microusd_per_million_tokens": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Output Microusd Per Million Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "input_microusd_per_million_tokens",
+          "output_microusd_per_million_tokens"
+        ],
+        "title": "ModelPricing",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Versioned, non-secret configuration loaded by a trusted interface.",
+    "properties": {
+      "schema_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Schema Version",
+        "type": "integer"
+      },
+      "agent_config": {
+        "$ref": "#/$defs/AgentConfig"
+      },
+      "budget_limits": {
+        "$ref": "#/$defs/BudgetLimits"
+      }
+    },
+    "required": [
+      "agent_config",
+      "budget_limits"
+    ],
+    "title": "RunProfile",
+    "type": "object"
+  },
+  "RunProfileV2": {
+    "$defs": {
+      "AgentSettings": {
+        "additionalProperties": false,
+        "description": "User-editable Agent behavior without Provider-owned model fields.",
+        "properties": {
+          "agent_id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "agent_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Agent Version",
+            "type": "string"
+          },
+          "instructions": {
+            "maxLength": 65536,
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "prompt_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "context_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Context Version",
+            "type": "string"
+          },
+          "max_output_tokens": {
+            "exclusiveMinimum": 0,
+            "maximum": 10000000000,
+            "title": "Max Output Tokens",
+            "type": "integer"
+          },
+          "model_timeout_ms": {
+            "exclusiveMinimum": 0,
+            "maximum": 600000,
+            "title": "Model Timeout Ms",
+            "type": "integer"
+          },
+          "max_context_chars": {
+            "exclusiveMinimum": 0,
+            "maximum": 4000000,
+            "title": "Max Context Chars",
+            "type": "integer"
+          },
+          "max_tool_result_bytes": {
+            "maximum": 4000000,
+            "minimum": 128,
+            "title": "Max Tool Result Bytes",
+            "type": "integer"
+          },
+          "tool_names": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 128,
+            "title": "Tool Names",
+            "type": "array"
+          }
+        },
+        "required": [
+          "agent_id",
+          "agent_version",
+          "instructions",
+          "prompt_version",
+          "context_version",
+          "max_output_tokens",
+          "model_timeout_ms",
+          "max_context_chars",
+          "max_tool_result_bytes"
+        ],
+        "title": "AgentSettings",
+        "type": "object"
+      },
+      "BudgetLimits": {
+        "additionalProperties": false,
+        "description": "Finite limits selected by a trusted Run creation boundary.",
+        "properties": {
+          "max_model_iterations": {
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Max Model Iterations",
+            "type": "integer"
+          },
+          "max_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "max_cost_microusd": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Max Cost Microusd",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "maximum": 2678400000,
+            "minimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Max Tool Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_model_iterations",
+          "max_tokens",
+          "max_cost_microusd",
+          "max_wall_time_ms",
+          "max_tool_calls"
+        ],
+        "title": "BudgetLimits",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Version 2 Run configuration selecting one catalog Provider and its default model.",
+    "properties": {
+      "schema_version": {
+        "const": 2,
+        "default": 2,
+        "title": "Schema Version",
+        "type": "integer"
+      },
+      "provider_id": {
+        "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$",
+        "title": "Provider Id",
+        "type": "string"
+      },
+      "agent_config": {
+        "$ref": "#/$defs/AgentSettings"
+      },
+      "budget_limits": {
+        "$ref": "#/$defs/BudgetLimits"
+      }
+    },
+    "required": [
+      "provider_id",
+      "agent_config",
+      "budget_limits"
+    ],
+    "title": "RunProfileV2",
+    "type": "object"
+  }
+}

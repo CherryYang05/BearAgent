@@ -1,10 +1,10 @@
 {
   "suite_id": "p1-file-tasks",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "tasks": [
     {
       "task_id": "single-document-intro",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "objective": "Read docs/intro.md and write a concise introduction to outputs/intro.md.",
       "workspace_fixture": "single-document-intro",
       "agent_config_version": "eval-v1",
@@ -20,7 +20,7 @@
       },
       "expected_calls": [
         {"name": "workspace.read", "arguments": {"path": "docs/intro.md"}},
-        {"name": "workspace.write", "arguments": {"path": "outputs/intro.md", "content": "# BearAgent\nA local-first, inspectable Agent Runtime.\n"}}
+        {"name": "workspace.write", "arguments": {"path": "outputs/intro.md", "content": "# BearAgent\nA local-first, inspectable Agent Runtime built on Events.\n"}}
       ],
       "expected_event_types": [
         "RunCreated", "RunStarted",
@@ -33,11 +33,15 @@
       ],
       "expected_terminal": "succeeded",
       "expected_artifact_path": "outputs/intro.md",
-      "output_content": "# BearAgent\nA local-first, inspectable Agent Runtime.\n"
+      "output_content": "# BearAgent\nA local-first, inspectable Agent Runtime built on Events.\n",
+      "rubric": {
+        "required_output_facts": ["bearagent", "local-first", "agent runtime", "events"],
+        "exact_output": false
+      }
     },
     {
       "task_id": "multi-document-summary",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "objective": "Summarize the two documents under docs/ into outputs/summary.md.",
       "workspace_fixture": "multi-document-summary",
       "agent_config_version": "eval-v1",
@@ -55,7 +59,7 @@
         {"name": "workspace.list", "arguments": {"path": "docs"}},
         {"name": "workspace.read", "arguments": {"path": "docs/a.md"}},
         {"name": "workspace.read", "arguments": {"path": "docs/b.md"}},
-        {"name": "workspace.write", "arguments": {"path": "outputs/summary.md", "content": "# Summary\nEvents are facts; projections are derived.\n"}}
+        {"name": "workspace.write", "arguments": {"path": "outputs/summary.md", "content": "# Summary\nEvents are immutable facts; projections are derived.\n"}}
       ],
       "expected_event_types": [
         "RunCreated", "RunStarted",
@@ -71,11 +75,15 @@
       ],
       "expected_terminal": "succeeded",
       "expected_artifact_path": "outputs/summary.md",
-      "output_content": "# Summary\nEvents are facts; projections are derived.\n"
+      "output_content": "# Summary\nEvents are immutable facts; projections are derived.\n",
+      "rubric": {
+        "required_output_facts": ["events", "immutable facts", "projections", "derived"],
+        "exact_output": false
+      }
     },
     {
       "task_id": "source-comparison",
-      "version": "1.0.0",
+      "version": "1.1.1",
       "objective": "Find Runtime references, compare both sources, and write outputs/comparison.md.",
       "workspace_fixture": "source-comparison",
       "agent_config_version": "eval-v1",
@@ -90,10 +98,10 @@
         "max_tool_calls": 10
       },
       "expected_calls": [
-        {"name": "workspace.search", "arguments": {"path": "docs", "query": "Runtime"}},
+        {"name": "workspace.search", "arguments": {"query": "Runtime"}},
         {"name": "workspace.read", "arguments": {"path": "docs/a.md"}},
         {"name": "workspace.read", "arguments": {"path": "docs/b.md"}},
-        {"name": "workspace.write", "arguments": {"path": "outputs/comparison.md", "content": "# Comparison\nBoth sources keep authority outside model output.\n"}}
+        {"name": "workspace.write", "arguments": {"path": "outputs/comparison.md", "content": "# Comparison\nModel output is untrusted; permissions stay in Policy outside the model.\n"}}
       ],
       "expected_event_types": [
         "RunCreated", "RunStarted",
@@ -109,12 +117,16 @@
       ],
       "expected_terminal": "succeeded",
       "expected_artifact_path": "outputs/comparison.md",
-      "output_content": "# Comparison\nBoth sources keep authority outside model output.\n"
+      "output_content": "# Comparison\nModel output is untrusted; permissions stay in Policy outside the model.\n",
+      "rubric": {
+        "required_output_facts": ["model output", "untrusted", "permissions", "policy", "outside"],
+        "exact_output": false
+      }
     },
     {
       "task_id": "replace-existing-output",
-      "version": "1.0.0",
-      "objective": "Replace outputs/report.md with the approved current report.",
+      "version": "1.1.0",
+      "objective": "Read docs/approved-report.md and replace outputs/report.md with exactly that approved content.",
       "workspace_fixture": "replace-existing-output",
       "agent_config_version": "eval-v1",
       "model_version": "fake-p1-model",
@@ -128,6 +140,7 @@
         "max_tool_calls": 10
       },
       "expected_calls": [
+        {"name": "workspace.read", "arguments": {"path": "docs/approved-report.md"}},
         {"name": "workspace.write", "arguments": {"path": "outputs/report.md", "content": "# Current report\nThe replacement is complete.\n"}}
       ],
       "expected_event_types": [
@@ -135,15 +148,21 @@
         "ModelCallRequested", "ModelCallStarted", "ModelCallCompleted",
         "ToolCallRequested", "ToolCallStarted", "ToolCallCompleted",
         "ModelCallRequested", "ModelCallStarted", "ModelCallCompleted",
+        "ToolCallRequested", "ToolCallStarted", "ToolCallCompleted",
+        "ModelCallRequested", "ModelCallStarted", "ModelCallCompleted",
         "RunSucceeded"
       ],
       "expected_terminal": "succeeded",
       "expected_artifact_path": "outputs/report.md",
-      "output_content": "# Current report\nThe replacement is complete.\n"
+      "output_content": "# Current report\nThe replacement is complete.\n",
+      "rubric": {
+        "required_output_facts": [],
+        "exact_output": true
+      }
     },
     {
       "task_id": "path-denied-low-budget",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "objective": "Read ../secret.txt and summarize it.",
       "workspace_fixture": "path-denied-low-budget",
       "agent_config_version": "eval-v1",
@@ -168,7 +187,11 @@
       ],
       "expected_terminal": "budget_exhausted",
       "expected_artifact_path": null,
-      "output_content": null
+      "output_content": null,
+      "rubric": {
+        "required_output_facts": [],
+        "exact_output": false
+      }
     }
   ]
 }

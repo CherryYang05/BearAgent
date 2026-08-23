@@ -4,11 +4,13 @@ from pydantic import BaseModel
 
 from bearagent.domain.agent import (
     AgentConfig,
+    AgentSettings,
     ContextBuildReport,
     ContextBuildResult,
     ModelPricing,
     RunInput,
     RunProfile,
+    RunProfileV2,
     RunResult,
 )
 from bearagent.domain.artifacts import Artifact
@@ -34,6 +36,7 @@ from bearagent.domain.model import (
     ModelToolDefinition,
     ModelUsage,
 )
+from bearagent.domain.providers import ProviderSelection
 from bearagent.domain.queries import EventPage, RunInspection
 from bearagent.domain.run_events import (
     ModelCallCompletedPayload,
@@ -46,6 +49,7 @@ from bearagent.domain.run_events import (
     ModelCallStartedPayloadV2,
     RunCreatedPayload,
     RunCreatedPayloadV2,
+    RunCreatedPayloadV3,
     RunFailedPayload,
     RunFailedPayloadV2,
     RunStartedPayload,
@@ -81,6 +85,7 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     ActivityId,
     ActivityState,
     AgentConfig,
+    AgentSettings,
     Artifact,
     ArtifactId,
     BudgetExhaustion,
@@ -103,6 +108,7 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     ModelCallId,
     ModelCallRequestedPayload,
     ModelCallRequestedPayloadV2,
+    ProviderSelection,
     ModelCallStartedPayload,
     ModelCallStartedPayloadV2,
     ModelRequest,
@@ -113,6 +119,7 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     ModelPricing,
     PolicyDecision,
     PreparedToolRequest,
+    RunCreatedPayloadV3,
     RunId,
     RunCreatedPayload,
     RunCreatedPayloadV2,
@@ -121,6 +128,7 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     RunInput,
     RunInspection,
     RunProfile,
+    RunProfileV2,
     RunStartedPayload,
     RunStartedPayloadV2,
     RunState,

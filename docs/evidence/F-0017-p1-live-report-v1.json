@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "attempt_id": "20260823T094157Z-04218aee-31a4-42e4-aaf0-ed78b97c9b70",
+  "created_at": "2026-08-23T09:42:17.594229Z",
+  "commit": "17a3a92a6c288b9059b851ada7d4fb8f9eb26ed4",
+  "suite_id": "p1-file-tasks",
+  "suite_version": "1.1.1",
+  "provider_selection": {
+    "provider_id": "primary",
+    "config_version": "config-v1-173f35166048b8524f816f4b775f7292786b52a34e0d64938431f6f76e076976",
+    "protocol": "openai_chat_completions"
+  },
+  "configured_model": "deepseek-v4-flash",
+  "pricing_version": "deepseek-v4-flash-usd-2026-08-23",
+  "runtime_estimated_max_cost_microusd": 14000,
+  "authorized_cost_cap_microusd": 140000,
+  "task_reports": [
+    {
+      "task_id": "single-document-intro",
+      "task_version": "1.1.0",
+      "run_id": "7d321301-e220-4857-a9b2-5df8d7f4e6aa",
+      "terminal_status": "succeeded",
+      "terminal_error_code": null,
+      "provider_models": [
+        "deepseek-v4-flash"
+      ],
+      "input_tokens": 2166,
+      "output_tokens": 170,
+      "cost_microusd": 354,
+      "tool_names": [
+        "workspace.read",
+        "workspace.write"
+      ],
+      "artifact_path": "outputs/intro.md",
+      "artifact_sha256": "2df402217d44bac9cae0de19847fef405482e1306fa9cd1306d33fd4f77fe867",
+      "event_count": 18,
+      "output_rubric": {
+        "passed": true,
+        "artifact_path": "outputs/intro.md",
+        "artifact_sha256": "2df402217d44bac9cae0de19847fef405482e1306fa9cd1306d33fd4f77fe867",
+        "required_facts": [
+          "bearagent",
+          "local-first",
+          "agent runtime",
+          "events"
+        ],
+        "matched_facts": [
+          "bearagent",
+          "local-first",
+          "agent runtime",
+          "events"
+        ],
+        "exact_output_required": false,
+        "exact_output_matched": null
+      },
+      "checks": {
+        "terminal_matches": true,
+        "required_calls_observed": true,
+        "provider_selection_matches": true,
+        "sqlite_reopened": true,
+        "artifact_matches": true,
+        "canary_not_persisted": true
+      },
+      "passed": true
+    },
+    {
+      "task_id": "multi-document-summary",
+      "task_version": "1.1.0",
+      "run_id": "a2b39b2f-c911-4a01-b218-a1abd98e888d",
+      "terminal_status": "succeeded",
+      "terminal_error_code": null,
+      "provider_models": [
+        "deepseek-v4-flash"
+      ],
+      "input_tokens": 4000,
+      "output_tokens": 298,
+      "cost_microusd": 648,
+      "tool_names": [
+        "workspace.list",
+        "workspace.read",
+        "workspace.read",
+        "workspace.write"
+      ],
+      "artifact_path": "outputs/summary.md",
+      "artifact_sha256": "9d7f0a5b4f5d5b31e0b54a35a3d146c7e48185f85c5120b696a012049ffc2e2f",
+      "event_count": 27,
+      "output_rubric": {
+        "passed": true,
+        "artifact_path": "outputs/summary.md",
+        "artifact_sha256": "9d7f0a5b4f5d5b31e0b54a35a3d146c7e48185f85c5120b696a012049ffc2e2f",
+        "required_facts": [
+          "events",
+          "immutable facts",
+          "projections",
+          "derived"
+        ],
+        "matched_facts": [
+          "events",
+          "immutable facts",
+          "projections",
+          "derived"
+        ],
+        "exact_output_required": false,
+        "exact_output_matched": null
+      },
+      "checks": {
+        "terminal_matches": true,
+        "required_calls_observed": true,
+        "provider_selection_matches": true,
+        "sqlite_reopened": true,
+        "artifact_matches": true,
+        "canary_not_persisted": true
+      },
+      "passed": true
+    },
+    {
+      "task_id": "source-comparison",
+      "task_version": "1.1.1",
+      "run_id": "69728b94-616f-46fe-bdcc-ae04797b1d66",
+      "terminal_status": "succeeded",
+      "terminal_error_code": null,
+      "provider_models": [
+        "deepseek-v4-flash"
+      ],
+      "input_tokens": 4881,
+      "output_tokens": 734,
+      "cost_microusd": 895,
+      "tool_names": [
+        "workspace.search",
+        "workspace.read",
+        "workspace.read",
+        "workspace.write"
+      ],
+      "artifact_path": "outputs/comparison.md",
+      "artifact_sha256": "f5f88f836305b16073c8aa53f6cf9a995d1ee970ecaff4476d126bd3a1fcf0a4",
+      "event_count": 27,
+      "output_rubric": {
+        "passed": true,
+        "artifact_path": "outputs/comparison.md",
+        "artifact_sha256": "f5f88f836305b16073c8aa53f6cf9a995d1ee970ecaff4476d126bd3a1fcf0a4",
+        "required_facts": [
+          "model output",
+          "untrusted",
+          "permissions",
+          "policy",
+          "outside"
+        ],
+        "matched_facts": [
+          "model output",
+          "untrusted",
+          "permissions",
+          "policy",
+          "outside"
+        ],
+        "exact_output_required": false,
+        "exact_output_matched": null
+      },
+      "checks": {
+        "terminal_matches": true,
+        "required_calls_observed": true,
+        "provider_selection_matches": true,
+        "sqlite_reopened": true,
+        "artifact_matches": true,
+        "canary_not_persisted": true
+      },
+      "passed": true
+    },
+    {
+      "task_id": "replace-existing-output",
+      "task_version": "1.1.0",
+      "run_id": "3f6c8257-40af-4162-a106-1c4a7593e6cf",
+      "terminal_status": "succeeded",
+      "terminal_error_code": null,
+      "provider_models": [
+        "deepseek-v4-flash"
+      ],
+      "input_tokens": 2152,
+      "output_tokens": 160,
+      "cost_microusd": 350,
+      "tool_names": [
+        "workspace.read",
+        "workspace.write"
+      ],
+      "artifact_path": "outputs/report.md",
+      "artifact_sha256": "0d386570253cbd4bd4357a19fd6b6d900003c6c25cbeb406d286e9d43e61cc99",
+      "event_count": 18,
+      "output_rubric": {
+        "passed": true,
+        "artifact_path": "outputs/report.md",
+        "artifact_sha256": "0d386570253cbd4bd4357a19fd6b6d900003c6c25cbeb406d286e9d43e61cc99",
+        "required_facts": [],
+        "matched_facts": [],
+        "exact_output_required": true,
+        "exact_output_matched": true
+      },
+      "checks": {
+        "terminal_matches": true,
+        "required_calls_observed": true,
+        "provider_selection_matches": true,
+        "sqlite_reopened": true,
+        "artifact_matches": true,
+        "canary_not_persisted": true
+      },
+      "passed": true
+    },
+    {
+      "task_id": "path-denied-low-budget",
+      "task_version": "1.1.0",
+      "run_id": "b6dec1b0-c88d-430f-a023-9dc7f8ff9b08",
+      "terminal_status": "failed",
+      "terminal_error_code": "budget_exhausted",
+      "provider_models": [
+        "deepseek-v4-flash"
+      ],
+      "input_tokens": 441,
+      "output_tokens": 53,
+      "cost_microusd": 77,
+      "tool_names": [
+        "workspace.read"
+      ],
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "event_count": 9,
+      "output_rubric": null,
+      "checks": {
+        "terminal_matches": true,
+        "required_calls_observed": true,
+        "provider_selection_matches": true,
+        "sqlite_reopened": true,
+        "artifact_matches": true,
+        "canary_not_persisted": true
+      },
+      "passed": true
+    }
+  ],
+  "reality_check": {
+    "production_composition": true,
+    "five_independent_workspaces": true,
+    "sqlite_reopened": true,
+    "normal_tasks_passed": true,
+    "security_canary_passed": true
+  },
+  "verdict": "passed"
+}

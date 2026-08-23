@@ -6,13 +6,15 @@ sourceRefs:
   - F-0005
   - ADR-0014
   - F-0016
+  - F-0017
+  - ADR-0015
 ---
 
 你运行一个文件任务后，最先要回答的不是“模型说了什么”，而是三个更具体的问题：这次 Run 的 ID
 是什么、最终状态是什么、哪些事实真的保存下来了。F-0005 用三个命令回答它们：
 
 ```powershell
-bearagent run "阅读 docs 并把总结写到 outputs/summary.md"
+bearagent run "阅读 docs 并把总结写到 outputs/summary.md" --config data/config.json
 bearagent run inspect <run-id>
 bearagent run events <run-id> --after-sequence 0 --limit 100
 ```
@@ -21,8 +23,8 @@ bearagent run events <run-id> --after-sequence 0 --limit 100
 
 ```mermaid
 flowchart TB
-    C["CLI 校验 objective 和路径"] --> B["bootstrap 读取 Run profile"]
-    B --> G["组装 Provider、SQLite、Policy 和 workspace Tools"]
+    C["CLI 校验 objective 和路径"] --> B["bootstrap 读取 Run profile 和 BearAgent config"]
+    B --> G["按显式 protocol 组装一个 Provider、SQLite、Policy 和 workspace Tools"]
     G --> L["AgentLoop 保存并执行 Run"]
     L --> R["RunResult"]
     R --> H["human 或 JSON 输出"]
@@ -36,28 +38,31 @@ projection 和 Event，所以不存在“终端显示成功、数据库却是另
 
 ## Run profile 为什么不放密钥
 
-默认 profile 是 `data/p1-run-profile.json`。它的 version 1 只有两个主体字段：`agent_config` 和
-`budget_limits`。model、Prompt、Context、Tool 名称、价格版本和预算会随 RunCreated Event 保存，便于
-以后解释这次执行；API key、base URL、workspace 绝对路径和数据库路径不会进入 profile 或 Event。
+默认配置分成两份。`data/config.json` 描述服务怎样连接和默认使用哪个模型：
+`provider_id`、厂商显示名、protocol、HTTPS base URL、直接填写的 `api_key`、模型列表和
+`default_model`。该文件被 Git 忽略且必须按敏感文件保护。RunProfile v2
+`data/p1-run-profile.json` 只通过 `provider_id` 选择服务，再保存 Agent 指令、Tool 白名单和预算。
+Key 和 model 不在 RunProfile 中重复配置；config 明确拒绝 pricing，普通 Run 使用 `unpriced`。
 
-profile 必须是有限大小的普通 UTF-8 JSON 文件。未知字段、链接、非法编码和越界值都会在数据库写入
-和 Provider 调用前失败。Provider 凭据只能从进程环境注入。
+两种配置都是有限大小的普通 UTF-8 JSON 文件。未知字段、链接、非法编码、引用不存在和越界值会在
+创建数据库和 Run 前失败。RunProfile v1 仍可读，并映射到 legacy Responses 配置；新配置使用 v2。
 
 profile 不是“每个 Tool 一份 JSON”，也不需要为每个问题重新生成。每个 Tool 的参数 schema 已由
-`ToolSpec` 定义；profile 只选择这个 Agent 能看到哪些 Tool。同一份 profile 可以先后运行“总结 docs”
-和“比较两份说明”，每次变化的是 objective。只有模型、Agent 指令、预算或 Tool 权限发生变化时，才
-需要换 profile。
+`ToolSpec` 定义；profile 只选择这个 Agent 能看到哪些 Tool。同一 config/profile 可以先后运行
+“总结 docs”和“比较两份说明”，每次变化的是 objective。只有服务/model、Agent 指令、预算或 Tool
+权限发生变化时才需要修改配置。
 
-仓库提供的示例 profile 把预算设为 0。使用它启动 Run 时，AgentLoop 会保存 RunCreated、RunStarted 和
-`budget_exhausted` RunFailed；OpenAI SDK client 不会创建，模型和 Tool 都不会调用。预算非零但环境中
-没有 Provider 凭据时，首个模型 Activity 和 Run 会以安全的 `provider_authentication` 失败。这两种
-情况都能用 `inspect/events` 查看，不再只得到无法定位的 composition 错误。
+仓库提供的 v1/v2 示例 profile 都把预算设为 0。使用它启动 Run 时，AgentLoop 会保存 RunCreated、
+RunStarted 和 `budget_exhausted` RunFailed；SDK client 不会创建，模型和 Tool 都不会调用。预算非零
+但所选 key 缺失时，首个模型 Activity 和 Run 会以安全的 `provider_authentication` 失败。这两种情况
+都能用 `inspect/events` 查看。
 
 ## inspect 与 events 看的是不同层次
 
 `inspect` 返回 Reducer 已计算出的完整 RunState，包括预算、usage、Activity、terminal Error 和最后
-sequence。它还会分页扫描已提交的 v2 Tool completed Event，从 `workspace.write` 结果重建 Artifact
-元数据。如果 Event 总量超过可信上限，命令会明确失败，不会把不完整 Artifact 列表说成完整结果。
+sequence。新 Run 还显示 RunCreated v3 保存的 `provider_id`、config version、protocol、配置 model 和
+pricing version（普通 Run 为 `unpriced`），不显示 base URL 或 key。它也会分页扫描已提交的 v2 Tool completed Event，从
+`workspace.write` 结果重建 Artifact 元数据。如果 Event 总量超过可信上限，命令会明确失败，不会把不完整 Artifact 列表说成完整结果。
 
 `events` 返回一页不可变事实，并带回 `next_after_sequence` 和 `has_more`。默认 human 输出每条只显示
 sequence、时间、类型和 schema version，不显示 payload。`--json` 是显式完整导出，可能包含用户目标、
@@ -69,8 +74,8 @@ sequence、时间、类型和 schema version，不显示 payload。`--json` 是�
 PENDING/RUNNING Activity；它不会猜测成功，也不会自动追加 RunFailed。若文件已经写成，但
 ToolCallCompleted 没有提交，查询也不会从文件系统反推一个 Artifact。
 
-自动恢复、retry、Attempt、Receipt 和 `UNKNOWN` 属于 P2。F-0005 的自动验收使用注入式 Fake Provider，
-没有读取真实 key 或调用真实模型。是否把真实模型 API/4-of-5 演练保留为 P1 关闭门，会在 F-0005
-完成后单独决定。
+自动恢复、retry、Attempt、Receipt 和 `UNKNOWN` 属于 P2。F-0017 已实现默认关闭的 live runner，
+真实 gate 仍必须由项目所有者确认 Provider、model、pricing snapshot 和费用上限后单独执行。2026-08-23
+的 DeepSeek V4 suite v1.1.1 已通过 5/5，因此 F-0017/P1 已关闭；runner 默认状态没有改变。
 
 继续阅读[生产 CLI 和查询服务实现导读](../development/run-cli.md)，查看代码位置、Schema 和故障测试。

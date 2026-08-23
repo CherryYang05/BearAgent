@@ -33,6 +33,7 @@ from bearagent.interfaces.cli.renderers import (
 )
 
 DEFAULT_PROFILE_PATH = Path("data/p1-run-profile.json")
+DEFAULT_CONFIG_PATH = Path("data/config.json")
 DEFAULT_DATABASE_PATH = Path("data/bearagent.db")
 DEFAULT_WORKSPACE_PATH = Path(".")
 
@@ -140,8 +141,12 @@ def run_objective(
     objective: Annotated[str, typer.Argument(help="The objective for this Run.")],
     profile: Annotated[
         Path,
-        typer.Option("--profile", help="Path to a version 1 Run profile."),
+        typer.Option("--profile", help="Path to a version 1 or 2 Run profile."),
     ] = DEFAULT_PROFILE_PATH,
+    config: Annotated[
+        Path,
+        typer.Option("--config", help="Path to a version 1 BearAgent config."),
+    ] = DEFAULT_CONFIG_PATH,
     workspace: Annotated[
         Path,
         typer.Option("--workspace", help="Workspace root available to Tools."),
@@ -161,6 +166,7 @@ def run_objective(
             _execute_objective(
                 objective=objective,
                 profile=profile,
+                config=config,
                 workspace=workspace,
                 database=database,
             )
@@ -238,6 +244,7 @@ async def _execute_objective(
     *,
     objective: str,
     profile: Path,
+    config: Path,
     workspace: Path,
     database: Path,
 ) -> RunCommandOutput:
@@ -245,6 +252,7 @@ async def _execute_objective(
         raise ValueError("objective is invalid")
     services = await build_run_services(
         profile_path=profile,
+        config_path=config,
         workspace_path=workspace,
         database_path=database,
     )
@@ -257,7 +265,7 @@ async def _execute_objective(
             session_id=SessionId.new(),
             objective=objective,
             budget_limits=services.profile.budget_limits,
-            agent_config=services.profile.agent_config,
+            agent_config=services.agent_config,
         ),
         run_id=run_id,
     )

@@ -1,8 +1,8 @@
 ---
 title: Local-first and Self-hosting Strategy
 status: accepted
-version: 0.5
-last_verified: 2026-08-20
+version: 0.6
+last_verified: 2026-08-23
 ---
 
 # 本地开发与自托管
@@ -40,18 +40,31 @@ Production  P3 安全门通过后才启用公网 hostname
 - CLI 直接运行；
 - SQLite 和 workspace 放在项目外的数据目录；
 - 不开放 HTTP，不提供 host shell；
-- secret 只在本机环境或 secret store；
+- P1 本地 CLI 的 Provider key 只在被 Git 忽略的本机 catalog；长期服务后续改用 secret store；
 - 文档站本地预览和 CI 构建，不部署。
 
-F-0005 的本地 CLI 默认使用当前目录作为 workspace、`data/p1-run-profile.json` 作为非敏感配置、
-`data/bearagent.db` 作为 EventStore。profile 只含 AgentConfig 与预算，不允许 API key、base URL 或本机
-路径。OpenAI adapter 由 SDK 从 `OPENAI_API_KEY` 和可选 `OPENAI_BASE_URL` 读取环境；这些值不进入
-Event。SDK client 只在首个模型 Activity 开始时创建；凭据缺失会成为持久的
-`provider_authentication` Run failure。自动测试注入 Fake Provider，尚未授权或完成真实模型演练。
+本地 CLI 默认使用当前目录作为 workspace、`data/p1-run-profile.json` 作为 Run 配置、
+`data/config.json` 作为模型服务配置、`data/bearagent.db` 作为 EventStore。config 可以保存 HTTPS
+base URL、wire protocol、直接填写的 key、模型列表和默认模型；该文件是敏感本机配置，必须被 Git 忽略；
+RunProfile v2 通过 `provider_id` 选择条目，只保存 Agent 行为和预算。普通 Run 从 Provider 默认模型
+解析 model，并使用 `unpriced`；真实 gate 单独接收 pricing snapshot。新 Event 只保存有限 Provider 选择，
+不保存 endpoint 或 key。
 
-仓库中的 [`run-profile-v1.example.json`](../reference/run-profile-v1.example.json) 是 fail-closed 结构
-模板：所有预算为 0，model/pricing 是占位值。它允许 CLI 保存一个 `budget_exhausted` Run，但不会创建
-SDK client 或调用模型/Tool。未确认真实 API 演练方案前，不要把它改成会发起调用的配置。
+production composition 支持 `openai_responses`、`openai_chat_completions` 和
+`anthropic_messages`。这三个值表示协议，不表示厂商名单。配置必须按服务文档明确选择，Runtime
+不会检测 URL/model，也不会失败后 fallback。客户端只在首个模型 Activity 开始时创建。v2 catalog 缺少或非法 key 会在数据库和 Run 创建前失败；
+legacy v1 环境凭据缺失仍会成为持久的 `provider_authentication` Run failure。
+
+仓库根目录的 [config 示例](../../config.example.json)、
+[RunProfile v2](../../examples/run-profile-v2.example.json) 和
+[RunProfile v1](../../examples/run-profile-v1.example.json) 示例都不含 secret；完整字段约束见
+[配置参考](../reference/configuration.md)。两个 profile 示例的预算
+均为 0。它们允许 CLI 保存一个 `budget_exhausted` Run，但不会创建 SDK client 或调用模型/Tool。
+
+真实 gate 由 `scripts/run_p1_live_eval.py` 执行，默认关闭。运行者必须显式确认 Provider、model、
+pricing snapshot、commit 和 suite cost cap；preflight 未通过时不得创建 DB、workspace、SDK client 或
+Run。真实 key 只写入被 Git 忽略的本机 config，不能写进命令、profile、report 或 Git。2026-08-23 的
+suite v1.1.1 已在授权费用范围内通过 5/5；runner 仍不会因这次通过而默认开启。
 
 `run inspect/events` 只打开已经存在的普通数据库文件。不存在的路径不会生成空数据库；损坏或未来
 migration 只返回安全 persistence Error。这里仍是本地命令，不会启动 HTTP 服务。

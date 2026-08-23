@@ -6,6 +6,7 @@ sourceRefs:
   - F-0001
   - F-0003
   - F-0004
+  - F-0017
   - ADR-0007
 ---
 
@@ -16,9 +17,8 @@ F-0001 的解决办法很朴素：进入 Runtime 之前，把外部数据翻译�
 离开 Runtime 时，再由对应 adapter 翻译出去。
 
 :::tip[这部分已经实现]
-类型化 ID、Message、Error、通用 Event 外壳和 JSON schema 快照已有代码与测试。F-0003 与 F-0004
-已经分别让 SQLite 和 OpenAI Responses adapter 在边界完成显式翻译；F-0016 的 Agent Loop 只通过
-这些 BearAgent 类型和 port 接线。
+类型化 ID、Message、Error、通用 Event 外壳和 JSON schema 快照已有代码与测试。SQLite 与三个模型
+协议 adapter 都在边界完成显式翻译；AgentLoop 只通过这些 BearAgent 类型和 port 接线。
 :::
 
 ```mermaid

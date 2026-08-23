@@ -24,6 +24,7 @@ sourceRefs:
   - F-0016
   - F-0015
   - F-0005
+  - F-0017
 ---
 
 import { CardGrid, LinkCard } from '@astrojs/starlight/components';
@@ -50,15 +51,15 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
   />
   <LinkCard
     title="只想知道现在能做什么"
-    description="区分已经实现、P1 仍在建设和更晚的计划。"
+    description="区分已经完成的 P1、当前边界和更晚的计划。"
     href="/zh-cn/project/status/"
   />
 </CardGrid>
 
-:::note[生产 CLI 已接通，P1 仍未关闭]
-`run/inspect/events` 已把 Provider、workspace、SQLite、Policy 和 Agent Loop 组装到同一条本地路径。
-五个固定任务通过 production composition 的离线 Fake Provider 验证；真实模型 4/5 gate 与完整 P1
-Reality Check 尚待下一步决定。路线图中的恢复、Approval 和 sandbox 仍不是当前功能。
+:::note[生产 CLI 已接通，P1 已完成]
+`run/inspect/events` 已把显式选择的模型协议、workspace、SQLite、Policy 和 Agent Loop 组装到同一条
+本地路径。config v1、RunProfile v2、三种 protocol adapter、离线 Reality Check 和 DeepSeek V4
+suite v1.1.1 真实 5/5 均已通过。恢复、Approval 和 sandbox 仍不是当前功能。
 :::
 
 ## BearAgent 想把三件事做可靠

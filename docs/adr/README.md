@@ -21,6 +21,8 @@ ADR 只记录影响多个模块、以后难以反转的技术决定。标题直�
   — accepted
 - [ADR-0014：CLI 只调用 application command，生产依赖只在 bootstrap 组装](ADR-0014-cli-calls-application-production-wiring-stays-in-bootstrap.md)
   — accepted
+- [ADR-0015：用户配置显式选择模型协议 adapter](ADR-0015-explicit-model-protocol-adapters.md)
+  — accepted
 
 新决定使用 [ADR 模板](../templates/adr.md)。被新决定替代的 ADR 不删除，改为 `superseded` 并链接
 到替代它的文档。

@@ -3,13 +3,13 @@ import os
 from pathlib import Path
 
 import pytest
-from tests.agent_loop_fixtures import agent_config, budget_limits
+from tests.agent_loop_fixtures import agent_config, agent_settings, budget_limits
 from typer.testing import CliRunner
 
 import bearagent.interfaces.cli.main as cli_main
 from bearagent.adapters.testing import FakeModelProvider, ScriptedFakeModelProvider
 from bearagent.bootstrap import RunServices, build_run_services
-from bearagent.domain.agent import RunProfile
+from bearagent.domain.agent import RunProfile, RunProfileV2
 from bearagent.domain.model import ModelCompleted, ModelFinishReason, ModelTextDelta, ModelUsage
 from bearagent.interfaces.cli.main import app
 from bearagent.ports.model import ModelProvider
@@ -275,6 +275,65 @@ def test_blank_objective_fails_before_database_or_provider_setup(tmp_path: Path)
     assert not database_path.exists()
 
 
+def test_v2_cli_rejects_missing_direct_key_before_database_creation(
+    tmp_path: Path,
+) -> None:
+    secret = "must-not-appear"
+    profile = RunProfileV2(
+        provider_id="primary",
+        agent_config=agent_settings(),
+        budget_limits=budget_limits(),
+    )
+    profile_path = tmp_path / "profile-v2.json"
+    profile_path.write_text(
+        json.dumps(profile.model_dump(mode="json")),
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "providers": [
+                    {
+                        "provider_id": "primary",
+                        "name": "Private Provider",
+                        "protocol": "openai_chat_completions",
+                        "base_url": "https://private-provider.test/v1",
+                        "models": [{"model_id": "test-model"}],
+                        "default_model": "test-model",
+                        "unexpected_secret": secret,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    database_path = tmp_path / "events.db"
+
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            "reject invalid provider configuration",
+            "--profile",
+            str(profile_path),
+            "--config",
+            str(config_path),
+            "--workspace",
+            str(tmp_path),
+            "--database",
+            str(database_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert json.loads(result.stdout)["error"]["code"] == "invalid_input"
+    assert secret not in result.output
+    assert not database_path.exists()
+
+
 def _inject_provider(
     monkeypatch: pytest.MonkeyPatch,
     provider: ModelProvider,
@@ -282,11 +341,13 @@ def _inject_provider(
     async def build_with_fake(
         *,
         profile_path: str | os.PathLike[str],
+        config_path: str | os.PathLike[str],
         workspace_path: str | os.PathLike[str],
         database_path: str | os.PathLike[str],
     ) -> RunServices:
         return await build_run_services(
             profile_path=profile_path,
+            config_path=config_path,
             workspace_path=workspace_path,
             database_path=database_path,
             model_provider=provider,

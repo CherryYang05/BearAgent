@@ -55,3 +55,18 @@ def test_application_does_not_import_adapters_frameworks_or_sdks() -> None:
                 violations.append(f"{relative}: {module}")
 
     assert not violations, "Forbidden application imports:\n" + "\n".join(violations)
+
+
+def test_provider_sdks_are_confined_to_model_adapters() -> None:
+    violations: list[str] = []
+    for path in sorted(SOURCE_ROOT.rglob("*.py")):
+        relative = path.relative_to(SOURCE_ROOT)
+        if relative.parts[:2] == ("adapters", "model"):
+            continue
+        for module in imported_modules(path):
+            if module == "openai" or module.startswith("openai."):
+                violations.append(f"{relative}: {module}")
+            if module == "anthropic" or module.startswith("anthropic."):
+                violations.append(f"{relative}: {module}")
+
+    assert not violations, "Provider SDK imports escaped adapters/model:\n" + "\n".join(violations)

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "providers": [
+    {
+      "provider_id": "primary",
+      "name": "Example AI",
+      "protocol": "openai_chat_completions",
+      "base_url": "https://api.example.com/v1",
+      "api_key": "replace-with-provider-api-key",
+      "models": [
+        {
+          "model_id": "example-chat",
+          "name": "Example Chat"
+        }
+      ],
+      "default_model": "example-chat"
+    }
+  ]
+}

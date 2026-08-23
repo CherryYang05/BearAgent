@@ -22,13 +22,16 @@ from bearagent.domain.ids import (
 )
 from bearagent.domain.messages import Message, TextPart, ToolCallPart
 from bearagent.domain.model import ModelFinishReason, ModelRequest
+from bearagent.domain.providers import ProviderSelection
 from bearagent.domain.run_events import (
     RUN_EVENT_SCHEMA_VERSION_V2,
+    RUN_EVENT_SCHEMA_VERSION_V3,
     ModelCallCompletedPayloadV2,
     ModelCallFailedPayloadV2,
     ModelCallRequestedPayloadV2,
     ModelCallStartedPayloadV2,
     RunCreatedPayloadV2,
+    RunCreatedPayloadV3,
     RunFailedPayloadV2,
     RunStartedPayloadV2,
     RunSucceededPayloadV2,
@@ -76,6 +79,7 @@ class AgentLoop:
         context_builder: ContextBuilder | None = None,
         clock: Clock | None = None,
         id_generator: IdGenerator | None = None,
+        provider_selection: ProviderSelection | None = None,
     ) -> None:
         self._model_provider = model_provider
         self._event_store = event_store
@@ -83,6 +87,12 @@ class AgentLoop:
         self._tool_specs = tool_executor.specs
         self._context_builder = ContextBuilder() if context_builder is None else context_builder
         self._clock = SystemClock() if clock is None else clock
+        self._provider_selection = provider_selection
+        self._event_schema_version = (
+            RUN_EVENT_SCHEMA_VERSION_V2
+            if provider_selection is None
+            else RUN_EVENT_SCHEMA_VERSION_V3
+        )
         self._id_generator = Uuid4IdGenerator() if id_generator is None else id_generator
 
     async def run(self, run_input: RunInput, *, run_id: RunId | None = None) -> RunResult:
@@ -94,17 +104,28 @@ class AgentLoop:
         # identifier carries no authority; all execution still starts at append.
         run_id = self._id_generator.new(RunId) if run_id is None else run_id
         correlation_id = self._id_generator.new(CorrelationId)
-        state = await self._append(
-            None,
-            run_id,
-            correlation_id,
-            "RunCreated",
+        run_created = (
             RunCreatedPayloadV2(
                 session_id=run_input.session_id,
                 budget_limits=run_input.budget_limits,
                 objective=run_input.objective,
                 agent_config=run_input.agent_config,
-            ),
+            )
+            if self._provider_selection is None
+            else RunCreatedPayloadV3(
+                session_id=run_input.session_id,
+                budget_limits=run_input.budget_limits,
+                objective=run_input.objective,
+                agent_config=run_input.agent_config,
+                provider_selection=self._provider_selection,
+            )
+        )
+        state = await self._append(
+            None,
+            run_id,
+            correlation_id,
+            "RunCreated",
+            run_created,
         )
         state = await self._append(
             state,
@@ -512,7 +533,7 @@ class AgentLoop:
             run_id=run_id,
             sequence=1 if state is None else state.last_sequence + 1,
             event_type=event_type,
-            schema_version=RUN_EVENT_SCHEMA_VERSION_V2,
+            schema_version=self._event_schema_version,
             occurred_at=self._clock.now(),
             causation_id=self._id_generator.new(CausationId),
             correlation_id=correlation_id,

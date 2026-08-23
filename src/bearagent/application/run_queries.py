@@ -7,7 +7,11 @@ from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, Er
 from bearagent.domain.events import Event
 from bearagent.domain.ids import RunId
 from bearagent.domain.queries import EventPage, RunInspection
-from bearagent.domain.run_events import ToolCallCompletedPayloadV2, parse_run_event_payload
+from bearagent.domain.run_events import (
+    RunCreatedPayloadV3,
+    ToolCallCompletedPayloadV2,
+    parse_run_event_payload,
+)
 from bearagent.domain.runs import RunState
 from bearagent.ports.store import (
     DEFAULT_EVENT_QUERY_LIMIT,
@@ -69,9 +73,12 @@ class RunQueryService:
             raise _invalid_history()
 
         artifacts: list[Artifact] = []
+        provider_selection = None
         try:
             for event in events:
                 payload = parse_run_event_payload(event)
+                if isinstance(payload, RunCreatedPayloadV3):
+                    provider_selection = payload.provider_selection
                 if not isinstance(payload, ToolCallCompletedPayloadV2):
                     continue
                 artifact = artifact_from_tool_result_data(
@@ -84,6 +91,7 @@ class RunQueryService:
                 run_id=run_id,
                 state=state,
                 artifacts=tuple(artifacts),
+                provider_selection=provider_selection,
             )
         except (KeyError, ValidationError, ValueError) as error:
             raise _invalid_history(cause=error) from error
