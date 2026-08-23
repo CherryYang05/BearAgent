@@ -16,8 +16,8 @@ sourceRefs:
 这就是最小 Agent Loop：观察当前信息，选择下一步，执行动作，获得新观察，再决定是否继续。
 
 :::note[通用原理和当前进度]
-本页先讲 Agent 系统通常怎样分工。BearAgent 已实现模型 adapter 和统一 Tool 执行边界，但还没有
-真实文件 Tool，也没有把两者接成完整 Agent Loop。
+本页先讲 Agent 系统通常怎样分工。BearAgent P1 已把模型 adapter、四个 workspace Tool、统一
+Tool 执行边界、SQLite 和串行 Agent Loop 接成 CLI 路径；真实模型退出演练与 P2 恢复仍未完成。
 :::
 
 ## 一次循环里谁做什么

@@ -4,7 +4,7 @@ status: active
 plan_id: PLAN-F-0015
 related_spec: F-0015
 created: 2026-08-10
-last_updated: 2026-08-16
+last_updated: 2026-08-23
 ---
 
 # PLAN-F-0015：Starlight 文档站与 GitHub Pages 发布
@@ -71,6 +71,21 @@ F-0015 与 ADR-0008 已接受；中文优先、工程事实和公共解释分开
 - 验证：生产构建、sitemap、根页链接、404 页面、Python 回归测试和首次 Pages deployment；
 - 回退：禁用或删除 Pages workflow，保留本地站点，不影响 Runtime。
 
+### 第 6 步：重组 P1 阅读路径并独立维护 CLI 手册
+
+- 状态：completed（2026-08-23）；
+- 交付结果：首页先把读者带到 CLI 和当前状态；学习路径按“角色分工 → 完整 Run → 状态与边界”
+  逐步深入；新增独立 CLI 手册与 P1 架构取舍页；
+- 代码落点：`site/astro.config.mjs`、首页、`learn/`、`guides/cli.md`、
+  `architecture/p1-decisions.md`、相关开发者与状态页面；
+- 接入关系：CLI 手册只解释现有 interface/application 行为，精确契约仍由 F-0005、Schema、代码和
+  测试维护；架构取舍回链 ADR，不建立第二套决定记录；
+- 重点测试：从首页到 CLI/架构/代码/状态的导航，实际 CLI help，过时实现状态搜索，Markdown 链接
+  与 Starlight 构建；
+- 验证：`uv run python scripts/check_docs.py`、`uv run pytest tests/unit/test_check_docs.py`、
+  `npm.cmd run build --prefix=site`、CLI help smoke；
+- 回退：恢复导航和改写页面；不影响 Runtime、Event、SQLite 或用户 Artifact。
+
 ## 每一步都检查过
 
 - [x] 站点无 Runtime 持久状态，产物可从源码重建；
@@ -81,13 +96,15 @@ F-0015 与 ADR-0008 已接受；中文优先、工程事实和公共解释分开
 - [x] Node 工具链与 Python Runtime 分开；
 - [x] 学习、开发、状态和阶段页面同步；
 - [x] 术语在具体行为中解释，未使用机械字符串替换。
+- [x] CLI 使用说明与实现导读分开，初学者不需要先读 Feature 历史才能运行 P1；
+- [x] 已接通的 Agent Loop、workspace Tool 和 CLI 没有继续被写成“尚未实现”。
 
 ## 最终验证
 
 ```text
 npm --prefix=site ci
 npm run build --prefix=site
-uv run pytest tests/unit/test_check_docs.py -p no:cacheprovider
+uv run pytest tests/unit/test_check_docs.py
 uv run ruff format --check .
 uv run ruff check .
 uv run pyright

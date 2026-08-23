@@ -5,8 +5,8 @@ spec_id: F-0015
 milestone: P1
 owner: CherryYang05
 created: 2026-08-10
-last_updated: 2026-08-16
-implemented_in: "PR #3 (local site); GitHub Pages extension pending"
+last_updated: 2026-08-23
+implemented_in: "PR #3 (local site); PR #14 (Pages and P1 documentation restructure, open)"
 related_adrs:
   - ADR-0008
 ---
@@ -30,6 +30,7 @@ F-0015 最初只建立了内容和本地构建底座。现在需要把同一份�
 - G-5：锁定安装、生产构建和 CI 检查；
 - G-6：把学习页、开发者页和状态页同步纳入 Feature 完成标准；
 - G-7：`main` 上的站点变更通过 GitHub Actions 发布到项目 Pages 地址。
+- G-8：把 P1 内容重组为由浅入深的阅读路径，并单独维护可完整执行的 CLI 使用手册。
 
 ## 3. 本次不做
 
@@ -87,6 +88,10 @@ Front Matter、内部链接、MDX 或 Mermaid 无法编译时，生产构建失�
 - FR-14：文档先讲具体问题和行为，再引入必要术语；禁止用机械替换代替上下文重写；
 - FR-15：Astro 明确配置公开站点地址和 `/BearAgent` 基础路径，根页、资源、sitemap 和 404 链接都保留此前缀；
 - FR-16：文档检查在进入目录前排除 `.venv`、`node_modules` 等生成目录，不能先遍历再过滤。
+- FR-17：主导航应先帮助读者安装和运行 CLI，再解释一次 Run、架构取舍和代码；历史演进页与行业
+  背景不得打断主路径。
+- FR-18：CLI 手册应集中说明安装状态、profile、Provider 环境、`doctor/run/inspect/events`、human/JSON
+  输出、退出码、数据位置、常见失败与 P1 限制，并以实际 CLI help、Schema 和测试为事实来源。
 
 ## 7. 对外入口和模块连接
 
@@ -142,6 +147,9 @@ lockfile 安装失败、Markdown/MDX 编译失败、无效 Front Matter 或 Merm
 - AC-11：站点与工程文档的改写以完整段落为单位，术语在具体行为中解释；
 - AC-12：生产构建生成带 `/BearAgent/` 前缀的根页跳转、资源链接、sitemap 和中文 `404.html`；
 - AC-13：文档检查不进入 `.venv` 等忽略目录，并有回归测试。
+- AC-14：从首页不超过两次点击可到达 CLI 手册、P1 执行路径、架构取舍、代码入口和当前状态。
+- AC-15：站点中不得继续把已接通的 Agent Loop、workspace Tool 或 `run/inspect/events` 写成尚未实现；
+  CLI 示例、默认路径、分页范围和退出码与当前代码/测试一致。
 
 ## 14. 验证方式
 

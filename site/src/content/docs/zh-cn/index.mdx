@@ -1,16 +1,16 @@
 ---
 title: BearAgent 文档
-description: 从一次本地文件任务开始，理解 BearAgent 怎样记录执行、限制资源并为恢复和授权留出可靠边界。
+description: 先用 P1 命令行完成本地文件任务，再由浅入深理解 Run、Event、安全边界、架构取舍和代码。
 template: splash
 hero:
-  tagline: 让长任务的每一步都说得清楚。
+  tagline: 先跑通一次任务，再看懂每个边界。
   actions:
-    - text: 从一次任务开始
-      link: /BearAgent/zh-cn/learn/
+    - text: 使用 P1 命令行
+      link: /zh-cn/guides/cli/
       icon: right-arrow
       variant: primary
-    - text: 查看当前进度
-      link: /BearAgent/zh-cn/project/status/
+    - text: 按路线学习
+      link: /zh-cn/learn/
       icon: open-book
 bearStatus: mixed
 sourceRefs:
@@ -28,45 +28,46 @@ sourceRefs:
 
 import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-假设你让 Agent 阅读一个仓库，并把结论写到 `outputs/report.md`。模型会决定下一步，但它不应该
-直接决定哪些文件能读、哪些位置能写，也不能在一次调用超时后猜测文件是否已经写好。BearAgent
-要把这些执行问题放到模型之外处理。
+P1 当前只有 CLI：让 Agent 读取指定 workspace，并把完整结果写到 `outputs/**`。最适合的阅读顺序
+不是先读完所有 Spec，而是先看到命令怎样产生 Run ID、Artifact 和 Event，再理解 Runtime 为什么
+限制路径、预算、权限和重试。
 
 <CardGrid>
   <LinkCard
-    title="先看 Agent 发展到了哪里"
-    description="了解今天 Agent 擅长什么，以及长任务、评测和安全为什么仍然困难。"
-    href="/BearAgent/zh-cn/learn/"
+    title="先跑通命令行"
+    description="从源码安装、准备 profile、运行 Run，并用 inspect/events 排查失败。"
+    href="/zh-cn/guides/cli/"
   />
   <LinkCard
-    title="再看 BearAgent 怎样分工"
-    description="沿一次请求理解 Runtime、EventStore、模型 adapter 和 Tool 执行边界。"
-    href="/BearAgent/zh-cn/architecture/"
+    title="跟完一条 P1 Run"
+    description="从 objective 到模型、Tool、SQLite、Artifact 和查询，建立完整执行画面。"
+    href="/zh-cn/architecture/runtime-flow/"
   />
   <LinkCard
-    title="准备修改代码"
-    description="按代码地图找到实现、测试和需要同步的文档。"
-    href="/BearAgent/zh-cn/development/"
+    title="理解架构取舍"
+    description="为什么先用 CLI/SQLite、默认拒绝、相对路径、原子输出和串行 Loop。"
+    href="/zh-cn/architecture/p1-decisions/"
   />
   <LinkCard
-    title="只想知道现在能做什么"
-    description="区分已经实现、P1 仍在建设和更晚的计划。"
-    href="/BearAgent/zh-cn/project/status/"
+    title="进入代码和测试"
+    description="沿 interfaces → application → ports/adapters 找到实现和验证入口。"
+    href="/zh-cn/development/"
   />
 </CardGrid>
 
-:::caution[BearAgent 还不能完成真实 Agent 任务]
-当前代码已经能表示消息、错误、Run、Activity 和 Event，也能从一串 Event 计算状态并检查预算。
-Event 可以原子写入 SQLite，OpenAI Responses adapter 能翻译流式响应，Tool 请求也已有统一 Registry、
-Policy 和 Executor，四个 workspace Tool 也已通过这条入口；但 ContextBuilder、完整执行循环和 Run
-CLI 仍未接通。路线图中的名称不是当前功能。
+:::note[P1 的执行链已接通，里程碑仍未关闭]
+`run/inspect/events` 已把 Provider、workspace、SQLite、Policy 和 Agent Loop 组装到同一条本地路径。
+五个固定任务通过 production composition 的离线 Fake Provider 验证；真实模型 gate 与完整 P1
+Reality Check 尚待完成。恢复、Approval 和 sandbox 仍不是当前功能。准确状态见
+[现在实现到了哪里](/zh-cn/project/status/)。
 :::
 
-## BearAgent 想把三件事做可靠
+## 这套文档分三层
 
-1. **执行过程能还原。** 用户可以知道模型和工具做过什么、用了多少预算、在哪里失败。
-2. **结果不明时不猜。** 已确认的操作可以继续使用；无法确认的外部写入会停下来处理。
-3. **权限不由模型决定。** 模型可以提出工具请求，但 Runtime 才能允许、询问用户或拒绝。
+1. **使用文档**回答“现在怎么运行、配置和排错”，以[CLI 完整手册](/zh-cn/guides/cli/)为入口。
+2. **学习与架构**回答“一次请求怎样流动、为什么这样取舍”，从[P1 学习路线](/zh-cn/learn/)进入。
+3. **开发者文档**回答“代码在哪里、哪些边界不能改坏、什么测试能证明”，从
+   [代码路线](/zh-cn/development/)进入。
 
-第一版只做仓库和本地文档研究，并且只允许向 `outputs/**` 写入。这个范围很小，正好可以把
-记录、失败和权限做实，再考虑 Web、MCP、Memory 或多个 Agent。
+工程事实仍以仓库 `docs/`、代码和测试为准。站点不会把未来 Feature 写成当前能力，也不会用学习页
+代替 Spec、ADR 或 Plan。

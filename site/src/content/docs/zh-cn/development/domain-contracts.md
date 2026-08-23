@@ -138,5 +138,5 @@ uv run pytest tests/contract/test_domain_schemas.py
 uv run pyright
 ```
 
-这些类型已经被状态、SQLite、模型和 Tool 模块使用；完整 Agent Loop 尚未接通。下一步可以沿
+这些类型已经被状态、SQLite、模型、Tool、AgentLoop 和 CLI 共用。下一步可以沿
 [Event 怎样改变状态](run-reducer-and-budgets.md)，继续看这些数据进入 Runtime 后发生什么。

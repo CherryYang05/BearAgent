@@ -11,9 +11,9 @@ sourceRefs:
 用户要求 Agent 读取一个文件。模型先请求读文件；工具返回内容后，模型再次思考。第二次模型
 调用让累计 token 超过上限，所以 Runtime 不再允许新的工具调用，并以预算耗尽结束 Run。
 
-:::note[规则已实现，完整调度尚未实现]
-下面的 Event、状态变化和预算判断已有 F-0002 代码支持。真实模型与 workspace Tool 已分别实现；
-负责调用它们并追加这些 Event 的 Agent Loop 仍属于后续 Feature。
+:::note[本页只聚焦 Reducer]
+下面的 Event、状态变化和预算判断由 F-0002 实现，F-0016/F-0005 已把它们接入 AgentLoop 和 CLI。
+为了看清一条 Event 怎样改变状态，本页不展开 production composition。
 :::
 
 ## 开始时有什么限制

@@ -39,7 +39,11 @@ Check 通过；suite v1.1.1 又用 DeepSeek V4 经 production 路径完成四个
 
 P1 只保证已经保存的事实可以查看。进程退出后不会自动继续。
 
-## P2：让每次恢复决定都有依据
+当前使用入口见[P1 命令行完整使用手册](../guides/cli.md)，完整请求路径和取舍见
+[一次请求怎样穿过 BearAgent](../architecture/runtime-flow.md)与
+[P1 为什么这样设计](../architecture/p1-decisions.md)。
+
+## P2：从已有事实安全继续
 
 P2 会把一个逻辑 Activity 和它的实际 Attempt 分开。重试会创建新 Attempt，不会覆盖旧失败。
 Runtime 先判断动作是只读、幂等、可核对还是非幂等，再选择复用、重试、reconcile 或

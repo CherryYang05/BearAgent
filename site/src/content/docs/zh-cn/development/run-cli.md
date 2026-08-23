@@ -98,5 +98,6 @@ client 初始化异常，确认公开 Error 不复制原始内容。
 - `tests/evals/test_p1_agent_loop_tasks.py`：五个固定任务通过 production composition 并重开查询；
 - `tests/contract/test_cli_schemas.py`：machine-readable 输出 Schema 快照。
 
-F-0017 没有增加 SQLite migration、网络 Tool、恢复或 Approval。live runner 仍默认关闭；DeepSeek V4
-suite v1.1.1 已通过真实 5/5 并生成脱敏报告。
+F-0005 没有增加 SQLite migration、网络 Tool、恢复或 Approval，也没有用真实模型完成 P1 退出演练。
+面向使用者的安装、profile、全部选项、退出码与排错集中维护在
+[P1 命令行完整使用手册](../guides/cli.md)，本页只解释实现边界。

@@ -73,24 +73,6 @@ Model、Tool、数据库和用户输入都先进入 BearAgent domain model。未
 Model output、文件内容和 Tool result 都是不受信任数据。ToolRequest 必须经过精确 Registry、参数
 准备、Policy 和统一 Executor。Prompt 或 Tool schema 不能授予运行权限。
 
-### 事实边界：状态来自 Event，不来自猜测
-
-Event 保存已发生的事实，Reducer 逐条计算 `RunState`。SQLite 中的 Run/Activity 表只是 projection，
-用于快速查询；它们不能绕过 Event 直接改变事实。
-
-## 为什么第一版保持单进程和 SQLite
-
-BearAgent 当前面向单用户、本地文件任务。单进程、串行 Activity 和 SQLite 让 transaction、顺序、
-超时和恢复语义更容易验证。过早加入 queue、多 worker 和分布式 lease，会先增加不确定性，却不直接
-提高旗舰任务完成质量。
-
-架构并不禁止以后扩展。它要求先出现真实压力或用例，再在保持 Event、Policy 和 adapter 边界的前提
-下扩展。
-
-## 从哪条路线继续读
-
-- 想跟一次未来完整调用：读[一次请求怎样穿过 BearAgent](runtime-flow.md)；
-- 想理解失败、安全和恢复：读[可靠性与安全边界](reliability-boundaries.md)；
-- 想理解内部数据：读[模块之间为什么只传 BearAgent 数据](domain-contracts.md)；
-- 想直接进入实现：读[怎样顺着代码读懂 BearAgent](../development/)；
-- 想核对现在能否使用：读[当前实现状态](../project/status.md)。
+先沿[一次请求怎样穿过 BearAgent](runtime-flow.md)看完整顺序，再用
+[P1 为什么这样设计](p1-decisions.md)理解单进程、Event、默认拒绝 Policy、相对路径、原子输出和
+串行 Loop 的取舍。准备修改实现时，从[开发者入口](../development/)进入代码。

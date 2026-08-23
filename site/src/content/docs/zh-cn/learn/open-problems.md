@@ -25,8 +25,9 @@ sourceRefs:
 研究热点包括长程规划、分层任务分解、反思和错误修正、跨 Context handoff，以及能否从环境反馈中
 稳定更新计划。工业界更关心可恢复进度、明确退出条件和失败时的人类接管。
 
-BearAgent 的取舍是把“执行事实”和“下一次模型看到的 Context”分开。Event 负责保留事实，未来的
-ContextBuilder 再挑选下一次决策需要的信息。当前已实现 Event 与状态基础，长任务恢复尚未实现。
+BearAgent 的取舍是把“执行事实”和“下一次模型看到的 Context”分开。Event 负责保留事实，
+ContextBuilder 从已提交 Event 挑选下一次决策需要的信息。当前这条 P1 路径已实现；长任务恢复尚未
+实现。
 
 ## 2. Context 不是越长越好，Memory 也不是多存就好
 
@@ -55,8 +56,8 @@ BearAgent 当前没有 Memory，也不把 Event log 叫 Memory。前者服务未
 则指出只追准确率会忽略成本、复现、holdout 和 benchmark 过拟合。
 
 学术界正在扩展更真实、动态、有对抗性的环境；工业界则需要把能力 eval、回归 eval、代码检查、
-模型评分和人工 review 组合起来。BearAgent 计划把固定任务、执行路径、安全测试和故障演练放进同一
-评测体系，但当前还没有完整任务集和 Agent Loop。
+模型评分和人工 review 组合起来。BearAgent P1 已有五个版本化固定任务、执行路径断言和安全测试，
+但真实模型 gate、恢复故障演练和跨版本评测体系尚未完成。
 
 ## 4. Tool 让 Agent 有用，也扩大了攻击面
 
@@ -105,8 +106,8 @@ Agent Loop 会反复调用模型和 Tool。增加规划、评审、多个 Agent 
 研究热点包括模型路由、缓存、Context 压缩、早停、推理预算和成本感知评测。工业实践通常先用一个
 强模型建立质量基线，再判断哪些步骤可以换成更小模型或确定性代码。
 
-BearAgent 已把模型次数、Tool 次数、token、微美元费用和总时间作为五个独立预算维度；真正的运行
-成本优化要等 Agent Loop 和任务 eval 接通后才能验证。
+BearAgent 已把模型次数、Tool 次数、token、微美元费用和总时间作为五个独立预算维度，并在
+AgentLoop 与固定任务中记账；真正的运行成本优化仍需要真实模型证据和跨版本 eval。
 
 ## 8. 多 Agent 是解决方案，还是新的协调问题
 
@@ -123,8 +124,8 @@ BearAgent 在早期固定为单 Agent、单用户、单进程。多个 Agent 属
 ## BearAgent 选择先解决哪一部分
 
 ```text
-先做：有界数据 → Event 与状态 → SQLite 原子保存 → 模型边界 → Tool 执行与 Policy
-再做：文件 Tool → ContextBuilder 与 Loop → CLI 与固定任务
+P1 已做：有界数据 → Event 与状态 → SQLite 原子保存 → 模型边界 → Tool 与 Policy
+       → 文件 Tool → ContextBuilder 与 Loop → CLI 与固定任务
 之后：恢复与 UNKNOWN → Approval 与 sandbox → 日常扩展 → 持续评测
 ```
 

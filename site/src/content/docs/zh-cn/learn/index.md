@@ -1,6 +1,6 @@
 ---
-title: 从一次任务理解 Agent 和 BearAgent
-description: 先看今天的 Agent 能做什么，再沿同一个本地文件任务理解模型、工具、Event、状态、持久化和权限。
+title: P1 学习路线：先会用，再看懂
+description: 先从命令行跑通一次文件任务，再沿同一条 Run 理解 Agent、Event、安全边界和架构取舍。
 bearStatus: concept
 sourceRefs:
   - AI Agents in Depth
@@ -14,66 +14,68 @@ sourceRefs:
   - F-0008
 ---
 
-学习 Agent 容易掉进两个极端：只看模型怎样“思考”，或者一上来就背框架名词。这条路径改用一个
-具体任务贯穿所有页面：
+这条主路径始终使用同一个例子：用户要求 Agent 阅读仓库文档，并把总结写进
+`outputs/summary.md`。先看到命令和结果，再解释背后的模块；不要求读者先读 Feature 历史或背完整
+术语表。
 
-> 用户要求 Agent 阅读仓库文档，比较几个方案，并把总结写进 `outputs/report.md`。
-
-模型需要理解目标和选择下一步，Tool 才能真正读写文件，Runtime 负责把它们组织成有界执行，并把
-已经发生的事实保存下来。
+:::note[页面会明确标出实现状态]
+P1 的 CLI、文件 Tool、SQLite、Agent Loop 和查询入口已经接通；真实模型退出演练仍待完成。出现
+恢复、Approval 或 sandbox 时，页面会直接标明它们属于后续阶段。
+:::
 
 ```mermaid
-flowchart TB
-    A["用户提出文件任务"] --> B["Runtime 组织模型与 Tool"]
-    B --> C["Event 记下已经发生的事实"]
-    C --> D["Reducer 计算当前状态和用量"]
-    D --> E{"继续、完成还是失败？"}
-    E -->|"继续且预算允许"| B
-    E -->|"完成或停止"| F["结果与执行记录"]
+flowchart LR
+    A["1. 跑 CLI"] --> B["2. 分清 Model / Tool / Runtime"]
+    B --> C["3. 跟完一条 Run"]
+    C --> D["4. 看 Event、状态和失败"]
+    D --> E["5. 理解架构取舍"]
 ```
 
-:::note[每页都区分三种内容]
-“Agent 通常怎样工作”是通用概念；“BearAgent 为什么这样设计”是项目取舍；“当前代码已经做到”
-必须有仓库代码和测试支持。未来能力会在相关段落直接标为尚未实现。
-:::
+## 1. 先跑通 P1 的命令行
+
+从[P1 命令行完整使用手册](../guides/cli.md)开始。先用零预算 profile 验证 `run/inspect/events`，
+再决定是否配置真实 Provider。你会先看见 Run ID、状态、Activity、Artifact 和有序 Event，而不是
+先面对内部类名。
+
+## 2. 分清模型、Tool 和 Runtime
 
 ## 第一部分：先建立今天的 Agent 全景
 
-1. [Agent 现在发展到哪一步](agents-today.md)：从聊天、Tool use 到编码、研究和电脑操作 Agent，
-   看清能力进步与真实任务限制。
-2. [Agent 仍然难在哪里](open-problems.md)：理解长任务可靠性、上下文、评测、安全、权限、成本和
-   多 Agent 协作为什么仍是工业界与学术界的热点。
-3. [一项 Agent 任务怎样运转](agent-basics.md)：回到最小执行循环，分清 Model、Context、Tool、
-   Runtime、Memory 和 Event。
+## 3. 跟完一条完整 Run
 
-这三页先回答“为什么要有 Runtime”。如果只看模型演示，很难理解 BearAgent 为什么优先做 Event、
-预算和 Tool 权限，而不是先堆更多 Tool。
+[一次文件任务怎样走完整条执行链](agent-loop-file-task.md)把前面的边界接起来。你会看到 Context
+怎样只从已提交 Event 重建、外部调用为什么发生在 started Event 之后，以及 Tool 失败怎样回到模型。
 
-## 第二部分：沿 BearAgent 的执行路径学习
+接着读[一次请求怎样穿过 BearAgent](../architecture/runtime-flow.md)，把 CLI、Application、Provider、
+ToolExecutor 和 SQLite 放进同一张图。
 
-4. [F-0016 前，BearAgent 已经完成什么](before-agent-loop.md)：沿一个读写文件任务查看模型、Tool、
-   Event 与状态三条已实现通道，以及它们尚未自动接通的位置。
-5. [BearAgent 内部怎样交换数据](../architecture/domain-contracts.md)：为什么内部模块使用自己的 ID、
-   Message、Error 和 Event，而不直接传某个模型 SDK 对象。
-6. [状态和预算怎样计算](runtime-state-and-budgets.md)：Event 和 Reducer 怎样分工，模型次数、token、
-   费用、时间和 Tool 次数在什么时刻记账。
-7. [逐条读懂一次 Run](run-event-reducer-walkthrough.md)：把一个模型调用、一次文件读取和一次预算
-   拒绝连成完整记录。
-8. [持久事实与安全恢复的边界](durable-events.md)：为什么 Event 能重开查询，仍不等于进程重启后
-   可以安全继续。
-9. [为什么模型服务需要独立边界](model-provider-boundary.md)：SDK 对象、Provider call ID、usage
-   和异常怎样翻译成内部数据。
-10. [一个 Tool 请求为什么要过四道检查](tool-execution-boundary.md)：Registry、参数准备、Policy 和
-   Executor 怎样把模型建议变成受控执行。
+## 4. 看懂状态、预算和已保存事实
 
-## 第三部分：回到整体架构
+[状态和预算怎样计算](runtime-state-and-budgets.md)解释 Event 与 Reducer 的分工，以及模型次数、
+token、费用、总时间和 Tool 次数何时记账。
 
-读完执行路径后，再看[一次请求怎样穿过 BearAgent](../architecture/runtime-flow.md)和
-[可靠性与安全边界](../architecture/reliability-boundaries.md)。这时 port、adapter、projection、
-fail closed 等术语都会对应到刚看过的具体问题。
+[逐条读懂一次 Run](run-event-reducer-walkthrough.md)把一个模型调用、一次读文件和一次预算拒绝连在
+一起。[持久事实与安全恢复的边界](durable-events.md)随后解释：SQLite 能重开查询，不等于进程会自动
+恢复。
 
-## 当前实现边界
+## 5. 理解 P1 最重要的取舍
 
-当前学习路径涉及的内部数据、状态与预算、SQLite EventStore、模型 adapter、Tool 执行边界和四个
-workspace Tool 已经实现。ContextBuilder、完整 Agent Loop 和 Run CLI 尚未接通；崩溃恢复、用户
-授权和 sandbox 属于后续阶段。查看随代码同步的[当前实现状态](../project/status.md)。
+[P1 为什么这样设计](../architecture/p1-decisions.md)集中解释九项决定：为什么先用 CLI/SQLite，为什么
+核心不传 SDK 对象，为什么状态来自 Event，为什么 Tool 必须经过默认拒绝 Policy，为什么路径不跟随
+链接，为什么输出原子替换，以及为什么 timeout 不会自动重试。
+
+读完后，进入[开发者代码路线](../development/)；它按实际调用关系链接到实现和测试。
+
+## 按问题继续深挖
+
+| 想弄清的问题 | 页面 |
+|---|---|
+| Provider SDK 为什么不能进入 Runtime | [为什么模型服务需要独立边界](model-provider-boundary.md) |
+| Tool 请求为什么不能直接执行 | [一个 Tool 请求为什么要过四道检查](tool-execution-boundary.md) |
+| Windows/Unix 路径怎样统一并防逃逸 | [workspace 路径边界](workspace-read-boundary.md) |
+| 为什么输出不会留下半份目标 | [原子输出边界](atomic-output-boundary.md) |
+| CLI 与 EventStore 怎样接线 | [从命令行运行并检查一次 Run](run-inspect-events.md) |
+
+行业现状、研究问题和 F-0016 之前的分阶段实现记录放在扩展阅读中，不再打断主路径：
+[Agent 现在发展到哪一步](agents-today.md)、[Agent 仍然难在哪里](open-problems.md)、
+[F-0016 前的实现快照](before-agent-loop.md)。

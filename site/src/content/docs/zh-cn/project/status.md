@@ -28,9 +28,11 @@ BearAgent 当前还不能调用真实模型完成文件任务。路线图和架�
 | F-0003 SQLite EventStore | Event 与 Run/Activity projection 原子提交；migration、重开、并发和损坏读取有测试 |
 | F-0004 模型边界 | Provider-neutral 请求/事件、确定性 adapter 和首个 OpenAI Responses 流式 adapter |
 | F-0006 Tool 执行边界 | 有界 Tool 数据、精确 Registry、默认拒绝 Policy、统一 Executor 和安全失败 |
-| F-0007 workspace 只读 Tool | 一层目录列出、分段 UTF-8 读取、普通字符串搜索和路径逃逸拒绝 |
-| F-0008 原子输出与 Artifact | `outputs/**` UTF-8 原子创建/替换，以及路径、大小和 SHA-256 元数据 |
-| F-0015 文档站 | 中文 Starlight 页面、搜索、Mermaid、sitemap 和 404 可以构建；Pages 发布配置进行中 |
+| F-0007 workspace 只读 Tool | 一层目录列出、分段 UTF-8 读取、普通字符串搜索和跨平台路径边界 |
+| F-0008 原子输出与 Artifact | 只向 `outputs/**` 写有限 UTF-8 文本；创建/替换以一次 replace 提交并返回 hash 元数据 |
+| F-0016 有界 Agent Loop | 从已提交 Event 构造 Context，串行调用模型与 Tool，保存 v2 事实；五个 Fake 任务在两种 Store 上通过 |
+| F-0005 生产 CLI 与查询 | `run/inspect/events`、严格 profile、production composition、分页查询和 human/JSON；零预算/缺凭据保留安全 terminal Run；五个任务通过真实 SQLite/Tools + Fake Provider |
+| F-0015 文档站 | 中文 Starlight、搜索、Mermaid、由浅入深的 P1 路线、独立 CLI 手册和 Pages 发布配置 |
 
 Python package 已能在本地构建 sdist 和 wheel，但这不表示 `bearagent` 已经发布到 PyPI。正式发布前
 仍要确定许可证、确认 PyPI 项目名归属、完成隔离安装与发布演练。发布后的安装路径见
@@ -49,13 +51,19 @@ Python package 已能在本地构建 sdist 和 wheel，但这不表示 `bearagen
 
 这些工作目前仍只是待办，不是可用能力。下一个 P1 功能需要由项目所有者确认后开始。
 
+P1 当前怎样操作见[命令行完整使用手册](../guides/cli.md)；执行链和主要取舍分别见
+[一次请求怎样穿过 BearAgent](../architecture/runtime-flow.md)与
+[P1 为什么这样设计](../architecture/p1-decisions.md)。
+
 ## 当前明确不能做
 
 - SQLite 可以保存 Event 和 projection，但进程重启后不会自动继续 Run；
-- 模型 adapter 可以翻译一次 Responses 流，但尚未由 ContextBuilder 或 Runtime 调度；
-- 四个 workspace Tool 已通过统一入口单独验证，但没有 Agent Loop、用户 Approval、sandbox 或服务器 API；
-- 文档站的 GitHub Pages workflow 已写入当前分支；合并、启用 Pages Source 并首次部署前，公开地址
-  仍不可用。`docs.bearguin.cn` 还没有配置。
+- `inspect/events` 只能查看已提交事实，不能 resume、retry 或修复非终态 Run；
+- Tool 请求和 Artifact 已随 v2 Event 写入 Store，但还没有用户 Approval、sandbox、服务器 API 或
+  独立 Artifact 查询表；
+- Pages workflow 只在 `main` 或手动触发时部署；F-0015 PR #14 仍待本次改动验证与合并，之后还要
+  确认仓库 Pages Source 和公开 URL；
+- `docs.bearguin.cn` 尚未配置，当前发布目标是 GitHub Pages 项目地址。
 
 F-0002 的确定性重放只说明“同一串 Event 会算出同一状态”。它不是 P2 的崩溃恢复，也没有
 Checkpoint、Attempt、RecoveryDecision 或 `UNKNOWN` 处置。P3 的参数绑定 Approval 和隔离 runner、

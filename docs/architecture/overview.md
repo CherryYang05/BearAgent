@@ -481,6 +481,18 @@ F-0008 已通过 ADR-0012 决定：P1 不设置 Artifact TTL，也不自动清�
 开放问题不授权提前实现。影响模块边界、持久 schema、安全或生产依赖时，必须在对应 Feature 前
 写入 ADR。
 
+## 19. 读者从哪里进入
+
+- 实际安装、配置、运行和排错见
+  [P1 命令行完整使用手册](../../site/src/content/docs/zh-cn/guides/cli.md)；
+- 从一条请求理解当前模块连接见
+  [一次请求怎样穿过 BearAgent](../../site/src/content/docs/zh-cn/architecture/runtime-flow.md)；
+- 集中理解 P1 的主要取舍及代价见
+  [P1 为什么这样设计](../../site/src/content/docs/zh-cn/architecture/p1-decisions.md)；
+- 修改实现时从[开发者代码路线](../../site/src/content/docs/zh-cn/development/index.md)进入。
+
+这些站点页面服务读者任务；本文件、ADR、Spec、代码和测试继续保存工程事实。
+
 ## 参考资料
 
 外部资料用于发现问题和比较方案，不证明 BearAgent 已实现同类能力。完整说明见站点的

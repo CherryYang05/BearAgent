@@ -18,8 +18,8 @@ JSON 形状，不会授予工具执行权限。
 
 :::tip[内容状态：当前已实现]
 F-0004 已实现不依赖特定模型服务商的请求/事件、确定性替代实现，以及首个 OpenAI Responses
-流式适配器。F-0006 至 F-0008 已实现 Tool Registry、Policy、Executor 和四个 workspace Tool；但
-ContextBuilder、Agent Loop 和 CLI Run 仍未实现，所以模型输出还不会自动触发一次 Tool Activity。
+流式适配器。F-0016 已实现 ContextBuilder、Agent Loop 和 Tool 接线；F-0005 已通过 production
+composition 把它们接到 CLI。自动验收仍使用 Fake Provider。
 :::
 
 ## 一次模型调用经过三层

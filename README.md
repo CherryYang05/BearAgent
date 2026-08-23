@@ -69,8 +69,10 @@ uv run bearagent run inspect <run-id> --json
 uv run bearagent run events <run-id> --after-sequence 0 --limit 100 --json
 ```
 
-完整教程见[配置一次模型服务](site/src/content/docs/zh-cn/learn/configure-model-service.md)和
-[运行与检查一次 Run](site/src/content/docs/zh-cn/learn/run-inspect-events.md)。
+Run profile 只保存非敏感 `AgentConfig` 和预算；API key/base URL 只能来自进程环境。当前仓库只用
+注入式 Fake Provider 自动验证这条链，真实模型配置和 P1 退出演练仍待完成。安装状态、profile 字段、
+所有命令选项、退出码与排错方式统一维护在
+[P1 命令行完整使用手册](site/src/content/docs/zh-cn/guides/cli.md)。
 
 ## 当前已经实现
 
@@ -131,7 +133,62 @@ uv run python scripts/check_docs.py
 npm.cmd run build --prefix=site
 ```
 
-准备修改代码时先阅读 [`AGENTS.md`](AGENTS.md)，再确认当前 Feature 的 Spec、ADR 和 Plan。
+本地启动中文文档站：
+
+```powershell
+npm --prefix=site ci
+npm run dev --prefix=site
+```
+
+访问 `http://localhost:4321/zh-cn/`。生产构建使用 `npm run build --prefix=site`。
+
+## 代码从哪里读
+
+```text
+src/bearagent/
+├── domain/       BearAgent 自己的 ID、消息、事件、状态和错误
+├── runtime/      Reducer、预算和后续执行规则
+├── application/  启动或查询 Run 的用例
+├── ports/        Runtime 需要模型、工具、存储提供的行为
+├── adapters/     Provider、SQLite、文件和测试实现
+└── interfaces/   CLI；HTTP API 后置
+```
+
+测试按要验证的边界放在 `tests/unit/`、`contract/`、`integration/`、`recovery/`、`security/`。
+
+## 阶段顺序
+
+| 阶段 | 用户得到什么 | 状态 |
+|---|---|---|
+| P0 工程基础 | 仓库可安装、测试，开发规则明确 | 已完成 |
+| P1 可检查执行 | 本地文件任务可完成，过程和失败可查看 | 进行中 |
+| P2 失败恢复 | 中断后只从能确认的位置继续 | 未开始 |
+| P3 权限与隔离 | 危险操作获准后执行，代码与宿主隔离 | 未开始 |
+| P4 日常使用 | Skill、MCP、Web、Memory 依次接入 | 未开始 |
+| P5 持续评测 | 比较质量、成本、恢复和安全回归 | 未开始 |
+
+P3 是第一个可信 Runtime 完成线，不是成熟通用 Agent 产品的完成线。完整验收条件见
+[项目路线图](docs/project/roadmap.md)。
+
+## 文档入口
+
+- [产品定位](docs/project/product-positioning.md)：为谁解决什么问题，为什么范围保持很小；
+- [总体架构](docs/architecture/overview.md)：模块怎样连接，哪些边界长期成立；
+- [Feature Specs](docs/specs/README.md)：每个功能必须做到什么；
+- [Implementation Plans](docs/plans/README.md)：按什么顺序实现和验证；
+- [ADRs](docs/adr/README.md)：为什么选择当前技术方案；
+- [AI 辅助开发流程](docs/development/ai-development-sop.md)：怎样调查、定义、实现和关闭 Feature；
+- [P1 命令行完整使用手册](site/src/content/docs/zh-cn/guides/cli.md)：安装、配置、运行、查询和排错；
+- [本地文档站](site/README.md)：面向学习和代码阅读的中文站点。
+
+`docs/`、代码和测试保存工程事实；`site/` 用更连贯的例子解释这些事实。路线图和参考项目的能力
+不能被写成当前实现。
+
+## 参与开发
+
+先阅读 [`AGENTS.md`](AGENTS.md)，再确认当前 Feature 的 Spec、ADR 和 Plan。修改保持范围清楚，
+并用与风险相称的单元、契约、集成、恢复和安全测试证明行为。Feature 完成时同步工程文档、学习
+说明、开发者入口和当前状态。
 
 ## License
 

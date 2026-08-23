@@ -17,9 +17,13 @@ sourceRefs:
 
 > 模型提出 `workspace.read` 后，参数在哪里校验？谁决定允许执行？如果失败，错误怎样保存？
 
-然后沿着数据经过的方向阅读。BearAgent 的目录名字就是依赖方向：内部数据在 `domain/`，Runtime
-规则在 `runtime/`，外部能力的接口在 `ports/`，SQLite、OpenAI 和测试替身等具体实现在
-`adapters/`。
+1. 先看[当前实现状态](../project/status.md)，避免把路线图当成已有功能；
+2. 如果还没实际运行过 P1，先走一遍[CLI 完整手册](../guides/cli.md)；
+3. 用[Runtime 各部分怎样协作](../architecture/)和[P1 架构取舍](../architecture/p1-decisions.md)
+   理解调用与依赖方向；
+4. 找到当前 Feature 的 Spec、相关 ADR 和 Plan；
+5. 按下面的实现导读进入代码和测试；
+6. 修改后运行完整验证，并同步会受影响的使用、学习、开发者和状态页面。
 
 ```mermaid
 flowchart LR

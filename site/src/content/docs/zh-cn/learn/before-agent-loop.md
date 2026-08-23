@@ -1,6 +1,6 @@
 ---
-title: F-0016 前，BearAgent 已经完成什么
-description: 用一次读写文件任务查看模型、Tool 和 Event 三条已实现通道，以及它们等待 Agent Loop 接线的位置。
+title: 历史快照：F-0016 前完成了什么
+description: 保留 Agent Loop 接线前的实现快照，用来理解 P1 为什么先分别建立模型、Tool 和 Event 通道。
 bearStatus: mixed
 sourceRefs:
   - architecture/overview
@@ -14,17 +14,24 @@ sourceRefs:
   - F-0008
 ---
 
-先看结论：F-0016 开始前，BearAgent 已经有三条可以独立验证的通道：模型调用、Tool 安全执行、
-Event 持久化与状态计算。现在缺的不是另一个文件 Tool，而是负责组装上下文、推进下一步并保存事实的
+:::caution[这是 2026-08-19 的历史快照]
+本页保留 F-0016 实现前的分阶段状态。文中的“尚未实现”只描述当时；当前 AgentLoop、四个 workspace
+Tool 与 `run/inspect/events` 已接通。请从[P1 主学习路线](index.md)或
+[一次文件任务的当前完整路径](agent-loop-file-task.md)开始阅读。
+:::
+
+先看当时的结论：F-0016 开始前，BearAgent 已经有三条可以独立验证的通道：模型调用、Tool 安全执行、
+Event 持久化与状态计算。当时缺的不是另一个文件 Tool，而是负责组装上下文、推进下一步并保存事实的
 `ContextBuilder + Agent Loop`。
 
-因此下面这条命令目前还不能运行：
+因此下面这条命令在当时还不能运行：
 
 ```powershell
 bearagent run "读取 docs/project.md，把简介写到 outputs/intro.md"
 ```
 
-测试和调用代码已经可以分别使用三条通道，但还没有生产调用方自动把上一段结果交给下一段。
+当时测试和调用代码已经可以分别使用三条通道，但还没有 production 调用方自动把上一段结果交给
+下一段。
 
 ## 三条通道已经做到哪里
 

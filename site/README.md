@@ -34,9 +34,11 @@ npm run preview --prefix=site
 
 ## 内容怎样分工
 
-- `learn/`：从一次 Agent 任务出发解释原理和术语；
-- `architecture/`：解释 Runtime、port、adapter 和长期边界；
+- `guides/cli.md`：独立维护 P1 的安装、配置、命令、退出码和排错；
+- `learn/`：按“先会用，再看懂”的顺序解释一次 Run；
+- `architecture/`：解释 Runtime、port、adapter、关键取舍和长期边界；
 - `development/`：提供代码入口、修改约束和验证命令；
 - `project/`：说明产品方向、阶段顺序和当前实现状态。
 
-每个 Feature 完成时都要检查以上相关页面。不要复制 Spec 原文，也不要用机械术语替换代替重写。
+CLI 精确契约仍由 F-0005、Schema、代码和测试确认；使用手册负责把它们组织成可执行流程。每个
+Feature 完成时都要检查以上相关页面。不要复制 Spec 原文，也不要用机械术语替换代替重写。

@@ -73,8 +73,10 @@ P0 建立 Python 3.12、uv、CI、CLI、模块依赖检查、测试替身，以�
 
 P1 已接通：
 
-**状态：进行中（2026-08-10 开始）。** F-0001、F-0002、F-0003 和 F-0004 已实现；F-0015 的
-本地站点已实现，GitHub Pages 发布扩展正在验证。下一个 Runtime Feature 尚未确认。
+**状态：进行中（2026-08-10 开始）。** F-0001 至 F-0008 和 F-0016 已实现。F-0005 已接通 CLI、
+production composition 和查询入口。F-0015 已完成本地站点、P1 渐进式阅读路径和独立 CLI 手册；
+Pages 发布扩展由 PR #14 承载，仍待本次改动验证、合并、仓库设置与公开 URL 检查。P1 仍需真实
+模型 gate 决定与里程碑 Reality Check；单个 Feature 完成不会自动关闭 P1。
 
 最终离线门禁通过 445 个测试、schema、链接、35 页站点、sdist/wheel 和隔离 CLI smoke。suite
 v1.1.1 使用 DeepSeek V4 经 production composition 完成四个普通任务和一个安全 canary，结果为
@@ -317,7 +319,7 @@ Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；
 8. F-0016：ContextBuilder、有界 Loop、Agent 配置和评测任务
 9. F-0005：`run/inspect/events` CLI
 10. [F-0015：Starlight 文档站与 GitHub Pages 发布](../specs/F-0015-local-starlight-docs-site.md) — accepted
-    （本地站点已实现，Pages 发布扩展进行中）
+    （本地站点、P1 阅读路径和 CLI 手册已实现；PR #14 Pages 发布扩展待合并和上线验证）
 
 ### P2（计划；均未创建 Spec）
 

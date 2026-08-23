@@ -53,7 +53,7 @@ ToolExecutor 保证检查顺序、单次调用、timeout、取消传播和输出
 
 Executor 不自动重试，因为它无法只凭 timeout 判断副作用是否已经发生。
 
-**当前：执行骨架与四个 workspace Tool 已实现；Agent Loop 尚未接线。**
+**当前：执行骨架、四个 workspace Tool 与 Agent Loop 已接线。**
 
 ## 5. Sandbox：即使代码出错，最多能碰到哪里
 
@@ -106,8 +106,9 @@ Model 也可能照做。防线不能只是一句系统 Prompt：
 6. Event 记录请求、决定和结果；
 7. security eval 反复测试攻击变体。
 
-当前 BearAgent 已有 1 至 4 的执行骨架和安全测试；文件路径 Policy、sandbox、持久 Approval 和完整
-trace 仍待实现。
+当前 BearAgent 已有 1 至 4 的完整 P1 执行路径，并把请求、固定 Policy 决定和结果写入 Event；
+sandbox 与持久 Approval 仍待实现。文件 Tool 还会在 adapter 层执行真实路径边界检查，但这不等于
+P3 的隔离环境。
 
 ## 取消和错误为什么要有明确语义
 
@@ -131,3 +132,5 @@ running、succeeded、failed，尚没有 pause/cancel/attempt 状态。
 
 把这些问题分开，能避免常见误解：Prompt 不是权限系统，sandbox 不是授权，SQLite 持久化不是自动恢复，
 `retryable=True` 也不是 adapter 可以立即重复副作用。
+
+这些边界为什么选择当前形状、又牺牲了什么，见[P1 的关键架构取舍](p1-decisions.md)。
