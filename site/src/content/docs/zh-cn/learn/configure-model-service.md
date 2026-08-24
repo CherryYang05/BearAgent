@@ -99,14 +99,16 @@ RunProfile v2 不接受 `agent_config.model` 或 `agent_config.pricing`。Bootst
 
 ## 第三步：运行并检查
 
-```powershell
-uv run bearagent run "阅读 docs，并把总结写到 outputs/summary.md" `
-  --profile data/p1-run-profile.json `
-  --config data/config.json
+CLI 默认读取 `data/config.json` 和 `data/p1-run-profile.json`，因此正常运行不需要重复传路径：
+
+```console
+uv run bearagent run "阅读 docs，并把总结写到 outputs/summary.md"
 
 uv run bearagent run inspect <run-id> --json
 uv run bearagent run events <run-id> --json
 ```
+
+只有临时使用其他配置时，才需要用 `--config` 或 `--profile` 覆盖默认路径。
 
 缺少、空白或非法 key 时，config 会在创建数据库和 Run 前失败。v2 Run 只用 Event schema v3 保存
 `provider_id`、自动计算的 `config_version` 和 `protocol`，不会保存 base URL、key 或 HTTP header。

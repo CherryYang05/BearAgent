@@ -14,10 +14,12 @@ sourceRefs:
 是什么、最终状态是什么、哪些事实真的保存下来了。F-0005 用三个命令回答它们：
 
 ```powershell
-bearagent run "阅读 docs 并把总结写到 outputs/summary.md" --config data/config.json
+bearagent run "阅读 docs 并把总结写到 outputs/summary.md"
 bearagent run inspect <run-id>
 bearagent run events <run-id> --after-sequence 0 --limit 100
 ```
+
+第一条命令默认读取 `data/config.json` 和 `data/p1-run-profile.json`，不需要每次重复传入路径。
 
 ## 一次命令怎样接到已有边界
 
