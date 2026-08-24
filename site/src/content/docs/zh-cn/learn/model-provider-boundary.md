@@ -1,12 +1,13 @@
 ---
 title: 为什么模型服务需要独立边界
-description: 理解模型 adapter 如何把外部流式协议翻译成稳定、受限的 BearAgent 内部数据。
+description: 理解三种外部流式协议如何在 adapter 边界变成同一套 BearAgent 数据。
 bearStatus: implemented
 sourceRefs:
   - F-0004
-  - F-0006
-  - F-0007
-  - F-0008
+  - ADR-0007
+  - ADR-0010
+  - F-0017
+  - ADR-0015
 ---
 
 很多 Agent 演示会让主循环直接读取某个 SDK 的响应对象。这样开始很快，但模型厂商的事件
@@ -16,10 +17,10 @@ sourceRefs:
 模型服务的请求、流事件和错误转换成 BearAgent 自己的数据。JSON Schema 则只描述工具参数允许的
 JSON 形状，不会授予工具执行权限。
 
-:::tip[内容状态：当前已实现]
-F-0004 已实现不依赖特定模型服务商的请求/事件、确定性替代实现，以及首个 OpenAI Responses
-流式适配器。F-0016 已实现 ContextBuilder、Agent Loop 和 Tool 接线；F-0005 已通过 production
-composition 把它们接到 CLI。自动验收仍使用 Fake Provider。
+:::tip[内容状态：协议实现与 P1 真实 gate 已完成]
+F-0004 建立内部接口和首个 OpenAI Responses adapter。F-0017 又实现 OpenAI Chat Completions 与
+Anthropic Messages adapter、显式配置和 CLI composition。三种协议都有离线契约与安全测试；另有一份
+DeepSeek V4 suite v1.1.1 真实 5/5 证据。它不代表其他服务或协议已付费联调。
 :::
 
 ## 一次模型调用经过三层
@@ -50,9 +51,9 @@ usage 为未知，以保持历史兼容。
 用来关联自己的 Activity、Event 和策略检查。适配器同时保留两者，但服务商 ID 不能替代内部 ID，
 更不能授予执行权限。
 
-模型提出 `read_file` 只是一段不可信数据。F-0004 只验证名称和 JSON object arguments；F-0016
-以后负责把它转换成 F-0006 的 `ToolRequest`，再交给统一 Executor 和 Policy。P3 还会在同一条路径上
-增加 Grant 和用户 Approval。
+模型提出 `workspace.read` 只是一段不可信数据。adapter 只验证名称和 JSON object arguments；
+AgentLoop 仍让每个请求经过 Registry、参数准备、固定 Policy、ToolExecutor 和 WorkspaceBoundary。
+P3 才增加用户 Approval。
 
 ## 为什么适配器不自动重试
 
@@ -65,7 +66,6 @@ F-0004 因此禁用 SDK 自动重试，只把超时、连接失败、429/5xx 标
 
 ## 下一步
 
-继续到 [F-0004 开发者实现导读](../development/model-provider.md) 查看模型代码边界和测试证据。接着读
-[一个 Tool 请求为什么要过四道检查](tool-execution-boundary.md)，可以看到模型提出 Tool call 以后还要
-经过哪些独立检查。要理解 Run 如何记录模型 Activity，先读
-[Run 状态、Reducer 与预算](runtime-state-and-budgets.md)。
+继续到 [ModelProvider 开发者实现导读](../development/model-provider.md) 查看三种翻译边界和测试证据。
+要实际选择服务，读[配置一次模型服务，运行不同目标](configure-model-service.md)；要理解 Run 如何
+记录模型 Activity，读[状态和预算怎样计算](runtime-state-and-budgets.md)。

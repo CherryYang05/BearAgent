@@ -4,6 +4,7 @@ description: 跟随一个读文件任务，观察 Event 怎样改变状态，以
 bearStatus: mixed
 sourceRefs:
   - F-0002
+  - ADR-0009
   - runtime/reducer.py
   - runtime/budgets.py
 ---

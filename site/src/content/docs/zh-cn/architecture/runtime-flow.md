@@ -13,6 +13,7 @@ sourceRefs:
   - F-0008
   - F-0016
   - F-0005
+  - F-0017
 ---
 
 下面沿一个当前已经接通的 P1 文件任务走一遍：
@@ -21,7 +22,7 @@ sourceRefs:
 bearagent run "比较 docs 中的架构说明，把结论写到 outputs/report.md"
 ```
 
-命令需要有效的 Run profile 和 Provider 环境；完整准备步骤见
+命令需要有效的 config v1 和 RunProfile v2；完整准备步骤见
 [P1 命令行完整使用手册](../guides/cli.md)。这里聚焦请求怎样穿过各模块，以及每个边界为什么存在。
 
 ## 总路径先看一遍
@@ -77,17 +78,17 @@ Runtime 在请求新 Model Activity 前检查预算，保存 `ModelCallRequested
 `ModelProvider` port 调用 adapter。
 
 **当前状态：已实现。** ContextBuilder、五类预算、ModelProvider port 与串行 AgentLoop 已接线。
-自动证据来自 Fake Provider；真实模型退出演练仍未完成。
+五个 Fake 任务提供确定性证据；DeepSeek V4 suite v1.1.1 另通过 production composition 真实 5/5。
 
 ## 第 3 步：adapter 把外部流翻译成内部事件
 
-OpenAI adapter 处理 SSE，产出文本 delta、完整 Tool call 和唯一 completion。SDK 类型、HTTP 异常和
-Provider 特有状态都停在 adapter 内。
+Responses、Chat Completions 或 Anthropic Messages adapter 处理各自的流式协议，产出文本 delta、
+完整 Tool call 和唯一 completion。SDK 类型、HTTP 异常和 Provider 特有状态都停在 adapter 内。
 
 完成后 Runtime 才有足够信息保存模型用量和停止原因。中途失败不会伪造 completion。
 
-**当前状态：已实现。** AgentLoop 保存 Model requested/started/completed/failed v2 Event；OpenAI
-adapter 仍是唯一 production Provider adapter。
+**当前状态：已实现。** AgentLoop 保存 Model requested/started/completed/failed Event；三种 production
+adapter 运行共享的离线契约。一次 DeepSeek V4 真实验证不代表其他服务或协议已付费联调。
 
 ## 第 4 步：Tool 请求穿过独立权限路径
 

@@ -11,12 +11,16 @@ sourceRefs:
   - F-0006
   - F-0007
   - F-0008
+  - F-0016
   - F-0015
   - F-0005
   - F-0017
 ---
 
-BearAgent 当前还不能调用真实模型完成文件任务。路线图和架构中的设计，不等于已经接通运行入口。
+BearAgent 已有本地 `run/inspect/events` CLI。它用 config v1 与 RunProfile v2 显式选择
+Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、固定 Policy、workspace Tools
+和有界 Agent Loop。F-0017 的 suite v1.1.1 已用 DeepSeek V4 经 production composition 通过四个普通
+任务与安全 canary；脱敏 report 和最终 Reality Check 完成，因此 F-0017/P1 已关闭。
 
 ## 已经可以验证
 
@@ -31,25 +35,18 @@ BearAgent 当前还不能调用真实模型完成文件任务。路线图和架�
 | F-0007 workspace 只读 Tool | 一层目录列出、分段 UTF-8 读取、普通字符串搜索和跨平台路径边界 |
 | F-0008 原子输出与 Artifact | 只向 `outputs/**` 写有限 UTF-8 文本；创建/替换以一次 replace 提交并返回 hash 元数据 |
 | F-0016 有界 Agent Loop | 从已提交 Event 构造 Context，串行调用模型与 Tool，保存 v2 事实；五个 Fake 任务在两种 Store 上通过 |
-| F-0005 生产 CLI 与查询 | `run/inspect/events`、严格 profile、production composition、分页查询和 human/JSON；零预算/缺凭据保留安全 terminal Run；五个任务通过真实 SQLite/Tools + Fake Provider |
+| F-0005 生产 CLI 与查询 | `run/inspect/events`、严格 profile、production composition、分页查询和 human/JSON；零预算与 Provider 调用失败保留安全 terminal Run；五个任务通过真实 SQLite/Tools + Fake Provider |
+| F-0017 模型配置与 live gate | config v1、RunProfile v2、三种协议 adapter、RunCreated v3、production selector 与默认关闭的 runner；Fake 5/5 和 DeepSeek V4 live 5/5 分开验证 |
 | F-0015 文档站 | 中文 Starlight、搜索、Mermaid、由浅入深的 P1 路线、独立 CLI 手册和 Pages 发布配置 |
-
-Python package 已能在本地构建 sdist 和 wheel，但这不表示 `bearagent` 已经发布到 PyPI。正式发布前
-仍要确定许可证、确认 PyPI 项目名归属、完成隔离安装与发布演练。发布后的安装路径见
-[从 PyPI 安装 BearAgent](../guides/install-from-pypi.md)。
-
-想了解最新完成的执行边界，可以先读面向初学者的
-[F-0016 前，BearAgent 已经完成什么](../learn/before-agent-loop.md)，再读
-[一个 Tool 请求为什么要过四道检查](../learn/tool-execution-boundary.md)，最后按
-[Tool 执行边界代码导读](../development/tool-execution-boundary.md)进入代码和测试。
 
 ## P1 完成证据
 
-- 最小上下文组装和有界 Agent Loop，把模型、ToolExecutor 与 EventStore 接成一条 Run；
-- 保存完整模型结果、规范化 ToolRequest/ToolResult、配置版本和 Artifact 来源；
-- `run`、`inspect`、`events` 命令以及固定评测任务。
-
-这些工作目前仍只是待办，不是可用能力。下一个 P1 功能需要由项目所有者确认后开始。
+- 最终离线门禁通过 445 个测试、schema、链接、Starlight、sdist/wheel 与隔离 CLI smoke；
+- suite v1.1.1 使用确认的 Provider、model、pricing snapshot、commit 和费用上限；
+- 四个普通任务与安全 canary 通过 5/5；五个独立 SQLite 重开后 inspection/Event/Artifact 一致；
+- 总 usage 为 13,640 input、1,415 output tokens，报告费用为 2,324 microUSD；
+- 脱敏证据见
+  [F-0017 P1 live report v1](https://github.com/CherryYang05/BearAgent/blob/main/docs/evidence/F-0017-p1-live-report-v1.json)。
 
 P1 当前怎样操作见[命令行完整使用手册](../guides/cli.md)；执行链和主要取舍分别见
 [一次请求怎样穿过 BearAgent](../architecture/runtime-flow.md)与
@@ -59,8 +56,8 @@ P1 当前怎样操作见[命令行完整使用手册](../guides/cli.md)；执行
 
 - SQLite 可以保存 Event 和 projection，但进程重启后不会自动继续 Run；
 - `inspect/events` 只能查看已提交事实，不能 resume、retry 或修复非终态 Run；
-- Tool 请求和 Artifact 已随 v2 Event 写入 Store，但还没有用户 Approval、sandbox、服务器 API 或
-  独立 Artifact 查询表；
+- RunCreated v3 只增加安全 Provider 选择；Tool 请求和 Artifact 仍随 v2 Event 写入 Store；
+- 还没有用户 Approval、sandbox、服务器 API 或独立 Artifact 查询表；
 - Pages workflow 只在 `main` 或手动触发时部署；F-0015 PR #14 仍待本次改动验证与合并，之后还要
   确认仓库 Pages Source 和公开 URL；
 - `docs.bearguin.cn` 尚未配置，当前发布目标是 GitHub Pages 项目地址。

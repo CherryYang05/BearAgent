@@ -21,6 +21,7 @@ sourceRefs:
   - F-0006
   - F-0007
   - F-0008
+  - F-0016
   - F-0015
   - F-0005
   - F-0017
@@ -53,13 +54,17 @@ P1 当前只有 CLI：让 Agent 读取指定 workspace，并把完整结果写�
     description="沿 interfaces → application → ports/adapters 找到实现和验证入口。"
     href="/zh-cn/development/"
   />
+  <LinkCard
+    title="只想知道现在能做什么"
+    description="区分已经完成的 P1、当前边界和更晚的计划。"
+    href="/zh-cn/project/status/"
+  />
 </CardGrid>
 
-:::note[P1 的执行链已接通，里程碑仍未关闭]
-`run/inspect/events` 已把 Provider、workspace、SQLite、Policy 和 Agent Loop 组装到同一条本地路径。
-五个固定任务通过 production composition 的离线 Fake Provider 验证；真实模型 gate 与完整 P1
-Reality Check 尚待完成。恢复、Approval 和 sandbox 仍不是当前功能。准确状态见
-[现在实现到了哪里](/zh-cn/project/status/)。
+:::note[生产 CLI 已接通，P1 已完成]
+`run/inspect/events` 已把显式选择的模型协议、workspace、SQLite、Policy 和 Agent Loop 组装到同一条
+本地路径。config v1、RunProfile v2、三种 protocol adapter、离线 Reality Check 和 DeepSeek V4
+suite v1.1.1 真实 5/5 均已通过。恢复、Approval 和 sandbox 仍不是当前功能。
 :::
 
 ## 这套文档分三层

@@ -27,3 +27,9 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 - [PLAN-F-0003：EventStore、SQLite 和 projection](PLAN-F-0003-event-store-sqlite-projections.md)
 - [PLAN-F-0004：ModelProvider 和首个生产 adapter](PLAN-F-0004-model-provider-first-adapter.md)
 - [PLAN-F-0006：统一 Tool Registry、Executor 和 P1 固定 Policy](PLAN-F-0006-tool-registry-executor-policy.md)
+- [PLAN-F-0007：实现有界的 workspace 只读 Tool](PLAN-F-0007-workspace-read-tools.md)
+- [PLAN-F-0008：实现 outputs 原子写入和 Artifact 元数据](PLAN-F-0008-atomic-output-artifacts.md)
+
+- [PLAN-F-0016：实现有界 Context 和串行 Agent Loop](PLAN-F-0016-bounded-context-agent-loop.md)
+- [PLAN-F-0005：接通生产 Run、inspect 和 events CLI](PLAN-F-0005-run-inspect-events-cli.md)
+- [PLAN-F-0017：配置模型服务协议并完成 P1 真实模型 gate](PLAN-F-0017-configurable-model-providers-live-gate.md)

@@ -1,23 +1,24 @@
 ---
 title: Local-first and Self-hosting Strategy
 status: accepted
-version: 0.5
-last_verified: 2026-08-16
+version: 0.7
+last_verified: 2026-08-24
 ---
 
 # 本地开发与自托管
 
 ## 1. 现在怎样运行
 
-P1 Runtime 全部在本地开发和验证，不开放 HTTP。F-0015 文档站是独立的静态产物，可以通过
-GitHub Pages 公开；它不会启动 Runtime，也不会读取模型密钥或用户数据。P2 完成后建立私有服务器
-staging；只有 P3 的权限、认证、runner 和备份恢复全部通过，Agent 服务才通过公网子域名提供给
-项目所有者。
+P1 Runtime 全部在本地开发和验证，不开放 HTTP。F-0015 文档站是独立的静态产物；本 Feature
+加入 GitHub Pages 发布配置，但公开 URL 和仓库 Pages 设置仍要在合并后核验。静态站不会启动
+Runtime，也不会读取模型密钥或用户数据。P2 在私有服务器演练恢复；P3 仍通过私有通道验证
+Approval 与隔离 runner；只有 P4 的认证、部署和备份恢复全部通过，Agent 服务才通过公网子域名
+提供给项目所有者。
 
 不需要新域名：
 
-- `docs.bearguin.cn`：未来可指向静态文档；当前入口是 GitHub Pages；
-- `agent.bearguin.cn`：P3 后的单用户 Agent API，未来 Web UI 与 `/api` 同源。
+- `docs.bearguin.cn`：未来可指向静态文档；当前发布目标是 GitHub Pages；
+- `agent.bearguin.cn`：P4 后的单用户 Agent API，未来 Web UI 与 `/api` 同源。
 
 暂不增加 `api.*`，避免 CORS、cookie 和证书管理复杂度。
 
@@ -37,21 +38,45 @@ Production  P4 接入与部署门通过后才启用公网 hostname
 
 ## 3. 每个阶段允许什么
 
-### P0–P1：Runtime 只在本地
+### P0–P1：只在本地
 
 - CLI 直接运行；
 - SQLite 和 workspace 放在项目外的数据目录；
 - 不开放 HTTP，不提供 host shell；
-- secret 只在本机环境或 secret store；
+- P1 本地 CLI 的 Provider key 只在被 Git 忽略的本机 catalog；长期服务后续改用 secret store；
 - 文档站本地预览；`main` 的站点变更可以部署到 GitHub Pages。
+
+本地 CLI 默认使用当前目录作为 workspace、`data/p1-run-profile.json` 作为 Run 配置、
+`data/config.json` 作为模型服务配置、`data/bearagent.db` 作为 EventStore。config 可以保存 HTTPS
+base URL、wire protocol、直接填写的 key、模型列表和默认模型；该文件是敏感本机配置，必须被 Git 忽略；
+RunProfile v2 通过 `provider_id` 选择条目，只保存 Agent 行为和预算。普通 Run 从 Provider 默认模型
+解析 model，并使用 `unpriced`；真实 gate 单独接收 pricing snapshot。新 Event 只保存有限 Provider 选择，
+不保存 endpoint 或 key。
+
+production composition 支持 `openai_responses`、`openai_chat_completions` 和
+`anthropic_messages`。这三个值表示协议，不表示厂商名单。配置必须按服务文档明确选择，Runtime
+不会检测 URL/model，也不会失败后 fallback。客户端只在首个模型 Activity 开始时创建。v2 catalog 缺少或非法 key 会在数据库和 Run 创建前失败；
+legacy v1 环境凭据缺失仍会成为持久的 `provider_authentication` Run failure。
+
+仓库根目录的 [config 示例](../../config.example.json)、
+[RunProfile v2](../../examples/run-profile-v2.example.json) 和
+[RunProfile v1](../../examples/run-profile-v1.example.json) 示例都不含 secret；完整字段约束见
+[配置参考](../reference/configuration.md)。两个 profile 示例的预算
+均为 0。它们允许 CLI 保存一个 `budget_exhausted` Run，但不会创建 SDK client 或调用模型/Tool。
+
+真实 gate 由 `scripts/run_p1_live_eval.py` 执行，默认关闭。运行者必须显式确认 Provider、model、
+pricing snapshot、commit 和 suite cost cap；preflight 未通过时不得创建 DB、workspace、SDK client 或
+Run。真实 key 只写入被 Git 忽略的本机 config，不能写进命令、profile、report 或 Git。2026-08-23 的
+suite v1.1.1 已在授权费用范围内通过 5/5；runner 仍不会因这次通过而默认开启。
+
+`run inspect/events` 只打开已经存在的普通数据库文件。不存在的路径不会生成空数据库；损坏或未来
+migration 只返回安全 persistence Error。这里仍是本地命令，不会启动 HTTP 服务。
 
 ### F-0015：公开静态文档
 
 GitHub Actions 构建 `site/dist/` 并发布到
 `https://cherryyang05.github.io/BearAgent/`。GitHub Pages 只接收静态产物，不在 Web 请求中运行
 文档生成器。首次上线要在仓库 Settings → Pages 中选择 GitHub Actions 作为 Source。
-
-以后切换到 `docs.bearguin.cn` 时再配置 DNS 和 CNAME，并移除 Astro 的 `/BearAgent` 基础路径。
 
 ### P2：私有服务器 staging
 

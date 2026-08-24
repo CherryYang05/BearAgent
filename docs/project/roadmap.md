@@ -73,16 +73,20 @@ P0 建立 Python 3.12、uv、CI、CLI、模块依赖检查、测试替身，以�
 
 P1 已接通：
 
-**状态：进行中（2026-08-10 开始）。** F-0001 至 F-0008 和 F-0016 已实现。F-0005 已接通 CLI、
-production composition 和查询入口。F-0015 已完成本地站点、P1 渐进式阅读路径和独立 CLI 手册；
-Pages 发布扩展由 PR #14 承载，仍待本次改动验证、合并、仓库设置与公开 URL 检查。P1 仍需真实
-模型 gate 决定与里程碑 Reality Check；单个 Feature 完成不会自动关闭 P1。
+- 类型化领域数据、Event、Reducer 和五类 hard budget；
+- SQLite EventStore、projection、migration 和重开查询；
+- 三种显式模型协议 adapter、Provider 配置和有界 Context；
+- 默认拒绝 Policy、workspace 读写 Tool、原子 Artifact 和串行 Agent Loop；
+- `run/inspect/events` CLI、Fake 任务集、真实模型 gate 和脱敏证据。
 
 最终离线门禁通过 445 个测试、schema、链接、35 页站点、sdist/wheel 和隔离 CLI smoke。suite
 v1.1.1 使用 DeepSeek V4 经 production composition 完成四个普通任务和一个安全 canary，结果为
 5/5。证据见 [F-0017 P1 live report](../evidence/F-0017-p1-live-report-v1.json)。
 
 P1 只保证已保存事实可查。进程退出后不会自动继续；timeout 也不会撤销可能已经发生的副作用。
+
+F-0015 的本地站点属于已完成的 P1 交付；PR #14 继续补充渐进式阅读路径、独立 CLI 手册和 GitHub
+Pages 发布配置。公开 URL 与仓库 Pages 设置仍要在合并后核验，但不撤销已经完成的 P1 Runtime gate。
 
 ## 5. P2：可恢复执行语义
 
@@ -309,17 +313,19 @@ Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；
 
 ### P1（已完成）
 
-1. [F-0001：内部 ID、Message 和 Error](../specs/F-0001-domain-ids-messages-errors.md) — implemented
-2. [F-0002：Run/Activity 状态和预算](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
-3. [F-0003：Event store、SQLite、projection 和 migration](../specs/F-0003-event-store-sqlite-projections.md) — implemented
-4. [F-0006：Tool 接口、Registry、executor 和固定 Policy](../specs/F-0006-tool-registry-executor-policy.md) — implemented
-5. F-0007：workspace 边界和只读工具
-6. F-0008：原子写和 Artifact
-7. [F-0004：模型接口和首个真实 adapter](../specs/F-0004-model-provider-first-adapter.md) — implemented
-8. F-0016：ContextBuilder、有界 Loop、Agent 配置和评测任务
-9. F-0005：`run/inspect/events` CLI
-10. [F-0015：Starlight 文档站与 GitHub Pages 发布](../specs/F-0015-local-starlight-docs-site.md) — accepted
-    （本地站点、P1 阅读路径和 CLI 手册已实现；PR #14 Pages 发布扩展待合并和上线验证）
+1. [F-0001：内部 ID、Message 和 Error](../specs/F-0001-domain-ids-messages-errors.md)
+2. [F-0002：Run/Activity 状态和预算](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md)
+3. [F-0003：EventStore、SQLite、projection 和 migration](../specs/F-0003-event-store-sqlite-projections.md)
+4. [F-0004：模型接口和首个真实 adapter](../specs/F-0004-model-provider-first-adapter.md)
+5. [F-0005：`run/inspect/events` CLI](../specs/F-0005-run-inspect-events-cli.md)
+6. [F-0006：Tool Registry、Policy 和 Executor](../specs/F-0006-tool-registry-executor-policy.md)
+7. [F-0007：workspace 只读 Tool](../specs/F-0007-workspace-read-tools.md)
+8. [F-0008：原子输出和 Artifact](../specs/F-0008-atomic-output-artifacts.md)
+9. [F-0015：Starlight 文档站与 GitHub Pages 发布](../specs/F-0015-local-starlight-docs-site.md) — accepted
+10. [F-0016：有界 Context 和串行 Agent Loop](../specs/F-0016-bounded-context-agent-loop.md)
+11. [F-0017：模型服务配置与真实 gate](../specs/F-0017-configurable-model-providers-live-gate.md)
+
+F-0015 的本地站点已经实现；`accepted` 表示 Pages 公开 URL 和合并后验收尚未关闭。
 
 ### P2（计划；均未创建 Spec）
 

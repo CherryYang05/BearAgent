@@ -57,7 +57,7 @@ BearAgent 当前没有 Memory，也不把 Event log 叫 Memory。前者服务未
 
 学术界正在扩展更真实、动态、有对抗性的环境；工业界则需要把能力 eval、回归 eval、代码检查、
 模型评分和人工 review 组合起来。BearAgent P1 已有五个版本化固定任务、执行路径断言和安全测试，
-但真实模型 gate、恢复故障演练和跨版本评测体系尚未完成。
+并以 DeepSeek V4 suite v1.1.1 完成一次真实 5/5 gate；恢复故障演练和跨版本评测体系尚未完成。
 
 ## 4. Tool 让 Agent 有用，也扩大了攻击面
 

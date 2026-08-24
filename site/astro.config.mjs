@@ -18,6 +18,10 @@ export default defineConfig({
       title: 'BearAgent Docs',
       description: '让个人 Agent 在本地可靠地完成长任务',
       disable404Route: true,
+      logo: {
+        src: './src/assets/bearagent-logo.png',
+        alt: 'BearAgent',
+      },
       defaultLocale: 'zh-cn',
       locales: {
         'zh-cn': {
@@ -61,6 +65,7 @@ export default defineConfig({
             { label: 'Tool 请求为什么要过四道检查', slug: 'learn/tool-execution-boundary' },
             { label: 'Windows 和 Unix 路径怎样统一', slug: 'learn/workspace-read-boundary' },
             { label: '原子输出怎样保护旧文件', slug: 'learn/atomic-output-boundary' },
+            { label: '失败后先问哪三个问题', slug: 'learn/recovery-authority-isolation' },
           ],
         },
         {
@@ -80,8 +85,12 @@ export default defineConfig({
             { label: '从数据边界开始读代码', slug: 'development/domain-contracts' },
             { label: '沿 Event 读懂状态与预算', slug: 'development/run-reducer-and-budgets' },
             { label: '从一次 append 读持久化', slug: 'development/sqlite-event-store' },
-            { label: '跟一次 SSE 读模型 adapter', slug: 'development/model-provider' },
+            { label: '跟一次流式调用读模型 adapter', slug: 'development/model-provider' },
             { label: '跟一次 ToolRequest 读执行边界', slug: 'development/tool-execution-boundary' },
+            { label: 'F-0007：workspace 只读 Tool', slug: 'development/workspace-read-tools' },
+            { label: 'F-0008：原子输出与 Artifact', slug: 'development/atomic-output-artifacts' },
+            { label: 'F-0016：有界 Agent Loop', slug: 'development/agent-loop' },
+            { label: 'F-0005：生产 CLI 与查询', slug: 'development/run-cli' },
             { label: '把 wheel 发布到 PyPI', slug: 'development/publish-python-package' },
             { label: '代码变了，站点怎样跟着变', slug: 'development/feature-documentation' },
             { label: '本地运行文档站', slug: 'guides/local-docs' },

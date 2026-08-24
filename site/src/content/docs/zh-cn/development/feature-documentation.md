@@ -64,7 +64,8 @@ sourceRefs:
 
 - “当前 `SqliteEventStore` 能在重开后查询事实；启动恢复尚未实现。”
 - “当前 Policy 使用固定 allowlist；用户 Approval 尚未实现。”
-- “当前 OpenAI adapter 已由 AgentLoop 和 CLI 调用；真实模型退出演练尚未完成。”
+- “当前三种模型协议 adapter 已由 AgentLoop 和 CLI 调用；DeepSeek V4 已完成一次真实 5/5，但不代表
+  其他服务或协议已付费联调。”
 
 这样读者从搜索结果直接进入中间段落时，也不容易把设计当成已有功能。
 

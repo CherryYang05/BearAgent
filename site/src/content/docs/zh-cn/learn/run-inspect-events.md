@@ -19,7 +19,9 @@ bearagent run inspect <run-id>
 bearagent run events <run-id> --after-sequence 0 --limit 100
 ```
 
-本页解释三条命令为什么读取同一批事实。安装、profile 全字段、Provider 环境、所有选项、退出码和
+第一条命令默认读取 `data/config.json` 和 `data/p1-run-profile.json`，不需要每次重复传入路径。
+
+本页解释三条命令为什么读取同一批事实。安装、config/profile 全字段、Provider 配置、所有选项、退出码和
 排错步骤见[P1 命令行完整使用手册](../guides/cli.md)。
 
 ## 一次命令怎样接到已有边界
@@ -77,7 +79,8 @@ sequence、时间、类型和 schema version，不显示 payload。`--json` 是�
 PENDING/RUNNING Activity；它不会猜测成功，也不会自动追加 RunFailed。若文件已经写成，但
 ToolCallCompleted 没有提交，查询也不会从文件系统反推一个 Artifact。
 
-自动恢复、retry、Attempt、Receipt 和 `UNKNOWN` 属于 P2。F-0005 的自动验收使用注入式 Fake Provider，
-没有读取真实 key 或调用真实模型。真实模型 API gate 与完整 P1 Reality Check 仍待完成。
+自动恢复、retry、Attempt、Receipt 和 `UNKNOWN` 属于 P2。F-0017 已实现默认关闭的 live runner，
+真实 gate 仍必须由项目所有者确认 Provider、model、pricing snapshot 和费用上限后单独执行。2026-08-23
+的 DeepSeek V4 suite v1.1.1 已通过 5/5，因此 F-0017/P1 已关闭；runner 默认状态没有改变。
 
 继续阅读[生产 CLI 和查询服务实现导读](../development/run-cli.md)，查看代码位置、Schema 和故障测试。

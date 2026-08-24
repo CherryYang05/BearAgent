@@ -14,10 +14,6 @@ IGNORED_DIRECTORIES = {
     ".git",
     ".npm-cache",
     ".python",
-    ".pytest-state",
-    ".pytest-tmp",
-    ".pytest_cache",
-    ".ruff_cache",
     ".uv-cache",
     ".venv",
     "dist",
@@ -32,7 +28,10 @@ def markdown_files(root: Path = ROOT) -> list[Path]:
     files: list[Path] = []
     for directory, directory_names, file_names in os.walk(root, topdown=True):
         directory_names[:] = sorted(
-            name for name in directory_names if name not in IGNORED_DIRECTORIES
+            name
+            for name in directory_names
+            if name not in IGNORED_DIRECTORIES
+            and not any(name.startswith(prefix) for prefix in IGNORED_DIRECTORY_PREFIXES)
         )
         files.extend(
             Path(directory) / name for name in file_names if name.casefold().endswith(".md")

@@ -7,6 +7,7 @@ sourceRefs:
   - AI Agents in Depth Chapter 2
   - AI Agents in Depth Chapter 4
   - F-0006
+  - F-0017
 ---
 
 假设用户让 Agent 比较三份设计文档并写一份总结。模型不能自己打开硬盘文件；它只能根据当前看到
@@ -17,7 +18,8 @@ sourceRefs:
 
 :::note[通用原理和当前进度]
 本页先讲 Agent 系统通常怎样分工。BearAgent P1 已把模型 adapter、四个 workspace Tool、统一
-Tool 执行边界、SQLite 和串行 Agent Loop 接成 CLI 路径；真实模型退出演练与 P2 恢复仍未完成。
+Tool 执行边界、SQLite 和串行 Agent Loop 接成 CLI 路径；DeepSeek V4 suite v1.1.1 已通过真实 5/5，
+P1 已关闭。P2 恢复仍未实现。
 :::
 
 ## 一次循环里谁做什么

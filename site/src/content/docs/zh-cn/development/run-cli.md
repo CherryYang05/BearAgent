@@ -38,7 +38,8 @@ ModelRequest 中，也不会被 Policy 允许。同一个 SQLite Store 同时交
 
 测试可以注入 Provider-neutral Fake Provider；真实 CLI 不暴露 `--api-key`，只从被 Git 忽略的本机
 `data/config.json` 中读取所选 Provider 的 key。SDK client 延迟到首个模型 Activity；零预算不创建
-client，缺 key 时在数据库和 Run 创建前安全失败。domain、runtime 和 application 不导入
+client。v2 config 缺少或非法 key 时在数据库和 Run 创建前失败；legacy v1 缺少环境凭据时，首个
+Activity/Run 保存安全的 `provider_authentication`。domain、runtime 和 application 不导入
 OpenAI/Anthropic、SQLite adapter 或 Typer；architecture test 持续检查这个方向。
 
 Profile 与 catalog loader 都使用文件描述符读取最多 128 KiB，并比较打开前后快照。链接、reparse
@@ -98,6 +99,8 @@ client 初始化异常，确认公开 Error 不复制原始内容。
 - `tests/evals/test_p1_agent_loop_tasks.py`：五个固定任务通过 production composition 并重开查询；
 - `tests/contract/test_cli_schemas.py`：machine-readable 输出 Schema 快照。
 
-F-0005 没有增加 SQLite migration、网络 Tool、恢复或 Approval，也没有用真实模型完成 P1 退出演练。
-面向使用者的安装、profile、全部选项、退出码与排错集中维护在
+F-0017 没有增加 SQLite migration、网络 Tool、恢复或 Approval。live runner 仍默认关闭；DeepSeek V4
+suite v1.1.1 已通过真实 5/5 并生成脱敏报告。
+
+面向使用者的安装、config/profile、全部选项、退出码与排错集中维护在
 [P1 命令行完整使用手册](../guides/cli.md)，本页只解释实现边界。

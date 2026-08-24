@@ -1,140 +1,116 @@
 ---
-title: 跟一次 SSE 读懂模型 adapter
-description: 从 ModelRequest 到 ModelCompleted，理解 OpenAI Responses 事件怎样在边界翻译、关联、限流并安全失败。
+title: ModelProvider 与三种协议 adapter 实现导读
+description: 从 config.json 走到 protocol factory、流事件翻译、Event v3 和 live gate。
 bearStatus: implemented
 sourceRefs:
   - F-0004
-  - OpenAI Responses API
+  - ADR-0010
+  - F-0017
+  - ADR-0015
+  - PLAN-F-0017
 ---
 
-模型 adapter 的工作不是把 SDK response 原样交给 Runtime。它要把一次外部流转换成 BearAgent 认识的
-有限事件，同时拒绝不完整、矛盾或超出当前支持范围的响应。
+一次 `bearagent run` 不会把“OpenAI 兼容”当成足够的配置。它先从 RunProfile 取得
+`provider_id`，再从 catalog 取得明确的 wire protocol，最后只创建那个协议的 adapter。Runtime
+核心始终只认识 `ModelProvider` 和 BearAgent 自己的数据。
 
-```text
-ModelRequest
-    ↓ 翻译 input、tools、timeout
-OpenAI Responses SSE
-    ↓ 逐项校验和累计大小
-ModelTextDelta / ModelToolCall
-    ↓ 恰好一个成功终点
-ModelCompleted
+F-0004 建立 port 与首个 Responses adapter；F-0017 增加可复用配置、Chat Completions、Anthropic
+Messages、Event v3 和默认关闭的真实模型验收入口。三个 protocol 是产品边界，厂商名不是分支条件。
+
+## 一次选择怎样进入模型调用
+
+```mermaid
+flowchart LR
+    P["RunProfile v2: provider_id"] --> C["config v1"]
+    C --> F["bootstrap.build_model_provider"]
+    F --> R["Responses adapter"]
+    F --> O["Chat Completions adapter"]
+    F --> A["Anthropic Messages adapter"]
+    R --> M["ModelProvider port"]
+    O --> M
+    A --> M
+    M --> L["AgentLoop"]
 ```
 
-从 `domain/model.py` 读到 `ports/model.py`，最后进入
-`adapters/model/openai_responses.py`，会比一开始就在 490 行 adapter 中找入口更清楚。
+factory 只按 `ModelProtocol` 枚举分支。它不检查 base URL 属于哪个厂商，不从 model 名猜协议，
+也不在一次失败后创建第二个 adapter。
 
-## 内部模型数据只表达 Runtime 需要的内容
+## 代码地图
 
-`ModelRequest` 包含：模型名、消息历史、可用 Tool 定义、最大输出 token、timeout 和 prompt version。
-它不包含 OpenAI SDK 类型。
-
-构造请求时会检查：
-
-- 消息数、Tool 数、描述长度、总输入字符和 timeout 有上限；
-- Tool 名称唯一，input schema 根节点必须是 JSON object；
-- 历史中的 `tool_call_id` 和 `provider_call_id` 都不能重复；
-- Tool result 必须引用前面出现且尚未回答的 Tool call；
-- Tool schema 只是告诉模型“可以怎样提请求”，它本身不授予执行权限。
-
-最后一条尤其重要。模型看到了某个 Tool，不代表 Runtime 一定允许这次具体参数；真正执行时仍要经过
-Tool Registry、参数准备和 Policy。
-
-## Port 只承诺一条异步事件流
-
-`ModelProvider.stream(request)` 返回 `AsyncIterator[ModelEvent]`。Runtime 只需要认识三种成功事件：
-
-| 事件 | 含义 |
-|---|---|
-| `ModelTextDelta` | 一个非空文本片段 |
-| `ModelToolCall` | 一个完整、已解析为 JSON object 的函数调用 |
-| `ModelCompleted` | 唯一成功终点，包含 Provider request ID、模型、停止原因和可选 usage |
-
-“usage 缺失”和“usage 为 0”是两种不同情况，所以 `ModelCompleted.usage` 可以是 `None`。Adapter 不会
-为了填满字段而猜 token。
-
-## 请求怎样翻译成 Responses API
-
-`OpenAIResponsesProvider.stream` 调用 `responses.create` 时固定：
-
-- `stream=True`，逐项处理 SSE；
-- `store=False`，不要求 Provider 保存响应；
-- `parallel_tool_calls=False`，与当前串行 Activity 规则一致；
-- 每次请求使用 `ModelRequest.timeout_ms`；
-- OpenAI client 必须 `max_retries=0`。
-
-禁用 SDK 自动重试不是说系统永远不重试，而是防止 adapter 在 Runtime 不知情时重复请求。未来由
-Runtime 根据 Event 和失败语义决定是否建立新尝试。
-
-`_translate_input` 会把 BearAgent Message 展开为 Responses input item。Assistant 的 Tool call 使用
-`provider_call_id`，之后 Tool result 通过内部 `tool_call_id` 找回它。历史缺少关联 ID 时，adapter
-直接报告协议错误。
-
-## 流式事件怎样变成三个内部事件
-
-`_translate_event` 对每个 SDK event 做显式分派：
-
-- 非空 `response.output_text.delta` 变成 `ModelTextDelta`；
-- 完整的 function call output item 解析 arguments，变成 `ModelToolCall`；
-- `response.completed` 经过终态校验后变成 `ModelCompleted`；
-- created、in_progress 等没有内部意义的生命周期通知被明确忽略；
-- refusal、failed、incomplete 和 error 转换为安全的 `ModelProviderError`；
-- 未列入支持范围的事件或输出类型失败关闭。
-
-文本和函数参数共同计入 4,000,000 字符的聚合上限。限制聚合大小而不只限制单个 delta，才能阻止
-很多小片段累积成无限输出。
-
-## 为什么 completion 还要再核对一次 Tool call
-
-流中已经发出的 Tool call 会记录 `provider_call_id`、name 和规范化 JSON 参数。看到最终 completion
-时，`_validate_completion_tool_calls` 再比较最终 output：
-
-- call ID 集合必须完全相同；
-- 不能重复 call ID；
-- Tool 名称不能改变；
-- 参数按 key 排序并压缩后必须相同。
-
-如果流中告诉 Runtime “读取 A”，completion 却把它改成“写入 B”，adapter 不接受任何一个版本为
-事实。这个校验把 Provider 流当成不受信任输入，而不是假设同一次响应内部永远一致。
-
-## 成功流必须只有一个明确终点
-
-`terminal_seen` 保证 `ModelCompleted` 之后不能再出现事件。流自然结束却没有 completion，也会报告
-协议错误。中途失败时，已经 yield 的文本片段可能已用于界面展示，但不会伪造 `ModelCompleted`。
-
-`CancelledError` 原样向上传播，避免把调用方主动取消伪装成 Provider 普通失败。
-
-## 外部异常怎样变成安全错误
-
-`_classify_sdk_error` 把常见 SDK 和 HTTP 异常归一化：
-
-| 外部情况 | 内部 code | 可重试提示 |
+| 范围 | 入口 | 责任 |
 |---|---|---|
-| timeout | `PROVIDER_TIMEOUT` | 是 |
-| rate limit | `PROVIDER_RATE_LIMITED` | 是 |
-| authentication / permission | 对应认证或权限 code | 否 |
-| bad request | `PROVIDER_INVALID_REQUEST` | 否 |
-| connection、429、5xx | unavailable/rate limit | 是 |
-| 未知错误 | `PROVIDER_ERROR` | 否 |
+| catalog | `src/bearagent/configuration.py` | 校验条目、HTTPS URL、直接 key、SecretStr 和配置版本 |
+| Run profile | `src/bearagent/domain/agent.py` | 保持 v1 可读；v2 用 `provider_id` 选择 catalog 条目 |
+| 选择事实 | `src/bearagent/domain/providers.py` | `ModelProtocol` 与非敏感 `ProviderSelection` |
+| production factory | `src/bearagent/bootstrap.py` | 解析唯一选择，延迟创建对应 SDK client |
+| Responses | `src/bearagent/adapters/model/openai_responses.py` | Responses 请求与 SSE event 翻译 |
+| Chat Completions | `src/bearagent/adapters/model/openai_chat_completions.py` | chunk、ToolCall fragment、wire 名称和 thinking 翻译 |
+| Anthropic Messages | `src/bearagent/adapters/model/anthropic_messages.py` | message/content block 生命周期翻译 |
+| 共用限制 | `src/bearagent/adapters/model/_common.py` | 有界文本、参数、usage 和完成结果 |
+| 内部接口 | `src/bearagent/ports/model.py` | 流式接口与安全 `ModelProviderError` |
+| live gate | `src/bearagent/evaluation/p1_live.py` | preflight、隔离 attempt、查询复核与脱敏报告 |
 
-公开 details 只保留长度受限的 request ID、Provider code 和数字 status。响应 body、Header、Prompt、
-模型输出和原始异常文本不会复制进去。
+## 三种 adapter 分别翻译什么
 
-## FakeModelProvider 为什么值得先读
+| protocol | 主要外部形状 | BearAgent 处理 |
+|---|---|---|
+| `openai_responses` | typed Responses stream event | 文本 delta、完整 function call、response completed |
+| `openai_chat_completions` | chat completion chunk | 按 index 重组 ToolCall fragment，接受标准 usage-only 尾块 |
+| `anthropic_messages` | message/content-block event | 严格校验 block 生命周期，重组 text 与 tool JSON delta |
 
-`adapters/testing/model.py` 只有几十行：它回放预先配置的 `ModelEvent`，记录收到的内部请求，还能在
-指定事件后抛出失败。它让 Runtime 测试无需网络就能稳定复现“输出两段文本后失败”等情况。
+每个 adapter 最终只能产生文本增量、完整 ToolCall 和唯一 `ModelCompleted`。一次响应可以带多个
+ToolCall；adapter 全部翻译，AgentLoop 再逐个重新检查预算、Policy 和 workspace 边界。
 
-Contract test 又通过 `httpx.MockTransport` 让真正的 OpenAI SDK 解析内存 SSE。这样既测试官方 SDK
-边界和请求 JSON，又不需要账号、API key 或在线模型。
+Chat function name 只允许有限字符，但 BearAgent 的内部 Tool 名称可以是 `workspace.read`。adapter 发送前
+确定性映射为 wire-safe 名称，收到 ToolCall 后再恢复；Runtime、Policy 和 Event 始终看到内部名称。参数
+仍由 BearAgent 校验，不依赖 Provider 的 `strict` 扩展。
 
-建议阅读和运行：
+Model 配置可以对 Chat Completions 显式设置 `thinking_mode: "disabled"`。默认仍是
+`provider_default`。P1 不保存或回放隐藏推理；如果 Provider 返回无法安全表示的非空 reasoning，adapter
+返回 `provider_protocol_error`，不会静默丢弃，也不会写进 Event。
 
-```powershell
-uv run pytest tests/unit/test_model_contracts.py tests/unit/test_testing_adapters.py
-uv run pytest tests/contract/test_model_provider_contract.py
-uv run pytest tests/security/test_model_provider.py
-```
+production adapter 必须取得服务报告的实际 usage。缺失或格式错误会成为
+`provider_protocol_error`，不能写成 0。Anthropic 的 cached input tokens 计入输入总量。完整
+ToolCall 之前结束、完成后又出现关键事件、未知关键 event 或 JSON 参数不是有界 object 也会失败。
 
-模型边界已经实现，但没有 ContextBuilder 决定放入哪些消息，也没有 Agent Loop 消费事件、保存
-Model Activity 或把 Tool call 送入 `ToolExecutor`。不要把“adapter 能完成一次流式翻译”理解成
-“CLI 已经能完成真实 Agent 任务”。
+## 配置与 secret 怎样分开
+
+`config.json` 保存 `provider_id`、厂商显示名、protocol、HTTPS base URL、直接填写的 `api_key`、模型列表、
+可选 thinking mode 和 `default_model`，并拒绝 pricing；RunProfile v2 只保存 `provider_id`、Agent 行为和预算。`SecretStr`
+防止 key 出现在配置 model 的 repr/JSON；factory 只在创建选定 adapter 时解封。
+
+Bootstrap 从默认模型构造 `unpriced` 的 `AgentConfig`；真实 gate 单独注入 pricing snapshot。新 Run 使用
+RunCreated v3 保存 `provider_id`、由非密钥 Provider/model 字段计算的 config version、protocol、配置
+model 和 pricing version。它不保存 base URL 或 key。旧 RunCreated v1/v2 与 RunProfile v1 继续可读，SQLite
+不需要新增表或列。
+
+缺少、空白或非法 key 会在数据库和 Run 创建前返回安全的 `invalid_input`。有效 key 不进入
+AgentConfig、Event、SQLite、CLI 输出或 live report。零预算仍会在创建 SDK client 前停止。
+
+## 失败为什么不触发 fallback
+
+三个 SDK 都配置 `max_retries=0`，每个请求显式设置 timeout，生产 HTTP client 不跟随 redirect。
+取消原样传播；认证、限流、连接、timeout 和协议错误转换成有限的 `ErrorInfo`，不复制响应 body、
+header、Prompt、输出、endpoint 或原始异常文本。
+
+一次 Run 只使用选中的协议与 endpoint。自动 fallback 可能把同一个 Prompt 和 key 发往另一处，还会
+让 Activity 次数和费用无法从 Event 解释。P1 因此既不自动 retry，也不自动 fallback；P2 才定义带
+Attempt 的恢复与重试语义。
+
+## 测试证据在哪里
+
+- `tests/contract/test_model_provider_contract.py`：Responses 的真实 SDK + 内存 SSE；
+- `tests/contract/test_openai_chat_completions_provider.py`：Chat chunk、usage-only 尾块和多 ToolCall；
+- `tests/contract/test_anthropic_messages_provider.py`：Messages 生命周期、tool JSON 与 cached usage；
+- `tests/unit/test_provider_config.py`、`tests/unit/test_run_profile_versions.py`：catalog/profile 边界；
+- `tests/unit/test_provider_composition.py`：三种 protocol 的唯一 factory 选择与延迟缺 key；
+- `tests/integration/test_provider_selection_events.py`：RunCreated v3、查询与旧 Event 兼容；
+- `tests/unit/test_p1_live_eval.py`、`tests/integration/test_p1_live_eval.py`：默认关闭的 preflight、
+  五个隔离任务、SQLite 重开、rubric、canary 和脱敏 report；
+- `tests/architecture/test_import_boundaries.py`：SDK 不能进入 core。
+
+这些测试不需要账号、key 或网络。真实账号与模型的 gate 是单独的手工验收：项目所有者必须确认
+Provider、model、独立 pricing snapshot、commit 与费用上限，然后由 `scripts/run_p1_live_eval.py` 执行。
+2026-08-23 的 suite v1.1.1 使用 DeepSeek V4 经 production composition 通过 5/5，脱敏证据见
+[F-0017 P1 live report v1](https://github.com/CherryYang05/BearAgent/blob/main/docs/evidence/F-0017-p1-live-report-v1.json)。
+这份证据关闭 F-0017/P1，但不证明其他 endpoint、model 或 protocol 已付费联调。
