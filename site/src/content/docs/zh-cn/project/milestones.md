@@ -39,6 +39,10 @@ Check 通过；suite v1.1.1 又用 DeepSeek V4 经 production 路径完成四个
 
 P1 只保证已经保存的事实可以查看。进程退出后不会自动继续。
 
+当前使用入口见[P1 命令行完整使用手册](../guides/cli.md)，完整请求路径和取舍见
+[一次请求怎样穿过 BearAgent](../architecture/runtime-flow.md)与
+[P1 为什么这样设计](../architecture/p1-decisions.md)。
+
 ## P2：让每次恢复决定都有依据
 
 P2 会把一个逻辑 Activity 和它的实际 Attempt 分开。重试会创建新 Attempt，不会覆盖旧失败。
@@ -66,5 +70,5 @@ Memory 和受控联网。Tool 数量真实增长后，才决定是否需要 Tool
 
 ## 阶段怎样关闭
 
-真实任务和失败演练必须能被别人复现；README、架构、Spec、代码、测试和状态页要说同一件事；
+真实任务和失败演练必须能被别人复现；README、架构、代码、测试和状态页要说同一件事；
 当前限制必须直接写出。路线图或架构图本身不能作为“已经完成”的证据。

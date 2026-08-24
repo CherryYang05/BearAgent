@@ -17,10 +17,12 @@ sourceRefs:
 ## 第一次阅读
 
 1. 先看[当前实现状态](../project/status.md)，避免把路线图当成已有功能；
-2. 用[Runtime 各部分怎样协作](../architecture/)理解调用方向；
-3. 找到当前 Feature 的 Spec、相关 ADR 和 Plan；
-4. 按下面的实现导读进入代码和测试；
-5. 修改后运行完整验证，并同步会受影响的学习页和状态页。
+2. 如果还没实际运行过 P1，先走一遍[CLI 完整手册](../guides/cli.md)；
+3. 用[Runtime 各部分怎样协作](../architecture/)和[P1 架构取舍](../architecture/p1-decisions.md)
+   理解调用与依赖方向；
+4. 找到当前 Feature 的 Spec、相关 ADR 和 Plan；
+5. 按下面的实现导读进入代码和测试；
+6. 修改后运行完整验证，并同步会受影响的使用、学习、开发者和状态页面。
 
 ## 当前实现导读
 

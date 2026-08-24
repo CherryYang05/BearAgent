@@ -9,13 +9,15 @@ last_verified: 2026-08-24
 
 ## 1. 现在怎样运行
 
-P1 全部在本地开发和验证，Runtime 不开放 HTTP。F-0015 文档站也只在本地与 CI 构建。P1 完成后
-可以发布静态文档；P2 在私有服务器演练恢复；P3 仍通过私有通道验证 Approval 与隔离 runner；只有
-P4 的认证、部署和备份恢复全部通过，Agent 服务才通过公网子域名提供给项目所有者。
+P1 Runtime 全部在本地开发和验证，不开放 HTTP。F-0015 文档站是独立的静态产物；本 Feature
+加入 GitHub Pages 发布配置，但公开 URL 和仓库 Pages 设置仍要在合并后核验。静态站不会启动
+Runtime，也不会读取模型密钥或用户数据。P2 在私有服务器演练恢复；P3 仍通过私有通道验证
+Approval 与隔离 runner；只有 P4 的认证、部署和备份恢复全部通过，Agent 服务才通过公网子域名
+提供给项目所有者。
 
 不需要新域名：
 
-- `docs.bearguin.cn`：P1 完成后发布静态文档；
+- `docs.bearguin.cn`：未来可指向静态文档；当前发布目标是 GitHub Pages；
 - `agent.bearguin.cn`：P4 后的单用户 Agent API，未来 Web UI 与 `/api` 同源。
 
 暂不增加 `api.*`，避免 CORS、cookie 和证书管理复杂度。
@@ -42,7 +44,7 @@ Production  P4 接入与部署门通过后才启用公网 hostname
 - SQLite 和 workspace 放在项目外的数据目录；
 - 不开放 HTTP，不提供 host shell；
 - P1 本地 CLI 的 Provider key 只在被 Git 忽略的本机 catalog；长期服务后续改用 secret store；
-- 文档站本地预览和 CI 构建，不部署。
+- 文档站本地预览；`main` 的站点变更可以部署到 GitHub Pages。
 
 本地 CLI 默认使用当前目录作为 workspace、`data/p1-run-profile.json` 作为 Run 配置、
 `data/config.json` 作为模型服务配置、`data/bearagent.db` 作为 EventStore。config 可以保存 HTTPS
@@ -70,10 +72,11 @@ suite v1.1.1 已在授权费用范围内通过 5/5；runner 仍不会因这次�
 `run inspect/events` 只打开已经存在的普通数据库文件。不存在的路径不会生成空数据库；损坏或未来
 migration 只返回安全 persistence Error。这里仍是本地命令，不会启动 HTTP 服务。
 
-### P1 完成后：公开静态文档
+### F-0015：公开静态文档
 
-构建 `site/dist/` 并发布到 `docs.bearguin.cn`。服务器只接收静态产物，不在 Web 请求中运行文档
-生成器。托管、HTTPS、发布权限和回滚需单独确认。
+GitHub Actions 构建 `site/dist/` 并发布到
+`https://cherryyang05.github.io/BearAgent/`。GitHub Pages 只接收静态产物，不在 Web 请求中运行
+文档生成器。首次上线要在仓库 Settings → Pages 中选择 GitHub Actions 作为 Source。
 
 ### P2：私有服务器 staging
 

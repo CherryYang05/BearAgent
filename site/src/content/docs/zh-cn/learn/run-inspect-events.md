@@ -21,6 +21,9 @@ bearagent run events <run-id> --after-sequence 0 --limit 100
 
 第一条命令默认读取 `data/config.json` 和 `data/p1-run-profile.json`，不需要每次重复传入路径。
 
+本页解释三条命令为什么读取同一批事实。安装、config/profile 全字段、Provider 配置、所有选项、退出码和
+排错步骤见[P1 命令行完整使用手册](../guides/cli.md)。
+
 ## 一次命令怎样接到已有边界
 
 ```mermaid

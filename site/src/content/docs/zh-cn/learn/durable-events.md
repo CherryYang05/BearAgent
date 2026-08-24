@@ -4,8 +4,6 @@ description: 理解 Event log、projection、transaction，以及为什么持久
 bearStatus: implemented
 sourceRefs:
   - F-0003
-  - ADR-0002
-  - ADR-0003
 ---
 
 一个进程内 reducer 能回答“这串 Event 会得到什么状态”，但进程退出后，内存里的 Event 也会

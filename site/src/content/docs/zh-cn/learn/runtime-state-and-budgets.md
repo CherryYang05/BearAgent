@@ -5,7 +5,6 @@ bearStatus: implemented
 sourceRefs:
   - F-0002
   - F-0003
-  - ADR-0009
 ---
 
 如果执行循环只用几个可变变量保存“做到哪里”和“用了多少 token”，进程结束后就很难还原过程，

@@ -85,6 +85,9 @@ v1.1.1 使用 DeepSeek V4 经 production composition 完成四个普通任务和
 
 P1 只保证已保存事实可查。进程退出后不会自动继续；timeout 也不会撤销可能已经发生的副作用。
 
+F-0015 的本地站点属于已完成的 P1 交付；PR #14 继续补充渐进式阅读路径、独立 CLI 手册和 GitHub
+Pages 发布配置。公开 URL 与仓库 Pages 设置仍要在合并后核验，但不撤销已经完成的 P1 Runtime gate。
+
 ## 5. P2：可恢复执行语义
 
 **状态：未开始。** P1 已关闭；开始实现前仍要逐个接受对应 Feature Spec。
@@ -318,9 +321,11 @@ Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；
 6. [F-0006：Tool Registry、Policy 和 Executor](../specs/F-0006-tool-registry-executor-policy.md)
 7. [F-0007：workspace 只读 Tool](../specs/F-0007-workspace-read-tools.md)
 8. [F-0008：原子输出和 Artifact](../specs/F-0008-atomic-output-artifacts.md)
-9. [F-0015：本地 Starlight 文档站](../specs/F-0015-local-starlight-docs-site.md)
+9. [F-0015：Starlight 文档站与 GitHub Pages 发布](../specs/F-0015-local-starlight-docs-site.md) — accepted
 10. [F-0016：有界 Context 和串行 Agent Loop](../specs/F-0016-bounded-context-agent-loop.md)
 11. [F-0017：模型服务配置与真实 gate](../specs/F-0017-configurable-model-providers-live-gate.md)
+
+F-0015 的本地站点已经实现；`accepted` 表示 Pages 公开 URL 和合并后验收尚未关闭。
 
 ### P2（计划；均未创建 Spec）
 

@@ -1,19 +1,22 @@
+from collections.abc import Iterator
 from pathlib import Path
+from unittest.mock import patch
 
-import pytest
 from scripts import check_docs
 
 
-def test_markdown_files_ignore_isolated_pytest_workspaces(
+def test_markdown_files_prunes_ignored_directories_before_descending(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    (tmp_path / "docs").mkdir()
-    expected = tmp_path / "docs" / "index.md"
-    expected.write_text("# Docs\n", encoding="utf-8")
-    ignored = tmp_path / ".pytest-tmp-f0016-final" / "case" / "output.md"
-    ignored.parent.mkdir(parents=True)
-    ignored.write_text("# Test output\n", encoding="utf-8")
-    monkeypatch.setattr(check_docs, "ROOT", tmp_path)
+    def fake_walk(root: Path, *, topdown: bool) -> Iterator[tuple[str, list[str], list[str]]]:
+        assert root == tmp_path
+        assert topdown is True
 
-    assert check_docs.markdown_files() == [expected]
+        directory_names = [".venv", "docs"]
+        yield str(root), directory_names, []
+
+        assert directory_names == ["docs"]
+        yield str(root / "docs"), [], ["visible.md"]
+
+    with patch.object(check_docs.os, "walk", fake_walk):
+        assert check_docs.markdown_files(tmp_path) == [tmp_path / "docs" / "visible.md"]

@@ -11,7 +11,9 @@
 4. 当前 Feature 的 [Spec](specs/README.md)、相关 [ADR](adr/README.md) 和 [Plan](plans/README.md)。
 
 准备参与开发时再读 [AI 辅助开发流程](development/ai-development-sop.md)。需要部署背景时读
-[本地开发与自托管](deployment/self-hosting.md)。公共学习站位于 [`site/`](../site/README.md)。
+[本地开发与自托管](deployment/self-hosting.md)。实际使用 P1 CLI 时直接读
+[命令行完整使用手册](../site/src/content/docs/zh-cn/guides/cli.md)；公共学习站位于
+[`site/`](../site/README.md)。
 
 ## 一件事实写在哪里
 
@@ -24,6 +26,7 @@
 | 模块现在怎样连接 | Architecture + 代码 |
 | 行为是否已经成立 | 代码、测试和可复现命令 |
 | 开发约束和完成标准 | `AGENTS.md` |
+| 当前 CLI 怎样安装、配置和排错 | `site/.../guides/cli.md`，精确字段回到 F-0005/Schema/代码 |
 | 面向读者的解释 | `site/`，内容必须能追溯到以上事实 |
 
 聊天记录只用于讨论。一个结论只有写进仓库并通过相应审查后，才成为项目决定。

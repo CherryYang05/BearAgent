@@ -78,5 +78,6 @@ CLI 框架和未来的 Web API 都在外层。外层可以导入核心，核心�
 5. P3 让危险动作同时通过参数绑定授权和隔离 runner；
 6. 第一版保持单用户、单个 Runtime 进程和 SQLite，直到实际压力要求更复杂的部署。
 
-继续阅读[BearAgent 内部怎样交换数据](domain-contracts.md)，或从
-[开发者入口](../development/)进入代码。
+先沿[一次请求怎样穿过 BearAgent](runtime-flow.md)看完整顺序，再用
+[P1 为什么这样设计](p1-decisions.md)理解单进程、Event、默认拒绝 Policy、相对路径、原子输出和
+串行 Loop 的取舍。准备修改实现时，从[开发者入口](../development/)进入代码。

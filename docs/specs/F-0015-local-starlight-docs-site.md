@@ -1,25 +1,25 @@
 ---
-title: "Feature: Local Starlight documentation site"
-status: implemented
+title: "Feature: Starlight documentation site and GitHub Pages publication"
+status: accepted
 spec_id: F-0015
 milestone: P1
 owner: CherryYang05
 created: 2026-08-10
-last_updated: 2026-08-13
-implemented_in: "PR #3"
+last_updated: 2026-08-23
+implemented_in: "PR #3 (local site); PR #14 (Pages and P1 documentation restructure, open)"
 related_adrs:
   - ADR-0008
 ---
 
-# F-0015：建立本地中文文档站
+# F-0015：建立中文文档站并发布到 GitHub Pages
 
 ## 1. 为什么现在要做
 
 工程 `docs/` 保存精确的 Architecture、Roadmap、Spec、ADR 和 Plan，适合设计和审查，却没有从
 Agent 原理走向代码的学习路径，也缺少公共导航、本地搜索和网站预览。
 
-P1 期间需要先建立内容与技术底座。服务器发布等 P1 完成后单独验收，避免文档部署干扰 Runtime
-Feature。
+F-0015 最初只建立了内容和本地构建底座。现在需要把同一份静态产物发布到 GitHub Pages，让读者
+不必拉取仓库也能阅读。发布仍与 Runtime 分开，不会开放 Agent 服务或读取 Runtime 数据。
 
 ## 2. 本次交付
 
@@ -28,19 +28,21 @@ Feature。
 - G-3：从一次 Agent 任务到 BearAgent 架构和代码的学习路径；
 - G-4：页面明确区分通用原理、已接受设计、当前实现和计划；
 - G-5：锁定安装、生产构建和 CI 检查；
-- G-6：把学习页、开发者页和状态页同步纳入 Feature 完成标准。
+- G-6：把学习页、开发者页和状态页同步纳入 Feature 完成标准；
+- G-7：`main` 上的站点变更通过 GitHub Actions 发布到项目 Pages 地址。
+- G-8：把 P1 内容重组为由浅入深的阅读路径，并单独维护可完整执行的 CLI 使用手册。
 
 ## 3. 本次不做
 
-不发布 `docs.bearguin.cn`，不修改 DNS、反向代理或服务器；不完成整套教程、英文翻译、历史版本、
+本次不配置 `docs.bearguin.cn`、DNS、反向代理或独立服务器；不完成整套教程、英文翻译、历史版本、
 问答 Agent、评论、登录和分析后台；不改变任何 Runtime 行为。
 
 站点不把 Spec 原文复制成教程，也不使用逐词替换制造新的术语。
 
 ## 4. 需要先说明的约定
 
-`docs/`、代码和测试保存工程事实；`site/` 根据这些事实组织学习和代码阅读内容。本地运行表示开发者
-能启动预览并生成静态页面，不表示服务器已上线。第一版只维护简体中文。
+`docs/`、代码和测试保存工程事实；`site/` 根据这些事实组织学习和代码阅读内容。第一版只维护简体
+中文。本地预览和 GitHub Pages 使用同一个 `/BearAgent/` 基础路径，避免上线后资源链接回到域名根目录。
 
 ## 5. 使用场景
 
@@ -58,6 +60,11 @@ adapter，而不是先面对完整术语表。
 
 Front Matter、内部链接、MDX 或 Mermaid 无法编译时，生产构建失败，不生成表面成功的站点。
 
+### 在线阅读
+
+变更进入 `main` 后，GitHub Actions 构建并发布 `site/dist/`。读者从
+`https://cherryyang05.github.io/BearAgent/` 进入中文首页；不存在的链接显示中文 404 页面。
+
 ### Feature 关闭
 
 一个 Feature 准备标记完成时，工程事实、相关学习说明、代码导读和当前状态已经同步；整个阶段
@@ -74,11 +81,17 @@ Front Matter、内部链接、MDX 或 Mermaid 无法编译时，生产构建失�
 - FR-7：全文搜索不依赖外部 SaaS；
 - FR-8：支持 Mermaid，依赖锁定并通过构建；
 - FR-9：提供本地开发、构建和生产预览命令；
-- FR-10：CI 锁定安装并构建，但不部署；
+- FR-10：普通 CI 锁定安装并构建；独立 Pages workflow 只在 `main` 或手动触发时部署；
 - FR-11：每个 Feature 同步工程 `docs/`、学习页、开发者页和状态页；
 - FR-12：每个阶段关闭时同步 Roadmap、学习地图、架构总结和阶段结果；
 - FR-13：外部资料优先一手来源，star 只用于发现项目；
-- FR-14：文档先讲具体问题和行为，再引入必要术语；禁止用机械替换代替上下文重写。
+- FR-14：文档先讲具体问题和行为，再引入必要术语；禁止用机械替换代替上下文重写；
+- FR-15：Astro 明确配置公开站点地址和 `/BearAgent` 基础路径，根页、资源、sitemap 和 404 链接都保留此前缀；
+- FR-16：文档检查在进入目录前排除 `.venv`、`node_modules` 等生成目录，不能先遍历再过滤。
+- FR-17：主导航应先帮助读者安装和运行 CLI，再解释一次 Run、架构取舍和代码；历史演进页与行业
+  背景不得打断主路径。
+- FR-18：CLI 手册应集中说明安装状态、profile、Provider 环境、`doctor/run/inspect/events`、human/JSON
+  输出、退出码、数据位置、常见失败与 P1 限制，并以实际 CLI help、Schema 和测试为事实来源。
 
 ## 7. 对外入口和模块连接
 
@@ -99,22 +112,25 @@ npm run preview --prefix=site
 ## 9. 失败时会发生什么
 
 lockfile 安装失败、Markdown/MDX 编译失败、无效 Front Matter 或 Mermaid 错误都会让构建失败。
-本地预览中断后重新启动即可。产物损坏时删除 `site/dist/` 并重新构建，不从产物恢复源内容。
+本地预览中断后重新启动即可。产物损坏时重新构建，不从产物恢复源内容。Pages workflow 失败时保留
+上一份成功发布的静态站点，并在 Actions 日志中报告构建或部署失败。
 
 ## 10. 安全与隐私
 
 站点不需要 Provider key、用户数据或 Runtime 数据；不嵌入密钥、远程脚本、评论、分析追踪或动态
-后端。依赖更新必须审查 lockfile 并重新构建。
+后端。workflow 只读取仓库内容，并仅让部署 job 获得 `pages: write` 与 `id-token: write`。依赖更新必须
+审查 lockfile 并重新构建。
 
 ## 11. 怎样检查执行过程
 
-只保留本地和 CI 构建输出，不添加用户遥测。Git `lastUpdated` 帮助判断页面新鲜度，但不替代
-Feature 状态。
+只保留本地、CI 和 Pages 部署输出，不添加用户遥测。Git `lastUpdated` 帮助判断页面新鲜度，但不
+替代 Feature 状态。
 
 ## 12. 上线与回退
 
-P1 只支持本地与 CI。P1 完成后另行决定托管、域名、HTTPS、发布权限和回滚。回退 F-0015 时删除
-`site/` 和 Node CI 步骤，不涉及 Runtime 数据迁移。
+合并后需要在仓库 Settings → Pages 中把 Source 设为 GitHub Actions。首次成功部署前，公开 URL
+仍可能显示 GitHub 的未配置页面。回退部署时禁用或删除 Pages workflow；上一份 Pages artifact 可以
+继续服务，Runtime 不需要迁移数据。自定义域名另行决定。
 
 ## 13. 验收标准
 
@@ -124,18 +140,23 @@ P1 只支持本地与 CI。P1 完成后另行决定托管、域名、HTTPS、发
 - AC-4：首页和侧边栏能到达必要页面；
 - AC-5：至少一张 BearAgent Mermaid 图能渲染；
 - AC-6：状态页准确区分已实现和 Roadmap；
-- AC-7：CI 构建但不部署，不含服务器凭证；
+- AC-7：PR 只构建；`main` 可以用 GitHub 原生身份发布 Pages，不保存服务器凭证；
 - AC-8：Python 检查、测试和工程链接继续通过；
 - AC-9：仓库规则、SOP、模板和 PR 模板要求同步各文档入口；
 - AC-10：开发者入口、Feature 文档规则和实现导读与学习路径互链；
-- AC-11：站点与工程文档的改写以完整段落为单位，术语在具体行为中解释。
+- AC-11：站点与工程文档的改写以完整段落为单位，术语在具体行为中解释；
+- AC-12：生产构建生成带 `/BearAgent/` 前缀的根页跳转、资源链接、sitemap 和中文 `404.html`；
+- AC-13：文档检查不进入 `.venv` 等忽略目录，并有回归测试。
+- AC-14：从首页不超过两次点击可到达 CLI 手册、P1 执行路径、架构取舍、代码入口和当前状态。
+- AC-15：站点中不得继续把已接通的 Agent Loop、workspace Tool 或 `run/inspect/events` 写成尚未实现；
+  CLI 示例、默认路径、分页范围和退出码与当前代码/测试一致。
 
 ## 14. 验证方式
 
 - Contract：lockfile 安装和生产构建；
-- Integration：CI 同时运行 Python 检查和站点构建；
+- Integration：CI 同时运行 Python 检查和站点构建；Pages workflow 构建并上传同一静态站点；
 - Recovery：删除静态产物后从源码重建；
-- Security：检查 diff 和配置不含密钥、发布步骤或 Runtime 数据；
+- Security：检查 workflow 不含密钥，部署权限只用于 GitHub Pages；
 - Manual：本地检查导航、搜索、状态提示、Mermaid 和段落连贯性。
 
 ## 15. 文档同步
@@ -150,4 +171,5 @@ P1 只支持本地与 CI。P1 完成后另行决定托管、域名、HTTPS、发
 
 ## 16. 尚未决定的问题
 
-无。Starlight、中文优先和 P1 仅本地构建已确认。
+代码侧没有开放问题。首次上线仍需在 GitHub 仓库设置中选择 GitHub Actions 作为 Pages Source，并在
+合并后检查公开 URL。

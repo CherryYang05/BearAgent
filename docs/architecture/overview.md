@@ -53,17 +53,17 @@ flowchart TB
 | workspace 只读边界 | 一层目录列出、分段 UTF-8 读取、普通字符串搜索和跨平台路径拒绝 |
 | workspace 输出边界 | `outputs/**` UTF-8 原子创建/替换、Artifact 元数据和失败前旧目标保护 |
 | Agent 执行链 | 从已提交 Event 构造有界 Context，串行调用模型与 Tool，保存 v2 Activity 事实和 v3 Provider 选择 |
-| 固定任务 | 五个版本化文件任务使用 Fake Provider 完成确定性验证；同一 rubric 也供默认关闭的 live runner 使用 |
+| 固定任务 | 五个版本化文件任务使用 Fake Provider 完成确定性验证；DeepSeek V4 suite v1.1.1 也通过同一 rubric 的真实 5/5 |
 | 用户入口 | `run/inspect/events` CLI、config v1、RunProfile v1/v2、human/JSON renderer 和安全退出码 |
 | 查询 | application query service 只通过 EventStore 读取 projection 与分页 Event，并重建 Artifact 元数据 |
 | 测试替身 | Fake model、Fake tool、内存 Event store |
-| 文档 | 工程 `docs/` 与本地 Starlight 学习/开发者站点 |
+| 文档 | 工程 `docs/` 与可静态发布的 Starlight 学习/开发者站点 |
 
 `bootstrap.py` 根据 catalog 中显式选择的 wire protocol 组装一个模型 adapter，再与 SQLite、
 workspace Tools、固定 Policy 和 AgentLoop 连接。F-0017 的离线测试覆盖三种 adapter、配置选择、
 Event v3 和五任务 live runner；它不会按厂商名、URL 或失败结果猜协议，也不会自动切换 endpoint。
 suite v1.1.1 已用 DeepSeek V4 经 production composition 完成四个普通任务与安全 canary，P1 以 5/5
-关闭。持久事实仍不等于进程重启后会自动继续。
+关闭并生成脱敏报告。这不代表其他服务或协议已付费联调；持久事实仍不等于进程重启后会自动继续。
 
 ### 3.2 已接受但尚未接通
 
@@ -450,7 +450,7 @@ Policy/Approval、runner 隔离、日志脱敏和备份恢复演练。
 | HTTP | httpx | async、timeout 和 streaming |
 | 测试 | pytest | 覆盖单元、契约、集成和故障注入 |
 | 质量 | Ruff + Pyright | 快速、可自动化 |
-| 文档 | Markdown/MDX + Starlight | 中文学习导航、本地搜索和 Mermaid |
+| 文档 | Markdown/MDX + Starlight | 中文学习导航、本地搜索、Mermaid 和 GitHub Pages 静态发布 |
 | 部署 | Docker Compose + 1Panel，P4 引入 | 符合单机自托管范围 |
 
 第一版不把 LangChain/LangGraph 或 Temporal 作为内核。只有真实需求证明需要多 worker、复杂 timer
@@ -480,6 +480,18 @@ F-0008 已通过 ADR-0012 决定：P1 不设置 Artifact TTL，也不自动清�
 
 开放问题不授权提前实现。影响模块边界、持久 schema、安全或生产依赖时，必须在对应 Feature 前
 写入 ADR。
+
+## 19. 读者从哪里进入
+
+- 实际安装、配置、运行和排错见
+  [P1 命令行完整使用手册](../../site/src/content/docs/zh-cn/guides/cli.md)；
+- 从一条请求理解当前模块连接见
+  [一次请求怎样穿过 BearAgent](../../site/src/content/docs/zh-cn/architecture/runtime-flow.md)；
+- 集中理解 P1 的主要取舍及代价见
+  [P1 为什么这样设计](../../site/src/content/docs/zh-cn/architecture/p1-decisions.md)；
+- 修改实现时从[开发者代码路线](../../site/src/content/docs/zh-cn/development/index.md)进入。
+
+这些站点页面服务读者任务；本文件、ADR、Spec、代码和测试继续保存工程事实。
 
 ## 参考资料
 

@@ -5,6 +5,7 @@ bearStatus: design
 sourceRefs:
   - architecture/overview
   - F-0002
+  - F-0006
 ---
 
 术语表用于保持代码和文档一致，不要求在每一段都堆满术语。面向初学者的页面应先讲场景，再在
@@ -32,6 +33,11 @@ sourceRefs:
 | `UNKNOWN` | 外部操作可能已发生，但 Runtime 暂时无法确认结果 |
 | RecoveryDecision | 根据已保存事实选择复用、重试、reconcile 或停下的决定 |
 | Tool | 执行读取、写入或其他外部动作的接口 |
+| ToolSpec | Tool 注册时提供的可信说明，包含名称、输入输出结构、副作用和资源上限 |
+| ToolRegistry | Runtime 启动时建立的 Tool 名单，只按完整名称查找 |
+| `prepare` | Tool 执行前的纯检查，把原始参数校验并整理成唯一含义 |
+| Policy | Runtime 的权限门，根据可信配置决定一次规范化请求是否允许执行 |
+| ToolExecutor | 串起查找、参数准备、权限检查、限时执行和结果检查的统一入口 |
 | Skill | 可复用的说明、知识和流程提示，不包含权限 |
 | Grant | 对主体、动作、资源和限制的授权 |
 | Approval | 用户对一次绑定具体 Run、Tool call 和规范化参数的授权决定 |

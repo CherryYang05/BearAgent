@@ -29,7 +29,8 @@ draft -> accepted -> implemented -> superseded
 - [F-0007：把 workspace 中的目录和文本安全地交给 Agent 阅读](F-0007-workspace-read-tools.md) — implemented
 - [F-0008：只把完整结果写进 outputs，并返回可核对的 Artifact](F-0008-atomic-output-artifacts.md) — implemented
 - [F-0016：把模型、Tool 和 Event 接成一条有界的文件任务执行链](F-0016-bounded-context-agent-loop.md) — implemented
-- [F-0015：建立本地中文文档站](F-0015-local-starlight-docs-site.md) — implemented
+- [F-0015：建立中文文档站并发布到 GitHub Pages](F-0015-local-starlight-docs-site.md) — accepted
+  （本地站点、P1 渐进式阅读路径和 CLI 手册已实现；PR #14 Pages 发布扩展进行中）
 - [F-0017：配置自己的模型服务，并用真实模型完成可检查文件任务](F-0017-configurable-model-providers-live-gate.md) — implemented
 
 其余计划 Feature 见[路线图 Backlog](../project/roadmap.md#11-feature-backlog)。未创建 Spec 的名称只是

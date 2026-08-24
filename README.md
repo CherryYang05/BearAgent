@@ -69,7 +69,9 @@ uv run bearagent run inspect <run-id> --json
 uv run bearagent run events <run-id> --after-sequence 0 --limit 100 --json
 ```
 
-完整教程见[配置一次模型服务](site/src/content/docs/zh-cn/learn/configure-model-service.md)和
+完整配置教程见[配置一次模型服务](site/src/content/docs/zh-cn/learn/configure-model-service.md)，全部 CLI
+选项、输出、退出码和排错步骤见
+[P1 命令行完整使用手册](site/src/content/docs/zh-cn/guides/cli.md)，执行链解释见
 [运行与检查一次 Run](site/src/content/docs/zh-cn/learn/run-inspect-events.md)。
 
 ## 当前已经实现
