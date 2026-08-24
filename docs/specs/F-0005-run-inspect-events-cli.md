@@ -171,7 +171,7 @@ projection。回退后已有数据库和 `outputs/**` 保留。
 
 - profile、workspace、Run ID 或分页参数无效：在 Provider/Tool 调用前拒绝；未创建 Run；
 - 零模型预算：先保存 RunCreated/RunStarted，再以 `budget_exhausted` 终止；不创建 SDK client、不读取凭据；
-- Provider 凭据缺失：首个模型 Activity 保存为 `provider_authentication` failure，Run 以同一安全 Error
+- legacy RunProfile v1 的 Provider 环境凭据缺失：首个模型 Activity 保存为 `provider_authentication` failure，Run 以同一安全 Error
   终止；不打印 key、endpoint 或 SDK 原始异常；
 - 其他 client 配置无效：安全失败，不打印 endpoint 或 SDK 原始异常；
 - SQLite 初始化失败：不调用 Provider；若 Run 尚未创建，不伪造 Run ID 对应的事实；

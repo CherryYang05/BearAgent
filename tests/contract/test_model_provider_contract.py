@@ -212,6 +212,78 @@ def test_openai_adapter_translates_complete_function_call_and_request() -> None:
     assert "api_key" not in json.dumps(body)
 
 
+def test_openai_adapter_translates_multiple_function_calls_in_order() -> None:
+    calls = (
+        {
+            "type": "function_call",
+            "id": "item_1",
+            "call_id": "call_1",
+            "name": "read_file",
+            "arguments": '{"path":"docs/index.md"}',
+            "status": "completed",
+        },
+        {
+            "type": "function_call",
+            "id": "item_2",
+            "call_id": "call_2",
+            "name": "read_file",
+            "arguments": '{"path":"README.md"}',
+            "status": "completed",
+        },
+    )
+    provider = openai_provider(
+        sse(
+            *(
+                cast(
+                    dict[str, object],
+                    {
+                        "type": "response.output_item.done",
+                        "sequence_number": index,
+                        "output_index": index - 1,
+                        "item": call,
+                    },
+                )
+                for index, call in enumerate(calls, start=1)
+            ),
+            {
+                "type": "response.completed",
+                "sequence_number": 3,
+                "response": response_payload(output=calls),
+            },
+        )
+    )
+
+    events = asyncio.run(collect(provider, build_request(tools=True)))
+
+    tool_calls = tuple(event for event in events if isinstance(event, ModelToolCall))
+    assert tuple(call.provider_call_id for call in tool_calls) == ("call_1", "call_2")
+    assert tuple(dict(call.arguments) for call in tool_calls) == (
+        {"path": "docs/index.md"},
+        {"path": "README.md"},
+    )
+    assert isinstance(events[-1], ModelCompleted)
+    assert events[-1].finish_reason is ModelFinishReason.TOOL_CALLS
+
+
+def test_openai_adapter_rejects_malformed_usage() -> None:
+    payload = response_payload()
+    cast(dict[str, object], payload["usage"]).pop("input_tokens")
+    provider = openai_provider(
+        sse(
+            {
+                "type": "response.completed",
+                "sequence_number": 1,
+                "response": payload,
+            }
+        )
+    )
+
+    with pytest.raises(ModelProviderError) as caught:
+        asyncio.run(collect(provider, build_request()))
+
+    assert caught.value.info.code.value == "provider_protocol_error"
+
+
 def test_openai_adapter_serializes_deeply_frozen_tool_history() -> None:
     tool_call_id = ToolCallId.new()
     request = build_request().model_copy(
@@ -321,7 +393,7 @@ def test_openai_adapter_rejects_malformed_function_arguments(arguments: str) -> 
         asyncio.run(collect(provider, build_request(tools=True)))
 
 
-def test_openai_adapter_preserves_missing_usage_without_guessing() -> None:
+def test_openai_adapter_rejects_missing_usage_without_guessing() -> None:
     provider = openai_provider(
         sse(
             {
@@ -332,10 +404,8 @@ def test_openai_adapter_preserves_missing_usage_without_guessing() -> None:
         )
     )
 
-    events = asyncio.run(collect(provider, build_request()))
-
-    assert isinstance(events[-1], ModelCompleted)
-    assert events[-1].usage is None
+    with pytest.raises(ModelProviderError, match="omitted required usage"):
+        asyncio.run(collect(provider, build_request()))
 
 
 def test_openai_adapter_rejects_refusal_in_completed_output() -> None:

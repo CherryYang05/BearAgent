@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 from bearagent.adapters.testing import FakeTool
-from bearagent.domain.agent import AgentConfig, ModelPricing, RunInput
+from bearagent.domain.agent import AgentConfig, AgentSettings, ModelPricing, RunInput
 from bearagent.domain.ids import SessionId
 from bearagent.domain.model import ModelCompleted, ModelFinishReason, ModelUsage
 from bearagent.domain.runs import BudgetLimits
@@ -60,6 +60,10 @@ def agent_config() -> AgentConfig:
             output_microusd_per_million_tokens=8_000_000,
         ),
     )
+
+
+def agent_settings() -> AgentSettings:
+    return AgentSettings.model_validate(agent_config().model_dump(exclude={"model", "pricing"}))
 
 
 def budget_limits(**overrides: int) -> BudgetLimits:

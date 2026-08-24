@@ -13,16 +13,17 @@ sourceRefs:
   - F-0007
   - F-0008
   - F-0016
+  - F-0017
 ---
 
 模型请求读取 `docs/architecture/overview.md` 时，BearAgent 需要检查路径、调用文件工具、保存结果，
 再把内容交给下一次模型调用。这条路径跨过多个模块，但每个模块只负责其中一段。
 
 :::caution[图中同时包含当前连接和后续能力]
-当前已实现领域类型、Run/Activity 状态、Reducer、预算检查、SQLite EventStore、OpenAI Responses
+当前已实现领域类型、Run/Activity 状态、Reducer、预算检查、SQLite EventStore、三种显式模型协议
 adapter、Registry、固定 Policy、workspace 读写、Artifact、ContextBuilder 和 application Agent Loop。
-F-0005 已接通 production composition 与 `run/inspect/events`；真实模型退出演练尚未完成，用户审批和
-隔离环境属于 P3。
+`run/inspect/events` 已接通 catalog/profile 与 production composition，DeepSeek V4 suite v1.1.1
+真实 gate 已通过 5/5；用户审批和隔离环境属于 P3。
 :::
 
 ```mermaid

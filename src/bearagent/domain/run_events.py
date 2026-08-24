@@ -17,12 +17,14 @@ from bearagent.domain.model import (
     ModelFinishReason,
     ModelRequest,
 )
+from bearagent.domain.providers import ProviderSelection
 from bearagent.domain.runs import BudgetLimits
 from bearagent.domain.tools import ToolExecutionRecord, ToolRequest, ToolStatus
 
 RUN_EVENT_SCHEMA_VERSION = 1
 RUN_EVENT_SCHEMA_VERSION_V2 = 2
-LATEST_RUN_EVENT_SCHEMA_VERSION = RUN_EVENT_SCHEMA_VERSION_V2
+RUN_EVENT_SCHEMA_VERSION_V3 = 3
+LATEST_RUN_EVENT_SCHEMA_VERSION = RUN_EVENT_SCHEMA_VERSION_V3
 
 
 class RunCreatedPayload(DomainModel):
@@ -116,6 +118,12 @@ class RunCreatedPayloadV2(RunCreatedPayload):
 
     objective: str = Field(min_length=1, max_length=1_000_000)
     agent_config: AgentConfig
+
+
+class RunCreatedPayloadV3(RunCreatedPayloadV2):
+    """v3 Run creation fact with a non-secret Provider selection."""
+
+    provider_selection: ProviderSelection
 
 
 class RunStartedPayloadV2(RunStartedPayload):
@@ -229,6 +237,7 @@ type RunEventPayload = (
     | ToolCallCompletedPayload
     | ToolCallFailedPayload
     | RunCreatedPayloadV2
+    | RunCreatedPayloadV3
     | RunStartedPayloadV2
     | RunSucceededPayloadV2
     | RunFailedPayloadV2
@@ -268,6 +277,18 @@ _PAYLOAD_TYPES = {
     ("ToolCallStarted", RUN_EVENT_SCHEMA_VERSION_V2): ToolCallStartedPayloadV2,
     ("ToolCallCompleted", RUN_EVENT_SCHEMA_VERSION_V2): ToolCallCompletedPayloadV2,
     ("ToolCallFailed", RUN_EVENT_SCHEMA_VERSION_V2): ToolCallFailedPayloadV2,
+    ("RunCreated", RUN_EVENT_SCHEMA_VERSION_V3): RunCreatedPayloadV3,
+    ("RunStarted", RUN_EVENT_SCHEMA_VERSION_V3): RunStartedPayloadV2,
+    ("RunSucceeded", RUN_EVENT_SCHEMA_VERSION_V3): RunSucceededPayloadV2,
+    ("RunFailed", RUN_EVENT_SCHEMA_VERSION_V3): RunFailedPayloadV2,
+    ("ModelCallRequested", RUN_EVENT_SCHEMA_VERSION_V3): ModelCallRequestedPayloadV2,
+    ("ModelCallStarted", RUN_EVENT_SCHEMA_VERSION_V3): ModelCallStartedPayloadV2,
+    ("ModelCallCompleted", RUN_EVENT_SCHEMA_VERSION_V3): ModelCallCompletedPayloadV2,
+    ("ModelCallFailed", RUN_EVENT_SCHEMA_VERSION_V3): ModelCallFailedPayloadV2,
+    ("ToolCallRequested", RUN_EVENT_SCHEMA_VERSION_V3): ToolCallRequestedPayloadV2,
+    ("ToolCallStarted", RUN_EVENT_SCHEMA_VERSION_V3): ToolCallStartedPayloadV2,
+    ("ToolCallCompleted", RUN_EVENT_SCHEMA_VERSION_V3): ToolCallCompletedPayloadV2,
+    ("ToolCallFailed", RUN_EVENT_SCHEMA_VERSION_V3): ToolCallFailedPayloadV2,
 }
 
 RUN_EVENT_PAYLOAD_TYPES = MappingProxyType(_PAYLOAD_TYPES)

@@ -2,11 +2,13 @@
 
 from bearagent.domain.agent import (
     AgentConfig,
+    AgentSettings,
     ContextBuildReport,
     ContextBuildResult,
     ModelPricing,
     RunInput,
     RunProfile,
+    RunProfileV2,
     RunResult,
 )
 from bearagent.domain.artifacts import (
@@ -50,6 +52,7 @@ from bearagent.domain.model import (
     ModelToolDefinition,
     ModelUsage,
 )
+from bearagent.domain.providers import ModelProtocol, ProviderSelection
 from bearagent.domain.queries import EventPage, RunInspection
 from bearagent.domain.run_events import (
     ModelCallCompletedPayload,
@@ -62,6 +65,7 @@ from bearagent.domain.run_events import (
     ModelCallStartedPayloadV2,
     RunCreatedPayload,
     RunCreatedPayloadV2,
+    RunCreatedPayloadV3,
     RunFailedPayload,
     RunFailedPayloadV2,
     RunStartedPayload,
@@ -108,6 +112,7 @@ __all__ = [
     "ActivityState",
     "ActivityStatus",
     "AgentConfig",
+    "AgentSettings",
     "Artifact",
     "ArtifactEncoding",
     "ArtifactId",
@@ -151,19 +156,23 @@ __all__ = [
     "ModelToolDefinition",
     "ModelUsage",
     "ModelPricing",
+    "ModelProtocol",
     "OpaqueId",
     "PolicyDecision",
     "PolicyOutcome",
     "PolicyReason",
     "PreparedToolRequest",
+    "ProviderSelection",
     "RunId",
     "RunCreatedPayload",
     "RunCreatedPayloadV2",
     "RunFailedPayload",
+    "RunCreatedPayloadV3",
     "RunFailedPayloadV2",
     "RunInput",
     "RunInspection",
     "RunProfile",
+    "RunProfileV2",
     "RunResult",
     "RunStartedPayload",
     "RunStartedPayloadV2",

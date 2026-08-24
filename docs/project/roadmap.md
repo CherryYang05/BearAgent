@@ -1,8 +1,8 @@
 ---
 title: BearAgent Roadmap
 status: accepted
-version: 0.9
-last_verified: 2026-08-20
+version: 0.12
+last_verified: 2026-08-23
 ---
 
 # BearAgent 项目路线图
@@ -28,7 +28,8 @@ P3 危险操作获准后在隔离环境执行
 ## 2. 固定产品范围
 
 首个任务是仓库与本地文档研究：在指定 workspace 内查找和比较资料，并把报告或说明写入
-`outputs/**`。P1 不联网，也不修改已有源码和输入文件。
+`outputs/**`。P1 的文件 Tool 不联网，也不修改已有源码和输入文件；只有显式选择的模型 adapter
+可以访问配置的 HTTPS endpoint。
 
 P0 至 P3 固定为单用户、单 Agent、单进程、SQLite 和 CLI 优先。所有外部动作经过统一 Tool
 executor；主 Runtime 进程不执行模型生成的 shell。Web、MCP、Memory、多个 Agent 和分布式 worker
@@ -39,7 +40,7 @@ executor；主 Runtime 进程不执行模型生成的 shell。Web、MCP、Memory
 | 阶段 | 状态 | 用户得到什么 | 关闭阶段的关键证据 |
 |---|---|---|---|
 | P0 工程基础 | 已完成 | 仓库可安装、测试，边界和开发流程明确 | 干净安装、CLI、CI、依赖边界、文档规则 |
-| P1 可检查执行 | 进行中 | 固定本地文件任务可完成，过程和失败可查看 | 任务集、路径拒绝、预算终止、完整 Event |
+| P1 可检查执行 | 已完成 | 固定本地文件任务可完成，过程和失败可查看 | Fake 5/5、真实 5/5、路径拒绝、预算终止、完整 Event |
 | P2 失败恢复 | 未开始 | 中断后只从能确认的位置继续 | kill point、状态重建、不重复写入、`UNKNOWN` |
 | P3 权限与隔离 | 未开始 | 危险操作获准后执行，代码与宿主隔离，可安全自托管 | Approval 篡改测试、runner 隔离、备份恢复、HTTPS |
 | P4 日常使用 | 未开始 | Skill、MCP、Web 和 Memory 依次接入 | 新入口不绕过原有记录和权限路径 |
@@ -67,9 +68,10 @@ Feature 可以根据 Spec、Plan、测试和文档流程推进。
 
 ## 5. P1：可检查执行
 
-**状态：进行中（2026-08-10 开始）。** F-0001 至 F-0008、F-0015 和 F-0016 已实现。F-0005 已接通
-CLI、production composition 和查询入口。P1 仍需单独决定真实模型 API/4-of-5 gate，并完成整个
-里程碑 Reality Check；F-0005 完成不会自动关闭 P1。
+**状态：已完成（2026-08-23）。** F-0001 至 F-0008、F-0015、F-0016 和 F-0017 均已实现。
+F-0017 交付直接填写本机 key、拒绝 pricing 且被 Git 忽略的 config v1、RunProfile v2、三种协议
+adapter、Event v3 和默认关闭的 live runner。suite v1.1.1 又通过 production composition 完成四个
+普通任务与安全 canary；最终离线 Reality Check 和脱敏报告均已完成。
 
 ### 5.1 用户结果
 
@@ -103,7 +105,8 @@ F-0003 已完成 EventStore port、SQLite adapter、schema v1 和 projection。�
 
 #### 模型和 Agent Loop
 
-- 一个真实 Provider adapter，外部 SDK 对象在边界翻译；
+- 三种显式 wire protocol adapter，外部 SDK 对象在边界翻译；
+- 一个配置只选择一个 adapter，不检测厂商，也不 fallback；
 - Fake Provider 驱动确定性 Loop 测试；
 - ContextBuilder 按稳定顺序组织 Runtime 规则、目标、必要消息、Tool schema 和 ToolResult；
 - Context 和 ToolResult 有明确字符/byte 上限，大结果使用确定性 preview；
@@ -113,9 +116,9 @@ F-0003 已完成 EventStore port、SQLite adapter、schema v1 和 projection。�
 P1 不做自动摘要 Memory 或复杂上下文压缩。
 
 F-0004 已完成 Provider-neutral 模型数据与 port、确定性测试 adapter 和首个 OpenAI Responses 流式
-adapter。F-0016 已由 ContextBuilder 和 AgentLoop 调用该 port；F-0005 已在 `bootstrap.py` 组装生产
-adapter、SQLite、Policy 和 workspace Tools。当前自动证据仍来自 Fake Provider，不代表真实模型 gate
-已经通过。
+adapter。F-0017 又实现 OpenAI Chat Completions 与 Anthropic Messages adapter，并由 `bootstrap.py`
+按 catalog 的显式 protocol 选择一个生产 adapter。三个 adapter 共享 contract/security 测试，缺 usage、
+未知关键流事件、不完整 ToolCall 或无法安全表示的隐藏 reasoning 都失败。真实 gate 证据已通过脱敏复核。
 
 #### 受限文件工具
 
@@ -142,8 +145,9 @@ ToolExecutor 的记录式入口，并把原始/规范化请求、Policy 决定�
 
 F-0016 已交付五个版本化 Fake Provider 任务，并在内存/SQLite Store 上验证 5/5。F-0005 让相同任务
 再通过 production composition、真实 SQLite 和 workspace Tools 验证 5/5，并接通 CLI/query 输出。
-OpenAI SDK client 只在首个模型 Activity 开始时创建，因此零预算和缺少凭据都会留下明确、可查询的
-terminal Run。真实模型演练不是 F-0005 的完成门，留给 Feature 后的 P1 决定。
+F-0017 让 Fake 与 live runner 共用 objective、fixture、预算和确定性 rubric；每个真实任务使用独立
+workspace/SQLite，并在完成后重开查询。客户端只在首个模型 Activity 创建，因此零预算和缺少所选
+凭据都会留下明确结果。live preflight 未通过时不会创建数据库、workspace、SDK client 或 Run。
 
 ### 5.3 P1 明确不做
 
@@ -163,7 +167,9 @@ terminal Run。真实模型演练不是 F-0005 的完成门，留给 Feature 后
 6. [F-0008：`outputs/**` 原子写和 Artifact](../specs/F-0008-atomic-output-artifacts.md)——已实现；
 7. [F-0016：ContextBuilder、有界 Loop、版本化 Agent 配置和任务集](../specs/F-0016-bounded-context-agent-loop.md)
    ——已实现；
-8. [F-0005：`run/inspect/events` CLI 与端到端演示](../specs/F-0005-run-inspect-events-cli.md)——已实现。
+8. [F-0005：`run/inspect/events` CLI 与端到端演示](../specs/F-0005-run-inspect-events-cli.md)——已实现；
+9. [F-0017：用户配置模型协议与 P1 live gate](../specs/F-0017-configurable-model-providers-live-gate.md)
+   ——已实现；真实 suite v1.1.1 通过 5/5。
 
 每次只激活一个主 Feature。可以根据依赖调整顺序，但不能并行铺开整个 Backlog。
 
@@ -181,7 +187,8 @@ bearagent run events <run-id> --json
 ### 5.6 P1 退出证据
 
 - Fake Provider 完成 5/5 固定任务，并断言预期工具路径和终止原因；
-- 真实模型在固定 workspace、配置和预算下完成至少 4/5，无需修改代码或 Prompt；
+- 一个显式选择的真实配置完成四个普通任务和一个安全 canary，无需修改代码、Prompt 或 rubric；
+- live preflight 固定 Provider、model、pricing snapshot、commit 和 suite cost cap，并在调用前显示最坏估算；
 - 每个 Artifact 有 hash，任务失败可以从记录复现；
 - 路径逃逸、超大读写和 timeout 产生结构化拒绝；
 - 每个 Activity 可由 `inspect` 关联到有序 Event；
@@ -193,7 +200,7 @@ bearagent run events <run-id> --json
 
 ## 6. P2：失败恢复
 
-**状态：未开始。必须在 P1 关闭后启动。**
+**状态：未开始。P1 已关闭；开始 P2 前仍需接受对应 Feature Spec。**
 
 ### 6.1 用户结果
 
@@ -320,6 +327,12 @@ Memory、受控联网和 Provider 配置体验。
 P5 把 P1 的任务、P2 的恢复演练和 P3 的安全演练接入统一追踪，比较模型、Prompt、Skill 和 Tool
 版本带来的答案、执行路径、成本和延迟变化。它负责平台化早期证据，不是第一次开始评测。
 
+费用估算不回填到 P1 的 `config.json`。P5 在开始相应 Feature 前设计独立、版本化的
+`PricingCatalog` 和费用策略：实际 token usage 继续来自 Provider，估算值必须记录价格来源、生效时间
+和版本；没有可用价格时显示为未定价，而不是把 `0` 表述为真实零费用。只有无人值守执行、多模型
+比较或明确金额上限证明需求后，才加入按金额阻止后续 Activity 的策略。P1 的真实模型 gate 继续使用
+与用户配置分离的固定 pricing snapshot 和 suite cost cap。
+
 关闭 P5 时，固定评测可在 CI/nightly 复现；修改模型或 Tool schema 后能看到答案和 trace 回归；
 文档中的每项核心承诺都能链接到代码或测试证据。
 
@@ -354,6 +367,7 @@ Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；
 8. [F-0016：ContextBuilder、有界 Loop、Agent 配置和评测任务](../specs/F-0016-bounded-context-agent-loop.md) — implemented
 9. [F-0005：`run/inspect/events` CLI](../specs/F-0005-run-inspect-events-cli.md) — implemented
 10. [F-0015：本地 Starlight 文档站](../specs/F-0015-local-starlight-docs-site.md) — implemented
+11. [F-0017：用户配置模型服务和 P1 live-model gate](../specs/F-0017-configurable-model-providers-live-gate.md) — implemented
 
 ### P2
 

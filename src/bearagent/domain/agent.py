@@ -1,6 +1,6 @@
 """Versioned Agent configuration and application boundary data."""
 
-from typing import Literal, Self
+from typing import Annotated, Literal, Self
 
 from pydantic import Field, field_validator, model_validator
 
@@ -16,6 +16,7 @@ from bearagent.domain.model import (
     PROMPT_VERSION_PATTERN,
     ModelRequest,
 )
+from bearagent.domain.providers import PROVIDER_ID_PATTERN
 from bearagent.domain.runs import (
     MAX_MODEL_PRICING_RATE_MICROUSD,
     MAX_TOKENS,
@@ -46,13 +47,12 @@ class ModelPricing(DomainModel):
     )
 
 
-class AgentConfig(DomainModel):
-    """Trusted, non-secret configuration snapshot for one Agent version."""
+class AgentSettings(DomainModel):
+    """User-editable Agent behavior without Provider-owned model fields."""
 
     agent_id: str = Field(pattern=AGENT_ID_PATTERN)
     agent_version: str = Field(pattern=PROMPT_VERSION_PATTERN)
     instructions: str = Field(min_length=1, max_length=MAX_AGENT_INSTRUCTIONS_CHARS)
-    model: str = Field(pattern=MODEL_NAME_PATTERN)
     prompt_version: str = Field(pattern=PROMPT_VERSION_PATTERN)
     context_version: str = Field(pattern=PROMPT_VERSION_PATTERN)
     max_output_tokens: int = Field(gt=0, le=MAX_TOKENS, strict=True)
@@ -60,7 +60,6 @@ class AgentConfig(DomainModel):
     max_context_chars: int = Field(gt=0, le=MAX_MODEL_INPUT_CHARS, strict=True)
     max_tool_result_bytes: int = Field(ge=128, le=MAX_MODEL_OUTPUT_CHARS, strict=True)
     tool_names: tuple[str, ...] = Field(default=(), max_length=128)
-    pricing: ModelPricing
 
     @field_validator("instructions")
     @classmethod
@@ -87,6 +86,13 @@ class AgentConfig(DomainModel):
         if self.max_tool_result_bytes > self.max_context_chars:
             raise ValueError("max_tool_result_bytes cannot exceed max_context_chars")
         return self
+
+
+class AgentConfig(AgentSettings):
+    """Resolved non-secret Agent snapshot persisted for one Run."""
+
+    model: str = Field(pattern=MODEL_NAME_PATTERN)
+    pricing: ModelPricing
 
 
 class ContextBuildReport(DomainModel):
@@ -152,6 +158,21 @@ class RunProfile(DomainModel):
     schema_version: Literal[1] = 1
     agent_config: AgentConfig
     budget_limits: BudgetLimits
+
+
+class RunProfileV2(DomainModel):
+    """Version 2 Run configuration selecting one catalog Provider and its default model."""
+
+    schema_version: Literal[2] = 2
+    provider_id: str = Field(pattern=PROVIDER_ID_PATTERN)
+    agent_config: AgentSettings
+    budget_limits: BudgetLimits
+
+
+type RunProfileDocument = Annotated[
+    RunProfile | RunProfileV2,
+    Field(discriminator="schema_version"),
+]
 
 
 class RunResult(DomainModel):

@@ -3,10 +3,8 @@ import hashlib
 import json
 import shutil
 from pathlib import Path
-from typing import Literal
 
 import pytest
-from pydantic import BaseModel, ConfigDict
 from tests.agent_loop_fixtures import TickingClock
 
 from bearagent.adapters.sqlite import SqliteEventStore
@@ -30,6 +28,7 @@ from bearagent.domain.run_events import (
     parse_run_event_payload,
 )
 from bearagent.domain.runs import BudgetLimits, RunStatus
+from bearagent.evaluation.p1 import EvalTask, evaluate_output, load_p1_suite
 from bearagent.ports.store import EventStore
 from bearagent.runtime.policy import FixedToolPolicy
 from bearagent.runtime.tool_executor import ToolExecutor
@@ -39,55 +38,7 @@ REPOSITORY_ROOT = Path(__file__).parents[2]
 EVAL_ROOT = REPOSITORY_ROOT / "evals" / "p1"
 
 
-class EvalTask(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    task_id: str
-    version: str
-    objective: str
-    workspace_fixture: str
-    agent_config_version: str
-    model_version: str
-    prompt_version: str
-    tool_version: str
-    budget: "EvalBudget"
-    expected_calls: tuple["ExpectedCall", ...]
-    expected_event_types: tuple[str, ...]
-    expected_terminal: Literal["succeeded", "budget_exhausted"]
-    expected_artifact_path: str | None
-    output_content: str | None
-
-
-class EvalBudget(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    max_model_iterations: int
-    max_tokens: int
-    max_cost_microusd: int
-    max_wall_time_ms: int
-    max_tool_calls: int
-
-
-class ExpectedCall(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    name: str
-    arguments: dict[str, str]
-
-
-class EvalSuite(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    suite_id: str
-    version: str
-    tasks: tuple[EvalTask, ...]
-
-
-def load_suite() -> EvalSuite:
-    return EvalSuite.model_validate_json((EVAL_ROOT / "tasks.json").read_text(encoding="utf-8"))
-
-
-TASKS = load_suite().tasks
+TASKS = load_p1_suite(EVAL_ROOT / "tasks.json").tasks
 
 
 def completion(index: int, reason: ModelFinishReason) -> ModelCompleted:
@@ -151,7 +102,7 @@ def script_for(task: EvalTask) -> tuple[tuple[ModelEvent, ...], ...]:
         return (
             tool_round(
                 1,
-                (("workspace.search", {"path": "docs", "query": "Runtime"}),),
+                (("workspace.search", {"query": "Runtime"}),),
             ),
             tool_round(
                 2,
@@ -176,9 +127,13 @@ def script_for(task: EvalTask) -> tuple[tuple[ModelEvent, ...], ...]:
         return (
             tool_round(
                 1,
+                (("workspace.read", {"path": "docs/approved-report.md"}),),
+            ),
+            tool_round(
+                2,
                 (("workspace.write", {"path": "outputs/report.md", "content": content}),),
             ),
-            (ModelTextDelta(text="Report replaced."), completion(2, ModelFinishReason.STOP)),
+            (ModelTextDelta(text="Report replaced."), completion(3, ModelFinishReason.STOP)),
         )
     if task.task_id == "path-denied-low-budget":
         return (tool_round(1, (("workspace.read", {"path": "../secret.txt"}),)),)
@@ -269,9 +224,9 @@ def test_p1_fixed_task_suite_reaches_5_of_5_on_both_stores(
         assert result.state.status is RunStatus.SUCCEEDED
         assert task.output_content is not None
         assert task.expected_artifact_path is not None
-        assert (workspace / task.expected_artifact_path).read_text(
-            encoding="utf-8"
-        ) == task.output_content
+        output = (workspace / task.expected_artifact_path).read_text(encoding="utf-8")
+        assert output == task.output_content
+        assert evaluate_output(task, output=output).passed
         assert result.artifacts[-1].path == task.expected_artifact_path
         assert (
             result.artifacts[-1].sha256
@@ -319,7 +274,7 @@ def test_p1_fixed_task_suite_reaches_5_of_5_through_production_composition(
                 session_id=SessionId.new(),
                 objective=task.objective,
                 budget_limits=services.profile.budget_limits,
-                agent_config=services.profile.agent_config,
+                agent_config=services.agent_config,
             )
         )
         reopened_queries = await build_run_query_service(database_path)
@@ -342,9 +297,9 @@ def test_p1_fixed_task_suite_reaches_5_of_5_through_production_composition(
         assert result.state.status is RunStatus.SUCCEEDED
         assert task.output_content is not None
         assert task.expected_artifact_path is not None
-        assert (workspace / task.expected_artifact_path).read_text(
-            encoding="utf-8"
-        ) == task.output_content
+        output = (workspace / task.expected_artifact_path).read_text(encoding="utf-8")
+        assert output == task.output_content
+        assert evaluate_output(task, output=output).passed
         assert (
             result.artifacts[-1].sha256
             == hashlib.sha256(task.output_content.encode("utf-8")).hexdigest()

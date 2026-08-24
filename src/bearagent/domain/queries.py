@@ -8,6 +8,7 @@ from bearagent.domain._base import DomainModel
 from bearagent.domain.artifacts import Artifact
 from bearagent.domain.events import Event
 from bearagent.domain.ids import RunId
+from bearagent.domain.providers import ProviderSelection
 from bearagent.domain.runs import RunState
 
 MAX_EVENT_PAGE_LIMIT = 10_000
@@ -20,6 +21,7 @@ class RunInspection(DomainModel):
     run_id: RunId
     state: RunState
     artifacts: tuple[Artifact, ...] = ()
+    provider_selection: ProviderSelection | None = None
 
     @model_validator(mode="after")
     def require_one_consistent_run(self) -> Self:

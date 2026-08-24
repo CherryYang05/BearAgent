@@ -4,7 +4,7 @@
 <p><strong>让个人 Agent 在本地可靠地完成长任务</strong></p>
 <p><sub>过程能查看 · 结果不明时不猜 · 危险操作必须获准</sub></p>
 <p>
-  <a href="#当前状态"><img alt="P1 in progress" src="https://img.shields.io/badge/status-P1%20in%20progress-2563EB"></a>
+  <a href="#当前状态"><img alt="P1 complete" src="https://img.shields.io/badge/status-P1%20complete-16A34A"></a>
   <a href="https://www.python.org/"><img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&amp;logoColor=white"></a>
   <a href="https://docs.astral.sh/uv/"><img alt="uv package manager" src="https://img.shields.io/badge/package%20manager-uv-DE5FE9"></a>
   <a href="https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml/badge.svg"></a>
@@ -12,9 +12,9 @@
 </div>
 
 > [!IMPORTANT]
-> BearAgent 已接通本地 `run/inspect/events` CLI、SQLite、OpenAI Responses adapter、受限 workspace
-> Tools 和有界 Agent Loop。自动验证使用 Fake Provider，尚未用真实模型完成 P1 的 4/5 退出演练，
-> 也还没有 P2 的崩溃恢复；因此 P1 仍是进行中。
+> BearAgent 已接通本地 `run/inspect/events` CLI、SQLite、三种模型协议 adapter、受限 workspace
+> Tools 和有界 Agent Loop。F-0017 的 DeepSeek V4 suite v1.1.1 真实 gate 已通过 5/5，P1 已关闭；
+> P2 的崩溃恢复、Attempt 和 `UNKNOWN` 仍未开始。
 
 ## 从一个文件任务说起
 
@@ -44,14 +44,14 @@ BearAgent 不以复刻 Manus、Claude Code 或堆叠模型、工具和 Agent 角
 
 ## 当前状态
 
-| 已有代码 | P1 还要确认/验证 | 更晚再做 |
+| 已有代码 | P1 完成证据 | 更晚再做 |
 |---|---|---|
-| Python 3.12、uv、CI 与文档站 | 是否把真实模型 API 演练保留为 P1 关闭门 | P2：崩溃恢复、Attempt、`UNKNOWN` |
-| `doctor`、`run`、`inspect`、`events` | 若保留，完成真实模型固定任务 4/5 | P3：Approval、隔离执行、安全自托管 |
-| 类型化领域数据、Reducer 与五类预算 | 完整执行 P1 Reality Check | P4：Skill、MCP、Web、Memory |
-| SQLite EventStore 与 version 1 migration | 核对文档、安装包和失败演练证据 | P5：持续追踪与跨版本评测 |
-| OpenAI adapter、Agent Loop 和 production composition | 不在 F-0005 内读取真实凭据 | P6+：多个 Agent、浏览器、分布式执行 |
-| Registry、固定 Policy 与受限 workspace Tools |  | 只有真实需求出现后再扩展 |
+| Python 3.12、uv、CI 与文档站 | 全量测试、链接、35 页站点、sdist/wheel 和隔离 smoke 通过 | P2：崩溃恢复、Attempt、`UNKNOWN` |
+| `doctor`、`run`、`inspect`、`events` | 四个普通任务与一个安全 canary 真实 5/5 | P3：Approval、隔离执行、安全自托管 |
+| 类型化领域数据、Reducer 与五类预算 | 最终 P1 Reality Check 通过 | P4：Skill、MCP、Web、Memory |
+| SQLite EventStore 与 version 1 migration | 五个独立数据库重开后状态、Event 和 Artifact 一致 | P5：持续追踪与跨版本评测 |
+| 三种模型协议 adapter、Agent Loop 和 production composition | Fake 5/5 与 DeepSeek V4 live 5/5 分开记录 | P6+：多个 Agent、浏览器、分布式执行 |
+| Registry、固定 Policy 与受限 workspace Tools | 路径拒绝、预算终止和 canary 检查通过 | 只有真实需求出现后再扩展 |
 
 当前事实见[路线图](docs/project/roadmap.md)和[公开状态页](site/src/content/docs/zh-cn/project/status.md)。
 
@@ -79,19 +79,32 @@ uv run python -m bearagent doctor --json
 F-0005 的命令入口已经实现：
 
 ```powershell
-uv run bearagent run "整理 workspace 中的资料" --profile data/p1-run-profile.json
+uv run bearagent run "整理 workspace 中的资料" --profile data/p1-run-profile.json --config data/config.json
 uv run bearagent run inspect <run-id> --json
 uv run bearagent run events <run-id> --after-sequence 0 --limit 100 --json
 ```
 
-Run profile 只保存非敏感 `AgentConfig` 和预算；API key/base URL 只能来自进程环境。当前仓库只用
-注入式 Fake Provider 自动验证这条链，真实模型配置和 P1 退出演练将在 F-0005 后单独决定。详见
-[从命令行运行并检查一次 Run](site/src/content/docs/zh-cn/learn/run-inspect-events.md)。
+F-0017 把“服务怎样连接”和“本次 Run 用哪个服务”分开：
 
-[version 1 安全模板](docs/reference/run-profile-v1.example.json)把预算全部设为 0。复制后执行 `run` 会
-保存一个明确的 `budget_exhausted` Run，但不会创建 OpenAI SDK client、读取凭据或调用模型/Tool。只有
-在确认真实 API 演练方案，并填入真实 model、pricing version、费率和非零预算后，才应把它保存为
-`data/p1-run-profile.json`。
+- 根目录的 [config 示例](config.example.json)保存厂商名、协议、base URL、
+  直接填写的本机 key、模型列表和默认模型；
+- [RunProfile v2 示例](examples/run-profile-v2.example.json)通过 `provider_id` 选服务，并保存
+  Agent 指令、Tool 白名单和预算，不重复保存 model；
+- [配置参考](docs/reference/configuration.md)记录字段类型、校验规则、选择行为和密钥边界；
+- `data/config.json` 被 Git 忽略且拒绝 `pricing`；真实 key 只写在这份本机 config 中。objective 每次可以不同，不需要重新生成配置。
+
+当前 production composition 支持 `openai_responses`、`openai_chat_completions` 和
+`anthropic_messages` 三种 wire protocol。它不会根据厂商、URL 或 model 猜协议，也不会失败后
+自动切换 endpoint。RunCreated v3 只保存可审计的 provider/model/protocol/pricing 选择，不保存 base URL、
+key。详见[配置一次模型服务，运行不同目标](site/src/content/docs/zh-cn/learn/configure-model-service.md)
+和[从命令行运行并检查一次 Run](site/src/content/docs/zh-cn/learn/run-inspect-events.md)。
+
+v1/v2 安全模板都把预算设为 0。执行后会保存明确的 `budget_exhausted` Run，不创建 SDK client，也不
+调用模型或 Tool。普通 Run 的内部价格版本是 `unpriced`。F-0017 的 live runner 也默认关闭；只有显式
+确认 provider、model、独立 pricing snapshot、commit 和总费用上限后才允许产生真实请求。
+2026-08-23 的 suite v1.1.1 使用 DeepSeek V4 经 production composition 通过 5/5；脱敏证据见
+[F-0017 P1 live report v1](docs/evidence/F-0017-p1-live-report-v1.json)。
+
 
 ## 开发和验证
 
@@ -131,7 +144,7 @@ src/bearagent/
 | 阶段 | 用户得到什么 | 状态 |
 |---|---|---|
 | P0 工程基础 | 仓库可安装、测试，开发规则明确 | 已完成 |
-| P1 可检查执行 | 本地文件任务可完成，过程和失败可查看 | 进行中 |
+| P1 可检查执行 | 本地文件任务可完成，过程和失败可查看 | 已完成 |
 | P2 失败恢复 | 中断后只从能确认的位置继续 | 未开始 |
 | P3 权限与隔离 | 危险操作获准后执行，代码与宿主隔离 | 未开始 |
 | P4 日常使用 | Skill、MCP、Web、Memory 依次接入 | 未开始 |

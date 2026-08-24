@@ -63,6 +63,15 @@ def render_inspection(inspection: RunInspection) -> str:
             f"cost_microusd={usage.cost_microusd}, tools={usage.tool_calls}"
         ),
     ]
+    if inspection.provider_selection is not None:
+        selection = inspection.provider_selection
+        lines.extend(
+            (
+                f"Provider ID: {selection.provider_id}",
+                f"Provider protocol: {selection.protocol.value}",
+                f"Provider config version: {selection.config_version}",
+            )
+        )
     for activity in state.activities:
         label = activity.kind.value
         if activity.tool_name is not None:

@@ -8,6 +8,7 @@ sourceRefs:
   - ai-development-sop
   - F-0016
   - F-0005
+  - F-0017
 ---
 
 开发者文档不复制 Spec，也不把每个目录重新列一遍。它负责回答三个问题：代码从哪里进入、关键
@@ -26,7 +27,7 @@ sourceRefs:
 - [F-0001：内部数据类型](domain-contracts.md)——ID、Message、Error、Event 以及模型 adapter 的翻译边界；
 - [F-0002：状态和预算](run-reducer-and-budgets.md)——具体 Event、Reducer、预算检查和修改顺序；
 - [F-0003：SQLite EventStore](sqlite-event-store.md)——transaction、migration、projection 和故障测试；
-- [F-0004：ModelProvider](model-provider.md)——Responses 流式翻译、资源上限和安全错误；
+- [F-0004/F-0017：ModelProvider 与协议 adapter](model-provider.md)——显式 protocol factory、三种流式翻译、Event v3 和 live gate；
 - [F-0006：Tool 执行边界](tool-execution-boundary.md)——Registry、参数准备、默认拒绝 Policy 和统一 Executor；
 - [F-0007：workspace 只读 Tool](workspace-read-tools.md)——跨平台路径边界、list/read/search 和安全测试；
 - [F-0008：原子输出与 Artifact](atomic-output-artifacts.md)——同目录暂存、原子提交、结果元数据和故障窗口；

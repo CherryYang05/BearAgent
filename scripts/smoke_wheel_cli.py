@@ -10,7 +10,7 @@ from typer.testing import CliRunner
 import bearagent.interfaces.cli.main as cli_main
 from bearagent.adapters.testing import ScriptedFakeModelProvider
 from bearagent.bootstrap import RunServices, build_run_services
-from bearagent.domain.agent import AgentConfig, ModelPricing, RunProfile
+from bearagent.domain.agent import AgentSettings, RunProfileV2
 from bearagent.domain.ids import IdGenerator
 from bearagent.domain.model import ModelCompleted, ModelFinishReason, ModelTextDelta, ModelUsage
 from bearagent.domain.runs import BudgetLimits
@@ -39,9 +39,33 @@ def main() -> None:
         root = Path(temporary)
         profile_path = root / "profile.json"
         database_path = root / "events.db"
+        config_path = root / "config.json"
         profile = _profile()
         profile_path.write_text(
             json.dumps(profile.model_dump(mode="json")),
+            encoding="utf-8",
+        )
+        config_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "providers": [
+                        {
+                            "provider_id": "wheel-smoke",
+                            "name": "Wheel Smoke Provider",
+                            "protocol": "openai_chat_completions",
+                            "base_url": "https://wheel-smoke.invalid/v1",
+                            "api_key": "offline-wheel-smoke-key",
+                            "models": [
+                                {
+                                    "model_id": "wheel-smoke-model",
+                                }
+                            ],
+                            "default_model": "wheel-smoke-model",
+                        }
+                    ],
+                }
+            ),
             encoding="utf-8",
         )
         run = runner.invoke(
@@ -51,6 +75,8 @@ def main() -> None:
                 "wheel smoke task",
                 "--profile",
                 str(profile_path),
+                "--config",
+                str(config_path),
                 "--workspace",
                 str(root),
                 "--database",
@@ -81,6 +107,7 @@ def _inject_provider(provider: ModelProvider) -> None:
     async def build_with_fake(
         *,
         profile_path: str | os.PathLike[str],
+        config_path: str | os.PathLike[str],
         workspace_path: str | os.PathLike[str],
         database_path: str | os.PathLike[str],
         model_provider: ModelProvider | None = None,
@@ -89,6 +116,7 @@ def _inject_provider(provider: ModelProvider) -> None:
         del model_provider
         return await build_run_services(
             profile_path=profile_path,
+            config_path=config_path,
             workspace_path=workspace_path,
             database_path=database_path,
             model_provider=provider,
@@ -98,13 +126,13 @@ def _inject_provider(provider: ModelProvider) -> None:
     cli_main.build_run_services = build_with_fake
 
 
-def _profile() -> RunProfile:
-    return RunProfile(
-        agent_config=AgentConfig(
+def _profile() -> RunProfileV2:
+    return RunProfileV2(
+        provider_id="wheel-smoke",
+        agent_config=AgentSettings(
             agent_id="wheel-smoke-agent",
             agent_version="v1",
             instructions="Return a short offline smoke-test response.",
-            model="wheel-smoke-model",
             prompt_version="v1",
             context_version="v1",
             max_output_tokens=128,
@@ -112,11 +140,6 @@ def _profile() -> RunProfile:
             max_context_chars=16_384,
             max_tool_result_bytes=4_096,
             tool_names=(),
-            pricing=ModelPricing(
-                version="offline-v1",
-                input_microusd_per_million_tokens=0,
-                output_microusd_per_million_tokens=0,
-            ),
         ),
         budget_limits=BudgetLimits(
             max_model_iterations=1,
