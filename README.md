@@ -4,7 +4,7 @@
   <p><strong>让个人 Agent 在本地可靠地完成长任务。</strong></p>
   <p>每一步可查看 · 结果不明时不乱重试 · 危险操作不由模型授权</p>
   <p>
-    <a href="#项目状态"><img alt="P1 complete" src="https://img.shields.io/badge/status-P1%20complete-16A34A"></a>
+    <a href="#当前已经实现"><img alt="Local CLI ready" src="https://img.shields.io/badge/status-local%20CLI%20ready-16A34A"></a>
     <a href="https://www.python.org/"><img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&amp;logoColor=white"></a>
     <a href="https://docs.astral.sh/uv/"><img alt="uv" src="https://img.shields.io/badge/package%20manager-uv-DE5FE9"></a>
     <a href="https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml/badge.svg"></a>
@@ -23,35 +23,11 @@ BearAgent 是一个 local-first 的个人 Agent Runtime。它把模型调用、T
 当前第一个可用场景是仓库与本地文档研究：Agent 可以在指定 workspace 中查找、读取和比较资料，
 并且只向 `outputs/**` 写入结果。
 
-> [!IMPORTANT]
-> P1 已完成可检查执行。进程重启后自动恢复、Attempt、`UNKNOWN`、用户 Approval 和隔离 runner
-> 仍未实现；这些分别属于 P2 和 P3。
-
-## 现在可以做什么
-
-- 从 CLI 启动一次本地文件 Run，并用 `inspect/events` 查看同一批已保存事实；
-- 使用 SQLite 保存 Event 和 projection，查看每次模型/Tool Activity、预算、Error 与 Artifact；
-- 显式选择 Responses、Chat Completions 或 Anthropic Messages 协议，不根据厂商或 URL 猜测；
-- 通过默认拒绝 Policy 和 workspace 边界阻止路径逃逸、外部写入与 host code execution；
-- 使用 model/tool/token/cost/time hard budget，让 Agent Loop 在明确上限内结束。
-
-```powershell
-uv run bearagent run "阅读 docs，并把项目简介写到 outputs/intro.md" `
-  --config data/config.json `
-  --profile data/p1-run-profile.json
-
-uv run bearagent run inspect <run-id> --json
-uv run bearagent run events <run-id> --after-sequence 0 --limit 100 --json
-```
-
-P1 的 Fake Provider 任务与真实模型 gate 都通过 5/5。真实 gate 的脱敏证据位于
-[F-0017 P1 live report](docs/evidence/F-0017-p1-live-report-v1.json)。
-
 ## 快速开始
 
 需要 [Git](https://git-scm.com/)、[uv](https://docs.astral.sh/uv/) 和 Python 3.12：
 
-```powershell
+```console
 git clone https://github.com/CherryYang05/BearAgent.git
 cd BearAgent
 uv python install 3.12
@@ -59,22 +35,54 @@ uv sync --all-groups --locked
 uv run bearagent doctor
 ```
 
-复制配置模板：
+### 1. 准备本地配置
 
-```powershell
-Copy-Item config.example.json data/config.json
-Copy-Item examples/run-profile-v2.example.json data/p1-run-profile.json
+第一次运行前准备两个本机文件：
+
+- 将根目录的 `config.example.json` 复制为 `data/config.json`；
+- 将 `examples/run-profile-v2.example.json` 复制为 `data/p1-run-profile.json`。
+
+在 `data/config.json` 中填写模型服务的 protocol、base URL、API key、model 和默认 model。在
+`data/p1-run-profile.json` 中选择同一个 `provider_id`，并设置 Agent 指令、可用 Tool 和预算。
+
+> [!IMPORTANT]
+> 示例 RunProfile 的预算全部是 0。要真正调用大模型，必须先把模型次数、token、时间和 Tool 次数
+> 等预算改为你愿意承担的非零上限。
+
+这两个默认文件都位于 Git 忽略的 `data/` 目录。API key 只应保存在本机的 `data/config.json` 中。
+字段说明见[配置参考](docs/reference/configuration.md)。
+
+### 2. 从命令行调用模型
+
+```console
+uv run bearagent run "阅读 docs，并把项目简介写到 outputs/intro.md"
 ```
 
-然后编辑两份本机文件：
+BearAgent 会自动读取 `data/config.json` 和 `data/p1-run-profile.json`，使用当前目录作为 workspace，
+并把 Event 保存到 `data/bearagent.db`。只有需要临时使用其他文件时，才需要传 `--config`、`--profile`、
+`--workspace` 或 `--database`。
 
-1. 在 `data/config.json` 中填写 Provider 的 protocol、base URL、API key、model 和默认 model；
-2. 在 `data/p1-run-profile.json` 中选择 `provider_id`，并按任务设置预算和 Tool 名单；
-3. 运行上面的 `bearagent run` 命令。
+命令结束后会输出 Run ID、最终状态、模型回答和生成的 Artifact。还可以查看保存下来的状态和 Event：
 
-仓库示例故意把预算设为 0，因此未修改时只会生成一个安全、可查询的 `budget_exhausted` Run，不会
-调用模型。字段说明和密钥边界见[配置参考](docs/reference/configuration.md)；完整 CLI 教程见
+```console
+uv run bearagent run inspect <run-id> --json
+uv run bearagent run events <run-id> --after-sequence 0 --limit 100 --json
+```
+
+完整教程见[配置一次模型服务](site/src/content/docs/zh-cn/learn/configure-model-service.md)和
 [运行与检查一次 Run](site/src/content/docs/zh-cn/learn/run-inspect-events.md)。
+
+## 当前已经实现
+
+- 从 CLI 启动一次真实模型文件任务，并用 `inspect/events` 查看同一批已保存事实；
+- 使用 SQLite 保存 Event 和 projection，查看每次模型/Tool Activity、预算、Error 与 Artifact；
+- 显式选择 Responses、Chat Completions 或 Anthropic Messages 协议，不根据厂商或 URL 猜测；
+- 在 workspace 内列出、读取和搜索文件，并且只向 `outputs/**` 原子写入完整结果；
+- 通过默认拒绝 Policy 和 workspace 边界阻止路径逃逸、外部写入与 host code execution；
+- 使用 model/tool/token/cost/time hard budget，让 Agent Loop 在明确上限内结束。
+
+固定离线任务与真实模型任务均通过 5/5。真实模型任务的脱敏证据位于
+[live-model report](docs/evidence/F-0017-p1-live-report-v1.json)。
 
 ## 为什么是 Runtime
 

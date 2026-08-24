@@ -109,6 +109,63 @@ def test_fake_provider_cli_run_then_inspect_and_page_events(
     assert event_payload["result"]["has_more"] is False
 
 
+def test_run_uses_default_local_configuration_paths(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    data_path = tmp_path / "data"
+    data_path.mkdir()
+    profile = RunProfileV2(
+        provider_id="primary",
+        agent_config=agent_settings(),
+        budget_limits=budget_limits(),
+    )
+    (data_path / "p1-run-profile.json").write_text(
+        json.dumps(profile.model_dump(mode="json")),
+        encoding="utf-8",
+    )
+    (data_path / "config.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "providers": [
+                    {
+                        "provider_id": "primary",
+                        "name": "Test Provider",
+                        "protocol": "openai_responses",
+                        "base_url": "https://example.com/v1",
+                        "api_key": "test-key",
+                        "models": [{"model_id": "test-model"}],
+                        "default_model": "test-model",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    provider = ScriptedFakeModelProvider(
+        [
+            (
+                ModelTextDelta(text="Default paths work."),
+                ModelCompleted(
+                    provider_request_id="fake-default-paths",
+                    model="test-model",
+                    finish_reason=ModelFinishReason.STOP,
+                    usage=ModelUsage(input_tokens=4, output_tokens=3),
+                ),
+            )
+        ]
+    )
+    _inject_provider(monkeypatch, provider)
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(app, ["run", "--json", "use the default files"])
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["result"]["final_text"] == "Default paths work."
+    assert (data_path / "bearagent.db").is_file()
+
+
 def test_run_group_preserves_inspect_and_rejects_invalid_ids_as_safe_json(
     tmp_path: Path,
 ) -> None:
