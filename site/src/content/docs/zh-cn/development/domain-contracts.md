@@ -141,4 +141,4 @@ uv run pyright
 这些测试覆盖 F-0001 数据结构和边界。SQLite、三个模型协议 adapter 与完整 AgentLoop 已分别由后续
 Feature 接通并有独立契约/集成测试；修改领域类型时仍要运行这些下游测试。
 
-下一步可以沿[Event 怎样改变状态](run-reducer-and-budgets.md)，继续看这些数据进入 Runtime 后发生什么。
+下一步可以沿[Event 怎样改变状态](/BearAgent/zh-cn/development/run-reducer-and-budgets/)，继续看这些数据进入 Runtime 后发生什么。

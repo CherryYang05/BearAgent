@@ -1,6 +1,6 @@
 ---
-title: 从 PyPI 安装 BearAgent
-description: 理解 wheel 怎样从 PyPI 进入隔离环境，并验证 bearagent 命令是否真正来自已安装包。
+title: PyPI 安装状态
+description: 为什么当前仍建议从源码运行，以及正式发布后怎样验证安装包。
 bearStatus: mixed
 sourceRefs:
   - F-0000
@@ -61,8 +61,9 @@ python -m bearagent doctor --json
 `pyproject.toml` 把 `bearagent` 注册为 console script，所以激活虚拟环境后可以直接使用这个命令。
 `doctor` 检查 Python、BearAgent 版本和当前运行环境，不读取模型密钥，也不执行 Agent 任务。
 
-当前 F-0015 分支只确认 `--version` 和 `doctor`。`run/inspect/events` 必须等相应 Runtime Feature 合并、
-打包并发布后，才能成为已发布版本的使用说明。安装 wheel 不会自动补上尚未进入该版本的代码。
+当前源码和本地构建 wheel 已包含 `doctor` 与 `run/inspect/events`，并通过隔离 wheel smoke；但这些
+事实仍不能证明 PyPI 上已有对应版本。正式发布后，本页还要核对实际项目页、版本号、文件 hash 和
+从空环境安装后的四组命令，再把状态改为 `implemented`。
 
 ## PyPI 发布前怎样测试本地 wheel
 
@@ -87,4 +88,4 @@ wheel 安装说成 PyPI 已经上线。
 
 `pip install` 的解析和安装阶段见
 [pip 官方 install 文档](https://pip.pypa.io/en/stable/cli/pip_install/)。维护者怎样构建和上传 package，
-继续阅读[怎样把 BearAgent wheel 发布到 PyPI](../development/publish-python-package.md)。
+继续阅读[怎样把 BearAgent wheel 发布到 PyPI](/BearAgent/zh-cn/development/publish-python-package/)。

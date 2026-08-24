@@ -4,7 +4,7 @@ description: 从长任务、上下文、评测、安全、权限、恢复和多 
 bearStatus: concept
 sourceRefs:
   - AI Agents in Depth Chapter 2
-  - AI Agents in Depth Chapter 6
+  - AI Agents in Depth Chapter 7
   - tau-bench
   - AgentDojo
   - AI Agents That Matter
@@ -130,4 +130,4 @@ P1 已做：有界数据 → Event 与状态 → SQLite 原子保存 → 模型�
 ```
 
 这个顺序不是认为规划、Memory 或多 Agent 不重要，而是认为这些能力必须建立在可观察、可停止、
-可恢复和不越权的 Runtime 上。更多论文、规范和项目对照见[参考资料](../reference/sources.md)。
+可恢复和不越权的 Runtime 上。更多论文、规范和项目对照见[参考资料](/BearAgent/zh-cn/reference/sources/)。

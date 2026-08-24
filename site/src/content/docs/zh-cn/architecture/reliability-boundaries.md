@@ -133,4 +133,4 @@ running、succeeded、failed，尚没有 pause/cancel/attempt 状态。
 把这些问题分开，能避免常见误解：Prompt 不是权限系统，sandbox 不是授权，SQLite 持久化不是自动恢复，
 `retryable=True` 也不是 adapter 可以立即重复副作用。
 
-这些边界为什么选择当前形状、又牺牲了什么，见[P1 的关键架构取舍](p1-decisions.md)。
+这些边界为什么选择当前形状、又牺牲了什么，见[P1 的关键架构取舍](/BearAgent/zh-cn/architecture/p1-decisions/)。

@@ -4,7 +4,7 @@ status: active
 plan_id: PLAN-F-0015
 related_spec: F-0015
 created: 2026-08-10
-last_updated: 2026-08-23
+last_updated: 2026-08-25
 ---
 
 # PLAN-F-0015：Starlight 文档站与 GitHub Pages 发布
@@ -66,6 +66,7 @@ F-0015 与 ADR-0008 已接受；中文优先、工程事实和公共解释分开
 - 已完成：新增只在 `main` 或手动触发的 GitHub Pages workflow；
 - 已完成：文档检查在遍历前排除 `.venv` 等目录，并加入回归测试；
 - 待完成：合并后在仓库 Pages 设置中选择 GitHub Actions，并检查公开 URL；
+- 2026-08-25 复核：仓库 Pages API 与公开项目地址均返回 404，不能把静态构建写成已经上线；
 - 代码落点：`site/astro.config.mjs`、`site/src/pages/index.astro`、`site/src/content/docs/404.md`、
   `.github/workflows/deploy-docs.yml` 和 `scripts/check_docs.py`；
 - 验证：生产构建、sitemap、根页链接、404 页面、Python 回归测试和首次 Pages deployment；
@@ -85,6 +86,23 @@ F-0015 与 ADR-0008 已接受；中文优先、工程事实和公共解释分开
 - 验证：`uv run python scripts/check_docs.py`、`uv run pytest tests/unit/test_check_docs.py`、
   `npm.cmd run build --prefix=site`、CLI help smoke；
 - 回退：恢复导航和改写页面；不影响 Runtime、Event、SQLite 或用户 Artifact。
+
+### 第 7 步：把站点重构为一本面向 Agent 初学者的书
+
+- 状态：completed（2026-08-25）；
+- 目标结果：从 README 到站点形成“序章—六部分—附录”的连续路线；首页从读者问题分流；历史页、
+  PyPI 和发布资料移入附录；工程 `docs/` 的索引、配置、部署和当前 F-0015 状态同步说人话；
+- 视觉结果：两张 GPT Image 插画以 3840×2160 入库，只承担章节气氛和整体印象；精确流程继续使用
+  Mermaid；统一排版、卡片、表格和移动端裁切；
+- 事实核对：完整阅读 `docs/`、站点、当前代码和测试入口，修复 F-0017 后仍残留的旧状态、参考书章节
+  漂移与 Pages 状态混淆；
+- 验证：工程链接、Starlight build、资源尺寸、桌面与 390px 手机浏览器检查、Python 全量质量门；
+- 回退：可以独立回退内容、样式和插画，不修改 Runtime、Event、SQLite、用户配置或 Artifact。
+
+完成结果：README、工程入口和 43 篇中文内容页已逐页复核；侧边栏重组为序章、六部分和附录；两张
+插画以 3840×2160 入库；所有站内 Markdown 链接改成带 `/BearAgent/zh-cn/` 的真实路由。浏览器检查
+还发现旧检查器只验证源码文件存在，却允许线上 404 的 `.md` 链接；检查器现已覆盖 MDX、源码后缀
+路由和基础路径，并加入回归测试。
 
 ## 每一步都检查过
 
@@ -115,3 +133,9 @@ git diff --check
 
 静态构建、搜索、Mermaid、工程检查和内容连贯性已经在本地验证。Pages Source 配置完成、workflow
 成功且公开 URL 可访问后，再把第 5 步和本 Plan 改为 `completed`。
+
+2026-08-25 本轮验证：`uv lock --check`、Ruff format/check、Pyright、449 tests、三个 Schema 生成器
+无内容漂移、137 份 Markdown/MDX 链接、45 页 Starlight + Pagefind + sitemap、全部构建后站内 href、
+3840×2160 资源尺寸、sdist/wheel 和隔离 CLI smoke 通过。桌面与 390×844 手机视口检查了首页、六部
+侧边栏、Runtime 插画、代码块和 Mermaid；未发现遮挡或不可控溢出。Plan 仍保持 `active`，唯一未完成
+项是第 5 步的真实 Pages 上线验收。

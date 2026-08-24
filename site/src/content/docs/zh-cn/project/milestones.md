@@ -39,9 +39,9 @@ Check 通过；suite v1.1.1 又用 DeepSeek V4 经 production 路径完成四个
 
 P1 只保证已经保存的事实可以查看。进程退出后不会自动继续。
 
-当前使用入口见[P1 命令行完整使用手册](../guides/cli.md)，完整请求路径和取舍见
-[一次请求怎样穿过 BearAgent](../architecture/runtime-flow.md)与
-[P1 为什么这样设计](../architecture/p1-decisions.md)。
+当前使用入口见[P1 命令行完整使用手册](/BearAgent/zh-cn/guides/cli/)，完整请求路径和取舍见
+[一次请求怎样穿过 BearAgent](/BearAgent/zh-cn/architecture/runtime-flow/)与
+[P1 为什么这样设计](/BearAgent/zh-cn/architecture/p1-decisions/)。
 
 ## P2：让每次恢复决定都有依据
 

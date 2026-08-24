@@ -66,6 +66,6 @@ F-0004 因此禁用 SDK 自动重试，只把超时、连接失败、429/5xx 标
 
 ## 下一步
 
-继续到 [ModelProvider 开发者实现导读](../development/model-provider.md) 查看三种翻译边界和测试证据。
-要实际选择服务，读[配置一次模型服务，运行不同目标](configure-model-service.md)；要理解 Run 如何
-记录模型 Activity，读[状态和预算怎样计算](runtime-state-and-budgets.md)。
+继续到 [ModelProvider 开发者实现导读](/BearAgent/zh-cn/development/model-provider/) 查看三种翻译边界和测试证据。
+要实际选择服务，读[配置一次模型服务，运行不同目标](/BearAgent/zh-cn/learn/configure-model-service/)；要理解 Run 如何
+记录模型 Activity，读[状态和预算怎样计算](/BearAgent/zh-cn/learn/runtime-state-and-budgets/)。

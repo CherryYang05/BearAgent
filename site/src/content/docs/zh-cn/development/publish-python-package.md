@@ -111,6 +111,6 @@ bearagent doctor
 uv run --with "bearagent==<version>" --no-project -- bearagent doctor
 ```
 
-最后在[从 PyPI 安装 BearAgent](../guides/install-from-pypi.md)中把状态更新为 implemented，加入实际
+最后在[从 PyPI 安装 BearAgent](/BearAgent/zh-cn/guides/install-from-pypi/)中把状态更新为 implemented，加入实际
 PyPI 项目链接、首个可安装版本和该版本支持的 CLI 命令。发布 wheel 不代表路线图中尚未实现的功能
 也已经可用。

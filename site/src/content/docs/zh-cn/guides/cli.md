@@ -156,7 +156,7 @@ Config v1 缺少、空白或非法 key 时，会在数据库和 Run 创建前返
 为兼容已有配置保留：它只支持 legacy OpenAI Responses 路径，并继续读取 `OPENAI_API_KEY` 与可选的
 `OPENAI_BASE_URL`；缺少凭据时，已经建立的 Run 会以安全的 `provider_authentication` 失败。
 
-完整字段和校验规则见[配置参考](../../../../../../docs/reference/configuration.md)。
+完整字段和校验规则见[配置参考](https://github.com/CherryYang05/BearAgent/blob/main/docs/reference/configuration.md)。
 
 ## 5. 运行一个 Run
 
@@ -277,5 +277,5 @@ uv run bearagent run events <run-id> --after-sequence 100 --limit 100 --json `
 - 没有 Run 列表、删除、导出命令、后台 daemon、HTTP API 或 Web UI；
 - 任务产生的 `outputs/**` 和数据库由用户管理，P1 不提供生命周期清理。
 
-想理解这些限制背后的理由，继续读[P1 的关键架构取舍](../architecture/p1-decisions.md)。要修改 CLI
-实现，读[生产 CLI 和查询服务实现导读](../development/run-cli.md)。
+想理解这些限制背后的理由，继续读[P1 的关键架构取舍](/BearAgent/zh-cn/architecture/p1-decisions/)。要修改 CLI
+实现，读[生产 CLI 和查询服务实现导读](/BearAgent/zh-cn/development/run-cli/)。

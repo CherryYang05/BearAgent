@@ -108,8 +108,9 @@ BearAgent 不把“接入更多模型和 Tool”当作第一目标。它先选�
 - 每次 Activity 受次数、token、费用和时间预算限制；
 - 结果不明时不能宣称成功，也不能盲目重试。
 
-当前代码已完成其中的数据、状态、SQLite、模型 adapter 和 Tool 执行基础，但还不能运行完整文件任务。
-这是“先做 Runtime 骨架，再接通 Agent 能力”的工程顺序，不是对通用 Agent 已完成度的宣传。
+当前 P1 已把这些底线接进一条可运行的本地文件任务：CLI 会显式选择模型协议，Agent Loop 只调用
+注册过的 workspace Tool，SQLite 保存 Event，输出只原子写入 `outputs/**`。这证明的是一个受限场景
+已经走通，不是通用 Agent、崩溃恢复、用户 Approval 或 sandbox 已经完成。
 
-下一页继续看[Agent 仍然难在哪里](open-problems.md)，以及这些问题为什么同时出现在工业系统和学术
-研究中。全部来源和延伸阅读集中在[参考资料](../reference/sources.md)。
+下一页继续看[Agent 仍然难在哪里](/BearAgent/zh-cn/learn/open-problems/)，以及这些问题为什么同时出现在工业系统和学术
+研究中。全部来源和延伸阅读集中在[参考资料](/BearAgent/zh-cn/reference/sources/)。

@@ -5,8 +5,8 @@ spec_id: F-0015
 milestone: P1
 owner: CherryYang05
 created: 2026-08-10
-last_updated: 2026-08-23
-implemented_in: "PR #3 (local site); PR #14 (Pages and P1 documentation restructure, open)"
+last_updated: 2026-08-25
+implemented_in: "PR #3 and PR #14 (merged local site); public Pages verification still pending"
 related_adrs:
   - ADR-0008
 ---
@@ -31,6 +31,8 @@ F-0015 最初只建立了内容和本地构建底座。现在需要把同一份�
 - G-6：把学习页、开发者页和状态页同步纳入 Feature 完成标准；
 - G-7：`main` 上的站点变更通过 GitHub Actions 发布到项目 Pages 地址。
 - G-8：把 P1 内容重组为由浅入深的阅读路径，并单独维护可完整执行的 CLI 使用手册。
+- G-9：把站点重构为可以连续阅读的六部分中文开发书，并用少量 4K 插画建立章节印象；精确结构仍由
+  Mermaid、代码和测试表达。
 
 ## 3. 本次不做
 
@@ -92,6 +94,10 @@ Front Matter、内部链接、MDX 或 Mermaid 无法编译时，生产构建失�
   背景不得打断主路径。
 - FR-18：CLI 手册应集中说明安装状态、profile、Provider 环境、`doctor/run/inspect/events`、human/JSON
   输出、退出码、数据位置、常见失败与 P1 限制，并以实际 CLI help、Schema 和测试为事实来源。
+- FR-19：主导航应使用“序章—六部分—附录”的书籍结构。每章先回答一个具体问题，再给运行例子、
+  图、代码入口、验证方法和当前/未来边界；历史页只能放在附录。
+- FR-20：生成式插画不承载精确标签、代码或安全规则。入库资源必须达到 3840×2160，提供替代文本，
+  在桌面和手机宽度下不遮挡正文，并保留生成来源说明。
 
 ## 7. 对外入口和模块连接
 
@@ -150,6 +156,10 @@ lockfile 安装失败、Markdown/MDX 编译失败、无效 Front Matter 或 Merm
 - AC-14：从首页不超过两次点击可到达 CLI 手册、P1 执行路径、架构取舍、代码入口和当前状态。
 - AC-15：站点中不得继续把已接通的 Agent Loop、workspace Tool 或 `run/inspect/events` 写成尚未实现；
   CLI 示例、默认路径、分页范围和退出码与当前代码/测试一致。
+- AC-16：首页、CLI、Runtime 链路、源码路线和状态页从首页最多两次点击可达；侧边栏按六部分显示，
+  PyPI 与历史内容不打断主学习路径。
+- AC-17：两张入库插画均为 3840×2160，具有可读 alt；桌面和 390px 手机视口下首页、插画、导航、
+  Mermaid 和代码块没有明显溢出或遮挡。
 
 ## 14. 验证方式
 
@@ -167,9 +177,9 @@ lockfile 安装失败、Markdown/MDX 编译失败、无效 Front Matter 或 Merm
 - [x] Site status and milestones
 - [x] Architecture / ADR
 - [x] Deployment docs
-- [ ] Generated reference
+- [x] Generated reference（本轮无公开 contract 变化；三个生成器确认无内容漂移）
 
 ## 16. 尚未决定的问题
 
-代码侧没有开放问题。首次上线仍需在 GitHub 仓库设置中选择 GitHub Actions 作为 Pages Source，并在
-合并后检查公开 URL。
+代码侧没有开放问题。2026-08-25 复核时，仓库 Pages API 与公开项目地址都返回 404；首次上线仍需
+在仓库设置中选择 GitHub Actions 作为 Pages Source，并在合并后检查 workflow 与公开 URL。

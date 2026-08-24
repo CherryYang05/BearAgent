@@ -47,5 +47,5 @@ BearAgent 首先服务愿意在自己电脑或服务器运行 Agent 的开发者
 安全自托管，再依次接入 Skill、MCP、Web 和 Memory，并要求它们继续经过原有的 Event、恢复、Policy
 和 runner 路径。
 
-完整阶段顺序见[阶段路线](milestones.md)，当前事实见
-[实现状态](status.md)。
+完整阶段顺序见[阶段路线](/BearAgent/zh-cn/project/milestones/)，当前事实见
+[实现状态](/BearAgent/zh-cn/project/status/)。

@@ -5,12 +5,23 @@ version: 0.7
 last_verified: 2026-08-24
 ---
 
-# 本地开发与自托管
+# 本地运行、文档发布与未来自托管
+
+这是一份**部署边界说明**，不是当前服务器安装教程。现在真正可运行的是本地 P1 CLI；静态文档可以
+由 GitHub Actions 构建，但公开 Pages 地址仍未验收；BearAgent Runtime 还没有 HTTP 服务、容器化
+production 或公网入口。
+
+| 你想做什么 | 现在应走的入口 |
+|---|---|
+| 在自己的电脑运行文件任务 | [CLI 完整手册](../../site/src/content/docs/zh-cn/guides/cli.md) |
+| 在本机预览文档站 | [本地文档站手册](../../site/src/content/docs/zh-cn/guides/local-docs.md) |
+| 理解未来为什么分 P2/P3/P4 部署 | 继续阅读本文 |
+| 现在就部署公开 Agent API | 当前不支持；不能把下面的计划当作安装步骤 |
 
 ## 1. 现在怎样运行
 
-P1 Runtime 全部在本地开发和验证，不开放 HTTP。F-0015 文档站是独立的静态产物；本 Feature
-加入 GitHub Pages 发布配置，但公开 URL 和仓库 Pages 设置仍要在合并后核验。静态站不会启动
+P1 Runtime 全部在本地开发和验证，不开放 HTTP。F-0015 文档站是独立的静态产物；仓库已经
+加入 GitHub Pages workflow，但 2026-08-25 复核时 Pages API 和公开 URL 仍返回 404。静态站不会启动
 Runtime，也不会读取模型密钥或用户数据。P2 在私有服务器演练恢复；P3 仍通过私有通道验证
 Approval 与隔离 runner；只有 P4 的认证、部署和备份恢复全部通过，Agent 服务才通过公网子域名
 提供给项目所有者。
@@ -74,9 +85,10 @@ migration 只返回安全 persistence Error。这里仍是本地命令，不会�
 
 ### F-0015：公开静态文档
 
-GitHub Actions 构建 `site/dist/` 并发布到
-`https://cherryyang05.github.io/BearAgent/`。GitHub Pages 只接收静态产物，不在 Web 请求中运行
-文档生成器。首次上线要在仓库 Settings → Pages 中选择 GitHub Actions 作为 Source。
+GitHub Actions 已能构建并上传 `site/dist/`；目标地址是
+`https://cherryyang05.github.io/BearAgent/`。GitHub Pages 只应接收静态产物，不在 Web 请求中运行
+文档生成器。首次上线还要在仓库 Settings → Pages 中选择 GitHub Actions 作为 Source，并在无登录
+浏览器中确认首页、资源、中文路由和 404。真正访问成功前，状态只能写“发布配置已实现”。
 
 ### P2：私有服务器 staging
 

@@ -177,5 +177,5 @@ human 与 JSON 也必须读取同一个 Pydantic result。
 | 预算是否允许下一步 | Event-derived usage + BudgetLimits |
 | 中断后哪些信息可信 | 已提交 Event；不自动猜测未提交结果 |
 
-继续阅读[一次请求怎样穿过 BearAgent](runtime-flow.md)，把这些取舍放回实际执行顺序；需要操作命令时
-回到[P1 命令行完整使用手册](../guides/cli.md)。
+继续阅读[一次请求怎样穿过 BearAgent](/BearAgent/zh-cn/architecture/runtime-flow/)，把这些取舍放回实际执行顺序；需要操作命令时
+回到[P1 命令行完整使用手册](/BearAgent/zh-cn/guides/cli/)。

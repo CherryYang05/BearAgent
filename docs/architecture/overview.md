@@ -65,15 +65,15 @@ Event v3 和五任务 live runner；它不会按厂商名、URL 或失败结果�
 suite v1.1.1 已用 DeepSeek V4 经 production composition 完成四个普通任务与安全 canary，P1 以 5/5
 关闭并生成脱敏报告。这不代表其他服务或协议已付费联调；持久事实仍不等于进程重启后会自动继续。
 
-### 3.2 已接受但尚未接通
+### 3.2 Roadmap 中的后续方向（尚未形成当前实现）
 
 - P2：Event-only 状态重建、Checkpoint、Attempt、恢复语义、控制命令和 `UNKNOWN` 处置；
 - P3：Grant、三态 Policy、参数绑定 Approval 和隔离 runner；
 - P4：HTTP/SSE、认证、自托管、Skill、MCP、Web UI、Memory 和受控联网；
 - P5：跨版本 trace 与持续评测。
 
-后文解释这些模块的长期连接方式，但每一节都会标明阶段。具体交付顺序以[路线图](../project/roadmap.md)
-和 Feature Spec 为准。
+这些条目用于说明长期连接方向，不表示对应 Feature Spec 已被接受。真正开始实现前，仍要创建并接受
+独立 Feature Spec；具体交付顺序以[路线图](../project/roadmap.md)和当时的 active Plan 为准。
 
 ## 4. 模块怎样连接
 
@@ -118,8 +118,8 @@ src/bearagent/
 ├── domain/       ID、Message、Event、状态和 Error
 ├── runtime/      Reducer、预算、后续执行与恢复规则
 ├── application/  启动、查询和控制 Run 的用例
-├── ports/        模型、存储、Policy、Tool、sandbox 的要求
-├── adapters/     Provider、SQLite、文件、sandbox 和测试实现
+├── ports/        当前模型、存储、Policy、Tool 的接口要求
+├── adapters/     当前 Provider、SQLite、文件和测试实现；sandbox 属于 P3
 ├── interfaces/   CLI；HTTP API 后置
 └── bootstrap.py  只负责组装依赖
 ```

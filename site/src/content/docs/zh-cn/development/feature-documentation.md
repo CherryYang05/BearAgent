@@ -74,7 +74,7 @@ sourceRefs:
 论文、官方工程文章和参考项目适合解释：为什么 Agent 需要评测、上下文为什么有限、Prompt Injection
 为什么危险、长任务为什么要保存进度。BearAgent 当前做到了什么，仍要回到代码和测试核对。
 
-引用外部资料时，优先集中在[参考资料](../reference/sources.md)，正文说明借鉴点。不要因为某个项目
+引用外部资料时，优先集中在[参考资料](/BearAgent/zh-cn/reference/sources/)，正文说明借鉴点。不要因为某个项目
 支持多个 Agent、浏览器或 sandbox，就把这些能力写进 BearAgent 当前架构图的已实现部分。
 
 ## 提交文档前的通读顺序
