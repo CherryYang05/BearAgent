@@ -12,7 +12,14 @@ def test_markdown_files_prunes_ignored_directories_before_descending(
         assert root == tmp_path
         assert topdown is True
 
-        directory_names = [".uv-cache-docs", ".venv", "docs"]
+        directory_names = [
+            ".pytest-state",
+            ".pytest-tmp",
+            ".pytest_cache",
+            ".uv-cache-docs",
+            ".venv",
+            "docs",
+        ]
         yield str(root), directory_names, []
 
         assert directory_names == ["docs"]
