@@ -36,10 +36,10 @@ Anthropic Messages adapter。它不根据厂商、URL 或 model 猜协议，也�
 随后 composition 选择 profile 明确列出的 Tool。未配置的 Tool 不进入 Registry，因此既不会出现在
 ModelRequest 中，也不会被 Policy 允许。同一个 SQLite Store 同时交给 AgentLoop 和 RunQueryService。
 
-测试可以注入 Provider-neutral Fake Provider；真实 CLI 不暴露 `--api-key`，只从选中条目指定的环境
-变量读取 key。SDK client 延迟到首个模型 Activity；零预算不创建 client，缺 key 时首个 Activity/Run
-保存安全的 `provider_authentication`。domain、runtime 和 application 不导入 OpenAI/Anthropic、
-SQLite adapter 或 Typer；architecture test 持续检查这个方向。
+测试可以注入 Provider-neutral Fake Provider；真实 CLI 不暴露 `--api-key`，只从被 Git 忽略的本机
+`data/config.json` 中读取所选 Provider 的 key。SDK client 延迟到首个模型 Activity；零预算不创建
+client，缺 key 时在数据库和 Run 创建前安全失败。domain、runtime 和 application 不导入
+OpenAI/Anthropic、SQLite adapter 或 Typer；architecture test 持续检查这个方向。
 
 Profile 与 catalog loader 都使用文件描述符读取最多 128 KiB，并比较打开前后快照。链接、reparse
 point、替换竞态、非法 UTF-8、未知字段、非法 URL/key 和未知字段都会变成有限的 safe Error。

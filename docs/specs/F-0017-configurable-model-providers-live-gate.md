@@ -5,7 +5,7 @@ spec_id: F-0017
 milestone: P1
 owner: CherryYang05
 created: 2026-08-22
-last_updated: 2026-08-23
+last_updated: 2026-08-25
 implemented_in: "codex/F-0017-p1-live-model-gate"
 related_adrs: [ADR-0004, ADR-0007, ADR-0009, ADR-0010, ADR-0013, ADR-0014, ADR-0015]
 ---
@@ -225,11 +225,10 @@ Responses 请求改成 Chat Completions，不把一个服务的 key 发给另一
 
 ```text
 bearagent run OBJECTIVE
-  --profile data/p1-run-profile.json
-  --config data/config.json
 ```
 
-两个路径有默认值。CLI 不增加 `--api-key`、`--protocol`、`--base-url` 或厂商专属参数。
+CLI 默认读取 `data/p1-run-profile.json` 和 `data/config.json`；只有临时使用其他文件时才需要用
+`--profile` 或 `--config` 覆盖。CLI 不增加 `--api-key`、`--protocol`、`--base-url` 或厂商专属参数。
 
 ```text
 RunProfile v2 --provider_id--┐
