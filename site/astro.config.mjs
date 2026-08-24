@@ -15,6 +15,10 @@ export default defineConfig({
     starlight({
       title: 'BearAgent Docs',
       description: '让个人 Agent 在本地可靠地完成长任务',
+      logo: {
+        src: './src/assets/bearagent-logo.png',
+        alt: 'BearAgent',
+      },
       defaultLocale: 'zh-cn',
       locales: {
         'zh-cn': {
@@ -46,6 +50,7 @@ export default defineConfig({
             { label: 'Windows 和 Unix 路径怎样统一', slug: 'learn/workspace-read-boundary' },
             { label: '一次文件任务怎样走完整条链', slug: 'learn/agent-loop-file-task' },
             { label: '从命令行运行并检查 Run', slug: 'learn/run-inspect-events' },
+            { label: '失败后先问哪三个问题', slug: 'learn/recovery-authority-isolation' },
           ],
         },
         {

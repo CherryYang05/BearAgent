@@ -23,7 +23,7 @@ sourceRefs:
 当前已实现领域类型、Run/Activity 状态、Reducer、预算检查、SQLite EventStore、三种显式模型协议
 adapter、Registry、固定 Policy、workspace 读写、Artifact、ContextBuilder 和 application Agent Loop。
 `run/inspect/events` 已接通 catalog/profile 与 production composition，DeepSeek V4 suite v1.1.1
-真实 gate 已通过 5/5；用户审批和隔离环境属于 P3。
+真实 gate 已通过 5/5；Attempt 与安全恢复属于 P2，用户审批和隔离环境属于 P3。
 :::
 
 ```mermaid
@@ -74,8 +74,9 @@ CLI 框架和未来的 Web API 都在外层。外层可以导入核心，核心�
 1. 记录每次模型和工具操作，使过程可以查询；
 2. 根据 Event 计算状态，并在下一次 Activity 前检查预算；
 3. 所有外部操作都经过同一个工具执行和权限入口；
-4. 中断后只根据已保存事实继续，结果不明时停下；
-5. 第一版保持单用户、单进程和 SQLite，直到实际压力要求更复杂的部署。
+4. P2 中断后只根据已保存事实继续，结果不明时停下；
+5. P3 让危险动作同时通过参数绑定授权和隔离 runner；
+6. 第一版保持单用户、单个 Runtime 进程和 SQLite，直到实际压力要求更复杂的部署。
 
 继续阅读[BearAgent 内部怎样交换数据](domain-contracts.md)，或从
 [开发者入口](../development/)进入代码。

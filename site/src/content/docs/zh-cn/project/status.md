@@ -57,7 +57,8 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 - 文档站只在本地和 CI 构建，尚未发布到 `docs.bearguin.cn`。
 
 F-0002 的确定性重放只说明“同一串 Event 会算出同一状态”。它不是 P2 的崩溃恢复，也没有
-Checkpoint、Attempt 或 `UNKNOWN` 处置。
+Checkpoint、Attempt、RecoveryDecision 或 `UNKNOWN` 处置。P3 的参数绑定 Approval 和隔离 runner、
+P4 的 HTTP/认证与自托管也都尚未实现。
 
 ## 文档怎样保持当前
 

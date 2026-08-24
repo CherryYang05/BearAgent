@@ -101,7 +101,7 @@
       <text x="78" y="39" class="card-title">HTTP API &amp; SSE</text>
       <text x="78" y="62" class="card-note">authenticated self-hosted interface</text>
       <rect x="283" y="33" width="46" height="22" rx="11" fill="#eee9fa"/>
-      <text x="306" y="48" text-anchor="middle" class="phase" fill="#66528f">P3</text>
+      <text x="306" y="48" text-anchor="middle" class="phase" fill="#66528f">P4</text>
     </g>
   </g>
 
@@ -211,7 +211,7 @@
       <rect x="14" y="18" width="34" height="34" rx="10" fill="#e3f5f2"/>
       <path d="M22 34h18M31 25v18M24 27l14 14M38 27 24 41" class="icon" stroke="#168174"/>
       <text x="20" y="73" class="card-title">Policy &amp; Approval</text>
-      <text x="20" y="96" class="card-note">Grant · allow / ask / deny</text>
+      <text x="20" y="96" class="card-note">Grant · allow / approval / deny</text>
       <text x="20" y="113" class="card-note">exact-argument approval</text>
       <rect x="193" y="24" width="46" height="22" rx="11" fill="#eee9fa"/>
       <text x="216" y="39" text-anchor="middle" class="phase" fill="#66528f">P3</text>

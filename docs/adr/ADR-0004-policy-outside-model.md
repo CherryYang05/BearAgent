@@ -13,8 +13,9 @@ date: 2026-08-09
 
 ## 决定
 
-所有外部动作先转换成规范化的 `ToolRequest`。`PolicyEngine` 根据已有 Grant 返回 `ALLOW`、`ASK`
-或 `DENY`。需要用户批准时，Approval 绑定精确参数的 hash 和有效期。
+所有外部动作先转换成规范化的 `ToolRequest`。`PolicyEngine` 根据已有 Grant 返回 `ALLOW`、
+`REQUIRE_APPROVAL` 或 `DENY`。需要用户批准时，Approval 绑定 Run、Tool call、规范化参数 hash、
+有效期和一次性 nonce。
 
 Prompt、Skill、模型输出、工具输出和工作区文件都不能创建或扩大 Grant。所有 Tool 必须经过同一个
 执行入口，adapter 不得绕过 Policy。
@@ -22,10 +23,11 @@ Prompt、Skill、模型输出、工具输出和工作区文件都不能创建或
 ## 为什么不选其他方案
 
 - System Prompt 无法强制执行安全规则；
-- 所有工具调用都人工批准会使低风险自动化无法使用；
+- 所有 Tool 调用都人工批准会使低风险自动化无法使用；
 - 每个 Tool 自己检查权限会产生重复规则和绕过路径。
 
 ## 怎样验证
 
-安全测试必须覆盖默认拒绝、路径规范化、批准参数篡改、过期和重放、跨 Run 使用，以及模型或工具
-内容尝试增加权限。批准 `write_file(a.txt)` 后修改任一关键参数，旧批准必须失效。
+安全测试必须覆盖默认拒绝、路径规范化、批准参数篡改、过期和重放、跨 Run 使用，以及模型或 Tool
+内容尝试增加权限。批准 `write_file(a.txt)` 后修改任一关键参数，旧批准必须失效。登录只确认身份，
+不能自动生成 Tool Grant；sandbox 也不能替代这次 Policy 检查。

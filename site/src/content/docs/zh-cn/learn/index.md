@@ -99,3 +99,9 @@ production composition、`inspect/events` 和 human/JSON 输出怎样接到现�
 
 当前这条路径已覆盖 F-0017 的离线实现和 DeepSeek V4 suite v1.1.1 真实 5/5。崩溃恢复和用户授权
 分别属于 P2、P3。
+
+## 13. 分清恢复、授权和隔离
+
+[一次失败后，Runtime 应先问哪三个问题](recovery-authority-isolation.md)从写文件超时开始，解释
+Activity 与 Attempt、副作用分类、`UNKNOWN`、参数绑定 Approval 和隔离 runner。页面也说明 hard
+budget 为什么仍要保留，以及 Routing、MCP 和 Memory 为什么不属于 P2/P3。

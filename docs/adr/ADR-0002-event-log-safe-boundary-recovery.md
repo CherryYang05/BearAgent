@@ -17,8 +17,16 @@ date: 2026-08-09
 重建；Checkpoint 只是加快重建的快照。Runtime 只在已持久化的 Activity 边界恢复，不保存 Python
 协程或调用栈。
 
-外部写入可能已发生、但结果无法确认时，Activity 进入 `UNKNOWN`。纯读操作，或具有幂等键、
-Receipt 的写操作，才允许自动重试。
+一个 Activity 可以包含多个 Attempt。重试必须创建新 Attempt，旧尝试和失败事实不得被覆盖。
+恢复策略不能只看 Error 上的 `retryable`，还要看可信 Tool 声明的副作用语义：
+
+- `READ_ONLY`：没有外部副作用，可以在预算和 deadline 内新建 Attempt；
+- `IDEMPOTENT`：使用同一幂等键查询或重试；
+- `RECONCILABLE`：先用目标状态或 Receipt 核对结果；
+- `NON_IDEMPOTENT`：没有充分证据时不得自动重做。
+
+外部写入可能已发生、但结果无法确认时，Activity 进入 `UNKNOWN`。每次复用、重试、reconcile 或
+停下的恢复决定都写成 Event。
 
 ## 为什么不选其他方案
 
@@ -28,5 +36,5 @@ Receipt 的写操作，才允许自动重试。
 
 ## 带来的影响
 
-写路径需要维护 Event 版本、Reducer 和恢复测试，复杂度高于普通聊天 demo。得到的回报是：状态、
-恢复决定、审计和评测 trace 可以建立在同一批事实上。
+写路径需要维护 Event 版本、Reducer、Attempt 和恢复测试，复杂度高于普通聊天 demo。得到的回报是：
+状态、恢复决定、审计和评测 trace 可以建立在同一批事实上。
