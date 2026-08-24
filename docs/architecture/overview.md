@@ -1,8 +1,8 @@
 ---
 title: BearAgent Architecture Baseline
 status: accepted
-version: 0.9
-last_verified: 2026-08-23
+version: 1.0
+last_verified: 2026-08-24
 ---
 
 # BearAgent 总体架构
@@ -33,9 +33,10 @@ flowchart TB
 1. **过程能够还原。** 每次模型和工具 Activity、预算、错误和 Artifact 都能关联到同一个 Run。
 2. **结果不明时不猜。** 只有能确认结果时才继续；无法确认的外部写入进入 `UNKNOWN`，不自动当作失败重做。
 3. **权限不来自文字。** 模型、Prompt、Skill、工作区文件和 Tool 输出都不能给自己增加权限。
-4. **个人能够维护。** P0 至 P3 保持单用户、单 Agent、单进程、SQLite 和 CLI，复杂度由真实需求触发。
+4. **个人能够维护。** P0 至 P3 保持单用户、单 Agent、单个 Runtime 进程、SQLite 和 CLI，复杂度由真实需求触发。
 
-这四条是长期边界。P1 先完成可检查执行，P2 增加恢复，P3 接入权限、隔离和安全自托管。
+这四条是长期边界。P1 先完成可检查执行，P2 增加恢复语义，P3 接入授权与隔离，P4 再开放服务入口
+和安全自托管。
 
 ## 3. 当前代码与后续设计
 
@@ -61,14 +62,14 @@ flowchart TB
 `bootstrap.py` 根据 catalog 中显式选择的 wire protocol 组装一个模型 adapter，再与 SQLite、
 workspace Tools、固定 Policy 和 AgentLoop 连接。F-0017 的离线测试覆盖三种 adapter、配置选择、
 Event v3 和五任务 live runner；它不会按厂商名、URL 或失败结果猜协议，也不会自动切换 endpoint。
-真实模型 API 尚未执行退出演练；持久事实也仍不等于进程重启后会自动继续。
+suite v1.1.1 已用 DeepSeek V4 经 production composition 完成四个普通任务与安全 canary，P1 以 5/5
+关闭。持久事实仍不等于进程重启后会自动继续。
 
 ### 3.2 已接受但尚未接通
 
-- P1：执行已经定义的真实模型 gate，并完成整个里程碑 Reality Check；
-- P2：Checkpoint、Attempt、暂停/继续/取消、恢复协调和 `UNKNOWN` 处置；
-- P3：Grant、Policy、Approval、隔离 runner、HTTP API、认证和备份恢复；
-- P4：Skill、MCP、Web UI、Memory 和受控联网；
+- P2：Event-only 状态重建、Checkpoint、Attempt、恢复语义、控制命令和 `UNKNOWN` 处置；
+- P3：Grant、三态 Policy、参数绑定 Approval 和隔离 runner；
+- P4：HTTP/SSE、认证、自托管、Skill、MCP、Web UI、Memory 和受控联网；
 - P5：跨版本 trace 与持续评测。
 
 后文解释这些模块的长期连接方式，但每一节都会标明阶段。具体交付顺序以[路线图](../project/roadmap.md)
@@ -194,8 +195,8 @@ Run 创建时固定模型调用次数、工具调用次数、token、费用和�
 
 ### 7.3 P2/P3 状态扩展
 
-P2 将增加 pause、cancel、Attempt 和 `UNKNOWN`；P3 再增加 `WAITING_APPROVAL`。这些状态必须由
-新 Event 明确表达，不能由 P1 Reducer 猜测生成。
+P2 将增加 pause、cancel、Attempt、RecoveryDecision 和 `UNKNOWN`；P3 再增加等待、批准和拒绝
+Approval 的状态。这些状态必须由新 Event 明确表达，不能由 P1 Reducer 猜测生成。
 
 ## 8. Event 保存与恢复
 
@@ -215,18 +216,24 @@ occurred_at, causation_id, correlation_id, payload
 
 ### 8.2 P2 将怎样恢复
 
-Runtime 启动后扫描非终态 Run，从最近可用 Checkpoint 加后续 Event 重建状态；Checkpoint 损坏时
-回到完整 Event。恢复只发生在模型或工具 Activity 的已保存边界，不恢复 token stream 中间位置。
+Runtime 启动后扫描非终态 Run。完整 Event 永远是事实来源；Checkpoint 只保存 sequence、版本和
+state hash，用于加速重建。Checkpoint 缺失、损坏或不兼容时回到完整 Event。恢复只发生在模型或
+Tool Activity 的已保存边界，不恢复 token stream 中间位置。
 
 | 中断时的 Activity | 默认处理 |
 |---|---|
-| 纯读、无副作用 | 在次数和期限内创建新 Attempt 重试 |
+| 纯读、无副作用 | 在次数、deadline 和 Run budget 内创建新 Attempt 重试 |
 | 已确认成功 | 复用已保存结果，不重复执行 |
 | 工作区原子写 | 检查临时文件、目标文件和内容 hash |
 | 支持幂等键的远程写 | 用同一键查询或重试 |
 | 无法查询的外部写 | 标记 `UNKNOWN`，等待人工判断 |
 
-BearAgent 不承诺任意外部 API exactly-once，也不假装可以从任意 Python 调用栈继续。
+Activity 表示逻辑动作，Attempt 表示一次真实执行。输入无效、短暂基础设施故障、永久故障、权限
+拒绝和副作用结果不明需要分开处理；Error 的 `retryable` 不能单独授权重做外部写入。每次复用、
+重试、reconcile 或停下都形成 RecoveryDecision Event。
+
+BearAgent 不承诺任意外部 API exactly-once，也不假装可以从任意 Python 调用栈继续。P1 的 hard
+budget 继续限制 P2 的重试；接近预算时的收敛提示或重复失败 guard 只是可选 guardrail。
 
 ## 9. 模型接入（F-0004 边界，F-0017 配置与协议）
 
@@ -275,7 +282,7 @@ Registry 拒绝重名和模糊匹配。P1 Policy 默认拒绝，只允许程序�
 
 F-0007 的三个只读 Tool 和 F-0008 的 `workspace.write` 已通过这条路径运行测试。F-0016 增加了
 ToolExecutor 的记录式返回，并由 AgentLoop 把原始/规范化请求、Policy 决定和完整 ToolResult 写入
-v2 Event。P3 再加入 Grant、`ASK` 和 Approval。
+v2 Event。P3 再加入 Grant、`REQUIRE_APPROVAL` 和 Approval。
 
 ### 10.2 P1 文件范围
 
@@ -290,11 +297,18 @@ F-0008 增加 `workspace.write`：只接受有限 UTF-8 文本并写入 `outputs
 
 P1 Policy 只有固定允许/拒绝规则。P3 才增加可配置 Grant 和用户 Approval。
 
-### 10.3 P3 隔离执行
+### 10.3 P3 授权与隔离执行
+
+P3 把 Policy 扩展为 `ALLOW / DENY / REQUIRE_APPROVAL`。Grant 约束主体、动作、资源和限制；
+Approval 绑定 Run、Tool call、规范化参数 hash、有效期和一次性 nonce。登录身份、Prompt、Skill 和
+ToolResult 都不能创建 Grant。
 
 shell/code Tool 只通过独立 `SandboxBackend` runner：无特权用户、只读根文件系统、每 Run 受限
 workspace、CPU/内存/PID/时间/输出限制、默认断网，并且不挂 Provider 密钥、主数据库、宿主根目录
 或 Docker socket。runner 不可用时 Tool 明确不可用，不回退到 host subprocess。
+
+Approval 不能扩大 runner 边界，sandbox 也不能替代 Policy。runner timeout 仍按 P2 的
+Attempt/Receipt/reconcile/`UNKNOWN` 语义处理。
 
 ## 11. Context、Skill、Memory 和 MCP
 
@@ -309,9 +323,10 @@ Event。总 Context 超限时只丢弃最早的完整模型/Tool 交互组，不
 
 ### 11.2 P4 扩展
 
-Skill 是版本化说明包，不是权限；其中脚本默认不可执行。Memory 从带来源、可删除的 SQLite/文件
-记录开始，先使用 FTS5，只有实际数据证明不足时才引入向量检索。MCP 作为 Tool provider adapter，
-每个 server 和 Tool 仍需 schema、timeout、输出上限和 Grant。
+P4 先增加 HTTP/SSE、单用户认证和安全自托管，再扩大上下文与 Tool 表面。Skill 是版本化说明包，
+不是权限；其中脚本默认不可执行。Memory 从带来源、可删除的 SQLite/文件记录开始，先使用 FTS5，
+只有实际数据证明不足时才引入向量检索。MCP 作为 Tool provider adapter，每个 server 和 Tool 仍需
+schema、timeout、输出上限、恢复语义和 Grant。
 
 接入 Skill、Memory 或 MCP 都不能改变 Runtime 的 ToolRequest、Policy 和 Event 路径。
 
@@ -382,10 +397,11 @@ sequence cursor 和 `has_more`；默认 human 输出不打印 payload，显式 `
 只调用 EventStore port，数据库不存在时不会创建空库。进程中断后的非终态 Run 会原样显示，不会
 自动恢复或伪造 terminal 状态。
 
-### 13.2 P3 HTTP/SSE
+### 13.2 P4 HTTP/SSE
 
-P3 才增加 Run 创建、查询、Event stream、取消、Approval 和 Artifact 下载 API。CLI 与 API 操作同一
-Run。SSE 通过持久 Event sequence 续接，不只依赖内存 token stream。Web UI 属于 P4。
+P4 才增加 Run 创建、查询、Event stream、取消、Approval 和 Artifact 下载 API。CLI 与 API 操作同一
+Run。SSE 通过持久 Event sequence 续接，不只依赖内存 token stream。P3 先通过 CLI 完成授权和隔离
+闭环，避免把核心安全语义与公网服务一起调试。
 
 ## 14. Event、trace 和评测不是一件事
 
@@ -417,8 +433,8 @@ P1 从固定任务、结构化日志和 Event 查询开始；P2 增加中断恢�
 - runner 访问宿主、Docker socket、主数据库或 Provider key；
 - 重启后重复删除、发布、付款或远程写入。
 
-P1/P2 只在本机或私有通道使用。公开访问前必须完成认证、会话保护、rate limit、Policy/Approval、
-runner 隔离、日志脱敏和备份恢复演练。
+P1 至 P3 只在本机或私有通道使用。P4 公开访问前必须完成认证、会话保护、rate limit、
+Policy/Approval、runner 隔离、日志脱敏和备份恢复演练。
 
 ## 16. 技术选择
 
@@ -429,13 +445,13 @@ runner 隔离、日志脱敏和备份恢复演练。
 | 数据校验 | Pydantic | 边界校验和 JSON schema |
 | 异步 | asyncio/AnyIO | 流式模型和工具调用 |
 | CLI | Typer | 先形成可用本地入口 |
-| API | FastAPI + SSE，P3 引入 | 单向事件流足够，Web 后置 |
+| API | FastAPI + SSE，P4 引入 | 先完成恢复、授权和隔离，再开放服务入口 |
 | 存储 | SQLite WAL + 显式 migration | 无外部服务，事务和备份清楚 |
 | HTTP | httpx | async、timeout 和 streaming |
 | 测试 | pytest | 覆盖单元、契约、集成和故障注入 |
 | 质量 | Ruff + Pyright | 快速、可自动化 |
 | 文档 | Markdown/MDX + Starlight | 中文学习导航、本地搜索和 Mermaid |
-| 部署 | Docker Compose + 1Panel | 符合单机自托管范围 |
+| 部署 | Docker Compose + 1Panel，P4 引入 | 符合单机自托管范围 |
 
 第一版不把 LangChain/LangGraph 或 Temporal 作为内核。只有真实需求证明需要多 worker、复杂 timer
 或补偿流程时，才用新 ADR 重新评估。
@@ -445,8 +461,8 @@ runner 隔离、日志脱敏和备份恢复演练。
 | 阶段 | 关键证据 |
 |---|---|
 | P1 | 固定文件任务完成；路径越界和预算耗尽被拒绝；每个 Activity 可由 Event 还原 |
-| P2 | 多个 kill point 后状态一致；已确认写入不重复；无法确认结果进入 `UNKNOWN` |
-| P3 | Approval 参数不可篡改；runner 读不到宿主资源；备份可以在空目录恢复 |
+| P2 | 多个 kill point 后状态一致；每次 Attempt 可查；已确认写入不重复；结果不明进入 `UNKNOWN` |
+| P3 | Approval 参数不可篡改且可恢复；runner 读不到宿主资源；runner 失败时没有 host fallback |
 
 模块单元测试不能代替端到端用户结果。详细任务数和退出门槛见[项目路线图](../project/roadmap.md)。
 
@@ -457,7 +473,8 @@ runner 隔离、日志脱敏和备份恢复演练。
 F-0008 已通过 ADR-0012 决定：P1 不设置 Artifact TTL，也不自动清理成功文件；崩溃残留和 reconcile
 留给 P2。对应后续 Feature 开始前仍需决定：
 
-- F-0012/F-0014：服务器资源与 Docker/Podman runner；
+- F-0012：SandboxBackend 选择、runner 资源上限和 Docker/Podman 边界；
+- F-0013/F-0014：P4 HTTP、自托管和备份恢复方案；
 - P4 Web UI：独立前端还是最小服务端页面；
 - 公开发布：Apache-2.0 或 AGPL-3.0。
 

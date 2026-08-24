@@ -1,8 +1,8 @@
 ---
 title: Local-first and Self-hosting Strategy
 status: accepted
-version: 0.6
-last_verified: 2026-08-23
+version: 0.7
+last_verified: 2026-08-24
 ---
 
 # 本地开发与自托管
@@ -10,13 +10,13 @@ last_verified: 2026-08-23
 ## 1. 现在怎样运行
 
 P1 全部在本地开发和验证，Runtime 不开放 HTTP。F-0015 文档站也只在本地与 CI 构建。P1 完成后
-可以发布静态文档；P2 完成后建立私有服务器 staging；只有 P3 的权限、认证、runner 和备份恢复
-全部通过，Agent 服务才通过公网子域名提供给项目所有者。
+可以发布静态文档；P2 在私有服务器演练恢复；P3 仍通过私有通道验证 Approval 与隔离 runner；只有
+P4 的认证、部署和备份恢复全部通过，Agent 服务才通过公网子域名提供给项目所有者。
 
 不需要新域名：
 
 - `docs.bearguin.cn`：P1 完成后发布静态文档；
-- `agent.bearguin.cn`：P3 后的单用户 Agent API，未来 Web UI 与 `/api` 同源。
+- `agent.bearguin.cn`：P4 后的单用户 Agent API，未来 Web UI 与 `/api` 同源。
 
 暂不增加 `api.*`，避免 CORS、cookie 和证书管理复杂度。
 
@@ -25,12 +25,13 @@ P1 全部在本地开发和验证，Runtime 不开放 HTTP。F-0015 文档站也
 服务器会暴露 Windows 本地开发看不到的问题：Linux 路径和权限、容器 volume 的 UID/GID、SQLite
 WAL 与备份、时区和重启、SSE 代理缓冲、TLS timeout，以及 runner 的网络和 secret 隔离。
 
-因此部署分三步：
+因此部署分四步：
 
 ```text
 Local       快速开发和全部自动测试
-Staging     私有 Linux/Compose/重启与恢复演练
-Production  P3 安全门通过后才启用公网 hostname
+P2 staging  私有 Linux/重启与恢复演练
+P3 staging  Approval 与隔离 runner 演练
+Production  P4 接入与部署门通过后才启用公网 hostname
 ```
 
 ## 3. 每个阶段允许什么
@@ -77,19 +78,26 @@ migration 只返回安全 persistence Error。这里仍是本地命令，不会�
 ### P2：私有服务器 staging
 
 - 使用一台 Docker Compose 主机；
-- 通过 SSH 运行 CLI；临时 API 只能绑定 `127.0.0.1`；
+- 通过 SSH 运行 CLI，不开放 HTTP；
 - 通过 SSH tunnel、Tailscale 或 WireGuard 访问；
 - 每个 release 做 kill/restart 和 restore drill；
 - 不需要公网 DNS。
 
-### P3：单用户生产 beta
+### P3：私有授权与隔离 staging
+
+- 继续通过 SSH、SSH tunnel 或私有网络操作 CLI；
+- Grant、Approval 和 Policy 决定全部写入 Event；
+- runner 位于独立私有 network，不接受公网入站；
+- 执行 Approval 篡改、等待批准中断、secret/文件/网络隔离和 no-host-fallback 演练；
+- 不开放公网 HTTP，不把登录身份当成 Tool Grant。
+
+### P4：单用户生产 beta
 
 - `agent.bearguin.cn` 指向服务器；
 - 1Panel/OpenResty 终止 TLS，反向代理到 loopback API；
 - 应用自己完成单用户认证，1Panel 密码访问只能作为第二层；
-- runner 位于独立私有 network，不接受公网入站；
 - 定期备份 SQLite、Artifact 和非 secret 配置；
-- P3 仍以 CLI/API 为主，Web UI 属于 P4。
+- P4 先开放 CLI/API；Web UI 在 API 和部署边界稳定后接入。
 
 ## 4. 服务器连接方式
 
@@ -105,7 +113,7 @@ flowchart LR
     D["docs.bearguin.cn"] --> S["静态 site/dist"]
 ```
 
-P3 Compose 只需要 Runtime API 和 runner。OpenResty 和证书继续由现有 1Panel 管理。不为“标准架构”
+P4 Compose 只需要 Runtime API 和 runner。OpenResty 和证书继续由现有 1Panel 管理。不为“标准架构”
 加入 PostgreSQL、Redis、队列或独立观测服务。
 
 ## 5. DNS 和 1Panel

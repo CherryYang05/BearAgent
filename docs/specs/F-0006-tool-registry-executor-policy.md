@@ -42,7 +42,7 @@ F-0006 先把这扇门建起来。它暂时不提供真实文件 Tool。F-0007 �
 
 - 不读写真实文件。读取和搜索属于 F-0007，写入 `outputs/**` 属于 F-0008；
 - 不接 Agent Loop、Event 或 CLI。它们仍由 F-0016 和 F-0005 完成；
-- 不做用户审批。P1 没有 Grant、`ASK` 或 Approval；
+- 不做用户审批。P1 没有 Grant、`REQUIRE_APPROVAL` 或 Approval；
 - 不提供 shell、代码执行、任意网络 Tool、MCP 或自动发现插件；
 - 不自动重试，也不加入 Attempt、Receipt、Checkpoint 或 `UNKNOWN`；
 - 不修改 SQLite，也不改变已经发布的 v1 Run Event 格式。

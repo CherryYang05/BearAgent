@@ -14,8 +14,8 @@ BearAgent 想让个人 Agent 在本地可靠地完成长任务：用户能看清
 :::caution[这是产品方向，不是当前功能清单]
 当前已完成工程基础、内部数据类型、状态与预算规则、SQLite EventStore、三种模型协议 adapter、统一
 ToolExecutor、workspace 读写 Tool、原子输出 Artifact、有界 Agent Loop、本地文档站和
-`run/inspect/events` production composition。Provider 配置与 live runner 的离线测试已通过；真实模型
-P1 gate 尚未完成。
+`run/inspect/events` production composition。F-0017 的真实模型 gate 已通过 5/5，P1 已关闭；P2/P3
+仍是规划，不是当前功能。
 :::
 
 ## 第一个用户和第一个任务
@@ -27,8 +27,8 @@ BearAgent 首先服务愿意在自己电脑或服务器运行 Agent 的开发者
 同一组任务会贯穿前三个阶段：
 
 - P1 证明任务能完成，而且模型调用、工具操作、预算和错误可以查看；
-- P2 人为中断进程，证明系统只从能够确认的位置继续；
-- P3 尝试越权和篡改批准参数，证明权限与隔离真正生效。
+- P2 人为中断进程，证明每次复用、重试、reconcile 或 `UNKNOWN` 都有已保存事实支撑；
+- P3 尝试越权、篡改批准参数和读取宿主 secret，证明授权与隔离两道门真正生效。
 
 ## BearAgent 选择负责哪一层
 
@@ -43,7 +43,9 @@ BearAgent 首先服务愿意在自己电脑或服务器运行 Agent 的开发者
 这些功能会扩大入口和能力，却不会自动解决重复写入、权限判断和故障恢复。如果核心执行记录还
 不可靠，增加更多工具只会增加无法解释的失败方式。
 
-因此 P1 至 P3 保持单用户、单 Agent、单进程、SQLite 和 CLI。P4 才依次接入 Skill、MCP、Web 和
-Memory，并要求它们继续经过原有的记录和权限路径。
+因此 P1 至 P3 保持单用户、单 Agent、单个 Runtime 进程、SQLite 和 CLI。P4 才加入 HTTP、认证和
+安全自托管，再依次接入 Skill、MCP、Web 和 Memory，并要求它们继续经过原有的 Event、恢复、Policy
+和 runner 路径。
 
-完整阶段顺序见[阶段路线](milestones.md)，当前事实见[实现状态](status.md)。
+完整阶段顺序见[阶段路线](milestones.md)，当前事实见
+[实现状态](status.md)。

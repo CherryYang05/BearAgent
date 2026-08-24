@@ -1,342 +1,278 @@
 ---
 title: BearAgent Roadmap
 status: accepted
-version: 0.12
-last_verified: 2026-08-23
+version: 1.0
+last_verified: 2026-08-24
 ---
 
 # BearAgent 项目路线图
 
-## 1. 路线图怎样使用
+## 1. 先记住三个问题
 
-BearAgent 按用户能够复现的结果推进，不按文件数量或开发天数关闭阶段。前三个阶段始终使用同一组
-仓库与本地文档任务：先完成并看清过程，再处理中断，最后接入权限与隔离。
+BearAgent 不追着 Agent 产品的功能清单前进。P1 至 P3 沿着同一条 Runtime 主线，每个阶段只回答
+一个可以通过故障演练验证的问题：
 
 ```text
-P1 任务能完成，过程能查看
-           ↓
-P2 中断后只从能确认的位置继续
-           ↓
-P3 危险操作获准后在隔离环境执行
+P1 发生了什么？
+        ↓
+P2 根据已保存事实，下一步怎样做才安全？
+        ↓
+P3 这个动作是否获准，又只能影响哪里？
 ```
 
-每个阶段都必须同时满足真实任务、失败演练、文档和测试。模块存在、ADR 被接受或架构图已经画出，
-都不能替代阶段结果。
+- **P1：Inspectable Execution / 可检查执行。** 保存模型、Tool、预算、Error 和 Artifact 事实；
+- **P2：Recoverable Execution Semantics / 可恢复执行语义。** 区分逻辑 Activity 与实际 Attempt，
+  根据副作用证据选择复用、重试、reconcile 或 `UNKNOWN`；
+- **P3：Authorized and Isolated Execution / 授权与隔离执行。** 危险动作先取得绑定具体参数的
+  Grant/Approval，再进入受控 runner。
 
-产品定位见[产品定位](product-positioning.md)，模块连接和长期边界见[总体架构](../architecture/overview.md)。
+阶段只由可复现的用户结果关闭。模块存在、ADR 被接受、Checkpoint 能写入或 sandbox 能启动，都
+不能单独算完成。
 
 ## 2. 固定产品范围
 
-首个任务是仓库与本地文档研究：在指定 workspace 内查找和比较资料，并把报告或说明写入
-`outputs/**`。P1 的文件 Tool 不联网，也不修改已有源码和输入文件；只有显式选择的模型 adapter
-可以访问配置的 HTTPS endpoint。
+首个场景仍是仓库与本地文档研究：在指定 workspace 内查找和比较资料，并把结果写入
+`outputs/**`。同一组任务会继续用于 P2 的中断恢复和 P3 的授权、隔离演练。
 
-P0 至 P3 固定为单用户、单 Agent、单进程、SQLite 和 CLI 优先。所有外部动作经过统一 Tool
-executor；主 Runtime 进程不执行模型生成的 shell。Web、MCP、Memory、多个 Agent 和分布式 worker
-不会抢在执行、恢复和权限闭环之前。
+P0 至 P3 保持单用户、单 Agent、单个 Runtime 进程、SQLite 和 CLI 优先。所有外部动作继续经过
+`Registry -> prepare -> Policy -> ToolExecutor`。模型、Prompt、Skill、workspace 内容和 Tool 输出
+都不能创建权限。主 Runtime 进程不执行模型生成的 shell。
+
+以下能力不会提前挤进 P2/P3：
+
+- Agent routing、multi-agent 和通用 Workflow engine；
+- MCP、Web、Memory、自动模型/Tool 路由和大规模 Tool search；
+- 语义化通用死循环判断；
+- 公开 HTTP 服务、多用户、分布式 worker 和 exactly-once 承诺。
 
 ## 3. 阶段总览
 
 | 阶段 | 状态 | 用户得到什么 | 关闭阶段的关键证据 |
 |---|---|---|---|
-| P0 工程基础 | 已完成 | 仓库可安装、测试，边界和开发流程明确 | 干净安装、CLI、CI、依赖边界、文档规则 |
+| P0 工程基础 | 已完成 | 仓库可安装、测试，边界和开发规则明确 | 干净安装、CLI、CI、依赖边界、文档规则 |
 | P1 可检查执行 | 已完成 | 固定本地文件任务可完成，过程和失败可查看 | Fake 5/5、真实 5/5、路径拒绝、预算终止、完整 Event |
-| P2 失败恢复 | 未开始 | 中断后只从能确认的位置继续 | kill point、状态重建、不重复写入、`UNKNOWN` |
-| P3 权限与隔离 | 未开始 | 危险操作获准后执行，代码与宿主隔离，可安全自托管 | Approval 篡改测试、runner 隔离、备份恢复、HTTPS |
-| P4 日常使用 | 未开始 | Skill、MCP、Web 和 Memory 依次接入 | 新入口不绕过原有记录和权限路径 |
+| P2 可恢复执行语义 | 未开始 | 中断后根据事实选择安全的下一步 | kill point、Attempt、恢复决策、不重复写入、`UNKNOWN` |
+| P3 授权与隔离执行 | 未开始 | 危险动作获准后只在受控边界内执行 | Approval 篡改阻断、等待批准恢复、runner 资源与 secret 隔离 |
+| P4 接入与日常使用 | 未开始 | 安全自托管后，Skill、MCP、Web 和 Memory 依次接入 | 新入口不绕过 Event、恢复、Policy 和 runner 路径 |
 | P5 持续评测 | 未开始 | 可以比较质量、成本、恢复和安全回归 | 固定数据集、执行路径断言、跨版本报告 |
 
-P3 是第一个可信 Runtime 完成线，不是成熟通用 Agent 产品完成线。
+P3 是可信 Runtime 内核的完成线。P4 才是把这个内核变成日常可访问产品的阶段。
 
-## 4. P0：工程基础
+## 4. 已完成的基础
 
-**状态：已完成（2026-08-09）。** 详细验收见 [F-0000](../specs/F-0000-p0-engineering-baseline.md)。
+### P0：工程基础
 
-### 交付结果
+**状态：已完成（2026-08-09）。** 详细验收见
+[F-0000](../specs/F-0000-p0-engineering-baseline.md)。
 
-- Python 3.12、uv、包结构和 lockfile；
-- `help`、`version`、`doctor` 命令；
-- Ruff、Pyright、pytest、Windows/Ubuntu CI 和文档链接检查；
-- domain/runtime/ports/adapters/interfaces 模块边界；
-- Fake model、Fake tool、内存 Event store；
-- Architecture、Roadmap、Spec/ADR/Plan 模板和开发流程。
+P0 建立 Python 3.12、uv、CI、CLI、模块依赖检查、测试替身，以及 Spec/ADR/Plan 和文档规则。
 
-### 完成证据
-
-干净环境可以按 README 安装并运行全部检查；architecture test 会阻止 Runtime 导入外层框架；新
-Feature 可以根据 Spec、Plan、测试和文档流程推进。
-
-## 5. P1：可检查执行
+### P1：可检查执行
 
 **状态：已完成（2026-08-23）。** F-0001 至 F-0008、F-0015、F-0016 和 F-0017 均已实现。
-F-0017 交付直接填写本机 key、拒绝 pricing 且被 Git 忽略的 config v1、RunProfile v2、三种协议
-adapter、Event v3 和默认关闭的 live runner。suite v1.1.1 又通过 production composition 完成四个
-普通任务与安全 canary；最终离线 Reality Check 和脱敏报告均已完成。
 
-### 5.1 用户结果
+P1 已接通：
 
-命令行可以启动仓库与本地文档研究 Run。Agent 读取指定 workspace，并向 `outputs/**` 生成结果。
-用户可以查看每次模型和 Tool Activity、预算、Error 和 Artifact。
+- 类型化领域数据、Event、Reducer 和五类 hard budget；
+- SQLite EventStore、projection、migration 和重开查询；
+- 三种显式模型协议 adapter、Provider 配置和有界 Context；
+- 默认拒绝 Policy、workspace 读写 Tool、原子 Artifact 和串行 Agent Loop；
+- `run/inspect/events` CLI、Fake 任务集、真实模型 gate 和脱敏证据。
 
-P1 只承诺已经保存的事实可查。进程退出后不自动继续，未完成的 Run 也不能显示为成功。
+最终离线门禁通过 445 个测试、schema、链接、35 页站点、sdist/wheel 和隔离 CLI smoke。suite
+v1.1.1 使用 DeepSeek V4 经 production composition 完成四个普通任务和一个安全 canary，结果为
+5/5。证据见 [F-0017 P1 live report](../evidence/F-0017-p1-live-report-v1.json)。
 
-### 5.2 需要接通的路径
+P1 只保证已保存事实可查。进程退出后不会自动继续；timeout 也不会撤销可能已经发生的副作用。
 
-#### 状态和预算
+## 5. P2：可恢复执行语义
 
-- Run/Activity 生命周期和具体 Event；
-- 纯 Reducer 从 Event 计算状态；
-- 模型次数、Tool 次数、token、费用和总时间预算；
-- P1 同时最多一个 active Activity。
+**状态：未开始。** P1 已关闭；开始实现前仍要逐个接受对应 Feature Spec。
 
-F-0002 已完成这一部分。
+### 5.1 阶段目标
 
-#### Event 保存和查询
+> Runtime 在进程中断或 Tool 结果不确定后，只根据已提交事实判断下一步；已经确认的副作用不重复，
+> 安全操作可以有界重试，可核对的操作先 reconcile，无法确认的操作明确进入 `UNKNOWN`。
 
-- Event store port、SQLite WAL adapter 和显式 SQL migration；
-- Event 追加与 projection 更新在同一 transaction；
-- 保存完整模型响应、usage、Provider request ID、ToolRequest/ToolResult、Error 和 Artifact 元数据；
-- token delta 可以实时输出，但不逐 token 写 WAL。
+P2 的核心不是“多 retry 几次”，而是让每次恢复决定都有可审计的依据。
 
-P1 的 Event log 用于检查事实，不包含 Checkpoint 或启动恢复。
+### 5.2 四层恢复语义
 
-F-0003 已完成 EventStore port、SQLite adapter、schema v1 和 projection。正常重开数据库后仍能
-查询已提交事实，但 Runtime 不会自动扫描或继续非终态 Run。
+#### 第一层：状态重建
 
-#### 模型和 Agent Loop
+- 完整 Event 永远是事实来源；
+- Event-only replay 与 `Checkpoint + tail Event` 必须得到相同 RunState 和 state hash；
+- Checkpoint 只加速读取，缺失、损坏或版本不兼容时必须回到完整 Event；
+- 启动扫描只识别非终态 Run 和最后一个已保存边界，不在这一层盲目恢复外部调用。
 
-- 三种显式 wire protocol adapter，外部 SDK 对象在边界翻译；
-- 一个配置只选择一个 adapter，不检测厂商，也不 fallback；
-- Fake Provider 驱动确定性 Loop 测试；
-- ContextBuilder 按稳定顺序组织 Runtime 规则、目标、必要消息、Tool schema 和 ToolResult；
-- Context 和 ToolResult 有明确字符/byte 上限，大结果使用确定性 preview；
-- Agent Loop 有明确结束条件，并在每次 Activity 前检查预算；
-- Prompt、模型、Tool schema 和 Agent 配置版本进入 trace，密钥不保存。
+#### 第二层：Activity 与 Attempt 分开
 
-P1 不做自动摘要 Memory 或复杂上下文压缩。
+Activity 表示一个逻辑动作。Attempt 表示这个动作的一次真实执行尝试。重试必须创建新 Attempt，
+不能覆盖旧失败，也不能让 Event 看起来像只执行过一次。
 
-F-0004 已完成 Provider-neutral 模型数据与 port、确定性测试 adapter 和首个 OpenAI Responses 流式
-adapter。F-0017 又实现 OpenAI Chat Completions 与 Anthropic Messages adapter，并由 `bootstrap.py`
-按 catalog 的显式 protocol 选择一个生产 adapter。三个 adapter 共享 contract/security 测试，缺 usage、
-未知关键流事件、不完整 ToolCall 或无法安全表示的隐藏 reasoning 都失败。真实 gate 证据已通过脱敏复核。
+每个 Attempt 至少关联：请求、开始/结束边界、失败类别、deadline、幂等键和可选 Receipt。模型重试、
+Tool 重试和网络 transport 重试必须能够区分。
 
-#### 受限文件工具
+#### 第三层：先分类，再决定
 
-- `ToolSpec`、`ToolRequest`、`ToolResult`、Registry 和统一 Tool executor；
-- 目录列出、文件读取、内容搜索；
-- `write_file` 只向 `outputs/**` 原子创建或替换文件；
-- 路径规范化拒绝绝对路径、`..`、symlink 逃逸和越界 rename；
-- 输入、输出、时间和错误文本均有上限。
+现有 `ToolSideEffect` 说明动作会影响哪里，`ToolRetrySafety` 只给出 P1 的粗粒度提示。P2 需要增加
+独立的恢复语义，至少区分：
 
-P1 的 Policy 是固定允许/拒绝规则。用户 Approval 属于 P3。
-
-F-0006 已完成有界 Tool 数据、精确 Registry、默认拒绝 Policy 和统一 ToolExecutor。F-0007 已完成
-`workspace.list`、`workspace.read`、`workspace.search` 和跨平台路径边界。F-0008 已完成只写
-`outputs/**` 的 `workspace.write`、同目录原子提交和 Artifact 元数据。F-0016 已让 AgentLoop 只调用
-ToolExecutor 的记录式入口，并把原始/规范化请求、Policy 决定和 ToolResult 写成 v2 Event。
-
-#### CLI 和固定任务
-
-- `bearagent run` 启动 Run，并输出模型文本、Tool 状态和最终 Artifact；
-- `run inspect` 显示状态、预算、usage、Error 和 Artifact；
-- `run events` 按 sequence 输出事实；
-- 人类输出与 `--json` 调用同一 application result；
-- 固定任务集记录任务版本、模型、Prompt、Tool 版本、预算、结果和执行路径。
-
-F-0016 已交付五个版本化 Fake Provider 任务，并在内存/SQLite Store 上验证 5/5。F-0005 让相同任务
-再通过 production composition、真实 SQLite 和 workspace Tools 验证 5/5，并接通 CLI/query 输出。
-F-0017 让 Fake 与 live runner 共用 objective、fixture、预算和确定性 rubric；每个真实任务使用独立
-workspace/SQLite，并在完成后重开查询。客户端只在首个模型 Activity 创建，因此零预算和缺少所选
-凭据都会留下明确结果。live preflight 未通过时不会创建数据库、workspace、SDK client 或 Run。
-
-### 5.3 P1 明确不做
-
-- Checkpoint、启动恢复、pause/resume/cancel/retry、Attempt、Receipt 和 `UNKNOWN`；
-- shell、代码执行、任意 HTTP、MCP、Memory、Web UI 和自动历史摘要；
-- 修改 workspace 中已有源码或输入文件；
-- 并行 Tool、多个 Agent 或多 Provider 兼容矩阵；
-- 公开 HTTP 服务和 Agent 服务器部署。
-
-### 5.4 推荐 Feature 顺序
-
-1. F-0002：Run/Activity 状态、Reducer 和预算——已实现；
-2. F-0003：Event store、SQLite、projection 和 migration——已实现；
-3. F-0004：模型接口和首个真实 adapter——已实现；
-4. F-0006：Tool 接口、Registry、executor 和固定 Policy——已实现；
-5. [F-0007：workspace 边界和只读工具](../specs/F-0007-workspace-read-tools.md)——已实现；
-6. [F-0008：`outputs/**` 原子写和 Artifact](../specs/F-0008-atomic-output-artifacts.md)——已实现；
-7. [F-0016：ContextBuilder、有界 Loop、版本化 Agent 配置和任务集](../specs/F-0016-bounded-context-agent-loop.md)
-   ——已实现；
-8. [F-0005：`run/inspect/events` CLI 与端到端演示](../specs/F-0005-run-inspect-events-cli.md)——已实现；
-9. [F-0017：用户配置模型协议与 P1 live gate](../specs/F-0017-configurable-model-providers-live-gate.md)
-   ——已实现；真实 suite v1.1.1 通过 5/5。
-
-每次只激活一个主 Feature。可以根据依赖调整顺序，但不能并行铺开整个 Backlog。
-
-### 5.5 旗舰任务
-
-```powershell
-bearagent run "阅读 docs 下的架构、产品定位和 SOP，生成一份不超过 800 字的项目介绍到 outputs/intro.md"
-bearagent run inspect <run-id>
-bearagent run events <run-id> --json
+```text
+READ_ONLY        没有外部副作用
+IDEMPOTENT       使用同一幂等键重复执行，结果不再变化
+RECONCILABLE     可以通过目标状态或 Receipt 核对
+NON_IDEMPOTENT   无可靠证据时不能自动重做
 ```
 
-任务集还要覆盖多文档汇总、带来源的差异比较和已有输出的受控替换。演示同时展示非法路径请求被
-拒绝，以及低预算 Run 明确失败。
+失败也至少分成输入无效、短暂基础设施故障、永久故障、权限拒绝和副作用结果不明。一个
+`retryable=true` 不能单独授权 Runtime 重做有副作用的动作。
 
-### 5.6 P1 退出证据
+#### 第四层：恢复策略
 
-- Fake Provider 完成 5/5 固定任务，并断言预期工具路径和终止原因；
-- 一个显式选择的真实配置完成四个普通任务和一个安全 canary，无需修改代码、Prompt 或 rubric；
-- live preflight 固定 Provider、model、pricing snapshot、commit 和 suite cost cap，并在调用前显示最坏估算；
-- 每个 Artifact 有 hash，任务失败可以从记录复现；
-- 路径逃逸、超大读写和 timeout 产生结构化拒绝；
-- 每个 Activity 可由 `inspect` 关联到有序 Event；
-- 预算耗尽后不再请求新 Activity；
-- transaction 故障不会出现 projection 已提交而 Event 缺失；
-- 进程退出后已提交 Event 可查询，非终态 Run 不显示成功；
-- schema、migration、contract、integration、security 和站点构建通过；
-- 状态页明确写出 P1 尚不支持崩溃恢复、Approval 和代码隔离。
+```text
+READ_ONLY + transient failure       -> 在次数、deadline 和 Run budget 内新建 Attempt
+IDEMPOTENT                          -> 使用同一幂等键查询或重试
+RECONCILABLE                        -> 先 reconcile，再决定复用或重试
+NON_IDEMPOTENT + insufficient proof -> UNKNOWN
+```
 
-## 6. P2：失败恢复
+恢复决定本身写成 Event。用户必须能看到系统为什么继续、为什么没有重试，或为什么停在
+`UNKNOWN`。
 
-**状态：未开始。P1 已关闭；开始 P2 前仍需接受对应 Feature Spec。**
+### 5.3 操作控制
 
-### 6.1 用户结果
+- `pause`、`resume`、`cancel`、`retry` 先保存用户意图，再影响调度；
+- cancel 后不创建新的 Activity；已经开始的外部副作用仍按实际证据处理；
+- retry 针对明确 Activity 创建新 Attempt，不重写旧 Event；
+- 重复命令必须幂等，或返回稳定、可查询的冲突；
+- `UNKNOWN` 需要 inspect、人工确认结果和审计入口，不能只成为数据库里的隐藏状态。
 
-进程退出、取消或重试后，BearAgent 根据已保存 Event 决定下一步。已确认成功的 Tool 不重复执行；
-安全的未完成操作可以创建新 Attempt；结果无法确认时停在 `UNKNOWN`。
+### 5.4 故障演练
 
-### 6.2 交付范围
-
-#### 状态重建
-
-- 从完整 Event 重建同一 RunState；
-- Checkpoint 保存 sequence、版本和 state hash，只用于加速；
-- Checkpoint 缺失、损坏或不兼容时回到完整 Event；
-- 从空库和至少一个旧 schema version 迁移。
-
-#### 恢复决定
-
-- 启动时扫描非终态 Run，并按最后一个已保存边界分类；
-- 未完成模型 stream 从前一边界重新请求，不承诺相同 token；
-- 已完成 Tool 复用结果，不重复执行；
-- 未完成 Activity 根据副作用说明选择重试、reconcile 或 `UNKNOWN`；
-- 恢复决定本身写成 Event，用户能看出为什么继续或停下。
-
-#### 控制命令
-
-- pause、resume、cancel、retry 先记录意图，再向 adapter 传播；
-- cancel 后不再调度新 Activity；
-- retry 创建新 Attempt，不覆盖旧记录；
-- 重复命令必须幂等或返回稳定冲突。
-
-#### 写入结果核对
-
-- 每个写 Activity 有幂等键、Attempt 和可选 Receipt；
-- workspace 原子写通过临时文件、目标文件和 hash reconcile；
-- 纯读在次数和 deadline 内自动重试；
-- 支持幂等键的远程写用同一键查询或重试；
-- 无法查询且没有 Receipt 的外部写进入 `UNKNOWN`。
-
-### 6.3 故障演练
-
-至少在以下位置强制结束 Runtime：
+至少在这些边界强制结束 Runtime：
 
 1. 模型请求 Event 已保存、完成 Event 未保存；
-2. Tool 完成 Event 已保存、下一次模型请求尚未保存；
-3. workspace 临时文件写完、原子 replace 之前；
-4. cancel 意图已保存、adapter 尚未停止；
-5. projection transaction 回滚，以及 Checkpoint 损坏。
+2. Tool Attempt 已开始、结果 Event 未保存；
+3. `workspace.write` 临时文件完成、`os.replace` 之前；
+4. `os.replace` 已发生、ToolResult/Event 尚未保存；
+5. cancel 意图已保存、adapter 尚未停止；
+6. projection transaction 回滚、Checkpoint 缺失或损坏。
 
-等待 Approval 的中断属于 P3，因为 P2 尚未实现 Approval。
+每个 kill point 都要断言副作用次数、最终状态、恢复决定和可见 Error，而不只断言“程序能重启”。
 
-### 6.4 P2 明确不做
+### 5.5 hard budget、软提示和重复失败
 
-Grant/Approval、shell runner、公开 API、任意调用栈或 token stream 的字节级恢复、不可查询外部写的
-exactly-once、多 worker 和通用 workflow engine。
+P1 的模型次数、Tool 次数、token、费用和总时间 hard budget 继续作为最终兜底。P2 的 retry 也消耗
+同一 Run budget，不能建立一套绕过预算的隐藏计数。
 
-### 6.5 P2 退出证据
+接近上限时向 Context 提供剩余预算提示，或者阻止“相同 Tool + 相同规范化参数 + 相同确定性失败 +
+无进展”的重复动作，可以作为后续小型 guardrail。它们不替代恢复语义，也不是 P2 关闭条件。项目
+不承诺通用语义死循环检测。
 
-- Windows 和 Linux 上全部故障演练通过；
-- Event-only 与 Checkpoint + tail 得到等价状态和 hash；
-- 已确认 workspace 写不重复，临时文件可正确 reconcile；
-- cancel 后没有新 Activity，重复命令不制造重复转换；
-- `UNKNOWN` 有查看、人工处理和审计入口；
-- migration/recovery 测试覆盖空库和旧版本；
-- golden trace 可以用 Fake adapter 重放并断言副作用次数。
+### 5.6 P2 明确不做
 
-P2 完成后才建立只通过 SSH tunnel 或私有网络访问的服务器 staging。
+Grant/Approval、sandbox、shell、公开 API、Routing、Memory、MCP、任意调用栈或 token stream 的字节级
+恢复、不可查询外部写的 exactly-once、多 worker 和通用 Workflow engine。
 
-## 7. P3：权限、隔离与自托管
+### 5.7 P2 Definition of Done
 
-**状态：未开始。必须在 P2 恢复闭环完成后启动。**
+- Event-only 与 Checkpoint replay 在 Windows/Linux 得到等价状态；
+- kill-point suite 能从仅有的持久事实恢复，并记录每次 RecoveryDecision；
+- 已确认 workspace 写不重复，replace 前后残留都能正确 reconcile；
+- 只读与幂等操作只在明确上限内重试，每次 Attempt 都可查；
+- 非幂等且证据不足的动作不会自动重做，而是进入可处理的 `UNKNOWN`；
+- cancel 后不再调度新 Activity，重复控制命令不制造重复转换；
+- golden trace 可用 Fake adapter 重放，并精确断言外部副作用次数。
 
-### 7.1 用户结果
+## 6. P3：授权与隔离执行
 
-危险 Tool 请求必须经过精确授权；修改已批准参数会使批准失效；shell/code 只在隔离 runner 中执行；
-单用户服务可以通过认证和 HTTPS 安全访问，并且能从备份恢复。
+**状态：未开始。必须在 P2 的恢复闭环完成后启动。**
 
-### 7.2 三道门
+### 6.1 阶段目标
 
-1. **权限门**：Grant 表达主体、动作、资源和约束；Policy 默认拒绝；Approval 绑定 Run、Tool call、
-   规范化参数 hash、有效期和一次性 nonce；
-2. **隔离门**：runner 无特权、只读 rootfs、每 Run workspace、资源与输出受限、默认断网，不挂密钥、
-   主数据库、宿主根目录或 Docker socket；
-3. **部署门**：CLI/API 共用 application command；加入认证、SSE 续接、HTTPS、备份和恢复演练。
+> 任何危险副作用在执行前都必须取得可审计授权，并且只能在受控执行边界内运行；模型只提出
+> Intent，不持有权限。
 
-登录只确认用户身份，不自动授予 Tool 权限；sandbox 也不能代替 Policy 检查。runner 不可用时不得
-回退到 host subprocess。
+P3 回答“能不能做、可以影响哪里”。它不再同时承担公网 API 和产品部署。
 
-### 7.3 P3 明确不做
+### 6.2 授权门
 
-Web UI、MCP、Skill、Memory、浏览器、任意通用联网、多用户、组织 RBAC、插件市场、PostgreSQL、
-Redis、queue 和多 worker。
+P1 的 `ALLOW / DENY` 升级为：
 
-### 7.4 P3 退出证据
+```text
+ALLOW
+DENY
+REQUIRE_APPROVAL
+```
 
-- 十个固定 workspace 任务至少八个无需修改代码完成；
-- 模型完成、workspace 写提交和等待批准三个边界的中断恢复符合契约；
-- workspace 逃逸、Prompt injection 提权、批准参数篡改和 host shell 测试全部阻断；
-- 每个 Run 可导出 Event/trace，`UNKNOWN` 明确可见；
-- runner 读不到 Provider key、宿主根目录、主数据库和 Docker socket；
-- Docker Compose 可在干净 Linux 环境部署，并从 SQLite + Artifact 备份恢复；
-- `agent.bearguin.cn` 只通过 HTTPS 和认证访问，内部端口不直接暴露公网；
-- 新开发者只靠仓库文档即可解释核心边界、失败方式和验证命令。
+Grant 表达主体、动作、资源和限制。Approval 绑定具体 Run、Tool call、规范化参数 hash、有效期和
+一次性 nonce。批准 `git.push` 到一个分支，不能被复用到另一个分支；批准写一个路径，也不能被
+修改为删除其他资源。
 
-## 8. P4：日常使用
+登录身份、Prompt、AgentConfig、Skill 和 ToolResult 都不能创建 Grant。Policy 仍在 Tool 真正执行前
+重新检查可信 ToolSpec 和规范化参数。
+
+### 6.3 隔离门
+
+shell/code Tool 只通过独立 `SandboxBackend` runner：
+
+- 无特权用户、只读 rootfs、每 Run 独立 workspace；
+- CPU、内存、PID、wall time、stdout/stderr 和 Artifact 大小受限；
+- 网络默认关闭，需要的目标另行授权；
+- 不挂载 Provider key、主数据库、用户 home、宿主根目录或 Docker socket；
+- runner 不可用时 Tool 明确不可用，不回退到 host subprocess。
+
+sandbox 不能代替 Policy，Approval 也不能扩大 runner 的文件、网络或资源边界。两道门都通过后动作
+才可执行。
+
+### 6.4 与 P2 的连接
+
+- 等待 Approval 是持久状态，重启后仍能查询、批准或拒绝；
+- 批准或拒绝必须成为 Event，并能恢复到同一个 Policy 结果；
+- runner timeout 不等于副作用未发生，仍按 P2 的 Attempt/Receipt/reconcile/`UNKNOWN` 处理；
+- Approval 被篡改、过期、重放或跨 Run 使用时，不创建 runner Attempt；
+- 取消等待批准的 Run 后，旧 Approval 不能重新激活执行。
+
+### 6.5 P3 明确不做
+
+公开 HTTP API、HTTPS/DNS、Web UI、MCP、Skill、Memory、浏览器、任意通用联网、多用户、组织 RBAC、
+插件市场、PostgreSQL、Redis、queue 和多 worker。它们属于 P4 或更晚阶段。
+
+### 6.6 P3 Definition of Done
+
+- 参数绑定 Approval 的篡改、过期、重放和跨 Run 使用全部被拒绝；
+- Prompt injection、workspace 内容和 Tool 输出无法授予权限；
+- 等待批准、批准后尚未执行、runner 结果未保存三个中断边界都能安全恢复；
+- runner 读不到 Provider key、主数据库、宿主根目录、用户 home 和 Docker socket；
+- 文件、网络、进程、资源和输出越界全部产生有限、可审计失败；
+- runner 不可用时没有 host fallback；
+- 每个危险动作都能从 Intent、Policy、Grant/Approval、Attempt、Receipt 和最终 Event 串回完整证据。
+
+## 7. P4：接入与日常使用
 
 **状态：未开始。**
 
-先接入一个版本化只读 Skill，证明说明文件不能扩大权限；再接入一个受控只读 MCP Tool，证明外部
-工具仍经过相同的 Policy、Event、timeout 和输出限制。之后再增加 Web UI、带来源且可删除的
-Memory、受控联网和 Provider 配置体验。
+P4 先把可信 Runtime 变成可安全访问的单用户服务，再扩大 Tool 和上下文表面：
 
-验收重点：
+1. HTTP API、SSE 续接和单用户认证；
+2. Compose 加固、HTTPS、备份与空目录恢复；
+3. 一个版本化只读 Skill，证明说明文件不能扩大权限；
+4. 一个受控 MCP Tool，证明外部 Tool 仍经过 Policy、Attempt、Event 和 runner 边界；
+5. Web UI、带来源且可删除的 Memory，以及受控联网；
+6. Tool 数量真实增长后，再决定静态分组、deferred loading 或 Tool selector。
 
-- Skill 不修改 Runtime 内核，也不能授予权限；
-- MCP Tool 和内置 Tool 运行同一组权限、故障和记录测试；
-- Memory 显示来源、置信度和有效期，用户可以删除；
-- 上下文压缩后仍能通过 Event 或 Artifact 回到原始证据；
-- Web 和 CLI 操作同一个 Run，没有两套业务逻辑。
+Agent routing、multi-agent、通用 progress detector 和大规模 Tool search 不因“业界常见”自动进入 P4；
+必须先出现现有单 Agent/固定 Tool subset 无法解决的任务证据。
 
-## 9. P5：持续评测
+## 8. P5：持续评测
 
 **状态：未开始。**
 
-P5 把 P1 的任务、P2 的恢复演练和 P3 的安全演练接入统一追踪，比较模型、Prompt、Skill 和 Tool
-版本带来的答案、执行路径、成本和延迟变化。它负责平台化早期证据，不是第一次开始评测。
+P5 把 P1 任务、P2 恢复演练和 P3 安全演练接入统一追踪，比较模型、Prompt、Skill 和 Tool 版本带来
+的答案、执行路径、成本和延迟变化。评测从 P1 就存在；P5 负责持续、跨版本地运行这些证据。
 
-费用估算不回填到 P1 的 `config.json`。P5 在开始相应 Feature 前设计独立、版本化的
-`PricingCatalog` 和费用策略：实际 token usage 继续来自 Provider，估算值必须记录价格来源、生效时间
-和版本；没有可用价格时显示为未定价，而不是把 `0` 表述为真实零费用。只有无人值守执行、多模型
-比较或明确金额上限证明需求后，才加入按金额阻止后续 Activity 的策略。P1 的真实模型 gate 继续使用
-与用户配置分离的固定 pricing snapshot 和 suite cost cap。
-
-关闭 P5 时，固定评测可在 CI/nightly 复现；修改模型或 Tool schema 后能看到答案和 trace 回归；
-文档中的每项核心承诺都能链接到代码或测试证据。
-
-## 10. P6+：只有需求证明后再做
+## 9. P6+：只有需求证明后再做
 
 - Child Run 形式的多个 Agent；
 - schedule、webhook 和长 timer；
@@ -344,42 +280,68 @@ P5 把 P1 的任务、P2 的恢复演练和 P3 的安全演练接入统一追踪
 - 向量检索；
 - 消息渠道；
 - PostgreSQL、多 worker、queue 和 lease；
-- Temporal 或其他 durable workflow engine；
+- Temporal 或其他 durable Workflow engine；
 - 多用户和租户隔离。
 
-进入任一项前都要给出触发证据，例如 SQLite 写竞争达到阈值或任务需要跨天 timer，而不是因为
-参考项目已经支持。
+进入任一项前都要给出触发证据，例如 SQLite 写竞争达到阈值、任务需要跨天 timer，或固定 Tool subset
+已无法承载真实任务，而不是因为参考项目已经支持。
+
+## 10. 阶段边界速查
+
+| 问题 | 阶段 |
+|---|---|
+| model/tool/token/cost/time hard budget | P1 已实现 |
+| 有界 Context、ToolResult 截断、Tool timeout | P1 已实现 |
+| Attempt、失败分类、retry/backoff | P2 |
+| Checkpoint、启动扫描、resume/cancel | P2 |
+| idempotency、Receipt、reconcile、`UNKNOWN` | P2 |
+| Grant、参数绑定 Approval | P3 |
+| shell/code、文件/网络/secret 隔离 | P3 |
+| HTTP API、认证、HTTPS、自托管 | P4 |
+| Skill、MCP、Web、Memory | P4 |
+| Tool routing | P4 出现规模证据后 |
+| generalized loop/progress detection | P4/P5 研究项，不是承诺 |
+| 多 Agent、分布式执行 | P6+ |
 
 ## 11. Feature Backlog
 
 Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；开始前必须创建 Spec 并声明 milestone。
-移动阶段时不重编号。
+移动阶段时不重编号。下面对 F-0013/F-0014 的调整只改变尚未创建 Spec 的计划归属。
 
-### P1
+### P1（已完成）
 
-1. [F-0001：内部 ID、Message 和 Error](../specs/F-0001-domain-ids-messages-errors.md) — implemented
-2. [F-0002：Run/Activity 状态和预算](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md) — implemented
-3. [F-0003：Event store、SQLite、projection 和 migration](../specs/F-0003-event-store-sqlite-projections.md) — implemented
-4. [F-0006：Tool 接口、Registry、executor 和固定 Policy](../specs/F-0006-tool-registry-executor-policy.md) — implemented
-5. [F-0007：workspace 边界和只读工具](../specs/F-0007-workspace-read-tools.md) — implemented
-6. [F-0008：原子写和 Artifact](../specs/F-0008-atomic-output-artifacts.md) — implemented
-7. [F-0004：模型接口和首个真实 adapter](../specs/F-0004-model-provider-first-adapter.md) — implemented
-8. [F-0016：ContextBuilder、有界 Loop、Agent 配置和评测任务](../specs/F-0016-bounded-context-agent-loop.md) — implemented
-9. [F-0005：`run/inspect/events` CLI](../specs/F-0005-run-inspect-events-cli.md) — implemented
-10. [F-0015：本地 Starlight 文档站](../specs/F-0015-local-starlight-docs-site.md) — implemented
-11. [F-0017：用户配置模型服务和 P1 live-model gate](../specs/F-0017-configurable-model-providers-live-gate.md) — implemented
+1. [F-0001：内部 ID、Message 和 Error](../specs/F-0001-domain-ids-messages-errors.md)
+2. [F-0002：Run/Activity 状态和预算](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md)
+3. [F-0003：EventStore、SQLite、projection 和 migration](../specs/F-0003-event-store-sqlite-projections.md)
+4. [F-0004：模型接口和首个真实 adapter](../specs/F-0004-model-provider-first-adapter.md)
+5. [F-0005：`run/inspect/events` CLI](../specs/F-0005-run-inspect-events-cli.md)
+6. [F-0006：Tool Registry、Policy 和 Executor](../specs/F-0006-tool-registry-executor-policy.md)
+7. [F-0007：workspace 只读 Tool](../specs/F-0007-workspace-read-tools.md)
+8. [F-0008：原子输出和 Artifact](../specs/F-0008-atomic-output-artifacts.md)
+9. [F-0015：本地 Starlight 文档站](../specs/F-0015-local-starlight-docs-site.md)
+10. [F-0016：有界 Context 和串行 Agent Loop](../specs/F-0016-bounded-context-agent-loop.md)
+11. [F-0017：模型服务配置与真实 gate](../specs/F-0017-configurable-model-providers-live-gate.md)
 
-### P2
+### P2（计划；均未创建 Spec）
 
-1. F-0009：Checkpoint、重放和启动恢复
-2. F-0010：pause/cancel/retry、幂等、Receipt 和 `UNKNOWN`
+1. F-0009：Event-only 状态重建、Checkpoint fallback 和启动检查
+2. F-0010：Attempt、失败分类、恢复语义和有界 retry
+3. F-0018：幂等键、Receipt、reconcile 和 `UNKNOWN` 处置
+4. F-0019：pause/resume/cancel/retry 命令与完整 kill-point suite
 
-### P3
+### P3（计划；均未创建 Spec）
 
-1. F-0011：Grant、Policy 和持久 Approval
-2. F-0012：sandbox runner 和 code Tool
-3. F-0013：HTTP API、SSE 和认证
-4. F-0014：Compose、加固、备份和恢复
+1. F-0011：Grant、三态 Policy 和持久化参数绑定 Approval
+2. F-0012：SandboxBackend、隔离 runner 和受控 shell/code Tool
+
+### P4（计划；均未创建 Spec）
+
+1. F-0013：HTTP API、SSE 续接和单用户认证
+2. F-0014：Compose 加固、HTTPS、备份和空目录恢复
+3. F-0020：版本化只读 Skill
+4. F-0021：受控 MCP Tool
+5. F-0022：Web UI
+6. F-0023：有来源、可删除的 Memory 和上下文压缩
 
 如果一个条目在写 Spec 时仍无法独立验收，保留现有 ID 的核心范围，并用新的全局 ID 拆出后续
 Feature。一个 Plan 不得同时实现整个阶段。
@@ -387,7 +349,7 @@ Feature。一个 Plan 不得同时实现整个阶段。
 ## 12. 维护这份路线图
 
 - 每个 Feature 完成时，同步工程 `docs/`、相关学习页、开发者导读和当前状态；
-- 每个阶段完成时，再同步本 Roadmap、学习地图、架构总结和阶段结果；
+- 每个阶段完成时，同步本 Roadmap、学习地图、架构总结和阶段结果；
 - 外部项目只能提供概念和方案对照，不能建立 BearAgent 当前能力；
 - 同时最多一个 active 主 Plan；
 - 阶段只由可复现退出证据关闭，不按主观百分比关闭。

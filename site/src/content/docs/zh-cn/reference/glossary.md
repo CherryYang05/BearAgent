@@ -30,9 +30,11 @@ sourceRefs:
 | Receipt | 外部系统返回、可用于确认操作结果的证据 |
 | Reconcile | 利用文件状态、幂等键或 Receipt 核对操作究竟是否发生 |
 | `UNKNOWN` | 外部操作可能已发生，但 Runtime 暂时无法确认结果 |
+| RecoveryDecision | 根据已保存事实选择复用、重试、reconcile 或停下的决定 |
 | Tool | 执行读取、写入或其他外部动作的接口 |
 | Skill | 可复用的说明、知识和流程提示，不包含权限 |
 | Grant | 对主体、动作、资源和限制的授权 |
+| Approval | 用户对一次绑定具体 Run、Tool call 和规范化参数的授权决定 |
 | Workflow | 由代码确定阶段顺序的流程，不等于 Agent Loop |
 
 代码中不使用 Task、Job、Thread 或 Turn 代替 Run，也不使用 Capability 同时表示业务流程和安全
