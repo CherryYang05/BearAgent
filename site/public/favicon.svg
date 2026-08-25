@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 220 220" role="img" aria-labelledby="title">
+  <title id="title">BearAgent</title>
+  <rect width="220" height="220" rx="48" fill="#f7f9fc"/>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 43 25 H 31 C 18 25 16 40 16 53 V 82 C 16 97 11 106 3 110 C 11 114 16 123 16 138 V 167 C 16 180 18 195 31 195 H 43" fill="none" stroke="#2364aa" stroke-width="10"/>
+    <path d="M 177 25 H 189 C 202 25 204 40 204 53 V 82 C 204 97 209 106 217 110 C 209 114 204 123 204 138 V 167 C 204 180 202 195 189 195 H 177" fill="none" stroke="#2364aa" stroke-width="10"/>
+    <circle cx="79" cy="63" r="28" fill="#c9681f" stroke="#18263b" stroke-width="7"/>
+    <circle cx="141" cy="63" r="28" fill="#c9681f" stroke="#18263b" stroke-width="7"/>
+    <circle cx="79" cy="63" r="12" fill="#ffe1bb"/><circle cx="141" cy="63" r="12" fill="#ffe1bb"/>
+    <ellipse cx="110" cy="117" rx="66" ry="70" fill="#d8752c" stroke="#18263b" stroke-width="7"/>
+    <path d="M 57 86 C 68 72 82 64 96 61 M 163 86 C 152 72 138 64 124 61" fill="none" stroke="#18263b" stroke-width="7"/>
+    <circle cx="86" cy="108" r="7" fill="#18263b"/><circle cx="134" cy="108" r="7" fill="#18263b"/>
+    <ellipse cx="110" cy="139" rx="36" ry="31" fill="#fff0d7"/>
+    <path d="M 99 130 Q 110 122 121 130 Q 119 143 110 143 Q 101 143 99 130 Z" fill="#18263b"/>
+    <path d="M 110 143 V 151 M 110 151 C 101 162 90 160 86 151 M 110 151 C 119 162 130 160 134 151" fill="none" stroke="#18263b" stroke-width="5"/>
+  </g>
+</svg>
