@@ -1,8 +1,8 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/bearagent-brand-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/bearagent-brand-light.svg">
-    <img src="docs/assets/bearagent-brand-light.svg" alt="BearAgent：温暖的几何电路熊与项目名字组成的组合标识" width="620">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/bearagent-lockup-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/BearAgent-logo-1.png">
+    <img src="docs/assets/BearAgent-logo-1.png" alt="BearAgent：蓝色科技熊头像与项目名字组成的组合标识" width="640">
   </picture>
   <p><strong>一个 local-first、可检查的个人 Agent Runtime。</strong></p>
   <p>模型提出下一步，Runtime 控制工具、预算、记录和文件边界。</p>
@@ -14,7 +14,7 @@
   </p>
 </div>
 
-![BearAgent 运行图解：温暖的几何电路熊值守本地 Runtime，管控工具、预算、事件和原子输出](site/public/images/bearagent-book-cover-4k-v2.webp)
+![BearAgent 运行图解：蓝色科技熊值守本地 Runtime，管控工具、预算、事件并生成原子输出](site/public/images/bearagent-book-cover-4k-blue.webp)
 
 你可以把 Model 想成负责判断“下一步做什么”的大脑，把 Runtime 想成真正负责执行的软件。BearAgent
 保存每次模型和 Tool Activity，限制模型次数、Tool 次数、token、费用和总时间，并且只允许内置文件
