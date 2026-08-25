@@ -45,8 +45,8 @@ body {
 
 .site-title img {
   width: auto;
-  height: 2.35rem;
-  max-width: min(11.5rem, 46vw);
+  height: 2.5rem;
+  max-width: min(12rem, 48vw);
 }
 
 .hero {
