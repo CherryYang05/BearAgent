@@ -70,18 +70,9 @@ uv run bearagent run events <run-id> --after-sequence 0 --limit 100 --json
 
 ## 一次请求发生了什么
 
-```mermaid
-flowchart LR
-    U["目标"] --> C["CLI / Application"]
-    C --> L["Agent Loop"]
-    L --> M["Model adapter"]
-    M --> L
-    L --> X["Registry → prepare → Policy → Executor"]
-    X --> T["workspace Tool"]
-    T --> L
-    L --> E["SQLite EventStore"]
-    L --> O["最终文本与 Artifact"]
-```
+下图只包含 P1 当前已经接通的执行与查询路径，不把恢复、Approval、sandbox 或后续服务入口画成现状。
+
+![BearAgent P1 当前实现架构：CLI 与配置进入 AgentLoop，模型和工具请求穿过受控 adapter，Event 写入 SQLite 并由 Reducer 支持 inspect 和 events 查询，workspace write 只原子输出到 outputs](site/public/images/runtime-boundary-4k.jpg)
 
 这里有三条不能绕过的边界：
 

@@ -28,12 +28,12 @@ bearagent run "比较 docs 中的架构说明，把结论写到 outputs/report.m
 <figure class="chapter-illustration">
   <img
     src="/images/runtime-boundary-4k.jpg"
-    alt="一个模型信号依次穿过上下文边界、受控工具门、持久事件记录，最后生成完整文件"
+    alt="BearAgent P1 当前实现架构：CLI 和配置进入 AgentLoop，模型请求经过三种 adapter，工具请求经过 Registry、prepare、Policy 和 Executor，Event 写入 SQLite 后由 Reducer 支持查询，workspace write 只向 outputs 原子写文件"
     width="3840"
     height="2160"
     loading="lazy"
   />
-  <figcaption>概念插画只帮助建立整体印象；下面的时序图才描述 BearAgent 当前的精确调用顺序。</figcaption>
+  <figcaption>这张图只画当前已实现的 P1 执行与查询路径；下面的时序图继续展开 Event 的精确先后顺序。</figcaption>
 </figure>
 
 :::tip[读图时只追一件事]
