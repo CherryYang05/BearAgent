@@ -1,4 +1,5 @@
 <div align="center">
+  <img src="docs/assets/bearagent-logo.png" alt="BearAgent logo" width="168">
   <h1>BearAgent</h1>
   <p><strong>一个 local-first、可检查的个人 Agent Runtime。</strong></p>
   <p>模型提出下一步，Runtime 控制工具、预算、记录和文件边界。</p>
