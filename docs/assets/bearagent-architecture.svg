@@ -1,374 +1,339 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1050" viewBox="0 0 1500 1050" role="img" aria-labelledby="title description">
-  <title id="title">BearAgent runtime architecture</title>
-  <desc id="description">A layered view of BearAgent execution, permissions, external adapters, durable data, and evaluation evidence. Every component is marked with its implementation phase.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160" role="img" aria-labelledby="title description">
+  <title id="title">BearAgent P1 implemented architecture</title>
+  <desc id="description">A five-layer architecture diagram showing CLI and configuration, application orchestration, the runtime core, ports and adapters, and local data. Only implemented P1 behavior is included.</desc>
   <defs>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
-      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#13263d" flood-opacity="0.09"/>
+    <filter id="shadow" x="-10%" y="-15%" width="120%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="13" flood-color="#24324a" flood-opacity="0.10"/>
     </filter>
     <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fbfdff"/>
-      <stop offset="0.5" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#fffaf5"/>
+      <stop offset="0" stop-color="#fbfcff"/>
+      <stop offset="1" stop-color="#fffaf4"/>
     </linearGradient>
-    <style>
-      text { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #13263d; }
-      .title { font-size: 31px; font-weight: 700; letter-spacing: -0.4px; }
-      .subtitle { font-size: 15px; fill: #617084; }
-      .legend { font-size: 13px; fill: #526277; }
-      .layer-title { font-size: 21px; font-weight: 700; }
-      .layer-note { font-size: 12px; fill: #718096; }
-      .card-title { font-size: 16px; font-weight: 650; }
-      .card-note { font-size: 12px; fill: #68788d; }
-      .phase { font-size: 11px; font-weight: 700; letter-spacing: 0.4px; }
-      .arrow-label { font-size: 12px; font-weight: 600; fill: #68788d; }
-      .row { fill: #ffffff; stroke-width: 1.2; }
-      .card { fill: #ffffff; stroke: #dce4ec; stroke-width: 1.2; filter: url(#shadow); }
-      .card-now { fill: #f4fbf7; stroke: #9bd9b7; stroke-width: 1.4; filter: url(#shadow); }
-      .icon { fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-      .flow { fill: none; stroke: #7c8998; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    </style>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c8998"/>
+    <linearGradient id="headerGlow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#173a68"/>
+      <stop offset="0.72" stop-color="#235b9c"/>
+      <stop offset="1" stop-color="#bd641f"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#667281"/>
     </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#225fa4"/>
+    </marker>
+    <style>
+      text { font-family: Inter, "Segoe UI", Arial, sans-serif; }
+      .layer-title { font-size: 50px; font-weight: 760; letter-spacing: -1px; }
+      .layer-subtitle { font-size: 25px; font-weight: 520; fill: #667281; }
+      .card-title { font-size: 42px; font-weight: 720; fill: #17243a; letter-spacing: -0.5px; }
+      .card-body { font-size: 27px; font-weight: 500; fill: #667281; }
+      .mini-title { font-size: 27px; font-weight: 680; fill: #26364d; }
+      .mini-body { font-size: 22px; font-weight: 500; fill: #6a7583; }
+      .flow-label { font-size: 24px; font-style: italic; font-weight: 520; fill: #667281; }
+      .card { fill: #ffffff; stroke-width: 2.5; filter: url(#shadow); }
+      .icon { fill: none; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+      .connector { fill: none; stroke: #667281; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow); }
+    </style>
   </defs>
 
-  <rect x="10" y="10" width="1480" height="1030" rx="24" fill="url(#background)" stroke="#e0e7ef"/>
+  <rect width="3840" height="2160" fill="url(#background)"/>
 
-  <g aria-label="Title and status legend">
-    <g transform="translate(48 43)" class="icon" stroke="#1769aa">
-      <path d="M4 28V8a5 5 0 0 1 5-5h18a5 5 0 0 1 5 5v20"/>
-      <path d="M12 15h20l8 8-8 8H12l-8-8z"/>
-      <circle cx="17" cy="23" r="2" fill="#1769aa" stroke="none"/>
-      <circle cx="25" cy="23" r="2" fill="#1769aa" stroke="none"/>
-    </g>
-    <text x="102" y="62" class="title">BearAgent Runtime Architecture</text>
-    <text x="103" y="88" class="subtitle">Local-first · every step inspectable · authority stays outside the model</text>
-
-    <circle cx="1055" cy="60" r="6" fill="#2f9e68"/>
-    <text x="1070" y="65" class="legend">Implemented foundation</text>
-    <rect x="1249" y="53" width="22" height="14" rx="5" fill="#ffffff" stroke="#7d8ca2" stroke-dasharray="4 3"/>
-    <text x="1281" y="65" class="legend">Accepted roadmap</text>
-    <text x="1055" y="88" class="legend">Phase tags show when each capability enters the project.</text>
+  <!-- Title -->
+  <g>
+    <rect x="42" y="34" width="3756" height="142" rx="36" fill="#ffffff" stroke="#e4e8ee" stroke-width="2" filter="url(#shadow)"/>
+    <rect x="78" y="67" width="18" height="76" rx="9" fill="url(#headerGlow)"/>
+    <text x="132" y="105" font-size="62" font-weight="800" fill="#17243a" letter-spacing="-1.5">BearAgent Architecture</text>
+    <text x="132" y="143" font-size="26" font-weight="540" fill="#697584">Inspectable, local-first Agent Runtime · current P1 implementation</text>
+    <rect x="3042" y="70" width="700" height="70" rx="35" fill="#fff4e8" stroke="#e4b78e" stroke-width="2"/>
+    <circle cx="3090" cy="105" r="12" fill="#cb6f26"/>
+    <text x="3120" y="114" font-size="27" font-weight="700" fill="#8f4514">IMPLEMENTED ONLY</text>
+    <text x="3392" y="114" font-size="24" font-weight="520" fill="#8f5d36">P2–P4 omitted</text>
   </g>
 
-  <!-- Interfaces -->
-  <g aria-label="Interfaces layer">
-    <rect class="row" x="25" y="120" width="1450" height="135" rx="18" stroke="#c8dcf1"/>
-    <rect x="25" y="120" width="260" height="135" rx="18" fill="#f2f7fd"/>
-    <rect x="267" y="120" width="18" height="135" fill="#f2f7fd"/>
-    <path d="M285 120V255" stroke="#d7e4f1"/>
-    <g transform="translate(55 151)" class="icon" stroke="#1769aa">
-      <rect x="2" y="2" width="42" height="34" rx="5"/>
-      <path d="m12 13 7 6-7 6M24 25h10"/>
-    </g>
-    <text x="115" y="178" class="layer-title" fill="#1769aa">Interfaces</text>
-    <text x="115" y="202" class="layer-note">User and automation</text>
-    <text x="115" y="218" class="layer-note">entry points</text>
+  <!-- Cross-layer connectors -->
+  <path d="M 2200 505 V 548" class="connector"/>
+  <text x="2230" y="536" class="flow-label">objective + limits</text>
+  <path d="M 2200 878 V 922" class="connector"/>
+  <text x="2230" y="910" class="flow-label">ModelRequest · ToolRequest · Event</text>
+  <path d="M 2200 1300 V 1344" class="connector"/>
+  <text x="2230" y="1332" class="flow-label">ports keep external types outside the core</text>
+  <path d="M 2200 1778 V 1822" class="connector"/>
+  <text x="2230" y="1810" class="flow-label">facts · projections · artifacts</text>
 
-    <g transform="translate(315 143)">
-      <rect class="card-now" y="-3" width="345" height="95" rx="14"/>
-      <rect x="17" y="20" width="48" height="48" rx="12" fill="#dff4e8"/>
-      <g transform="translate(23 27)" class="icon" stroke="#2f9e68">
-        <rect x="1" y="1" width="38" height="34" rx="5"/>
-        <path d="m9 12 7 6-7 6M21 25h10"/>
-      </g>
-      <text x="78" y="39" class="card-title">CLI &amp; Doctor</text>
-      <text x="78" y="62" class="card-note">help · version · environment diagnostics</text>
-      <rect x="283" y="33" width="46" height="22" rx="11" fill="#dff4e8"/>
-      <text x="306" y="48" text-anchor="middle" class="phase" fill="#237a50">NOW</text>
-    </g>
+  <!-- Layer 1 -->
+  <g>
+    <rect x="42" y="202" width="3756" height="303" rx="36" fill="#f2f7ff" stroke="#cdddf2" stroke-width="2.5"/>
+    <rect x="42" y="202" width="680" height="303" rx="36" fill="#edf5ff"/>
+    <path d="M 722 202 V 505" stroke="#cdddf2" stroke-width="2.5"/>
 
-    <g transform="translate(680 143)">
-      <rect class="card" y="-3" width="345" height="95" rx="14"/>
-      <rect x="17" y="20" width="48" height="48" rx="12" fill="#e8f2fb"/>
-      <g transform="translate(23 24)" class="icon" stroke="#1769aa">
-        <path d="M4 32V8M4 8h32M36 8v24M4 32h32"/>
-        <path d="M12 24h7l4-9 5 13h5"/>
-      </g>
-      <text x="78" y="39" class="card-title">Run · Inspect · Events</text>
-      <text x="78" y="62" class="card-note">stream progress and inspect execution facts</text>
-      <rect x="283" y="33" width="46" height="22" rx="11" fill="#e8eef8"/>
-      <text x="306" y="48" text-anchor="middle" class="phase" fill="#526b8d">P1</text>
+    <g class="icon" stroke="#1d5da5" transform="translate(112 278)">
+      <path d="M 12 70 H 96"/>
+      <path d="M 70 44 L 96 70 L 70 96"/>
+      <rect x="106" y="10" width="82" height="120" rx="12"/>
+      <path d="M 106 28 L 158 40"/>
     </g>
+    <text x="338" y="320" class="layer-title" fill="#1d5da5">Entry &amp;</text>
+    <text x="338" y="378" class="layer-title" fill="#1d5da5">Composition</text>
+    <text x="338" y="424" class="layer-subtitle">one local process</text>
 
-    <g transform="translate(1045 143)">
-      <rect class="card" y="-3" width="345" height="95" rx="14"/>
-      <rect x="17" y="20" width="48" height="48" rx="12" fill="#e8f2fb"/>
-      <g transform="translate(23 27)" class="icon" stroke="#1769aa">
-        <circle cx="20" cy="18" r="15"/>
-        <path d="M5 18h30M20 3a24 24 0 0 1 0 30M20 3a24 24 0 0 0 0 30"/>
-      </g>
-      <text x="78" y="39" class="card-title">HTTP API &amp; SSE</text>
-      <text x="78" y="62" class="card-note">authenticated self-hosted interface</text>
-      <rect x="283" y="33" width="46" height="22" rx="11" fill="#eee9fa"/>
-      <text x="306" y="48" text-anchor="middle" class="phase" fill="#66528f">P4</text>
+    <rect x="788" y="238" width="820" height="228" rx="30" class="card" stroke="#c9d9ef"/>
+    <g class="icon" stroke="#1d5da5" transform="translate(842 286)">
+      <rect width="112" height="82" rx="12"/>
+      <path d="M 22 24 L 44 41 L 22 58"/>
+      <path d="M 58 59 H 88"/>
     </g>
+    <text x="1000" y="315" class="card-title">CLI</text>
+    <text x="1000" y="357" class="card-body">doctor · run · inspect · events</text>
+    <rect x="842" y="392" width="704" height="42" rx="21" fill="#eef5ff"/>
+    <text x="1194" y="421" text-anchor="middle" class="mini-body" fill="#1d5da5">Typer interface · human / JSON output</text>
+
+    <rect x="1650" y="238" width="820" height="228" rx="30" class="card" stroke="#c9d9ef"/>
+    <g class="icon" stroke="#1d5da5" transform="translate(1704 279)">
+      <path d="M 20 4 H 86 L 116 34 V 112 H 20 Z"/>
+      <path d="M 86 4 V 34 H 116"/>
+      <path d="M 42 61 H 92 M 42 82 H 92"/>
+    </g>
+    <text x="1852" y="315" class="card-title">Local Configuration</text>
+    <text x="1852" y="357" class="card-body">config v1 · RunProfile v2</text>
+    <rect x="1704" y="392" width="704" height="42" rx="21" fill="#eef5ff"/>
+    <text x="2056" y="421" text-anchor="middle" class="mini-body" fill="#1d5da5">provider selection · agent instructions · hard budgets</text>
+
+    <rect x="2512" y="238" width="1222" height="228" rx="30" class="card" stroke="#c9d9ef"/>
+    <g class="icon" stroke="#1d5da5" transform="translate(2568 282)">
+      <circle cx="62" cy="22" r="17"/>
+      <circle cx="18" cy="92" r="17"/>
+      <circle cx="106" cy="92" r="17"/>
+      <path d="M 52 38 L 28 75 M 72 38 L 96 75"/>
+    </g>
+    <text x="2724" y="315" class="card-title">Composition Root</text>
+    <text x="2724" y="357" class="card-body">bootstrap.py · explicit dependency wiring</text>
+    <rect x="2568" y="392" width="1108" height="42" rx="21" fill="#eef5ff"/>
+    <text x="3122" y="421" text-anchor="middle" class="mini-body" fill="#1d5da5">SQLite + selected model adapter + fixed Policy + workspace Tools</text>
   </g>
 
-  <path class="flow" d="M750 255V276" marker-end="url(#arrow)"/>
+  <!-- Layer 2 -->
+  <g>
+    <rect x="42" y="550" width="3756" height="328" rx="36" fill="#f7f4ff" stroke="#ded3f1" stroke-width="2.5"/>
+    <rect x="42" y="550" width="680" height="328" rx="36" fill="#f2edff"/>
+    <path d="M 722 550 V 878" stroke="#ded3f1" stroke-width="2.5"/>
 
-  <!-- Application and runtime -->
-  <g aria-label="Application and runtime layer">
-    <rect class="row" x="25" y="280" width="1450" height="155" rx="18" stroke="#d9ccef"/>
-    <rect x="25" y="280" width="260" height="155" rx="18" fill="#f7f3fc"/>
-    <rect x="267" y="280" width="18" height="155" fill="#f7f3fc"/>
-    <path d="M285 280V435" stroke="#e4dbf2"/>
-    <g transform="translate(55 315)" class="icon" stroke="#6c4eb4">
-      <path d="m2 12 21-10 21 10-21 10z"/>
-      <path d="m2 22 21 10 21-10M2 32l21 10 21-10"/>
+    <g class="icon" stroke="#6548aa" transform="translate(110 636)">
+      <path d="M 20 18 H 76 V 66 H 20 Z M 104 18 H 160 V 66 H 104 Z M 62 92 H 118 V 140 H 62 Z"/>
+      <path d="M 48 66 V 82 H 90 M 132 66 V 82 H 90 V 92"/>
     </g>
-    <text x="115" y="330" class="layer-title" fill="#59409a">Application</text>
-    <text x="115" y="355" class="layer-title" fill="#59409a">+ Runtime</text>
-    <text x="115" y="381" class="layer-note">Use cases and</text>
-    <text x="115" y="397" class="layer-note">deterministic core</text>
+    <text x="338" y="677" class="layer-title" fill="#6548aa">Application</text>
+    <text x="338" y="735" class="layer-title" fill="#6548aa">Orchestration</text>
+    <text x="338" y="781" class="layer-subtitle">serial, inspectable flow</text>
 
-    <g transform="translate(315 291)">
-      <rect class="card-now" y="7" width="255" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#e0f5e9"/>
-      <path d="M24 35h14M31 28v14" class="icon" stroke="#2f9e68"/>
-      <text x="20" y="73" class="card-title">BearAgent Data &amp; State</text>
-      <text x="20" y="96" class="card-note">IDs · Message · Error</text>
-      <text x="20" y="113" class="card-note">Event · reducer · budgets</text>
-      <rect x="193" y="24" width="46" height="22" rx="11" fill="#dff4e8"/>
-      <text x="216" y="39" text-anchor="middle" class="phase" fill="#237a50">NOW</text>
+    <rect x="788" y="590" width="900" height="248" rx="30" class="card" stroke="#d9cef0"/>
+    <g class="icon" stroke="#6548aa" transform="translate(840 645)">
+      <path d="M 20 44 A 42 42 0 0 1 94 18"/>
+      <path d="M 90 4 L 98 22 L 78 24"/>
+      <path d="M 100 70 A 42 42 0 0 1 26 96"/>
+      <path d="M 30 110 L 22 92 L 42 90"/>
     </g>
+    <text x="1000" y="662" class="card-title">AgentLoop</text>
+    <text x="1000" y="704" class="card-body">serial model and Tool Activities</text>
+    <text x="840" y="778" class="mini-body">creates Run facts · stops on terminal result or bounded failure</text>
 
-    <g transform="translate(590 291)">
-      <rect class="card" y="7" width="255" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#f0ebfa"/>
-      <path d="M22 35h18M31 26v18" class="icon" stroke="#6c4eb4"/>
-      <text x="20" y="73" class="card-title">Run Coordinator</text>
-      <text x="20" y="96" class="card-note">commands · lifecycle</text>
-      <text x="20" y="113" class="card-note">structured outcomes</text>
-      <rect x="193" y="24" width="46" height="22" rx="11" fill="#e8eef8"/>
-      <text x="216" y="39" text-anchor="middle" class="phase" fill="#526b8d">P1</text>
+    <rect x="1730" y="590" width="890" height="248" rx="30" class="card" stroke="#d9cef0"/>
+    <g class="icon" stroke="#6548aa" transform="translate(1782 642)">
+      <path d="M 10 28 L 64 4 L 118 28 L 64 52 Z"/>
+      <path d="M 10 56 L 64 80 L 118 56 M 10 84 L 64 108 L 118 84"/>
     </g>
+    <text x="1940" y="662" class="card-title">ContextBuilder</text>
+    <text x="1940" y="704" class="card-body">bounded committed Event history</text>
+    <text x="1782" y="778" class="mini-body">stable order · complete interaction groups · Tool schemas</text>
 
-    <g transform="translate(865 291)">
-      <rect class="card" y="7" width="255" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#f0ebfa"/>
-      <path d="M22 28v14l9 6 9-6V28l-9-6zM27 34h8" class="icon" stroke="#6c4eb4"/>
-      <text x="20" y="73" class="card-title">Bounded Agent Loop</text>
-      <text x="20" y="96" class="card-note">iterations · time · cost</text>
-      <text x="20" y="113" class="card-note">tool-call budgets</text>
-      <rect x="193" y="24" width="46" height="22" rx="11" fill="#e8eef8"/>
-      <text x="216" y="39" text-anchor="middle" class="phase" fill="#526b8d">P1</text>
+    <rect x="2662" y="590" width="1072" height="248" rx="30" class="card" stroke="#d9cef0"/>
+    <g class="icon" stroke="#6548aa" transform="translate(2714 640)">
+      <circle cx="52" cy="52" r="39"/>
+      <path d="M 82 82 L 118 118"/>
+      <path d="M 38 52 H 66 M 52 38 V 66"/>
     </g>
-
-    <g transform="translate(1140 291)">
-      <rect class="card" y="7" width="250" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#f0ebfa"/>
-      <path d="M20 35a11 11 0 1 0 4-8M20 24v11h11" class="icon" stroke="#6c4eb4"/>
-      <text x="20" y="73" class="card-title">Recovery Coordinator</text>
-      <text x="20" y="96" class="card-note">resume from saved facts</text>
-      <text x="20" y="113" class="card-note">attempt · cancel · UNKNOWN</text>
-      <rect x="188" y="24" width="46" height="22" rx="11" fill="#e9f2f7"/>
-      <text x="211" y="39" text-anchor="middle" class="phase" fill="#3e718d">P2</text>
-    </g>
+    <text x="2872" y="662" class="card-title">RunQueryService</text>
+    <text x="2872" y="704" class="card-body">inspect · paged events · artifacts</text>
+    <text x="2714" y="778" class="mini-body">read-only application path through the EventStore port</text>
   </g>
 
-  <path class="flow" d="M750 435V456" marker-end="url(#arrow)"/>
+  <!-- Layer 3 -->
+  <g>
+    <rect x="42" y="924" width="3756" height="376" rx="36" fill="#effaf7" stroke="#c7e6de" stroke-width="2.5"/>
+    <rect x="42" y="924" width="680" height="376" rx="36" fill="#e8f7f3"/>
+    <path d="M 722 924 V 1300" stroke="#c7e6de" stroke-width="2.5"/>
 
-  <!-- Authority and execution -->
-  <g aria-label="Authority and execution layer">
-    <rect class="row" x="25" y="460" width="1450" height="155" rx="18" stroke="#bfe1dc"/>
-    <rect x="25" y="460" width="260" height="155" rx="18" fill="#f0faf8"/>
-    <rect x="267" y="460" width="18" height="155" fill="#f0faf8"/>
-    <path d="M285 460V615" stroke="#d5ebe7"/>
-    <g transform="translate(55 492)" class="icon" stroke="#168174">
-      <path d="M23 2 41 9v13c0 12-7 20-18 25C12 42 5 34 5 22V9z"/>
-      <path d="m15 24 6 6 11-13"/>
+    <g class="icon" stroke="#168271" transform="translate(112 1025)">
+      <circle cx="88" cy="76" r="50"/>
+      <path d="M 88 4 V 26 M 88 126 V 148 M 16 76 H 38 M 138 76 H 160"/>
+      <circle cx="88" cy="76" r="14"/>
     </g>
-    <text x="115" y="510" class="layer-title" fill="#146e64">Authority</text>
-    <text x="115" y="535" class="layer-title" fill="#146e64">+ Execution</text>
-    <text x="115" y="561" class="layer-note">Every side effect</text>
-    <text x="115" y="577" class="layer-note">crosses this gate</text>
+    <text x="338" y="1067" class="layer-title" fill="#168271">Runtime Core</text>
+    <text x="338" y="1125" class="layer-title" fill="#168271">&amp; Safety</text>
+    <text x="338" y="1171" class="layer-subtitle">BearAgent types only</text>
 
-    <g transform="translate(315 471)">
-      <rect class="card" y="7" width="255" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#e3f5f2"/>
-      <path d="M22 29h18M22 35h18M22 41h12" class="icon" stroke="#168174"/>
-      <text x="20" y="73" class="card-title">Tool Registry</text>
-      <text x="20" y="96" class="card-note">typed ToolSpec</text>
-      <text x="20" y="113" class="card-note">structured ToolResult</text>
-      <rect x="193" y="24" width="46" height="22" rx="11" fill="#e8eef8"/>
-      <text x="216" y="39" text-anchor="middle" class="phase" fill="#526b8d">P1</text>
+    <rect x="788" y="970" width="770" height="282" rx="30" class="card" stroke="#bfe1d8"/>
+    <g class="icon" stroke="#168271" transform="translate(842 1026)">
+      <circle cx="24" cy="30" r="16"/>
+      <circle cx="100" cy="30" r="16"/>
+      <circle cx="62" cy="100" r="16"/>
+      <path d="M 38 38 L 54 84 M 86 38 L 70 84 M 40 30 H 84"/>
     </g>
+    <text x="1000" y="1048" class="card-title">Domain Contracts</text>
+    <text x="1000" y="1115" class="card-body">Message · Event · ToolRequest</text>
+    <text x="1000" y="1161" class="mini-body">typed IDs · frozen schemas · safe ErrorInfo</text>
+    <rect x="842" y="1192" width="660" height="36" rx="18" fill="#e9f7f3"/>
+    <text x="1172" y="1218" text-anchor="middle" class="mini-body" fill="#168271">SDK objects and database rows stop at adapters</text>
 
-    <g transform="translate(590 471)">
-      <rect class="card" y="7" width="255" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#e3f5f2"/>
-      <path d="M21 25h20v17H21zM26 25v-5h10v5" class="icon" stroke="#168174" transform="translate(0 4)"/>
-      <text x="20" y="73" class="card-title">Tool Executor</text>
-      <text x="20" y="96" class="card-note">timeout · size limit</text>
-      <text x="20" y="113" class="card-note">receipt · event recording</text>
-      <rect x="193" y="24" width="46" height="22" rx="11" fill="#e8eef8"/>
-      <text x="216" y="39" text-anchor="middle" class="phase" fill="#526b8d">P1</text>
+    <rect x="1600" y="970" width="920" height="282" rx="30" class="card" stroke="#bfe1d8"/>
+    <g class="icon" stroke="#168271" transform="translate(1654 1024)">
+      <path d="M 12 112 A 54 54 0 1 1 120 112"/>
+      <path d="M 66 58 L 98 86"/>
+      <circle cx="66" cy="112" r="10"/>
     </g>
+    <text x="1810" y="1048" class="card-title">Reducer + Hard Budgets</text>
+    <text x="1810" y="1115" class="card-body">Event → RunState + usage</text>
+    <text x="1810" y="1161" class="mini-body">model · Tool · token · cost · wall time</text>
+    <rect x="1654" y="1192" width="812" height="36" rx="18" fill="#e9f7f3"/>
+    <text x="2060" y="1218" text-anchor="middle" class="mini-body" fill="#168271">pure state reduction · no I/O · no hidden retry</text>
 
-    <g transform="translate(865 471)">
-      <rect class="card" y="7" width="255" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#e3f5f2"/>
-      <path d="M22 34h18M31 25v18M24 27l14 14M38 27 24 41" class="icon" stroke="#168174"/>
-      <text x="20" y="73" class="card-title">Policy &amp; Approval</text>
-      <text x="20" y="96" class="card-note">Grant · allow / approval / deny</text>
-      <text x="20" y="113" class="card-note">exact-argument approval</text>
-      <rect x="193" y="24" width="46" height="22" rx="11" fill="#eee9fa"/>
-      <text x="216" y="39" text-anchor="middle" class="phase" fill="#66528f">P3</text>
+    <rect x="2562" y="970" width="1172" height="282" rx="30" class="card" stroke="#bfe1d8"/>
+    <g class="icon" stroke="#168271" transform="translate(2616 1027)">
+      <path d="M 58 6 L 106 26 V 68 C 106 98 86 117 58 130 C 30 117 10 98 10 68 V 26 Z"/>
+      <path d="M 38 66 L 52 80 L 82 48"/>
     </g>
-
-    <g transform="translate(1140 471)">
-      <rect class="card" y="7" width="250" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#e3f5f2"/>
-      <path d="M20 28h22v16H20zM24 24h14v4M26 36h10" class="icon" stroke="#168174" transform="translate(0 3)"/>
-      <text x="20" y="73" class="card-title">Sandbox Runner</text>
-      <text x="20" y="96" class="card-note">separate process boundary</text>
-      <text x="20" y="113" class="card-note">resource and secret isolation</text>
-      <rect x="188" y="24" width="46" height="22" rx="11" fill="#eee9fa"/>
-      <text x="211" y="39" text-anchor="middle" class="phase" fill="#66528f">P3</text>
+    <text x="2770" y="1048" class="card-title">Controlled Tool Path</text>
+    <text x="2770" y="1115" class="card-body">every Tool call crosses the same boundary</text>
+    <g>
+      <rect x="2616" y="1160" width="226" height="57" rx="17" fill="#e9f7f3" stroke="#bee2d9"/>
+      <rect x="2866" y="1160" width="226" height="57" rx="17" fill="#e9f7f3" stroke="#bee2d9"/>
+      <rect x="3116" y="1160" width="260" height="57" rx="17" fill="#e9f7f3" stroke="#bee2d9"/>
+      <rect x="3400" y="1160" width="278" height="57" rx="17" fill="#e9f7f3" stroke="#bee2d9"/>
+      <text x="2729" y="1197" text-anchor="middle" class="mini-title">Registry</text>
+      <text x="2979" y="1197" text-anchor="middle" class="mini-title">prepare</text>
+      <text x="3246" y="1197" text-anchor="middle" class="mini-title">Fixed Policy</text>
+      <text x="3539" y="1197" text-anchor="middle" class="mini-title">Executor</text>
+      <path d="M 2844 1188 H 2860 M 3094 1188 H 3110 M 3378 1188 H 3394" stroke="#168271" stroke-width="5" marker-end="url(#arrow)"/>
     </g>
   </g>
 
-  <path class="flow" d="M750 615V636" marker-end="url(#arrow)"/>
+  <!-- Layer 4 -->
+  <g>
+    <rect x="42" y="1348" width="3756" height="430" rx="36" fill="#fff8ef" stroke="#eed8c2" stroke-width="2.5"/>
+    <rect x="42" y="1348" width="680" height="430" rx="36" fill="#fff3e6"/>
+    <path d="M 722 1348 V 1778" stroke="#eed8c2" stroke-width="2.5"/>
 
-  <!-- Ports and adapters -->
-  <g aria-label="Ports and adapters layer">
-    <rect class="row" x="25" y="640" width="1450" height="155" rx="18" stroke="#f0d1b8"/>
-    <rect x="25" y="640" width="260" height="155" rx="18" fill="#fff7f0"/>
-    <rect x="267" y="640" width="18" height="155" fill="#fff7f0"/>
-    <path d="M285 640V795" stroke="#f3dfcf"/>
-    <g transform="translate(55 676)" class="icon" stroke="#dc6b20">
-      <circle cx="23" cy="23" r="9"/>
-      <path d="M23 2v7M23 37v7M2 23h7M37 23h7M8 8l5 5M33 33l5 5M38 8l-5 5M13 33l-5 5"/>
+    <g class="icon" stroke="#c76820" transform="translate(108 1470)">
+      <path d="M 14 34 H 74 V 94 H 14 Z M 104 34 H 164 V 94 H 104 Z"/>
+      <path d="M 74 64 H 104"/>
+      <path d="M 44 12 V 34 M 134 94 V 116"/>
+      <circle cx="44" cy="8" r="8" fill="#c76820" stroke="none"/>
+      <circle cx="134" cy="122" r="8" fill="#c76820" stroke="none"/>
     </g>
-    <text x="115" y="691" class="layer-title" fill="#b75215">Ports</text>
-    <text x="115" y="716" class="layer-title" fill="#b75215">+ Adapters</text>
-    <text x="115" y="742" class="layer-note">External details stay</text>
-    <text x="115" y="758" class="layer-note">outside the core</text>
+    <text x="338" y="1515" class="layer-title" fill="#c76820">Ports &amp;</text>
+    <text x="338" y="1573" class="layer-title" fill="#c76820">Adapters</text>
+    <text x="338" y="1619" class="layer-subtitle">external translation edge</text>
 
-    <g transform="translate(315 651)">
-      <rect class="card" y="7" width="255" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#fff0e4"/>
-      <path d="M22 33c3-9 15-9 18 0-3 9-15 9-18 0zM26 41h10" class="icon" stroke="#dc6b20" transform="translate(0 2)"/>
-      <text x="20" y="73" class="card-title">Model Provider</text>
-      <text x="20" y="96" class="card-note">BearAgent model interface</text>
-      <text x="20" y="113" class="card-note">one real adapter first</text>
-      <rect x="193" y="24" width="46" height="22" rx="11" fill="#e8eef8"/>
-      <text x="216" y="39" text-anchor="middle" class="phase" fill="#526b8d">P1</text>
+    <rect x="788" y="1394" width="930" height="338" rx="30" class="card" stroke="#ead2ba"/>
+    <g class="icon" stroke="#c76820" transform="translate(840 1444)">
+      <circle cx="62" cy="62" r="48"/>
+      <path d="M 38 62 H 86 M 62 38 V 86"/>
     </g>
+    <text x="1000" y="1467" class="card-title">ModelProvider Port</text>
+    <text x="1000" y="1531" class="card-body">streaming protocol adapters</text>
+    <rect x="840" y="1570" width="250" height="76" rx="18" fill="#fff5eb" stroke="#ead2ba"/>
+    <rect x="1110" y="1570" width="250" height="76" rx="18" fill="#fff5eb" stroke="#ead2ba"/>
+    <rect x="1380" y="1570" width="282" height="76" rx="18" fill="#fff5eb" stroke="#ead2ba"/>
+    <text x="965" y="1602" text-anchor="middle" class="mini-title">Responses</text>
+    <text x="965" y="1630" text-anchor="middle" class="mini-body">OpenAI wire</text>
+    <text x="1235" y="1602" text-anchor="middle" class="mini-title">Chat</text>
+    <text x="1235" y="1630" text-anchor="middle" class="mini-body">Completions</text>
+    <text x="1521" y="1602" text-anchor="middle" class="mini-title">Messages</text>
+    <text x="1521" y="1630" text-anchor="middle" class="mini-body">Anthropic wire</text>
+    <text x="840" y="1692" class="mini-body">timeout · cancellation · bounded usage · safe errors</text>
 
-    <g transform="translate(590 651)">
-      <rect class="card" y="7" width="255" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#fff0e4"/>
-      <path d="M20 28h11l4 4h8v14H20z" class="icon" stroke="#dc6b20" transform="translate(0 -2)"/>
-      <text x="20" y="73" class="card-title">Workspace Tools</text>
-      <text x="20" y="96" class="card-note">list · read · search</text>
-      <text x="20" y="113" class="card-note">bounded outputs/** writes</text>
-      <rect x="193" y="24" width="46" height="22" rx="11" fill="#e8eef8"/>
-      <text x="216" y="39" text-anchor="middle" class="phase" fill="#526b8d">P1</text>
+    <rect x="1760" y="1394" width="930" height="338" rx="30" class="card" stroke="#ead2ba"/>
+    <g class="icon" stroke="#c76820" transform="translate(1812 1443)">
+      <path d="M 18 112 L 112 18"/>
+      <circle cx="32" cy="32" r="20"/>
+      <path d="M 84 18 L 112 18 L 112 46"/>
+      <path d="M 18 84 L 18 112 L 46 112"/>
     </g>
+    <text x="1970" y="1467" class="card-title">Tool + Policy Ports</text>
+    <text x="1970" y="1531" class="card-body">bounded workspace adapters</text>
+    <g>
+      <rect x="1812" y="1570" width="188" height="76" rx="18" fill="#fff5eb" stroke="#ead2ba"/>
+      <rect x="2014" y="1570" width="188" height="76" rx="18" fill="#fff5eb" stroke="#ead2ba"/>
+      <rect x="2216" y="1570" width="188" height="76" rx="18" fill="#fff5eb" stroke="#ead2ba"/>
+      <rect x="2418" y="1570" width="216" height="76" rx="18" fill="#fff5eb" stroke="#ead2ba"/>
+      <text x="1906" y="1618" text-anchor="middle" class="mini-title">list</text>
+      <text x="2108" y="1618" text-anchor="middle" class="mini-title">read</text>
+      <text x="2310" y="1618" text-anchor="middle" class="mini-title">search</text>
+      <text x="2526" y="1618" text-anchor="middle" class="mini-title">write</text>
+    </g>
+    <text x="1812" y="1692" class="mini-body">path boundary · output limits · atomic replace</text>
 
-    <g transform="translate(865 651)">
-      <rect class="card" y="7" width="255" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#fff0e4"/>
-      <ellipse cx="31" cy="27" rx="10" ry="5" class="icon" stroke="#dc6b20" transform="translate(0 -2)"/>
-      <path d="M21 27v15c0 3 4 5 10 5s10-2 10-5V27M21 35c0 3 4 5 10 5s10-2 10-5" class="icon" stroke="#dc6b20" transform="translate(0 -2)"/>
-      <text x="20" y="73" class="card-title">EventStore + SQLite</text>
-      <text x="20" y="96" class="card-note">append facts atomically</text>
-      <text x="20" y="113" class="card-note">rebuildable projections</text>
-      <rect x="193" y="24" width="46" height="22" rx="11" fill="#e8eef8"/>
-      <text x="216" y="39" text-anchor="middle" class="phase" fill="#526b8d">P1</text>
+    <rect x="2732" y="1394" width="1002" height="338" rx="30" class="card" stroke="#ead2ba"/>
+    <g class="icon" stroke="#c76820" transform="translate(2784 1440)">
+      <ellipse cx="64" cy="24" rx="52" ry="20"/>
+      <path d="M 12 24 V 110 C 12 126 116 126 116 110 V 24"/>
+      <path d="M 12 62 C 12 78 116 78 116 62 M 12 94 C 12 110 116 110 116 94"/>
     </g>
-
-    <g transform="translate(1140 651)">
-      <rect class="card" y="7" width="250" height="120" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#fff0e4"/>
-      <path d="M22 27h18v17H22zM26 22h10v5M26 35h10" class="icon" stroke="#dc6b20" transform="translate(0 2)"/>
-      <text x="20" y="73" class="card-title">Sandbox Backend</text>
-      <text x="20" y="96" class="card-note">Docker / Podman adapter</text>
-      <text x="20" y="113" class="card-note">no host shell fallback</text>
-      <rect x="188" y="24" width="46" height="22" rx="11" fill="#eee9fa"/>
-      <text x="211" y="39" text-anchor="middle" class="phase" fill="#66528f">P3</text>
-    </g>
+    <text x="2940" y="1467" class="card-title">EventStore Port</text>
+    <text x="2940" y="1531" class="card-body">SQLite WAL adapter</text>
+    <rect x="2784" y="1570" width="894" height="76" rx="18" fill="#fff5eb" stroke="#ead2ba"/>
+    <text x="3231" y="1602" text-anchor="middle" class="mini-title">BEGIN IMMEDIATE transaction</text>
+    <text x="3231" y="1630" text-anchor="middle" class="mini-body">append Event + update projections atomically</text>
+    <text x="2784" y="1692" class="mini-body">migration ledger · sequence checks · corruption fails closed</text>
   </g>
 
-  <path class="flow" d="M750 795V816" marker-end="url(#arrow)"/>
+  <!-- Layer 5 -->
+  <g>
+    <rect x="42" y="1826" width="3756" height="292" rx="36" fill="#f0f8fb" stroke="#c9e1eb" stroke-width="2.5"/>
+    <rect x="42" y="1826" width="680" height="292" rx="36" fill="#eaf5f9"/>
+    <path d="M 722 1826 V 2118" stroke="#c9e1eb" stroke-width="2.5"/>
 
-  <!-- Durable data and evidence -->
-  <g aria-label="Durable data and evidence layer">
-    <rect class="row" x="25" y="820" width="1450" height="190" rx="18" stroke="#c7dbe8"/>
-    <rect x="25" y="820" width="260" height="190" rx="18" fill="#f1f8fb"/>
-    <rect x="267" y="820" width="18" height="190" fill="#f1f8fb"/>
-    <path d="M285 820V1010" stroke="#d9e8ef"/>
-    <g transform="translate(55 866)" class="icon" stroke="#136a8a">
-      <ellipse cx="23" cy="8" rx="18" ry="7"/>
-      <path d="M5 8v30c0 4 8 7 18 7s18-3 18-7V8M5 23c0 4 8 7 18 7s18-3 18-7"/>
+    <g class="icon" stroke="#26728f" transform="translate(112 1904)">
+      <ellipse cx="76" cy="24" rx="58" ry="20"/>
+      <path d="M 18 24 V 122 C 18 140 134 140 134 122 V 24"/>
+      <path d="M 18 67 C 18 85 134 85 134 67"/>
     </g>
-    <text x="115" y="885" class="layer-title" fill="#125c78">Durable Data</text>
-    <text x="115" y="910" class="layer-title" fill="#125c78">+ Evidence</text>
-    <text x="115" y="937" class="layer-note">Facts survive;</text>
-    <text x="115" y="953" class="layer-note">projections can rebuild</text>
+    <text x="338" y="1949" class="layer-title" fill="#26728f">Local Data</text>
+    <text x="338" y="2007" class="layer-title" fill="#26728f">&amp; Outputs</text>
+    <text x="338" y="2053" class="layer-subtitle">rebuildable views, durable facts</text>
 
-    <g transform="translate(315 849)">
-      <rect class="card-now" y="4" width="205" height="125" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#dff4e8"/>
-      <path d="M24 27h20M24 35h20M24 43h13" class="icon" stroke="#2f9e68"/>
-      <text x="22" y="72" class="card-title">Immutable Events</text>
-      <text x="22" y="94" class="card-note">types and reducer now</text>
-      <text x="22" y="112" class="card-note">durable log in P1</text>
-      <rect x="143" y="24" width="46" height="22" rx="11" fill="#dff4e8"/>
-      <text x="166" y="39" text-anchor="middle" class="phase" fill="#237a50">NOW</text>
+    <rect x="788" y="1866" width="910" height="212" rx="30" class="card" stroke="#c4dde8"/>
+    <g class="icon" stroke="#26728f" transform="translate(840 1913)">
+      <ellipse cx="58" cy="18" rx="46" ry="17"/>
+      <path d="M 12 18 V 100 C 12 116 104 116 104 100 V 18"/>
+      <path d="M 12 58 C 12 74 104 74 104 58"/>
     </g>
+    <text x="990" y="1935" class="card-title">SQLite</text>
+    <text x="990" y="1977" class="card-body">append-only Events · Run / Activity projections</text>
+    <text x="990" y="2040" class="mini-body">Event is the source of truth; projections are query views</text>
 
-    <g transform="translate(535 849)">
-      <rect class="card" y="4" width="205" height="125" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#e8f2fb"/>
-      <path d="M23 27h22v20H23zM28 32h12M28 38h8" class="icon" stroke="#136a8a" transform="translate(0 -2)"/>
-      <text x="22" y="72" class="card-title">Run Projections</text>
-      <text x="22" y="94" class="card-note">Sessions · Runs</text>
-      <text x="22" y="112" class="card-note">Activities · usage</text>
-      <rect x="143" y="24" width="46" height="22" rx="11" fill="#e8eef8"/>
-      <text x="166" y="39" text-anchor="middle" class="phase" fill="#526b8d">P1</text>
+    <rect x="1740" y="1866" width="900" height="212" rx="30" class="card" stroke="#c4dde8"/>
+    <g class="icon" stroke="#26728f" transform="translate(1792 1922)">
+      <path d="M 10 28 H 58 L 74 46 H 126 V 112 H 10 Z"/>
     </g>
+    <text x="1940" y="1935" class="card-title">Workspace</text>
+    <text x="1940" y="1977" class="card-body">bounded local files and documents</text>
+    <text x="1940" y="2040" class="mini-body">list · chunked UTF-8 read · literal search</text>
 
-    <g transform="translate(755 849)">
-      <rect class="card" y="4" width="205" height="125" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#e9f2f7"/>
-      <path d="M23 27h22v18H23zM29 22h10v5M29 36h10" class="icon" stroke="#136a8a" transform="translate(0 2)"/>
-      <text x="22" y="72" class="card-title">Checkpoints</text>
-      <text x="22" y="94" class="card-note">safe resume</text>
-      <text x="22" y="112" class="card-note">receipt · UNKNOWN</text>
-      <rect x="143" y="24" width="46" height="22" rx="11" fill="#e9f2f7"/>
-      <text x="166" y="39" text-anchor="middle" class="phase" fill="#3e718d">P2</text>
+    <rect x="2682" y="1866" width="1052" height="212" rx="30" class="card" stroke="#c4dde8"/>
+    <g class="icon" stroke="#26728f" transform="translate(2734 1915)">
+      <path d="M 18 4 H 82 L 112 34 V 118 H 18 Z"/>
+      <path d="M 82 4 V 34 H 112"/>
+      <circle cx="68" cy="78" r="22"/>
+      <path d="M 56 78 L 66 88 L 84 68"/>
     </g>
-
-    <g transform="translate(975 849)">
-      <rect class="card" y="4" width="205" height="125" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#e8f2fb"/>
-      <path d="M22 31h12l4 4h10v13H22z" class="icon" stroke="#136a8a" transform="translate(0 -4)"/>
-      <text x="22" y="72" class="card-title">Workspace</text>
-      <text x="22" y="94" class="card-note">inputs · outputs</text>
-      <text x="22" y="112" class="card-note">Artifacts · hashes</text>
-      <rect x="143" y="24" width="46" height="22" rx="11" fill="#e8eef8"/>
-      <text x="166" y="39" text-anchor="middle" class="phase" fill="#526b8d">P1</text>
-    </g>
-
-    <g transform="translate(1195 849)">
-      <rect class="card" y="4" width="195" height="125" rx="14"/>
-      <rect x="14" y="18" width="34" height="34" rx="10" fill="#f3eaf7"/>
-      <path d="M22 46V30M32 46V24M42 46V35M20 46h26" class="icon" stroke="#136a8a"/>
-      <text x="22" y="72" class="card-title">Eval Evidence</text>
-      <text x="22" y="94" class="card-note">tasks · recovery · security</text>
-      <text x="22" y="112" class="card-note">OTel · comparison in P5</text>
-      <rect x="133" y="24" width="46" height="22" rx="11" fill="#f3eaf7"/>
-      <text x="156" y="39" text-anchor="middle" class="phase" fill="#526b8d">P1+</text>
-    </g>
+    <text x="2890" y="1935" class="card-title">outputs/** Artifacts</text>
+    <text x="2890" y="1977" class="card-body">bounded UTF-8 · atomic create / replace</text>
+    <text x="2890" y="2040" class="mini-body">ArtifactId · path · byte size · SHA-256</text>
   </g>
 
-  <!-- Return path for inspectable state -->
-  <path class="flow" d="M1407 913h34V188h-30" marker-end="url(#arrow)"/>
-  <rect x="1240" y="462" width="180" height="26" rx="13" fill="#ffffff" stroke="#dce4ec"/>
-  <text x="1330" y="480" text-anchor="middle" class="arrow-label">events · status · approval</text>
+  <!-- Read-only query return path -->
+  <path d="M 3250 2078 H 3760 V 728 H 3708" fill="none" stroke="#225fa4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowBlue)"/>
+  <text x="3734" y="1405" transform="rotate(-90 3734 1405)" text-anchor="middle" font-size="24" font-style="italic" font-weight="600" fill="#225fa4">inspect / events read committed facts</text>
 
-  <text x="750" y="1030" text-anchor="middle" class="layer-note">Accepted target architecture · current implementation remains intentionally small</text>
+  <!-- Footer note -->
+  <text x="60" y="2148" font-size="21" font-weight="520" fill="#7a8490">Current boundary: single user · single Agent · single process · CLI + SQLite · no HTTP, MCP, Approval, sandbox, or automatic recovery.</text>
 </svg>

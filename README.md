@@ -24,6 +24,12 @@ Tool 在指定 workspace 中工作。
 > P1“可检查执行”已经完成。进程中断后自动恢复属于 P2；用户 Approval 和隔离 runner 属于 P3。
 > `site/` 是独立的文档展示站，可以在本地开发、构建和预览；它不负责部署 BearAgent Runtime。
 
+## BearAgent 架构总览
+
+下图按入口、应用编排、Runtime 核心、port/adapter 和本地数据分层，只画 P1 当前已经实现的组件。
+
+![BearAgent P1 分层架构：CLI 和本机配置通过 bootstrap 进入 AgentLoop，Runtime 核心用领域类型、Reducer、预算和受控 Tool 路径协调模型、workspace 与 SQLite EventStore，结果保存为可查询 Event 和 outputs Artifact](docs/assets/bearagent-architecture.svg)
+
 ## 十分钟跑通一次任务
 
 需要 Git、[uv](https://docs.astral.sh/uv/) 和 Python 3.12。
