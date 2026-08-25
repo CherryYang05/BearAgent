@@ -15,6 +15,7 @@ export default defineConfig({
     starlight({
       title: 'BearAgent',
       description: '从一次可检查的本地文件任务，学会设计可靠的 Agent Runtime',
+      favicon: '/favicon.png',
       disable404Route: true,
       logo: {
         src: './src/assets/bearagent-logo.png',

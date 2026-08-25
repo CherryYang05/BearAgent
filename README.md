@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="docs/assets/bearagent-logo.png" alt="BearAgent logo" width="168">
   <h1>BearAgent</h1>
   <p><strong>一个 local-first、可检查的个人 Agent Runtime。</strong></p>
   <p>模型提出下一步，Runtime 控制工具、预算、记录和文件边界。</p>
@@ -11,7 +10,7 @@
   </p>
 </div>
 
-![BearAgent 文档封面：小熊在工作台前观察由模型、上下文、受控工具、事件和输出组成的 Runtime](site/public/images/bearagent-book-cover-4k.jpg)
+![BearAgent 运行图解：模型提议进入本地边界，由 Runtime 管控工具与预算、记录事件并生成原子输出](site/public/images/bearagent-book-cover-4k.jpg)
 
 你可以把 Model 想成负责判断“下一步做什么”的大脑，把 Runtime 想成真正负责执行的软件。BearAgent
 保存每次模型和 Tool Activity，限制模型次数、Tool 次数、token、费用和总时间，并且只允许内置文件

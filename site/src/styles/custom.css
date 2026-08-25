@@ -253,8 +253,7 @@ body {
   }
 
   .book-cover img {
-    aspect-ratio: 4 / 3;
-    object-position: 64% center;
+    aspect-ratio: 16 / 9;
   }
 
   .book-cover figcaption {
