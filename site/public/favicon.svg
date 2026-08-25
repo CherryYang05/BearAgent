@@ -3,16 +3,16 @@
   <title id="title">BearAgent</title>
   <rect width="220" height="220" rx="48" fill="#f7f9fc"/>
   <g stroke-linecap="round" stroke-linejoin="round">
-    <path d="M 43 25 H 31 C 18 25 16 40 16 53 V 82 C 16 97 11 106 3 110 C 11 114 16 123 16 138 V 167 C 16 180 18 195 31 195 H 43" fill="none" stroke="#2364aa" stroke-width="10"/>
-    <path d="M 177 25 H 189 C 202 25 204 40 204 53 V 82 C 204 97 209 106 217 110 C 209 114 204 123 204 138 V 167 C 204 180 202 195 189 195 H 177" fill="none" stroke="#2364aa" stroke-width="10"/>
-    <circle cx="79" cy="63" r="28" fill="#c9681f" stroke="#18263b" stroke-width="7"/>
-    <circle cx="141" cy="63" r="28" fill="#c9681f" stroke="#18263b" stroke-width="7"/>
-    <circle cx="79" cy="63" r="12" fill="#ffe1bb"/><circle cx="141" cy="63" r="12" fill="#ffe1bb"/>
-    <ellipse cx="110" cy="117" rx="66" ry="70" fill="#d8752c" stroke="#18263b" stroke-width="7"/>
-    <path d="M 57 86 C 68 72 82 64 96 61 M 163 86 C 152 72 138 64 124 61" fill="none" stroke="#18263b" stroke-width="7"/>
-    <circle cx="86" cy="108" r="7" fill="#18263b"/><circle cx="134" cy="108" r="7" fill="#18263b"/>
-    <ellipse cx="110" cy="139" rx="36" ry="31" fill="#fff0d7"/>
-    <path d="M 99 130 Q 110 122 121 130 Q 119 143 110 143 Q 101 143 99 130 Z" fill="#18263b"/>
-    <path d="M 110 143 V 151 M 110 151 C 101 162 90 160 86 151 M 110 151 C 119 162 130 160 134 151" fill="none" stroke="#18263b" stroke-width="5"/>
+    <circle cx="110" cy="110" r="99" fill="#eef5ff"/>
+    <path d="M 57 24 H 29 V 52 M 163 24 H 191 V 52 M 29 168 V 196 H 57 M 191 168 V 196 H 163" fill="none" stroke="#2364aa" stroke-width="7"/>
+    <circle cx="78" cy="69" r="25" fill="#d8752c" stroke="#18263b" stroke-width="4"/>
+    <circle cx="142" cy="69" r="25" fill="#d8752c" stroke="#18263b" stroke-width="4"/>
+    <circle cx="78" cy="69" r="11" fill="#f5b168"/><circle cx="142" cy="69" r="11" fill="#f5b168"/>
+    <path d="M 52 111 C 52 75 75 51 110 51 C 145 51 168 75 168 111 V 128 C 168 164 144 186 110 186 C 76 186 52 164 52 128 Z" fill="#d8752c" stroke="#18263b" stroke-width="4"/>
+    <ellipse cx="86" cy="115" rx="6" ry="8" fill="#18263b"/><ellipse cx="134" cy="115" rx="6" ry="8" fill="#18263b"/>
+    <circle cx="88" cy="112" r="2" fill="#fff"/><circle cx="136" cy="112" r="2" fill="#fff"/>
+    <ellipse cx="110" cy="145" rx="35" ry="29" fill="#fff0d7"/>
+    <path d="M 100 136 Q 110 129 120 136 Q 118 145 110 145 Q 102 145 100 136 Z" fill="#18263b"/>
+    <path d="M 110 145 V 152 M 110 152 C 102 162 92 160 88 152 M 110 152 C 118 162 128 160 132 152" fill="none" stroke="#18263b" stroke-width="4"/>
   </g>
 </svg>

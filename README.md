@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/bearagent-wordmark-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="docs/assets/bearagent-wordmark-light.svg">
-    <img src="docs/assets/bearagent-wordmark-light.svg" alt="BearAgent：由代码括号环抱几何熊头像的组合标识" width="520">
+    <img src="docs/assets/bearagent-wordmark-light.svg" alt="BearAgent：几何熊头像与项目名字组成的组合标识" width="520">
   </picture>
   <p><strong>一个 local-first、可检查的个人 Agent Runtime。</strong></p>
   <p>模型提出下一步，Runtime 控制工具、预算、记录和文件边界。</p>
