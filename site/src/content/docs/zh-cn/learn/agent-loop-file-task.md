@@ -69,5 +69,5 @@ F-0016 已提供 Python application 接口，并用五个固定 Fake Provider �
 进程重启后自动继续、Attempt、`UNKNOWN` 和写后 reconcile 属于 P2。用户 Approval、Grant 和 sandbox
 属于 P3。当前的持久边界让失败可检查，但不宣称 exactly-once。
 
-继续阅读[从命令行运行并检查一次 Run](/BearAgent/zh-cn/learn/run-inspect-events/)，再到
-[有界 Agent Loop 实现导读](/BearAgent/zh-cn/development/agent-loop/)查看代码位置和测试证据。
+继续阅读[从命令行运行并检查一次 Run](/zh-cn/learn/run-inspect-events/)，再到
+[有界 Agent Loop 实现导读](/zh-cn/development/agent-loop/)查看代码位置和测试证据。

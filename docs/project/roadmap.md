@@ -2,7 +2,7 @@
 title: BearAgent Roadmap
 status: accepted
 version: 1.0
-last_verified: 2026-08-24
+last_verified: 2026-08-25
 ---
 
 # BearAgent 项目路线图
@@ -69,8 +69,8 @@ P0 建立 Python 3.12、uv、CI、CLI、模块依赖检查、测试替身，以�
 
 ### P1：可检查执行
 
-**状态：Runtime gate 已完成（2026-08-23）。** F-0001 至 F-0008、F-0016 和 F-0017 已实现。F-0015
-的本地文档交付已经合并，但 Feature 仍为 `accepted`，因为公开 Pages 地址尚未验收。
+**状态：已完成。** F-0001 至 F-0008、F-0015、F-0016 和 F-0017 均已实现。Runtime gate 在
+2026-08-23 完成；F-0015 随后完成书籍化文档重构和本地站点验收。
 
 P1 已接通：
 
@@ -86,9 +86,8 @@ v1.1.1 使用 DeepSeek V4 经 production composition 完成四个普通任务和
 
 P1 只保证已保存事实可查。进程退出后不会自动继续；timeout 也不会撤销可能已经发生的副作用。
 
-F-0015 的本地站点、渐进式路线、CLI 手册和 Pages workflow 已进入 `main`。2026-08-25 复核时公开项目
-地址与仓库 Pages API 仍返回 404；因此 F-0015 继续保持 `accepted`。这项发布门不撤销已完成的 P1
-Runtime gate，也不能被 445 个 Python 测试代替。
+F-0015 提供独立的 Starlight 文档站、渐进式学习路线、CLI 手册和源码导读。它可以本地开发、构建
+和预览，普通 CI 负责验证；在线托管与自动部署不属于 F-0015，也不再作为 P1 的关闭门。
 
 ## 5. P2：可恢复执行语义
 
@@ -323,11 +322,11 @@ Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；
 6. [F-0006：Tool Registry、Policy 和 Executor](../specs/F-0006-tool-registry-executor-policy.md)
 7. [F-0007：workspace 只读 Tool](../specs/F-0007-workspace-read-tools.md)
 8. [F-0008：原子输出和 Artifact](../specs/F-0008-atomic-output-artifacts.md)
-9. [F-0015：Starlight 文档书与 GitHub Pages 发布](../specs/F-0015-local-starlight-docs-site.md) — accepted，公开地址待验收
+9. [F-0015：可以连续阅读的 Starlight 文档书](../specs/F-0015-local-starlight-docs-site.md) — implemented
 10. [F-0016：有界 Context 和串行 Agent Loop](../specs/F-0016-bounded-context-agent-loop.md)
 11. [F-0017：模型服务配置与真实 gate](../specs/F-0017-configurable-model-providers-live-gate.md)
 
-F-0015 的本地站点已经实现；`accepted` 表示 Pages 公开 URL 和合并后验收尚未关闭。
+F-0015 的文档内容、本地站点、构建和阅读体验已经实现；部署到某个在线平台不在该 Feature 范围内。
 
 ### P2（计划；均未创建 Spec）
 

@@ -3,9 +3,8 @@
 `site/` 是 BearAgent 的中文学习和开发者网站。工程事实仍由仓库中的 `docs/`、代码和测试确认；
 这里用连续例子解释这些事实，并明确区分已经实现和未来计划。
 
-目标公开地址是 `https://cherryyang05.github.io/BearAgent/`。2026-08-25 复核时该地址与仓库 Pages
-API 仍返回 404；本地构建成功不等于已经上线。代码合并后还需在仓库 Pages 设置中选择 GitHub
-Actions 作为 Source，并在无登录浏览器中完成公开验收。
+它是仓库中的文档展示站，不绑定 GitHub Pages、域名或其他托管平台。当前交付包括本地开发、生产
+构建、预览和 CI 检查；是否把 `site/dist/` 部署到线上属于后续独立决定。
 
 ## 本地运行
 
@@ -16,8 +15,7 @@ npm --prefix=site ci
 npm run dev --prefix=site
 ```
 
-访问 `http://localhost:4321/BearAgent/zh-cn/`。本地也保留 `/BearAgent/`，这样可以提前发现只在
-GitHub Pages 仓库子路径下才会出现的错误链接。
+访问 `http://localhost:4321/zh-cn/`。
 
 验证生产构建和本地搜索：
 
@@ -28,10 +26,10 @@ npm run preview --prefix=site
 
 `site/dist/` 是可重新生成的构建产物，不提交 Git。
 
-## 发布
+## 构建边界
 
-`.github/workflows/deploy-docs.yml` 在 `site/` 变更进入 `main` 后构建并发布 GitHub Pages。普通 PR
-仍只执行 CI 构建，不会部署。workflow 不需要仓库 secret，只使用 GitHub Pages 的短期身份。
+普通 CI 会锁定安装依赖并构建站点，用来发现损坏的 Front Matter、路由、MDX、Mermaid 和搜索索引。
+仓库没有文档部署 workflow，也不需要部署凭据。
 
 ## 内容怎样像一本书一样分工
 

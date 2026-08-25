@@ -1,15 +1,15 @@
 ---
 title: Local-first and Self-hosting Strategy
 status: accepted
-version: 0.7
-last_verified: 2026-08-24
+version: 0.8
+last_verified: 2026-08-25
 ---
 
-# 本地运行、文档发布与未来自托管
+# 本地运行、文档站与未来自托管
 
-这是一份**部署边界说明**，不是当前服务器安装教程。现在真正可运行的是本地 P1 CLI；静态文档可以
-由 GitHub Actions 构建，但公开 Pages 地址仍未验收；BearAgent Runtime 还没有 HTTP 服务、容器化
-production 或公网入口。
+这是一份**部署边界说明**，不是当前服务器安装教程。现在真正可运行的是本地 P1 CLI；`site/` 是
+可以本地开发、构建和预览的静态文档站；BearAgent Runtime 还没有 HTTP 服务、容器化 production
+或公网入口。
 
 | 你想做什么 | 现在应走的入口 |
 |---|---|
@@ -20,15 +20,15 @@ production 或公网入口。
 
 ## 1. 现在怎样运行
 
-P1 Runtime 全部在本地开发和验证，不开放 HTTP。F-0015 文档站是独立的静态产物；仓库已经
-加入 GitHub Pages workflow，但 2026-08-25 复核时 Pages API 和公开 URL 仍返回 404。静态站不会启动
-Runtime，也不会读取模型密钥或用户数据。P2 在私有服务器演练恢复；P3 仍通过私有通道验证
+P1 Runtime 全部在本地开发和验证，不开放 HTTP。F-0015 文档站是独立的静态产物，仓库只在 CI 中
+验证它能够构建，不自动部署到托管平台。静态站不会启动 Runtime，也不会读取模型密钥或用户数据。
+P2 在私有服务器演练恢复；P3 仍通过私有通道验证
 Approval 与隔离 runner；只有 P4 的认证、部署和备份恢复全部通过，Agent 服务才通过公网子域名
 提供给项目所有者。
 
 不需要新域名：
 
-- `docs.bearguin.cn`：未来可指向静态文档；当前发布目标是 GitHub Pages；
+- `docs.bearguin.cn`：未来如需在线托管，可以指向静态文档；F-0015 不选择托管平台；
 - `agent.bearguin.cn`：P4 后的单用户 Agent API，未来 Web UI 与 `/api` 同源。
 
 暂不增加 `api.*`，避免 CORS、cookie 和证书管理复杂度。
@@ -55,7 +55,7 @@ Production  P4 接入与部署门通过后才启用公网 hostname
 - SQLite 和 workspace 放在项目外的数据目录；
 - 不开放 HTTP，不提供 host shell；
 - P1 本地 CLI 的 Provider key 只在被 Git 忽略的本机 catalog；长期服务后续改用 secret store；
-- 文档站本地预览；`main` 的站点变更可以部署到 GitHub Pages。
+- 文档站在本地预览，并由普通 CI 验证生产构建；仓库不自动部署它。
 
 本地 CLI 默认使用当前目录作为 workspace、`data/p1-run-profile.json` 作为 Run 配置、
 `data/config.json` 作为模型服务配置、`data/bearagent.db` 作为 EventStore。config 可以保存 HTTPS
@@ -83,12 +83,11 @@ suite v1.1.1 已在授权费用范围内通过 5/5；runner 仍不会因这次�
 `run inspect/events` 只打开已经存在的普通数据库文件。不存在的路径不会生成空数据库；损坏或未来
 migration 只返回安全 persistence Error。这里仍是本地命令，不会启动 HTTP 服务。
 
-### F-0015：公开静态文档
+### F-0015：独立文档站
 
-GitHub Actions 已能构建并上传 `site/dist/`；目标地址是
-`https://cherryyang05.github.io/BearAgent/`。GitHub Pages 只应接收静态产物，不在 Web 请求中运行
-文档生成器。首次上线还要在仓库 Settings → Pages 中选择 GitHub Actions 作为 Source，并在无登录
-浏览器中确认首页、资源、中文路由和 404。真正访问成功前，状态只能写“发布配置已实现”。
+`site/` 保存文档网站源码，`npm run build --prefix=site` 生成 `site/dist/`。开发者可以用本地 dev 或
+preview server 阅读和检查它，CI 负责阻止无法构建的页面进入主线。F-0015 不选择域名或托管平台，
+也不包含自动部署 workflow；以后如果需要在线发布，应单独决定目标、权限和验收方式。
 
 ### P2：私有服务器 staging
 

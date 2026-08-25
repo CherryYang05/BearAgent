@@ -72,4 +72,4 @@ F-0006 建好了统一入口，F-0007 已让三个只读 Tool 真正打开受限
 Policy 决定和结果写成 Event；F-0005 的 `run` 与 `inspect` 已用同一 RunState 展示 Tool Activity。
 
 想看路径怎样检查，可以继续阅读
-[Windows 和 Unix 路径为什么先变成同一种写法](/BearAgent/zh-cn/learn/workspace-read-boundary/)。
+[Windows 和 Unix 路径为什么先变成同一种写法](/zh-cn/learn/workspace-read-boundary/)。

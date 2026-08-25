@@ -88,4 +88,4 @@ wheel 安装说成 PyPI 已经上线。
 
 `pip install` 的解析和安装阶段见
 [pip 官方 install 文档](https://pip.pypa.io/en/stable/cli/pip_install/)。维护者怎样构建和上传 package，
-继续阅读[怎样把 BearAgent wheel 发布到 PyPI](/BearAgent/zh-cn/development/publish-python-package/)。
+继续阅读[怎样把 BearAgent wheel 发布到 PyPI](/zh-cn/development/publish-python-package/)。

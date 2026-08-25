@@ -24,9 +24,11 @@ IGNORED_DIRECTORIES = {
 }
 IGNORED_DIRECTORY_PREFIXES = (".pytest-state-", ".pytest-tmp-", ".uv-cache-")
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
-UNPREFIXED_SITE_ROUTE = re.compile(r"""(?:link:\s+|href=["']|\]\()/zh-cn/""")
+LEGACY_REPOSITORY_PREFIX = re.compile(r"""(?:link:\s+|(?:href|src)=["']|\]\()/BearAgent/""")
 MARKDOWN_SUFFIXES = {".md", ".mdx"}
 SITE_CONTENT_RELATIVE = Path("site/src/content/docs")
+SITE_PUBLIC_RELATIVE = Path("site/public")
+SITE_ROUTE_PREFIX = "/zh-cn/"
 
 
 def markdown_files(root: Path = ROOT) -> list[Path]:
@@ -62,20 +64,20 @@ def broken_links(root: Path = ROOT) -> list[str]:
     site_content = (root / SITE_CONTENT_RELATIVE).resolve()
     for document in markdown_files(root):
         content = document.read_text(encoding="utf-8")
-        if document.resolve().is_relative_to(site_content) and UNPREFIXED_SITE_ROUTE.search(
+        if document.resolve().is_relative_to(site_content) and LEGACY_REPOSITORY_PREFIX.search(
             content
         ):
             relative_document = document.relative_to(root)
             errors.append(
-                f"{relative_document}: absolute site route must include /BearAgent prefix"
+                f"{relative_document}: site route must not include legacy /BearAgent prefix"
             )
         for match in MARKDOWN_LINK.finditer(content):
             target = local_link_target(match.group(1))
             if not target:
                 continue
             is_site_document = document.resolve().is_relative_to(site_content)
-            if is_site_document and target.startswith("/BearAgent/zh-cn/"):
-                route_target = site_content / target.removeprefix("/BearAgent/")
+            if is_site_document and target.startswith(SITE_ROUTE_PREFIX):
+                route_target = site_content / target.removeprefix("/")
                 route_sources = (
                     route_target.with_suffix(".md"),
                     route_target.with_suffix(".mdx"),
@@ -87,7 +89,10 @@ def broken_links(root: Path = ROOT) -> list[str]:
                 relative_document = document.relative_to(root)
                 errors.append(f"{relative_document}: missing site route {match.group(1)!r}")
                 continue
-            resolved = (document.parent / target).resolve()
+            if is_site_document and target.startswith("/"):
+                resolved = (root / SITE_PUBLIC_RELATIVE / target.removeprefix("/")).resolve()
+            else:
+                resolved = (document.parent / target).resolve()
             is_site_target = resolved.is_relative_to(site_content)
             if is_site_document and is_site_target:
                 if resolved.suffix.casefold() in MARKDOWN_SUFFIXES:
@@ -99,7 +104,7 @@ def broken_links(root: Path = ROOT) -> list[str]:
                     continue
                 relative_document = document.relative_to(root)
                 errors.append(
-                    f"{relative_document}: internal site link must use /BearAgent/zh-cn/ "
+                    f"{relative_document}: internal site link must use /zh-cn/ "
                     f"route {match.group(1)!r}"
                 )
                 continue

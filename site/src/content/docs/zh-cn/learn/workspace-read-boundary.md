@@ -80,5 +80,5 @@ F-0007 保守地拒绝所有 symlink 和 junction。这样会失去一些仓库�
 和 Executor。F-0016 的 Agent Loop 已能按模型请求调用它们，F-0005 又把完整文件任务接到 CLI。
 写入 `outputs/**` 由 F-0008 的独立 Tool 实现，并通过同一 production composition 调用。
 
-接下来可以阅读[为什么不能直接覆盖输出文件](/BearAgent/zh-cn/learn/atomic-output-boundary/)，或进入
-[F-0007 workspace 只读 Tool 实现导读](/BearAgent/zh-cn/development/workspace-read-tools/)。
+接下来可以阅读[为什么不能直接覆盖输出文件](/zh-cn/learn/atomic-output-boundary/)，或进入
+[F-0007 workspace 只读 Tool 实现导读](/zh-cn/development/workspace-read-tools/)。

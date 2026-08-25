@@ -43,7 +43,7 @@ def test_site_links_use_built_routes_instead_of_source_suffixes(tmp_path: Path) 
     (guides / "cli.md").write_text("# CLI", encoding="utf-8")
     source = learn / "index.md"
     source.write_text(
-        "[good](/BearAgent/zh-cn/guides/cli/)\n[broken](../guides/cli.md)\n",
+        "[good](/zh-cn/guides/cli/)\n[broken](../guides/cli.md)\n",
         encoding="utf-8",
     )
 
@@ -53,13 +53,25 @@ def test_site_links_use_built_routes_instead_of_source_suffixes(tmp_path: Path) 
     ]
 
 
-def test_site_absolute_routes_include_base_prefix(tmp_path: Path) -> None:
+def test_site_routes_reject_legacy_repository_prefix(tmp_path: Path) -> None:
     site = tmp_path / "site" / "src" / "content" / "docs" / "zh-cn"
     site.mkdir(parents=True)
     source = site / "index.mdx"
-    source.write_text("hero:\n  link: /zh-cn/guides/cli/\n", encoding="utf-8")
+    source.write_text("hero:\n  link: /BearAgent/zh-cn/guides/cli/\n", encoding="utf-8")
 
     relative_source = source.relative_to(tmp_path)
     assert check_docs.broken_links(tmp_path) == [
-        f"{relative_source}: absolute site route must include /BearAgent prefix"
+        f"{relative_source}: site route must not include legacy /BearAgent prefix"
     ]
+
+
+def test_site_root_asset_resolves_from_public_directory(tmp_path: Path) -> None:
+    site_root = tmp_path / "site"
+    source = site_root / "src" / "content" / "docs" / "zh-cn" / "index.md"
+    image = site_root / "public" / "images" / "cover.jpg"
+    source.parent.mkdir(parents=True)
+    image.parent.mkdir(parents=True)
+    source.write_text("![cover](/images/cover.jpg)\n", encoding="utf-8")
+    image.write_bytes(b"image")
+
+    assert check_docs.broken_links(tmp_path) == []

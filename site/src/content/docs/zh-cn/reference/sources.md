@@ -34,8 +34,8 @@ sourceRefs:
 - [第 7 章：Agent 的评估](https://bojieli.github.io/ai-agent-book/book/chapter7/)：从最终结果、过程和成本
   理解 eval。
 
-读完第 1、2、4 章后，可以回到本站的[一项 Agent 任务怎样运转](/BearAgent/zh-cn/learn/agent-basics/)；第 7 章适合
-和[Agent 仍然难在哪里](/BearAgent/zh-cn/learn/open-problems/)对照阅读。
+读完第 1、2、4 章后，可以回到本站的[一项 Agent 任务怎样运转](/zh-cn/learn/agent-basics/)；第 7 章适合
+和[Agent 仍然难在哪里](/zh-cn/learn/open-problems/)对照阅读。
 
 - [Agentic Design Patterns 中文翻译](https://github.com/xindoo/agentic-design-patterns)：适合按 Reflection、
   Tool use、Planning、Multi-Agent 等模式建立索引。模式名称帮助比较方案，不代表每个 Agent 都需要
@@ -140,7 +140,7 @@ Event 和恢复处理。BearAgent 当前未接入 MCP 或 A2A。
   对照 `pyproject.toml`、distribution 构建、TestPyPI 和 PyPI 发布的标准流程。
 
 这些资料说明 Python packaging 工具怎样工作，不证明 BearAgent 已经发布。BearAgent 的实际发布版本、
-PyPI 项目归属和可用 CLI 仍以项目 release 记录与[当前状态](/BearAgent/zh-cn/project/status/)为准。
+PyPI 项目归属和可用 CLI 仍以项目 release 记录与[当前状态](/zh-cn/project/status/)为准。
 
 ## 资料进入本站的规则
 

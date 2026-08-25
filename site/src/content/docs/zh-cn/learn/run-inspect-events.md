@@ -22,7 +22,7 @@ bearagent run events <run-id> --after-sequence 0 --limit 100
 第一条命令默认读取 `data/config.json` 和 `data/p1-run-profile.json`，不需要每次重复传入路径。
 
 本页解释三条命令为什么读取同一批事实。安装、config/profile 全字段、Provider 配置、所有选项、退出码和
-排错步骤见[P1 命令行完整使用手册](/BearAgent/zh-cn/guides/cli/)。
+排错步骤见[P1 命令行完整使用手册](/zh-cn/guides/cli/)。
 
 ## 一次命令怎样接到已有边界
 
@@ -83,4 +83,4 @@ ToolCallCompleted 没有提交，查询也不会从文件系统反推一个 Arti
 真实 gate 仍必须由项目所有者确认 Provider、model、pricing snapshot 和费用上限后单独执行。2026-08-23
 的 DeepSeek V4 suite v1.1.1 已通过 5/5，因此 F-0017/P1 已关闭；runner 默认状态没有改变。
 
-继续阅读[生产 CLI 和查询服务实现导读](/BearAgent/zh-cn/development/run-cli/)，查看代码位置、Schema 和故障测试。
+继续阅读[生产 CLI 和查询服务实现导读](/zh-cn/development/run-cli/)，查看代码位置、Schema 和故障测试。

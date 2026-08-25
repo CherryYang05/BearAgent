@@ -131,7 +131,7 @@ BearAgent 已实现 P1 的五类预算数据和检查规则；用户取消、恢
 
 ## 接下来读什么
 
-如果想先看行业全景，回到[Agent 现在发展到哪一步](/BearAgent/zh-cn/learn/agents-today/)和
-[Agent 仍然难在哪里](/BearAgent/zh-cn/learn/open-problems/)。如果要进入 BearAgent 执行细节，继续读
-[状态和预算怎样计算](/BearAgent/zh-cn/learn/runtime-state-and-budgets/)，或直接看
-[Tool 请求的四道检查](/BearAgent/zh-cn/learn/tool-execution-boundary/)。
+如果想先看行业全景，回到[Agent 现在发展到哪一步](/zh-cn/learn/agents-today/)和
+[Agent 仍然难在哪里](/zh-cn/learn/open-problems/)。如果要进入 BearAgent 执行细节，继续读
+[状态和预算怎样计算](/zh-cn/learn/runtime-state-and-budgets/)，或直接看
+[Tool 请求的四道检查](/zh-cn/learn/tool-execution-boundary/)。

@@ -22,7 +22,7 @@ Tool 在指定 workspace 中工作。
 
 > [!IMPORTANT]
 > P1“可检查执行”已经完成。进程中断后自动恢复属于 P2；用户 Approval 和隔离 runner 属于 P3。
-> 本地文档站可以构建，但公开 GitHub Pages 地址目前仍未通过上线验收。
+> `site/` 是独立的文档展示站，可以在本地开发、构建和预览；它不负责部署 BearAgent Runtime。
 
 ## 十分钟跑通一次任务
 

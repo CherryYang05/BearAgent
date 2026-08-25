@@ -6,8 +6,8 @@ sourceRefs:
   - F-0015
 ---
 
-F-0015 的本地预览和 GitHub Pages 使用同一份静态站点。它不运行 BearAgent Runtime，也不需要模型
-密钥或 BearAgent 数据。
+F-0015 把学习内容和开发者文档组织成一份独立静态站点。它不运行 BearAgent Runtime，也不需要
+模型密钥或 BearAgent 数据。
 
 ## 准备环境
 
@@ -23,7 +23,7 @@ npm --prefix=site ci
 npm run dev --prefix=site
 ```
 
-然后访问 `http://localhost:4321/BearAgent/zh-cn/`。Markdown 或 MDX 保存后会自动刷新。
+然后访问 `http://localhost:4321/zh-cn/`。Markdown 或 MDX 保存后会自动刷新。
 
 ## 验证生产页面和搜索
 
@@ -34,14 +34,12 @@ npm run build --prefix=site
 npm run preview --prefix=site
 ```
 
-生产预览的根路径会跳转到 `/BearAgent/zh-cn/`。构建产物位于 `site/dist/`，可以随时从源码重新生成。
+生产预览的根路径会跳转到 `/zh-cn/`。构建产物位于 `site/dist/`，可以随时从源码重新生成。
 
-## 在线地址为什么多一段 `/BearAgent`
+## 为什么站内链接从 `/zh-cn/` 开始
 
-目标项目 Pages 地址是 `https://cherryyang05.github.io/BearAgent/`，仓库名就是站点的基础路径。Astro 在
-构建时为脚本、样式、sitemap 和内部入口加上这段前缀。变更进入 `main` 后，独立 workflow 才会
-尝试发布；普通 PR 不会改线上站点。2026-08-25 该公开地址仍返回 404，因此必须把“构建通过”和
-“公开可访问”作为两个验收结果分别报告。
+第一版只维护简体中文，所以正文路由统一从 `/zh-cn/` 开始。站点不绑定仓库名、域名或托管平台，
+脚本、样式和图片也从站点根路径加载。普通 CI 只验证构建，不会部署 `site/dist/`。
 
 :::caution[不要提交生成目录]
 `site/node_modules/`、`site/.astro/` 和 `site/dist/` 都不进入 Git。
@@ -53,7 +51,7 @@ npm run preview --prefix=site
 工程文档，也不要把未来路线写成当前功能。每页的 `bearStatus` 和 `sourceRefs` 用于
 标记内容性质和事实来源。
 
-完整关闭流程见[Feature 完成时怎样更新文档](/BearAgent/zh-cn/development/feature-documentation/)。
+完整关闭流程见[Feature 完成时怎样更新文档](/zh-cn/development/feature-documentation/)。
 
 ## 提交前做一次视觉检查
 
@@ -63,4 +61,4 @@ npm run preview --prefix=site
 2. 390px 手机宽度确认导航可打开，图片裁切不遮挡说明，代码块可横向滚动；
 3. 明暗主题各看一次对比度；
 4. 只用键盘确认主要入口可以聚焦；
-5. 生产 build 后再检查一次，避免开发模式掩盖基础路径或搜索问题。
+5. 生产 build 后再检查一次，避免开发模式掩盖路由或搜索问题。

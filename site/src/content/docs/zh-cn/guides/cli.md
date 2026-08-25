@@ -277,5 +277,5 @@ uv run bearagent run events <run-id> --after-sequence 100 --limit 100 --json `
 - 没有 Run 列表、删除、导出命令、后台 daemon、HTTP API 或 Web UI；
 - 任务产生的 `outputs/**` 和数据库由用户管理，P1 不提供生命周期清理。
 
-想理解这些限制背后的理由，继续读[P1 的关键架构取舍](/BearAgent/zh-cn/architecture/p1-decisions/)。要修改 CLI
-实现，读[生产 CLI 和查询服务实现导读](/BearAgent/zh-cn/development/run-cli/)。
+想理解这些限制背后的理由，继续读[P1 的关键架构取舍](/zh-cn/architecture/p1-decisions/)。要修改 CLI
+实现，读[生产 CLI 和查询服务实现导读](/zh-cn/development/run-cli/)。

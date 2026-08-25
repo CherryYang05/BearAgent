@@ -30,7 +30,7 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 | 能查询任务做过什么吗？ | 能，用 `inspect` 看状态，用 `events` 看有序事实 |
 | 程序中断后会自动继续吗？ | 不会，P2 尚未实现 |
 | 有用户 Approval 或真正的 sandbox 吗？ | 没有，P3 尚未实现 |
-| 文档公开网站已经上线吗？ | 没有；本地站点可构建，目标 Pages 地址当前为 404 |
+| 文档站可以查看吗？ | 可以；在本地启动开发或生产预览，仓库不负责在线部署 |
 
 ## 已经可以验证
 
@@ -47,7 +47,7 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 | F-0016 有界 Agent Loop | 从已提交 Event 构造 Context，串行调用模型与 Tool，保存 v2 事实；五个 Fake 任务在两种 Store 上通过 |
 | F-0005 生产 CLI 与查询 | `run/inspect/events`、严格 profile、production composition、分页查询和 human/JSON；零预算与 Provider 调用失败保留安全 terminal Run；五个任务通过真实 SQLite/Tools + Fake Provider |
 | F-0017 模型配置与 live gate | config v1、RunProfile v2、三种协议 adapter、RunCreated v3、production selector 与默认关闭的 runner；Fake 5/5 和 DeepSeek V4 live 5/5 分开验证 |
-| F-0015 文档站 | 中文 Starlight、搜索、Mermaid、六部分学习路线、独立 CLI 手册和 Pages workflow；公开 URL 尚未验收 |
+| F-0015 文档站 | 中文 Starlight、搜索、Mermaid、六部分学习路线、独立 CLI 手册，以及本地开发、构建和预览 |
 
 ## P1 完成证据
 
@@ -58,9 +58,9 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 - 脱敏证据见
   [F-0017 P1 live report v1](https://github.com/CherryYang05/BearAgent/blob/main/docs/evidence/F-0017-p1-live-report-v1.json)。
 
-P1 当前怎样操作见[命令行完整使用手册](/BearAgent/zh-cn/guides/cli/)；执行链和主要取舍分别见
-[一次请求怎样穿过 BearAgent](/BearAgent/zh-cn/architecture/runtime-flow/)与
-[P1 为什么这样设计](/BearAgent/zh-cn/architecture/p1-decisions/)。
+P1 当前怎样操作见[命令行完整使用手册](/zh-cn/guides/cli/)；执行链和主要取舍分别见
+[一次请求怎样穿过 BearAgent](/zh-cn/architecture/runtime-flow/)与
+[P1 为什么这样设计](/zh-cn/architecture/p1-decisions/)。
 
 ## 当前明确不能做
 
@@ -68,9 +68,8 @@ P1 当前怎样操作见[命令行完整使用手册](/BearAgent/zh-cn/guides/cl
 - `inspect/events` 只能查看已提交事实，不能 resume、retry 或修复非终态 Run；
 - RunCreated v3 只增加安全 Provider 选择；Tool 请求和 Artifact 仍随 v2 Event 写入 Store；
 - 还没有用户 Approval、sandbox、服务器 API 或独立 Artifact 查询表；
-- Pages workflow 已在 `main`，但 2026-08-25 复核时仓库 Pages API 与公开项目地址都返回 404；仍需
-  在仓库设置中选择 GitHub Actions Source，并用真实公开访问关闭 F-0015；
-- `docs.bearguin.cn` 尚未配置，当前发布目标是 GitHub Pages 项目地址。
+- 文档站没有自动部署 workflow，也没有绑定域名或托管平台；这不是 F-0015 的未完成项；
+- `docs.bearguin.cn` 尚未配置。如果以后需要在线托管，应另行定义部署目标和验收标准。
 
 F-0002 的确定性重放只说明“同一串 Event 会算出同一状态”。它不是 P2 的崩溃恢复，也没有
 Checkpoint、Attempt、RecoveryDecision 或 `UNKNOWN` 处置。P3 的参数绑定 Approval 和隔离 runner、

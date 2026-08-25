@@ -112,5 +112,5 @@ BearAgent 不把“接入更多模型和 Tool”当作第一目标。它先选�
 注册过的 workspace Tool，SQLite 保存 Event，输出只原子写入 `outputs/**`。这证明的是一个受限场景
 已经走通，不是通用 Agent、崩溃恢复、用户 Approval 或 sandbox 已经完成。
 
-下一页继续看[Agent 仍然难在哪里](/BearAgent/zh-cn/learn/open-problems/)，以及这些问题为什么同时出现在工业系统和学术
-研究中。全部来源和延伸阅读集中在[参考资料](/BearAgent/zh-cn/reference/sources/)。
+下一页继续看[Agent 仍然难在哪里](/zh-cn/learn/open-problems/)，以及这些问题为什么同时出现在工业系统和学术
+研究中。全部来源和延伸阅读集中在[参考资料](/zh-cn/reference/sources/)。

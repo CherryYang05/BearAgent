@@ -52,52 +52,52 @@ flowchart LR
 
 ## 第一部：先亲手跑一次
 
-从[完整命令行手册](/BearAgent/zh-cn/guides/cli/)开始。它集中说明安装、配置、`doctor`、`run`、`inspect`、
+从[完整命令行手册](/zh-cn/guides/cli/)开始。它集中说明安装、配置、`doctor`、`run`、`inspect`、
 `events`、退出码、数据位置和排错，不要求你在 Feature 页面之间来回拼步骤。
 
-随后读[配置一次模型服务](/BearAgent/zh-cn/learn/configure-model-service/)和[运行、检查与读取 Event](/BearAgent/zh-cn/learn/run-inspect-events/)。
+随后读[配置一次模型服务](/zh-cn/learn/configure-model-service/)和[运行、检查与读取 Event](/zh-cn/learn/run-inspect-events/)。
 此时先把 Run ID、Artifact 和有序 Event 看成“程序给你的收据”，还不用理解全部字段。
 
 ## 第二部：看懂 Agent 运行
 
 依次阅读：
 
-1. [一项 Agent 任务怎样运转](/BearAgent/zh-cn/learn/agent-basics/)：分清 Model、Context、Tool 与 Runtime；
-2. [一次文件任务的完整链路](/BearAgent/zh-cn/learn/agent-loop-file-task/)：跟完模型—Tool—模型循环；
-3. [状态和预算怎样计算](/BearAgent/zh-cn/learn/runtime-state-and-budgets/)：理解 Event 与 Reducer；
-4. [逐条读懂一次 Run](/BearAgent/zh-cn/learn/run-event-reducer-walkthrough/)：把抽象规则落到事件序列；
-5. [Event 为什么是事实来源](/BearAgent/zh-cn/learn/durable-events/)：分清“能够重开查询”和“能够恢复执行”。
+1. [一项 Agent 任务怎样运转](/zh-cn/learn/agent-basics/)：分清 Model、Context、Tool 与 Runtime；
+2. [一次文件任务的完整链路](/zh-cn/learn/agent-loop-file-task/)：跟完模型—Tool—模型循环；
+3. [状态和预算怎样计算](/zh-cn/learn/runtime-state-and-budgets/)：理解 Event 与 Reducer；
+4. [逐条读懂一次 Run](/zh-cn/learn/run-event-reducer-walkthrough/)：把抽象规则落到事件序列；
+5. [Event 为什么是事实来源](/zh-cn/learn/durable-events/)：分清“能够重开查询”和“能够恢复执行”。
 
 ## 第三部：理解安全边界
 
 这部分从四个常见误解出发：
 
-- “SDK 对象直接传进 Runtime 更省事” → [模型为什么需要 adapter](/BearAgent/zh-cn/learn/model-provider-boundary/)；
-- “模型都选择 Tool 了，直接调用就行” → [Tool 请求为什么过四道检查](/BearAgent/zh-cn/learn/tool-execution-boundary/)；
-- “拒绝 `..` 就不会越界” → [路径怎样留在 workspace](/BearAgent/zh-cn/learn/workspace-read-boundary/)；
-- “写文件只要 `write_text`” → [为什么不能直接覆盖文件](/BearAgent/zh-cn/learn/atomic-output-boundary/)。
+- “SDK 对象直接传进 Runtime 更省事” → [模型为什么需要 adapter](/zh-cn/learn/model-provider-boundary/)；
+- “模型都选择 Tool 了，直接调用就行” → [Tool 请求为什么过四道检查](/zh-cn/learn/tool-execution-boundary/)；
+- “拒绝 `..` 就不会越界” → [路径怎样留在 workspace](/zh-cn/learn/workspace-read-boundary/)；
+- “写文件只要 `write_text`” → [为什么不能直接覆盖文件](/zh-cn/learn/atomic-output-boundary/)。
 
-最后用[失败后先问哪三个问题](/BearAgent/zh-cn/learn/recovery-authority-isolation/)把 P1 的记录、P2 的恢复和 P3 的授权/
+最后用[失败后先问哪三个问题](/zh-cn/learn/recovery-authority-isolation/)把 P1 的记录、P2 的恢复和 P3 的授权/
 隔离分开。
 
 ## 第四、五部：从架构进入源码
 
-先读[架构总览](/BearAgent/zh-cn/architecture/)和[一次请求怎样穿过 Runtime](/BearAgent/zh-cn/architecture/runtime-flow/)，再进入
-[源码阅读路线](/BearAgent/zh-cn/development/)。源码页不会只列目录：每篇都会给出读代码的顺序、要守住的不变量、
+先读[架构总览](/zh-cn/architecture/)和[一次请求怎样穿过 Runtime](/zh-cn/architecture/runtime-flow/)，再进入
+[源码阅读路线](/zh-cn/development/)。源码页不会只列目录：每篇都会给出读代码的顺序、要守住的不变量、
 最小实验和对应测试。
 
 ## 第六部：把困惑变成研究问题
 
-[Agent 今天能做什么](/BearAgent/zh-cn/learn/agents-today/)帮助你判断适合 Agent 的任务形状；[Agent 仍然难在哪里](/BearAgent/zh-cn/learn/open-problems/)
+[Agent 今天能做什么](/zh-cn/learn/agents-today/)帮助你判断适合 Agent 的任务形状；[Agent 仍然难在哪里](/zh-cn/learn/open-problems/)
 把长任务、Context、评测、安全、恢复和多 Agent 协作拆成可研究的问题。参考项目只用来解释通用
 概念，不能证明 BearAgent 已经具备同样能力。
 
 ## 只有半小时，走这条捷径
 
-1. [BearAgent 要解决什么问题](/BearAgent/zh-cn/start/what-is-bearagent/)；
-2. [一次文件任务的完整链路](/BearAgent/zh-cn/learn/agent-loop-file-task/)；
-3. [一次请求怎样穿过 Runtime](/BearAgent/zh-cn/architecture/runtime-flow/)；
-4. [现在实现到了哪里](/BearAgent/zh-cn/project/status/)。
+1. [BearAgent 要解决什么问题](/zh-cn/start/what-is-bearagent/)；
+2. [一次文件任务的完整链路](/zh-cn/learn/agent-loop-file-task/)；
+3. [一次请求怎样穿过 Runtime](/zh-cn/architecture/runtime-flow/)；
+4. [现在实现到了哪里](/zh-cn/project/status/)。
 
 ## 每章怎样读最有效
 

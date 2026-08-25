@@ -450,7 +450,7 @@ Policy/Approval、runner 隔离、日志脱敏和备份恢复演练。
 | HTTP | httpx | async、timeout 和 streaming |
 | 测试 | pytest | 覆盖单元、契约、集成和故障注入 |
 | 质量 | Ruff + Pyright | 快速、可自动化 |
-| 文档 | Markdown/MDX + Starlight | 中文学习导航、本地搜索、Mermaid 和 GitHub Pages 静态发布 |
+| 文档 | Markdown/MDX + Starlight | 中文学习导航、本地搜索、Mermaid，以及可独立构建的静态站点 |
 | 部署 | Docker Compose + 1Panel，P4 引入 | 符合单机自托管范围 |
 
 第一版不把 LangChain/LangGraph 或 Temporal 作为内核。只有真实需求证明需要多 worker、复杂 timer

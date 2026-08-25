@@ -23,11 +23,11 @@ bearagent run "比较 docs 中的架构说明，把结论写到 outputs/report.m
 ```
 
 命令需要有效的 config v1 和 RunProfile v2；完整准备步骤见
-[P1 命令行完整使用手册](/BearAgent/zh-cn/guides/cli/)。这里聚焦请求怎样穿过各模块，以及每个边界为什么存在。
+[P1 命令行完整使用手册](/zh-cn/guides/cli/)。这里聚焦请求怎样穿过各模块，以及每个边界为什么存在。
 
 <figure class="chapter-illustration">
   <img
-    src="/BearAgent/images/runtime-boundary-4k.jpg"
+    src="/images/runtime-boundary-4k.jpg"
     alt="一个模型信号依次穿过上下文边界、受控工具门、持久事件记录，最后生成完整文件"
     width="3840"
     height="2160"
@@ -156,5 +156,5 @@ CLI 返回 Run ID、最终文本和 Artifact；`inspect` 查询 projection，`ev
 - projection 不能取代 Event 成为事实来源。
 
 这些限制让未来增加 Web、MCP 或更多 Provider 时仍沿同一条执行和记录路径。下一页用
-[P1 的关键架构取舍](/BearAgent/zh-cn/architecture/p1-decisions/)解释为什么先选择这条窄路径，再看恶意输入、timeout 或中断时
-[可靠性与安全边界](/BearAgent/zh-cn/architecture/reliability-boundaries/)怎样分工。
+[P1 的关键架构取舍](/zh-cn/architecture/p1-decisions/)解释为什么先选择这条窄路径，再看恶意输入、timeout 或中断时
+[可靠性与安全边界](/zh-cn/architecture/reliability-boundaries/)怎样分工。

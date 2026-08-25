@@ -6,11 +6,11 @@ hero:
   tagline: 不从术语表开始。先让 Agent 完成一项本地文件任务，再顺着 Run、Event、Model、Tool 和测试把系统拆开。
   actions:
     - text: 开始第一部
-      link: /BearAgent/zh-cn/guides/cli/
+      link: /zh-cn/guides/cli/
       icon: right-arrow
       variant: primary
     - text: 查看全书地图
-      link: /BearAgent/zh-cn/learn/
+      link: /zh-cn/learn/
       icon: open-book
 bearStatus: mixed
 sourceRefs:
@@ -31,7 +31,7 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
 <figure class="book-cover">
   <img
-    src="/BearAgent/images/bearagent-book-cover-4k.jpg"
+    src="/images/bearagent-book-cover-4k.jpg"
     alt="一只小熊在工作台前观察模型、上下文、受控工具、事件记录和输出文件组成的分层 Runtime"
     width="3840"
     height="2160"
@@ -59,22 +59,22 @@ BearAgent 是一个 local-first 的个人 Agent Runtime。Runtime 是模型之�
 
 <ol class="book-map">
   <li>
-    <span><a href="/BearAgent/zh-cn/guides/cli/">先亲手跑一次</a><small>配置模型，启动 Run，再用 inspect 和 events 回看过程。</small></span>
+    <span><a href="/zh-cn/guides/cli/">先亲手跑一次</a><small>配置模型，启动 Run，再用 inspect 和 events 回看过程。</small></span>
   </li>
   <li>
-    <span><a href="/BearAgent/zh-cn/learn/agent-basics/">看懂 Agent 运行</a><small>分清 Model、Context、Tool、Runtime、Run、Activity 和 Event。</small></span>
+    <span><a href="/zh-cn/learn/agent-basics/">看懂 Agent 运行</a><small>分清 Model、Context、Tool、Runtime、Run、Activity 和 Event。</small></span>
   </li>
   <li>
-    <span><a href="/BearAgent/zh-cn/learn/tool-execution-boundary/">理解安全边界</a><small>看模型输出为什么不可信，路径、Policy 和原子写入怎样兜底。</small></span>
+    <span><a href="/zh-cn/learn/tool-execution-boundary/">理解安全边界</a><small>看模型输出为什么不可信，路径、Policy 和原子写入怎样兜底。</small></span>
   </li>
   <li>
-    <span><a href="/BearAgent/zh-cn/architecture/">拼出系统架构</a><small>把 domain、runtime、application、port、adapter 和 interface 连起来。</small></span>
+    <span><a href="/zh-cn/architecture/">拼出系统架构</a><small>把 domain、runtime、application、port、adapter 和 interface 连起来。</small></span>
   </li>
   <li>
-    <span><a href="/BearAgent/zh-cn/development/">沿代码继续学习</a><small>按一条真实执行链读源码，用单元、契约、集成和安全测试验证理解。</small></span>
+    <span><a href="/zh-cn/development/">沿代码继续学习</a><small>按一条真实执行链读源码，用单元、契约、集成和安全测试验证理解。</small></span>
   </li>
   <li>
-    <span><a href="/BearAgent/zh-cn/learn/agents-today/">走向研究与扩展</a><small>把恢复、授权、隔离、评测和 Agent 研究问题放回领域全景。</small></span>
+    <span><a href="/zh-cn/learn/agents-today/">走向研究与扩展</a><small>把恢复、授权、隔离、评测和 Agent 研究问题放回领域全景。</small></span>
   </li>
 </ol>
 
@@ -84,33 +84,33 @@ BearAgent 是一个 local-first 的个人 Agent Runtime。Runtime 是模型之�
   <LinkCard
     title="我第一次接触 Agent"
     description="先用一个文件任务分清 Model、Tool 和 Runtime，不要求框架经验。"
-    href="/BearAgent/zh-cn/start/what-is-bearagent/"
+    href="/zh-cn/start/what-is-bearagent/"
   />
   <LinkCard
     title="我想先把项目跑起来"
     description="从源码安装、准备配置、运行命令，并处理最常见的失败。"
-    href="/BearAgent/zh-cn/guides/cli/"
+    href="/zh-cn/guides/cli/"
   />
   <LinkCard
     title="我想开始读源码"
     description="先看目录分工，再沿 interface → application → runtime → port/adapter 阅读。"
-    href="/BearAgent/zh-cn/development/"
+    href="/zh-cn/development/"
   />
   <LinkCard
     title="我想做 Agent 研究"
     description="从长任务、Context、评测、恢复、权限和隔离找到可研究的问题。"
-    href="/BearAgent/zh-cn/learn/open-problems/"
+    href="/zh-cn/learn/open-problems/"
   />
   <LinkCard
     title="我只想确认当前能力"
     description="查看已经实现、可以复现的证据，以及明确还不能做的事情。"
-    href="/BearAgent/zh-cn/project/status/"
+    href="/zh-cn/project/status/"
   />
 </CardGrid>
 
 :::note[先记住这一条边界]
-P1 已能运行并检查本地文件任务；P2 的中断恢复、P3 的 Approval 与隔离 runner 还没有实现。文档站的
-本地构建已成立，但公开 GitHub Pages 地址当前仍未完成验收。两件事不能混为一谈。
+P1 已能运行并检查本地文件任务；P2 的中断恢复、P3 的 Approval 与隔离 runner 还没有实现。`site/`
+只展示学习和开发文档，不运行 Runtime，也不承担线上部署。
 :::
 
 ## 怎样判断页面在讲什么

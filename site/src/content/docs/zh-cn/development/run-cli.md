@@ -103,4 +103,4 @@ F-0017 没有增加 SQLite migration、网络 Tool、恢复或 Approval。live r
 suite v1.1.1 已通过真实 5/5 并生成脱敏报告。
 
 面向使用者的安装、config/profile、全部选项、退出码与排错集中维护在
-[P1 命令行完整使用手册](/BearAgent/zh-cn/guides/cli/)，本页只解释实现边界。
+[P1 命令行完整使用手册](/zh-cn/guides/cli/)，本页只解释实现边界。

@@ -45,9 +45,9 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 
 ## 第一次阅读
 
-1. 先看[当前实现状态](/BearAgent/zh-cn/project/status/)，避免把路线图当成已有功能；
-2. 如果还没实际运行过 P1，先走一遍[CLI 完整手册](/BearAgent/zh-cn/guides/cli/)；
-3. 用[Runtime 各部分怎样协作](/BearAgent/zh-cn/architecture/)和[P1 架构取舍](/BearAgent/zh-cn/architecture/p1-decisions/)
+1. 先看[当前实现状态](/zh-cn/project/status/)，避免把路线图当成已有功能；
+2. 如果还没实际运行过 P1，先走一遍[CLI 完整手册](/zh-cn/guides/cli/)；
+3. 用[Runtime 各部分怎样协作](/zh-cn/architecture/)和[P1 架构取舍](/zh-cn/architecture/p1-decisions/)
    理解调用与依赖方向；
 4. 找到当前 Feature 的 Spec、相关 ADR 和 Plan；
 5. 按下面的实现导读进入代码和测试；
@@ -55,17 +55,17 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 
 ## 当前实现导读
 
-- [F-0001：内部数据类型](/BearAgent/zh-cn/development/domain-contracts/)——ID、Message、Error、Event 以及模型 adapter 的翻译边界；
-- [F-0002：状态和预算](/BearAgent/zh-cn/development/run-reducer-and-budgets/)——具体 Event、Reducer、预算检查和修改顺序；
-- [F-0003：SQLite EventStore](/BearAgent/zh-cn/development/sqlite-event-store/)——transaction、migration、projection 和故障测试；
-- [F-0004/F-0017：ModelProvider 与协议 adapter](/BearAgent/zh-cn/development/model-provider/)——显式 protocol factory、三种流式翻译、Event v3 和 live gate；
-- [F-0006：Tool 执行边界](/BearAgent/zh-cn/development/tool-execution-boundary/)——Registry、参数准备、默认拒绝 Policy 和统一 Executor；
-- [F-0007：workspace 只读 Tool](/BearAgent/zh-cn/development/workspace-read-tools/)——跨平台路径边界、list/read/search 和安全测试；
-- [F-0008：原子输出与 Artifact](/BearAgent/zh-cn/development/atomic-output-artifacts/)——同目录暂存、原子提交、结果元数据和故障窗口；
-- [F-0016：有界 Agent Loop](/BearAgent/zh-cn/development/agent-loop/)——Context、v2 Event、串行模型/Tool 调度、故障窗口和固定任务；
-- [F-0005：生产 CLI 与查询](/BearAgent/zh-cn/development/run-cli/)——Run profile、composition root、inspect/events、JSON 契约和失败边界；
-- [Feature 完成时怎样更新文档](/BearAgent/zh-cn/development/feature-documentation/)——哪些事实写在 `docs/`，哪些解释写在站点；
-- [本地运行文档站](/BearAgent/zh-cn/guides/local-docs/)——安装、构建和检查 Starlight。
+- [F-0001：内部数据类型](/zh-cn/development/domain-contracts/)——ID、Message、Error、Event 以及模型 adapter 的翻译边界；
+- [F-0002：状态和预算](/zh-cn/development/run-reducer-and-budgets/)——具体 Event、Reducer、预算检查和修改顺序；
+- [F-0003：SQLite EventStore](/zh-cn/development/sqlite-event-store/)——transaction、migration、projection 和故障测试；
+- [F-0004/F-0017：ModelProvider 与协议 adapter](/zh-cn/development/model-provider/)——显式 protocol factory、三种流式翻译、Event v3 和 live gate；
+- [F-0006：Tool 执行边界](/zh-cn/development/tool-execution-boundary/)——Registry、参数准备、默认拒绝 Policy 和统一 Executor；
+- [F-0007：workspace 只读 Tool](/zh-cn/development/workspace-read-tools/)——跨平台路径边界、list/read/search 和安全测试；
+- [F-0008：原子输出与 Artifact](/zh-cn/development/atomic-output-artifacts/)——同目录暂存、原子提交、结果元数据和故障窗口；
+- [F-0016：有界 Agent Loop](/zh-cn/development/agent-loop/)——Context、v2 Event、串行模型/Tool 调度、故障窗口和固定任务；
+- [F-0005：生产 CLI 与查询](/zh-cn/development/run-cli/)——Run profile、composition root、inspect/events、JSON 契约和失败边界；
+- [Feature 完成时怎样更新文档](/zh-cn/development/feature-documentation/)——哪些事实写在 `docs/`，哪些解释写在站点；
+- [本地运行文档站](/zh-cn/guides/local-docs/)——安装、构建和检查 Starlight。
 
 ## 不同问题去哪里找答案
 

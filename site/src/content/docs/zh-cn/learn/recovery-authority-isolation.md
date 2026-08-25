@@ -104,6 +104,6 @@ Routing 解决“把请求或 Tool 分给谁”，Memory 解决“把哪些历�
 BearAgent 当前只有有限 workspace Tool，固定 Tool subset 足够。P4 在接入 HTTP、Skill、MCP、Web
 和 Memory 后，只有 Tool 数量真的造成问题，才考虑 selector 或 deferred loading。
 
-完整范围和 Feature 顺序见[项目阶段](/BearAgent/zh-cn/project/milestones/)与
+完整范围和 Feature 顺序见[项目阶段](/zh-cn/project/milestones/)与
 [工程 Roadmap](https://github.com/CherryYang05/BearAgent/blob/main/docs/project/roadmap.md)。当前实现边界
-见[实现状态](/BearAgent/zh-cn/project/status/)。
+见[实现状态](/zh-cn/project/status/)。
