@@ -15,11 +15,11 @@ export default defineConfig({
     starlight({
       title: 'BearAgent',
       description: '从一次可检查的本地文件任务，学会设计可靠的 Agent Runtime',
-      favicon: '/bearagent-mark.png',
+      favicon: '/bearagent-mark.svg',
       disable404Route: true,
       logo: {
-        light: './src/assets/bearagent-lockup-light.png',
-        dark: './src/assets/bearagent-lockup-dark.png',
+        light: './src/assets/bearagent-brand-light.svg',
+        dark: './src/assets/bearagent-brand-dark.svg',
         alt: '',
         replacesTitle: true,
       },
