@@ -1,27 +1,30 @@
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/bearagent-lockup-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/bearagent-lockup-light.png">
-    <img src="docs/assets/bearagent-lockup-light.png" alt="BearAgent：蓝色电路熊头像与项目名称组成的透明背景组合标识" width="620">
-  </picture>
+  <img src="docs/assets/BearAgent-logo-1.png" alt="BearAgent：蓝色电路熊头像与蓝橙双色项目名称组成的透明背景组合标识" width="900">
 
-  <p><strong>一个 local-first、可检查的个人 Agent Runtime。</strong></p>
-  <p>让模型负责提出下一步，让确定性的 Runtime 负责执行、记录、预算与边界。</p>
+  <h1>BearAgent：可检查的个人 Agent Runtime</h1>
+
+  <p><strong>模型提出下一步，Runtime 守住执行、预算、事实与权限边界。</strong></p>
+  <p>从一次本地文件任务出发，学习如何构建能够检查、追踪和扩展的 Agent Runtime。</p>
 
   <p>
-    <a href="https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml"><img src="https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-    <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
-    <img src="https://img.shields.io/badge/typing-Pyright%20strict-3178C6" alt="Pyright strict">
-    <img src="https://img.shields.io/badge/docs-Starlight-BC52EE?logo=astro&logoColor=white" alt="Starlight documentation">
-    <img src="https://img.shields.io/badge/milestone-P1%20complete-2EA44F" alt="P1 complete">
+    <a href="site/src/content/docs/zh-cn/index.mdx"><img src="https://img.shields.io/badge/Documentation-Read_the_Book-174EA6?style=for-the-badge&amp;logo=bookstack&amp;logoColor=white" alt="阅读 BearAgent 中文学习书"></a>
+    <a href="#快速开始"><img src="https://img.shields.io/badge/Quick_Start-Run_Locally-F59E0B?style=for-the-badge&amp;logo=gnubash&amp;logoColor=white" alt="从本地快速开始"></a>
   </p>
 
   <p>
+    <a href="https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml"><img src="https://github.com/CherryYang05/BearAgent/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+    <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.12">
+    <img src="https://img.shields.io/badge/typing-Pyright_strict-3178C6?style=flat-square" alt="Pyright strict">
+    <img src="https://img.shields.io/badge/docs-Starlight-BC52EE?style=flat-square&amp;logo=astro&amp;logoColor=white" alt="Starlight documentation">
+    <a href="docs/project/roadmap.md"><img src="https://img.shields.io/badge/status-P1_implemented-2EA44F?style=flat-square" alt="P1 implemented"></a>
+  </p>
+
+  <p>
+    <a href="#为什么需要-bearagent">为什么需要 BearAgent</a> ·
     <a href="#快速开始">快速开始</a> ·
     <a href="#架构总览">架构总览</a> ·
     <a href="#能力边界">能力边界</a> ·
-    <a href="site/src/content/docs/zh-cn/index.mdx">中文学习书</a> ·
-    <a href="docs/project/roadmap.md">Roadmap</a>
+    <a href="#学习与开发">学习与开发</a>
   </p>
 </div>
 
@@ -29,11 +32,16 @@
 
 ![BearAgent 运行图解：蓝色电路熊值守本地 Runtime，管控 Tool、预算和 Event，并生成原子输出](site/public/images/bearagent-book-cover-4k-blue.webp)
 
-## BearAgent 在解决什么问题
+## 为什么需要 BearAgent
 
 LLM 可以提出动作，但不适合独自决定权限、预算、状态一致性，以及失败后是否应该重试。BearAgent
 在模型与外部环境之间加入一层确定性的 Runtime：模型只提交意图，Runtime 负责检查并执行，随后把
 发生过的事实保存为 Event。
+
+这意味着你不需要先相信模型“应该做对了”，而是可以回看它调用了什么、消耗了多少预算、生成了
+哪些 Artifact，以及失败发生在哪一步。
+
+## P1 当前能做什么
 
 | 可检查 | 有边界 | 默认拒绝 | 本地优先 |
 |---|---|---|---|
@@ -63,21 +71,16 @@ uv run bearagent doctor
 
 ### 2. 准备本机配置
 
-```console
-mkdir -p data
-cp config.example.json data/config.json
-cp examples/run-profile-v2.example.json data/p1-run-profile.json
-```
+在仓库根目录创建 `data/`，再复制两份示例文件：
+
+- `config.example.json` → `data/config.json`
+- `examples/run-profile-v2.example.json` → `data/p1-run-profile.json`
 
 - 在 `data/config.json` 中填写模型协议、base URL、API key 和 model；
 - 在 profile 中选择同一个 `provider_id`，并把默认全为 `0` 的预算改为有限值；
 - `data/` 默认被 Git 忽略。不要把 API key 写进 profile、命令、Event、日志或 Git。
 
-字段含义与三种受支持协议见[配置参考](docs/reference/configuration.md)。
-
-> [!NOTE]
-> Windows PowerShell 先运行 `New-Item -ItemType Directory -Force data`，再使用 `Copy-Item` 代替上面的
-> `cp`。
+字段含义、完整示例与三种受支持协议见[配置参考](docs/reference/configuration.md)。
 
 ### 3. 启动一次 Run
 
