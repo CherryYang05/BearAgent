@@ -1,7 +1,7 @@
 <div align="center">
   <img src="docs/assets/BearAgent-logo-1.png" alt="BearAgent：蓝色电路熊头像与蓝橙双色项目名称组成的透明背景组合标识" width="520">
 
-  <h1>BearAgent：Agent 外部动作的执行、诊断与恢复 Runtime</h1>
+  <h1>BearAgent: Verifiable Agent Execution</h1>
 
   <p><strong>一个在模型决策与外部副作用之间负责执行、诊断与恢复的 local-first Runtime。</strong></p>
   <p>它记录完整执行事实，在恢复前验证故障判断，并约束外部动作的权限和影响范围。</p>
