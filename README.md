@@ -166,6 +166,7 @@ uv run ruff check .
 uv run pyright
 uv run pytest
 uv run python scripts/check_docs.py
+uv run python scripts/check_governance.py
 npm run build --prefix=site
 ```
 

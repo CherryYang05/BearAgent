@@ -15,6 +15,8 @@
 - Feature status lives in the Feature Spec. Step-level progress lives in `docs/plans/PLAN-F-NNNN-*.md`.
 - ADR status records whether a decision is accepted, not whether its implementation is complete.
 - Keep at most one Implementation Plan `active`; reconcile its claims with code and tests before continuing it.
+- Do not add a second Feature registry. Spec Front Matter is the status source; indexes and site `sourceRefs` must
+  agree with it and are checked by `scripts/check_governance.py`.
 
 ## Git branches
 
@@ -25,17 +27,26 @@
 
 ## Change classification
 
-- S0, trivial repair: implementation plus a regression test; update public docs only when observable behavior changes.
-- S1, feature or behavior change: create or update a feature spec before implementation.
-- S2, cross-module architecture, security boundary, persistence schema, public contract, or new production dependency: feature spec plus an ADR and explicit failure/security tests.
+- S0, trivial repair: implementation plus targeted verification; add a regression test for executable defects, not
+  for typo or formatting-only edits. Update public docs only when observable behavior changes.
+- S1, feature or behavior change: accept a concise Feature Spec before implementation. Add a Plan only when the
+  work needs multiple independently verifiable slices or cannot be reviewed safely as one coherent change.
+- S2, cross-module architecture, security boundary, persistence schema, public contract, or new production
+  dependency: accept a full Feature Spec, an ADR, and an active Plan; include explicit failure, recovery, migration,
+  rollback, and security evidence where applicable.
 
-Do not create ceremonial documents for formatting-only or mechanical changes.
+BearAgent is a Complex repository, but that does not make every change S2. Do not create ceremonial documents for
+formatting-only or mechanical changes.
 
 ## Documentation synchronization
 
 - Engineering facts live in `docs/`, code, and tests. `site/` explains those facts to readers; it must not invent a second version of the system.
-- Closing every Feature must update all four surfaces: authoritative `docs/`, the beginner learning path in `site/`, developer documentation in `site/`, and the public current-status page. Updating only `docs/` is incomplete.
-- A Feature does not always need two new articles, but it must update the relevant learning and developer indexes/pages with what changed, where the implementation lives, how it is verified, and whether the behavior is implemented or planned.
+- Every Feature must assess four surfaces: authoritative `docs/`, the beginner learning path, developer
+  documentation, and public current status. For each surface, name the changed path or record `N/A` with a concrete
+  reason in the Spec. Assessment is mandatory; editing every surface is not.
+- Update beginner or developer pages only when their reader-visible explanation changed. Update public status only
+  when a usable capability, limitation, or milestone state changed. Internal refactors do not need ceremonial site
+  edits.
 - Closing every milestone `P<n>` must update the Roadmap plus the site learning map, developer architecture/status summary, and milestone outcome. Do this before selecting the next milestone.
 - External material may explain concepts or provide comparisons, but it cannot establish BearAgent behavior. Prefer primary sources, including the AI Agents in Depth book, DeepTutor documentation, and official documentation for high-star or otherwise relevant Agent projects; verify each project's current maintenance status. Treat star count as a discovery signal, not proof of correctness, and record source links.
 - Public pages must distinguish general concepts, accepted design, current implementation, and future plans. Never copy a reference project's capability into BearAgent's current-state claims.
@@ -91,7 +102,9 @@ A change is complete only when:
 - acceptance criteria are satisfied;
 - relevant unit, contract, integration, recovery, and security tests pass;
 - architecture/spec/ADR/user docs are updated when their claims changed;
-- the `site/` beginner path, developer docs, and current status are synchronized for every Feature, and milestone summaries are synchronized at every `P<n>` close;
+- every documentation surface records either an updated path or an explicit `N/A` reason, and milestone summaries
+  are synchronized at every `P<n>` close;
 - the active Implementation Plan is completed or accurately records remaining slices;
+- `uv run python scripts/check_governance.py` passes, including Feature/Plan/ADR status and index consistency;
 - the diff contains no provider type leakage, policy bypass, undocumented schema migration, or secret exposure;
 - verification commands and any known limitations are reported.

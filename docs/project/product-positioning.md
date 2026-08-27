@@ -1,8 +1,6 @@
 ---
 title: BearAgent Product Positioning
 status: accepted
-version: 0.5
-last_verified: 2026-08-24
 ---
 
 # BearAgent 产品定位

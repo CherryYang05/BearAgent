@@ -5,6 +5,7 @@ bearStatus: implemented
 sourceRefs:
   - AGENTS.md
   - F-0015
+  - ai-development-sop
 ---
 
 假设 `ToolExecutor` 新增了输出大小限制。站点不能只写“完善 Tool 安全性”，因为读者不知道限制发生
@@ -18,6 +19,10 @@ sourceRefs:
 4. 开发者到哪个文件和测试验证；
 5. 它没有顺便实现哪些相邻能力。
 
+但并非每个 Feature 都需要修改每一种页面。准备关闭 Feature 时，先对工程 `docs/`、初学者路线、
+开发者文档和当前状态逐项判断：有影响就写更新路径；没有影响就写 `N/A` 和具体原因。内部重构没有
+改变用户路径、代码阅读入口或当前能力时，不需要为了完成清单改写站点。
+
 ## 学习页、架构页、开发者页各有任务
 
 | 页面 | 读者正在问什么 | 合适的写法 |
@@ -29,6 +34,15 @@ sourceRefs:
 
 不要把同一段工程记录复制四遍。学习页也不需要展示内部评审流程；开发者页更不应按 Feature 文件的
 标题逐节改写，而要帮助第一次进入仓库的人建立代码地图。
+
+例如，Reducer 内部提取一个私有函数但 Event、状态和测试入口都没变，可以这样记录：
+
+```text
+Engineering docs: N/A - no contract or architecture claim changed
+Site beginner: N/A - observable behavior unchanged
+Site developer: N/A - code entry and execution path unchanged
+Current status: N/A - no capability or limitation changed
+```
 
 ## 从一个测试开始写，比从抽象结论开始更清楚
 
@@ -84,7 +98,8 @@ sourceRefs:
 3. 单独阅读当前状态，确认没有被规划内容抬高；
 4. 搜索旧术语、过期 Feature 编号和已经删除的页面标题；
 5. 运行链接检查和站点构建；
-6. 连续读完改动段落，修掉机械替换留下的生硬句子。
+6. 运行 `uv run python scripts/check_governance.py`，确认 Spec、Plan、ADR、索引和内部引用一致；
+7. 连续读完改动段落，修掉机械替换留下的生硬句子。
 
 文档的完成标准不是“每个工程文件都有一页”，而是第一次看代码的人能回答：数据从哪里来，在哪
 校验，谁做决定，哪里发生副作用，失败怎样出现，以及哪个测试能复现。

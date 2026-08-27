@@ -1,7 +1,8 @@
 # Implementation Plans
 
-Plan 说明一个已接受 Feature 准备按什么顺序落到代码。每一步完成后都应能单独验证，仓库同时最多
-只有一个 `active` 主 Plan。
+Plan 说明一个已接受 Feature 准备按什么顺序落到代码。S2 必须有 Plan；S1 只有在需要多个独立验证
+切片、跨多个提交/PR，或无法作为一个连贯变更安全评审时才创建。每一步完成后都应能单独验证，
+仓库同时最多只有一个 `active` 主 Plan。
 
 命名为 `PLAN-F-NNNN-<slug>.md`，Front Matter 至少包含：
 
@@ -12,7 +13,8 @@ related_spec: F-NNNN
 ```
 
 Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `accepted`，影响实现的开放问题已经
-解决；完成后根据代码和测试把 Plan 改为 `completed`、Spec 改为 `implemented`。
+解决；完成后根据代码和测试把 Plan 改为 `completed`、Spec 改为 `implemented`。完成的 Plan 保留为
+历史证据，但日常开发只读取当前 Feature 的 Spec、相关 ADR 和 active Plan。
 
 新 Plan 使用 [Implementation Plan 模板](../templates/implementation-plan.md)。
 

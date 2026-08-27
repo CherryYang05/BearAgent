@@ -1,8 +1,6 @@
 ---
 title: BearAgent Architecture Baseline
 status: accepted
-version: 1.0
-last_verified: 2026-08-24
 ---
 
 # BearAgent 总体架构

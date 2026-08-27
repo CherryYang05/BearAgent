@@ -1,8 +1,6 @@
 ---
 title: BearAgent Roadmap
 status: accepted
-version: 1.0
-last_verified: 2026-08-25
 ---
 
 # BearAgent 项目路线图
@@ -354,7 +352,8 @@ Feature。一个 Plan 不得同时实现整个阶段。
 
 ## 12. 维护这份路线图
 
-- 每个 Feature 完成时，同步工程 `docs/`、相关学习页、开发者导读和当前状态；
+- 每个 Feature 完成时，对工程 `docs/`、学习页、开发者导读和当前状态逐项记录更新路径或 `N/A`
+  原因；只有事实或读者路径变化时才修改对应页面；
 - 每个阶段完成时，同步本 Roadmap、学习地图、架构总结和阶段结果；
 - 外部项目只能提供概念和方案对照，不能建立 BearAgent 当前能力；
 - 同时最多一个 active 主 Plan；

@@ -5,8 +5,8 @@ spec_id: F-0017
 milestone: P1
 owner: CherryYang05
 created: 2026-08-22
-last_updated: 2026-08-25
-implemented_in: "codex/F-0017-p1-live-model-gate"
+last_updated: 2026-08-27
+implemented_in: "PR #15"
 related_adrs: [ADR-0004, ADR-0007, ADR-0009, ADR-0010, ADR-0013, ADR-0014, ADR-0015]
 ---
 
@@ -339,13 +339,13 @@ Event v3 必须继续可读。只有 Messages adapter 移除且 lock/build/wheel
 
 ## 15. 文档同步
 
-- [ ] Engineering source of truth：Spec、ADR、Plan、Architecture、Roadmap、P1 outcome 和脱敏报告；
-- [ ] Site beginner：Provider/协议/model 区别，配置一次后运行多个 objective；
-- [ ] Site developer：catalog、factory、三种翻译边界、Event v3 和 secret 边界；
-- [ ] Site current status / milestone summary：全部 gate 通过后才把 P1 改为完成；
-- [ ] Architecture / ADR：从“首个 adapter”更新为“显式协议 adapter”，不把服务商写成产品边界；
-- [ ] Deployment docs：本地敏感 catalog、HTTPS endpoint 和费用提示；
-- [ ] Generated reference：config v1、RunProfile v2、Event v3、report v1 schema/example。
+- [x] Engineering source of truth：Spec、ADR、Plan、Architecture、Roadmap、P1 outcome 和脱敏报告；
+- [x] Site beginner：Provider/协议/model 区别，配置一次后运行多个 objective；
+- [x] Site developer：catalog、factory、三种翻译边界、Event v3 和 secret 边界；
+- [x] Site current status / milestone summary：真实 gate 通过后已把 P1 改为完成；
+- [x] Architecture / ADR：从“首个 adapter”更新为“显式协议 adapter”，不把服务商写成产品边界；
+- [x] Deployment docs：本地敏感 catalog、HTTPS endpoint 和费用提示；
+- [x] Generated reference：config v1、RunProfile v2、Event v3、report v1 schema/example。
 
 ## 16. 已确认但延后提供的真实调用参数
 

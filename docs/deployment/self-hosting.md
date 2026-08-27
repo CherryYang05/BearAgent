@@ -1,8 +1,6 @@
 ---
 title: Local-first and Self-hosting Strategy
 status: accepted
-version: 0.8
-last_verified: 2026-08-25
 ---
 
 # 本地运行、文档站与未来自托管

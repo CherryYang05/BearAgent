@@ -5,8 +5,8 @@ spec_id: F-0016
 milestone: P1
 owner: CherryYang05
 created: 2026-08-18
-last_updated: 2026-08-20
-implemented_in: "codex/F-0016-agent-loop"
+last_updated: 2026-08-27
+implemented_in: "PR #12"
 related_adrs:
   - ADR-0001
   - ADR-0002

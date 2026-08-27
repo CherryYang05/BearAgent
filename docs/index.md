@@ -26,6 +26,7 @@
 | 当前按什么顺序实施 | 唯一 active Plan | Plan 勾选不能替代测试 |
 | 模块现在怎样连接 | Architecture + 当前代码 | 历史图不能覆盖代码事实 |
 | 一个行为是否真的成立 | 代码、测试、可复现命令 | 聊天记录和 README 都不是最终证据 |
+| Spec/Plan/ADR 状态是否一致 | `scripts/check_governance.py` | 索引和站点不能建立第二份状态 |
 | 用户怎样配置和操作 | CLI 手册 + [配置参考](reference/configuration.md) | 不让用户从 Spec 拼操作步骤 |
 
 ## 三种工程文档分别怎样读
@@ -60,13 +61,18 @@ Plan 保存切片顺序、接入点、测试和回退。全仓库最多一个主
 
 ## 代码和文档怎样保持一致
 
-每个 Feature 关闭时检查四个面：
+每个 Feature 关闭时判断四个面：
 
 1. `docs/` 中的 Spec、ADR、Plan 和架构事实；
 2. `site/` 中初学者会读到的概念和使用路径；
 3. `site/` 中开发者会跟随的源码与测试入口；
 4. 当前状态页和阶段结果。
 
+受到影响的表面写出更新路径；没有影响的表面写 `N/A` 和具体原因。不要求内部重构为了完成清单而
+修改四种页面。S1 使用精简 Spec，只有多片实施时才增加 Plan；S2 才使用完整 Spec、ADR 和 active
+Plan。
+
 页面先写读者会遇到的具体问题，再引入 Runtime、port、adapter、Event、Reducer 等精确术语。不要为
 了“更中文”另造一套同义词，也不要用搜索替换把旧状态机械改成新状态。改完后把段落连续读一遍，
-并运行 `uv run python scripts/check_docs.py` 与 `npm.cmd run build --prefix=site`。
+并运行 `uv run python scripts/check_docs.py`、`uv run python scripts/check_governance.py`；站点受到影响
+时再运行 `npm.cmd run build --prefix=site`。

@@ -4,7 +4,7 @@ status: completed
 plan_id: PLAN-F-0015
 related_spec: F-0015
 created: 2026-08-10
-last_updated: 2026-08-25
+last_updated: 2026-08-27
 ---
 
 # PLAN-F-0015：建立并重写 Starlight 文档站
@@ -43,7 +43,8 @@ F-0015 与 ADR-0008 已接受。`docs/` 保存工程事实，`site/` 面向读�
 ### 第 4 步：把文档同步和写作质量加入完成标准
 
 - 状态：completed；
-- 结果：每个 Feature 同步工程事实、学习页、开发者页和状态；禁止机械术语替换；
+- 结果：每个 Feature 判断工程事实、学习页、开发者页和状态影响，更新路径或记录 `N/A`；禁止机械
+  术语替换；
 - 代码落点：`AGENTS.md`、开发 SOP、模板和站点开发者页；
 - 验证：链接、站点构建、变更段落连续阅读和完整工程回归。
 
@@ -77,6 +78,17 @@ F-0015 与 ADR-0008 已接受。`docs/` 保存工程事实，`site/` 面向读�
 浏览器检查还发现旧文档检查器只验证 `.md` 源文件存在，却允许构建后指向源码或错误相对路径。
 检查器现已覆盖 MDX、真实 `/zh-cn/` 路由、旧 `/BearAgent` 前缀和 pytest 临时目录，并有回归测试。
 
+### 第 8 步：把 Spec 状态和文档影响变成可检查规则
+
+- 状态：completed（2026-08-27）；
+- 结果：Spec Front Matter 保持 Feature 状态唯一来源，不新增 `features.yaml` 或外部 Spec CLI；
+- 结果：治理检查校验 Feature/Plan/ADR 的 ID、状态关系、索引、完成清单和站点内部 `sourceRefs`；
+- 结果：S1 使用精简 Spec，只有多片实施时才写 Plan；S2 使用完整 Spec、ADR 和 active Plan；
+- 结果：文档同步从“所有页面都修改”变为“所有表面都判断，更新路径或记录 `N/A` 原因”；
+- 代码落点：`scripts/check_governance.py`、单元测试、CI、`AGENTS.md`、SOP、模板和 PR 模板；
+- 验证：治理单元测试、当前仓库治理检查、完整 Python 质量门和站点构建；
+- 回退：可以移除检查步骤，但保留精简 Spec 和影响判断规则，不恢复平行状态副本。
+
 ## 每一步都检查过
 
 - [x] 站点无 Runtime 持久状态，产物可从源码重建；
@@ -88,6 +100,7 @@ F-0015 与 ADR-0008 已接受。`docs/` 保存工程事实，`site/` 面向读�
 - [x] 学习、开发、状态和阶段页面同步；
 - [x] CLI 使用说明与实现导读分开；
 - [x] 已接通的 Agent Loop、workspace Tool 和 CLI 没有继续写成“尚未实现”。
+- [x] Spec、Plan、ADR、索引和站点内部 Feature/ADR/Plan 引用通过治理检查。
 
 ## 最终验证
 
@@ -99,6 +112,7 @@ uv run ruff check .
 uv run pyright
 uv run pytest
 uv run python scripts/check_docs.py
+uv run python scripts/check_governance.py
 git diff --check
 ```
 
@@ -106,4 +120,5 @@ git diff --check
 Starlight + Pagefind 构建、全部构建后站内 href、两张 3840×2160 资源、sdist/wheel、隔离 CLI smoke，
 以及桌面与 390×844 手机视口。删除托管平台假设后，相关路由检查、450 tests、站点构建、45 页构建
 产物 href/src 检查，以及桌面和手机浏览器检查再次通过。F-0015 的 Spec 保持 `implemented`，本 Plan
-保持 `completed`。
+保持 `completed`。2026-08-27 的治理优化另通过 Ruff、Pyright、459 tests、107 个 Markdown 文件链接
+检查、12 个 Spec / 11 个 Plan / 15 个 ADR 的治理检查，以及 45 页 Starlight 生产构建。

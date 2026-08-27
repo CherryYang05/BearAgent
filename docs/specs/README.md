@@ -14,6 +14,10 @@ draft -> accepted -> implemented -> superseded
 
 新 Spec 使用 [Feature Spec 模板](../templates/feature-spec.md)，文件名为 `F-NNNN-<slug>.md`。
 
+S1 使用精简范围：问题、目标/非目标、可观察行为、必要失败边界、验收标准和文档影响。S2 才完整
+展开状态、持久化、恢复、安全、迁移和回退，并配套 ADR 与 Plan。Spec Front Matter 是 Feature 状态
+的唯一登记；本索引由 `scripts/check_governance.py` 校验，不建立第二份 registry。
+
 ## P0：工程基础
 
 - [F-0000：建立可安装、可测试的工程基础](F-0000-p0-engineering-baseline.md) — implemented
