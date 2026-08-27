@@ -1,10 +1,10 @@
 <div align="center">
   <img src="docs/assets/BearAgent-logo-1.png" alt="BearAgent：蓝色电路熊头像与蓝橙双色项目名称组成的透明背景组合标识" width="520">
 
-  <h1>BearAgent：让 Agent 的执行可检查，让恢复有证据</h1>
+  <h1>BearAgent：面向可靠执行的本地 Agent Runtime</h1>
 
-  <p><strong>一个面向可验证恢复的 local-first 个人 Agent Runtime。</strong></p>
-  <p>模型提出意图，Runtime 约束执行、保存事实，并根据外部世界留下的证据判断下一步。</p>
+  <p><strong>模型提出动作，Runtime 负责执行、记录和约束；结果无法确认时，不猜测，也不盲目重试。</strong></p>
+  <p>从可检查执行开始，逐步建立结果确认、故障恢复与权限隔离边界。</p>
 
   <p>
     <a href="site/src/content/docs/zh-cn/index.mdx"><img src="https://img.shields.io/badge/Documentation-Read_the_Book-174EA6?style=for-the-badge&amp;logo=bookstack&amp;logoColor=white" alt="阅读 BearAgent 中文学习书"></a>
@@ -34,13 +34,14 @@
 
 ## 为什么需要 BearAgent
 
-LLM 可以提出动作，但不适合独自决定权限、预算、状态一致性，以及失败后是否应该重试。BearAgent
-在模型与外部环境之间加入一层确定性的 Runtime：模型只提交意图，Runtime 负责检查并执行，随后把
-发生过的事实保存为 Event。
+LLM Agent 正从生成回答走向调用文件系统、API、数据库和其他外部工具。真正困难的不只是模型能否提出正确动作，而是动作跨过外部系统边界以后，Runtime 能否确认实际发生了什么，以及失败后怎样继续才不会重复或扩大副作用。
 
-这些事实不只用于回看过程，也为失败后的判断提供证据。系统需要先确认外部动作是否已经发生，再
-决定复用结果、核对状态、有限重试，还是在证据不足时停下。恢复不是让模型再猜一次，而是让每个
-继续执行的决定都能够说明依据。
+错误、超时或进程中断只是系统观察到的现象，并不能证明外部动作没有发生。缺少执行事实和结果证据时，自动重试可能重复写入，宽泛的恢复动作也可能暂时掩盖真正的问题。
+
+BearAgent 把模型输出视为执行意图，而不是执行权限。它在 Agent orchestration 与外部副作用之间加入一层确定性的 Runtime，统一约束 Tool 调用、保存 Event，并在证据不足时停止猜测。
+
+> [!NOTE]
+> 当前 P1 已实现执行事实的记录、查询和边界控制；基于结果证据的恢复判断属于 P2，授权与隔离执行属于 P3。Roadmap 中的设计方向不代表当前已经实现。
 
 ## 当前可以做什么
 
@@ -48,9 +49,7 @@ LLM 可以提出动作，但不适合独自决定权限、预算、状态一致�
 |---|---|---|---|
 | Model 与 Tool Activity、Error、预算和 Artifact 关联到同一个 Run | 模型次数、Tool 次数、token、费用和总时间都有 hard budget | Tool 必须经过 Registry、参数规范化、Policy 和 Executor | SQLite、workspace 和 `outputs/**` 默认留在本机 |
 
-当前第一个完整场景是**仓库与本地文档研究**：Agent 可以在指定 workspace 中列出、读取和搜索文本，
-并把完整 UTF-8 结果原子写入 `outputs/**`。任务结束后，可以用 Run ID 查询状态、Artifact 和完整
-Event 序列。
+当前第一个完整场景是**仓库与本地文档研究**：Agent 可以在指定 workspace 中列出、读取和搜索文本，并把完整 UTF-8 结果原子写入 `outputs/**`。任务结束后，可以用 Run ID 查询状态、Artifact 和完整Event 序列。
 
 ## 快速开始
 
