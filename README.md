@@ -3,8 +3,8 @@
 
   <h1>BearAgent：面向可靠执行的本地 Agent Runtime</h1>
 
-  <p><strong>模型提出动作，Runtime 负责执行、记录和约束；结果无法确认时，不猜测，也不盲目重试。</strong></p>
-  <p>从可检查执行开始，逐步建立结果确认、故障恢复与权限隔离边界。</p>
+  <p><strong>模型提出动作，Runtime 负责约束执行、保存事实、验证结果并安全恢复。</strong></p>
+  <p>让每次外部动作可追踪、每个不确定结果有明确处置、每项危险操作受授权与隔离约束。</p>
 
   <p>
     <a href="site/src/content/docs/zh-cn/index.mdx"><img src="https://img.shields.io/badge/Documentation-Read_the_Book-174EA6?style=for-the-badge&amp;logo=bookstack&amp;logoColor=white" alt="阅读 BearAgent 中文学习书"></a>
@@ -36,14 +36,18 @@
 
 LLM Agent 正从生成回答走向调用文件系统、API、数据库和其他外部工具。真正困难的不只是模型能否提出正确动作，而是动作跨过外部系统边界以后，Runtime 能否确认实际发生了什么，以及失败后怎样继续才不会重复或扩大副作用。
 
-错误、超时或进程中断只是系统观察到的现象，并不能证明外部动作没有发生。缺少执行事实和结果证据时，自动重试可能重复写入，宽泛的恢复动作也可能暂时掩盖真正的问题。
+错误、超时或进程中断只是系统观察到的现象，并不能证明外部动作没有发生。缺少执行事实和结果证据时，自动重试可能重复写入，宽泛的恢复动作也可能暂时掩盖真正的问题。可靠的 Runtime 必须先确定已经发生的事实，再决定怎样继续。
 
-BearAgent 把模型输出视为执行意图，而不是执行权限。它在 Agent orchestration 与外部副作用之间加入一层确定性的 Runtime，统一约束 Tool 调用、保存 Event，并在证据不足时停止猜测。
+BearAgent 是位于 Agent orchestration 与真实外部副作用之间的 local-first 执行层。它把模型输出视为意图而不是权限，将每次模型或 Tool 调用变成有预算、有状态、可追踪的执行单元，并持续保存 Event、Attempt、Receipt 与 Artifact 等事实。
+
+发生中断或不确定结果后，Runtime 可以从持久事实重建状态，根据可核对的外部证据选择复用、有限重试、reconcile、停止或进入 `UNKNOWN`。危险操作还必须经过与参数绑定的授权和 Approval，并只能在隔离 runner 中影响允许的资源。
+
+BearAgent 的目标不是成为另一套 Agent 编排框架，也不依赖模型自行猜测执行结果。它提供的是一层确定性的系统基础，使不同模型、Tool、Skill 和 MCP 接入后，仍然遵守同一套执行、恢复、权限和证据规则。
+
+## 当前可以做什么
 
 > [!NOTE]
 > 当前 P1 已实现执行事实的记录、查询和边界控制；基于结果证据的恢复判断属于 P2，授权与隔离执行属于 P3。Roadmap 中的设计方向不代表当前已经实现。
-
-## 当前可以做什么
 
 | 可检查 | 有边界 | 默认拒绝 | 本地优先 |
 |---|---|---|---|
