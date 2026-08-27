@@ -410,7 +410,7 @@ def _validate_site_source_refs(
 
 
 def _relative(path: Path) -> str:
-    return str(path.relative_to(ROOT))
+    return path.relative_to(ROOT).as_posix()
 
 
 def _has_immutable_evidence(value: str) -> bool:
