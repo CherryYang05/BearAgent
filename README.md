@@ -1,10 +1,10 @@
 <div align="center">
   <img src="docs/assets/BearAgent-logo-1.png" alt="BearAgent：蓝色电路熊头像与蓝橙双色项目名称组成的透明背景组合标识" width="520">
 
-  <h1>BearAgent：面向可靠执行的本地 Agent Runtime</h1>
+  <h1>BearAgent</h1>
 
-  <p><strong>模型提出动作，Runtime 负责约束执行、保存事实、验证结果并安全恢复。</strong></p>
-  <p>让每次外部动作可追踪、每个不确定结果有明确处置、每项危险操作受授权与隔离约束。</p>
+  <p><strong>一个在模型决策与外部副作用之间负责执行、诊断与恢复的 local-first Runtime。</strong></p>
+  <p>它记录完整执行事实，在恢复前验证故障判断，并约束外部动作的权限和影响范围。</p>
 
   <p>
     <a href="site/src/content/docs/zh-cn/index.mdx"><img src="https://img.shields.io/badge/Documentation-Read_the_Book-174EA6?style=for-the-badge&amp;logo=bookstack&amp;logoColor=white" alt="阅读 BearAgent 中文学习书"></a>
@@ -34,20 +34,31 @@
 
 ## 为什么需要 BearAgent
 
-LLM Agent 正从生成回答走向调用文件系统、API、数据库和其他外部工具。真正困难的不只是模型能否提出正确动作，而是动作跨过外部系统边界以后，Runtime 能否确认实际发生了什么，以及失败后怎样继续才不会重复或扩大副作用。
+LLM Agent 正从生成答案走向调用文件系统、API、数据库和其他外部工具。模型可以提出下一步动作，
+但一旦动作开始改变真实环境，困难就不再只是“模型是否回答正确”，而是系统能否判断动作实际发生了
+什么，以及失败后怎样继续才不会扩大影响。
 
-错误、超时或进程中断只是系统观察到的现象，并不能证明外部动作没有发生。缺少执行事实和结果证据时，自动重试可能重复写入，宽泛的恢复动作也可能暂时掩盖真正的问题。可靠的 Runtime 必须先确定已经发生的事实，再决定怎样继续。
+一次 Tool 调用超时，并不能证明它没有执行；一个错误被暂时消除，也不能证明系统找到了正确原因。
+如果 Runtime 缺少完整的执行事实、结果证据和恢复边界，自动重试可能重复产生副作用，错误恢复也可能
+掩盖真正的问题。
 
-BearAgent 是位于 Agent orchestration 与真实外部副作用之间的 local-first 执行层。它把模型输出视为意图而不是权限，将每次模型或 Tool 调用变成有预算、有状态、可追踪的执行单元，并持续保存 Event、Attempt、Receipt 与 Artifact 等事实。
+BearAgent 把模型输出视为执行提议，而不是执行权限。它在 Agent orchestration 与外部副作用之间加入
+一层确定性的 Runtime，统一检查请求、执行 Tool、记录 Event、计算状态，并保留模型、Runtime、Tool
+与外部环境之间的执行关系。
 
-发生中断或不确定结果后，Runtime 可以从持久事实重建状态，根据可核对的外部证据选择复用、有限重试、reconcile、停止或进入 `UNKNOWN`。危险操作还必须经过与参数绑定的授权和 Approval，并只能在隔离 runner 中影响允许的资源。
+失败发生后，Runtime 不会根据最后一条错误直接重试，而是结合执行阶段、因果关系和外部状态形成可以
+验证的故障判断，再通过结果查询、read-after-write、dry-run、canary 或 reconcile 等低风险操作核对
+判断。只有诊断得到足够证据，并且恢复动作满足权限、状态和影响范围约束后，系统才会复用、重试、
+补偿或继续执行；否则回滚、停止或进入 `UNKNOWN`。
 
-BearAgent 的目标不是成为另一套 Agent 编排框架，也不依赖模型自行猜测执行结果。它提供的是一层确定性的系统基础，使不同模型、Tool、Skill 和 MCP 接入后，仍然遵守同一套执行、恢复、权限和证据规则。
+BearAgent 最终要建立的是一条确定性的 diagnosis–verification–recovery 闭环：不仅记录发生了什么，
+还要判断为什么失败、验证恢复依据，并限制错误恢复可能造成的副作用。
 
 ## 当前可以做什么
 
 > [!NOTE]
-> 当前 P1 已实现执行事实的记录、查询和边界控制；基于结果证据的恢复判断属于 P2，授权与隔离执行属于 P3。Roadmap 中的设计方向不代表当前已经实现。
+> 当前 P1 先回答“发生了什么”；P2 将回答“结果能否确认，以及应该复用、重试、核对还是停下”；
+> P3 再回答“动作是否获准，以及它最多能够影响哪里”。Roadmap 中的设计方向不代表当前已经实现。
 
 | 可检查 | 有边界 | 默认拒绝 | 本地优先 |
 |---|---|---|---|
