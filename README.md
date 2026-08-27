@@ -1,10 +1,10 @@
 <div align="center">
-  <img src="docs/assets/BearAgent-logo-1.png" alt="BearAgent：蓝色电路熊头像与蓝橙双色项目名称组成的透明背景组合标识" width="900">
+  <img src="docs/assets/BearAgent-logo-1.png" alt="BearAgent：蓝色电路熊头像与蓝橙双色项目名称组成的透明背景组合标识" width="520">
 
-  <h1>BearAgent：可检查的个人 Agent Runtime</h1>
+  <h1>BearAgent：让 Agent 的执行可检查，让恢复有证据</h1>
 
-  <p><strong>模型提出下一步，Runtime 守住执行、预算、事实与权限边界。</strong></p>
-  <p>从一次本地文件任务出发，学习如何构建能够检查、追踪和扩展的 Agent Runtime。</p>
+  <p><strong>一个面向可验证恢复的 local-first 个人 Agent Runtime。</strong></p>
+  <p>模型提出意图，Runtime 约束执行、保存事实，并根据外部世界留下的证据判断下一步。</p>
 
   <p>
     <a href="site/src/content/docs/zh-cn/index.mdx"><img src="https://img.shields.io/badge/Documentation-Read_the_Book-174EA6?style=for-the-badge&amp;logo=bookstack&amp;logoColor=white" alt="阅读 BearAgent 中文学习书"></a>
@@ -16,7 +16,7 @@
     <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.12">
     <img src="https://img.shields.io/badge/typing-Pyright_strict-3178C6?style=flat-square" alt="Pyright strict">
     <img src="https://img.shields.io/badge/docs-Starlight-BC52EE?style=flat-square&amp;logo=astro&amp;logoColor=white" alt="Starlight documentation">
-    <a href="docs/project/roadmap.md"><img src="https://img.shields.io/badge/status-P1_implemented-2EA44F?style=flat-square" alt="P1 implemented"></a>
+    <a href="docs/project/roadmap.md"><img src="https://img.shields.io/badge/runtime-local--first-2EA44F?style=flat-square" alt="local-first Runtime"></a>
   </p>
 
   <p>
@@ -30,7 +30,7 @@
 
 <br>
 
-![BearAgent 运行图解：蓝色电路熊值守本地 Runtime，管控 Tool、预算和 Event，并生成原子输出](site/public/images/bearagent-book-cover-4k-blue.webp)
+![BearAgent 运行图解：请求进入本地 Runtime，执行事实形成可核对证据，再据此决定是否安全继续](site/public/images/bearagent-recovery-cover-4k.webp)
 
 ## 为什么需要 BearAgent
 
@@ -38,10 +38,11 @@ LLM 可以提出动作，但不适合独自决定权限、预算、状态一致�
 在模型与外部环境之间加入一层确定性的 Runtime：模型只提交意图，Runtime 负责检查并执行，随后把
 发生过的事实保存为 Event。
 
-这意味着你不需要先相信模型“应该做对了”，而是可以回看它调用了什么、消耗了多少预算、生成了
-哪些 Artifact，以及失败发生在哪一步。
+这些事实不只用于回看过程，也为失败后的判断提供证据。系统需要先确认外部动作是否已经发生，再
+决定复用结果、核对状态、有限重试，还是在证据不足时停下。恢复不是让模型再猜一次，而是让每个
+继续执行的决定都能够说明依据。
 
-## P1 当前能做什么
+## 当前可以做什么
 
 | 可检查 | 有边界 | 默认拒绝 | 本地优先 |
 |---|---|---|---|
@@ -50,10 +51,6 @@ LLM 可以提出动作，但不适合独自决定权限、预算、状态一致�
 当前第一个完整场景是**仓库与本地文档研究**：Agent 可以在指定 workspace 中列出、读取和搜索文本，
 并把完整 UTF-8 结果原子写入 `outputs/**`。任务结束后，可以用 Run ID 查询状态、Artifact 和完整
 Event 序列。
-
-> [!IMPORTANT]
-> **当前阶段：P1「可检查执行」已经完成。** 进程中断后的安全恢复属于 P2；Grant、用户 Approval
-> 与隔离 runner 属于 P3。Roadmap 中的计划能力不是当前实现。
 
 ## 快速开始
 
@@ -103,10 +100,10 @@ uv run bearagent run events <run-id> --after-sequence 0 --limit 100 --json
 
 ## 架构总览
 
-下图只展示 P1 已经接通的组件。入口与 adapter 可以替换，但 Runtime 的状态、预算、Policy 和 Event
+下图展示当前已经接通的组件。入口与 adapter 可以替换，但 Runtime 的状态、预算、Policy 和 Event
 规则不依赖某个模型 SDK 或数据库实现。
 
-![BearAgent P1 分层架构：CLI 和本机配置通过 bootstrap 进入 AgentLoop，Runtime 核心用领域类型、Reducer、预算和受控 Tool 路径协调模型、workspace 与 SQLite EventStore，结果保存为可查询 Event 和 outputs Artifact](docs/assets/bearagent-architecture.svg)
+![BearAgent 分层架构：CLI 和本机配置通过 bootstrap 进入 AgentLoop，Runtime 核心用领域类型、Reducer、预算和受控 Tool 路径协调模型、workspace 与 SQLite EventStore，结果保存为可查询 Event 和 outputs Artifact](docs/assets/bearagent-architecture.svg)
 
 一次 Tool 调用必须经过同一条受控路径：
 
@@ -123,27 +120,28 @@ Model 提出 ToolRequest
 
 ## 一次请求怎样穿过 Runtime
 
-![BearAgent P1 当前执行链：CLI 与配置进入 AgentLoop，模型和 Tool 请求穿过受控 adapter，Event 写入 SQLite 并由 Reducer 支持 inspect 和 events 查询，workspace write 只原子输出到 outputs](site/public/images/runtime-boundary-4k.jpg)
+![BearAgent Runtime 架构：模型提出意图，受控执行路径产生外部结果与持久证据，Runtime 根据证据验证结果并决定安全的后续动作](site/public/images/runtime-boundary.svg)
 
-这条链路守住三个边界：
+这张图表达四个长期边界：
 
 1. Provider SDK 对象只停留在 adapter，Runtime 只交换 BearAgent 自己的数据类型；
 2. 模型只能提出 `ToolRequest`，不能绕过 Policy 直接操作 workspace；
-3. Event 保存已经发生的事实，RunState 与预算由 Reducer 从 Event 计算。
+3. Event 保存已经发生的事实，RunState 与预算由 Reducer 从 Event 计算；
+4. 恢复决定必须由 Attempt、Receipt 或可核对的外部状态支撑；证据不足时进入 `UNKNOWN`，而不是猜测。
 
 ## 能力边界
 
-| P1 已实现 | 后续阶段 |
+| 当前可用 | 设计方向 |
 |---|---|
-| `doctor/run/inspect/events` CLI | 进程中断后的自动 resume/retry（P2） |
+| `doctor/run/inspect/events` CLI | 进程中断后的安全 resume 与恢复决策 |
 | Responses、Chat Completions、Anthropic Messages 三种显式协议 | 按 URL 猜协议或失败后自动 fallback（不计划隐式提供） |
-| SQLite Event、projection 与重开查询 | Attempt、Receipt、reconcile 与 `UNKNOWN`（P2） |
-| workspace list/read/search 与 `outputs/**` 原子写入 | 受控 sandbox shell/code（P3）与联网 Tool/MCP（P4）；不会回退到 host shell |
-| 固定 allowlist Policy 与五类 hard budget | Grant、用户 Approval 与隔离 runner（P3） |
-| Fake 5/5 与一组脱敏真实模型 5/5 证据 | Web UI、Memory、多 Agent 与分布式执行（P4/P6+） |
+| SQLite Event、projection 与重开查询 | Attempt、Receipt、reconcile 与 `UNKNOWN` |
+| workspace list/read/search 与 `outputs/**` 原子写入 | 受控 sandbox shell/code 与联网 Tool/MCP；不会回退到 host shell |
+| 固定 allowlist Policy 与五类 hard budget | Grant、用户 Approval 与隔离 runner |
+| Fake 5/5 与一组脱敏真实模型 5/5 证据 | Web UI、Memory、多 Agent 与分布式执行 |
 
 真实模型 gate 的脱敏证据位于
-[F-0017 P1 live report](docs/evidence/F-0017-p1-live-report-v1.json)。它只证明报告中记录的 suite、commit、
+[F-0017 live report](docs/evidence/F-0017-p1-live-report-v1.json)。它只证明报告中记录的 suite、commit、
 配置和价格快照，不代表所有 Provider 都已在线联调。
 
 ## 学习与开发

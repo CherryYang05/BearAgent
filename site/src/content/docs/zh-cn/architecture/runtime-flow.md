@@ -16,7 +16,7 @@ sourceRefs:
   - F-0017
 ---
 
-下面沿一个当前已经接通的 P1 文件任务走一遍：
+下面先看 BearAgent 的稳定架构边界，再沿一个当前已经接通的文件任务走一遍：
 
 ```powershell
 bearagent run "比较 docs 中的架构说明，把结论写到 outputs/report.md"
@@ -27,13 +27,13 @@ bearagent run "比较 docs 中的架构说明，把结论写到 outputs/report.m
 
 <figure class="chapter-illustration">
   <img
-    src="/images/runtime-boundary-4k.jpg"
-    alt="BearAgent P1 当前实现架构：CLI 和配置进入 AgentLoop，模型请求经过三种 adapter，工具请求经过 Registry、prepare、Policy 和 Executor，Event 写入 SQLite 后由 Reducer 支持查询，workspace write 只向 outputs 原子写文件"
+    src="/images/runtime-boundary.svg"
+    alt="BearAgent Runtime 架构：用户目标进入 Agent Loop，模型输出经过 adapter，Tool 请求经过 Registry、校验、Policy 和有界 Executor；Attempt、Event、Reducer 状态、Receipt 与外部观测形成证据，验证后决定继续、安全重试或进入 UNKNOWN"
     width="3840"
     height="2160"
     loading="lazy"
   />
-  <figcaption>这张图只画当前已实现的 P1 执行与查询路径；下面的时序图继续展开 Event 的精确先后顺序。</figcaption>
+  <figcaption>实线表示执行，绿色点线表示持久证据，琥珀色虚线表示恢复决定；下面的时序图继续展开当前文件任务中 Event 的精确先后顺序。</figcaption>
 </figure>
 
 :::tip[读图时只追一件事]

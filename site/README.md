@@ -46,5 +46,8 @@ npm run preview --prefix=site
 CLI 精确契约仍由 F-0005、Schema、代码和测试确认；使用手册负责把它们组织成可执行流程。每个
 Feature 完成时都要检查以上相关页面。不要复制 Spec 原文，也不要用机械术语替换代替重写。
 
-`public/images/*-4k.jpg` 是 GPT Image 生成后以高质量重采样入库的 3840×2160 插画。它们只负责建立
-章节印象；精确流程使用 Mermaid。新增图片必须写 alt，并检查桌面和 390px 手机裁切。
+`public/images/bearagent-recovery-cover-4k.webp` 是 GPT Image 生成后以高质量重采样入库的
+3840×2160 章节插画。它只建立“意图—执行—证据—判断”的视觉印象，不承载精确标签。
+`public/images/runtime-boundary.svg` 是可编辑、可用于论文和宣传材料的 3840×2160 矢量母版；同目录的
+`runtime-boundary-4k.png` 是便于演示软件使用的 4K 导出。精确时序仍使用 Mermaid。新增图片必须写
+alt，并检查桌面和 390px 手机裁切。

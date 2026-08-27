@@ -1,0 +1,337 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160" role="img" aria-labelledby="title desc">
+  <title id="title">BearAgent Runtime architecture</title>
+  <desc id="desc">A publication-ready architecture figure showing how user intent becomes bounded execution, how execution facts and external observations become evidence, and how that evidence drives confirmed, safe-to-retry, or unknown recovery decisions.</desc>
+
+  <defs>
+    <style>
+      svg { shape-rendering: geometricPrecision; text-rendering: geometricPrecision; }
+      .canvas { fill: url(#canvas-gradient); }
+      .runtime { fill: #ffffff; stroke: #b9c6d8; stroke-width: 4; filter: url(#panel-shadow); }
+      .external { fill: #f3f6fa; stroke: #b1bdcd; stroke-width: 3; stroke-dasharray: 16 14; }
+      .lane-surface-blue { fill: #f7f9fe; stroke: #e5ebf5; stroke-width: 2; }
+      .lane-surface-neutral { fill: #fafbfd; stroke: #e8edf3; stroke-width: 2; }
+      .lane-surface-teal { fill: #f7fbfa; stroke: #e1efeb; stroke-width: 2; }
+      .divider { stroke: #dce3ec; stroke-width: 2; stroke-dasharray: 6 16; }
+      .card { fill: #ffffff; stroke: #d4dce7; stroke-width: 3; filter: url(#card-shadow); }
+      .reason-card { fill: #ffffff; stroke: #c9d8ef; stroke-width: 3; filter: url(#card-shadow); }
+      .policy-card { fill: #fffaf0; stroke: #e2b45a; stroke-width: 3; filter: url(#card-shadow); }
+      .evidence-card { fill: #ffffff; stroke: #b9dcd5; stroke-width: 3; filter: url(#card-shadow); }
+      .unknown-card { fill: #fff8ec; stroke: #e5b66a; stroke-width: 3; filter: url(#card-shadow); }
+      .icon-tile-blue { fill: #edf3ff; stroke: #d5e1f5; stroke-width: 2; }
+      .icon-tile-neutral { fill: #f4f6f9; stroke: #e1e6ed; stroke-width: 2; }
+      .icon-tile-teal { fill: #edf8f5; stroke: #d5ebe6; stroke-width: 2; }
+      .icon-tile-amber { fill: #fff3dc; stroke: #f0d39c; stroke-width: 2; }
+      .h1 { font: 750 80px Inter, "Segoe UI", Arial, sans-serif; fill: #111b2e; letter-spacing: -2.4px; }
+      .subtitle { font: 400 36px Inter, "Segoe UI", Arial, sans-serif; fill: #667085; }
+      .eyebrow { font: 700 22px Inter, "Segoe UI", Arial, sans-serif; fill: #245799; letter-spacing: 3px; dominant-baseline: middle; }
+      .boundary-label { font: 700 30px Inter, "Segoe UI", Arial, sans-serif; fill: #245799; letter-spacing: 3.5px; text-anchor: middle; dominant-baseline: middle; }
+      .external-label { font: 700 28px Inter, "Segoe UI", Arial, sans-serif; fill: #667085; letter-spacing: 2.5px; text-anchor: middle; dominant-baseline: middle; }
+      .lane-number { font: 700 25px Inter, "Segoe UI", Arial, sans-serif; fill: #b86606; text-anchor: middle; dominant-baseline: middle; }
+      .lane-title { font: 700 39px Inter, "Segoe UI", Arial, sans-serif; fill: #26364d; letter-spacing: -0.2px; }
+      .lane-note { font: 400 28px Inter, "Segoe UI", Arial, sans-serif; fill: #748196; }
+      .card-title { font: 700 37px Inter, "Segoe UI", Arial, sans-serif; fill: #17243a; text-anchor: middle; dominant-baseline: middle; letter-spacing: -0.4px; }
+      .card-note { font: 400 26px Inter, "Segoe UI", Arial, sans-serif; fill: #66758a; text-anchor: middle; dominant-baseline: middle; }
+      .align-left { text-anchor: start; }
+      .small-label { font: 600 25px Inter, "Segoe UI", Arial, sans-serif; fill: #526278; text-anchor: middle; dominant-baseline: middle; }
+      .decision-label { font: 700 29px Inter, "Segoe UI", Arial, sans-serif; fill: #20334b; dominant-baseline: middle; }
+      .decision-note { font: 400 23px Inter, "Segoe UI", Arial, sans-serif; fill: #69778b; dominant-baseline: middle; }
+      .external-title { font: 700 35px Inter, "Segoe UI", Arial, sans-serif; fill: #17243a; text-anchor: middle; dominant-baseline: middle; }
+      .external-note { font: 400 24px Inter, "Segoe UI", Arial, sans-serif; fill: #68768a; text-anchor: middle; dominant-baseline: middle; }
+      .legend { font: 600 24px Inter, "Segoe UI", Arial, sans-serif; fill: #526177; dominant-baseline: middle; }
+      .align-left { text-anchor: start; }
+      .flow { fill: none; stroke: #245799; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow-flow); }
+      .flow-back { fill: none; stroke: #245799; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow-flow); }
+      .evidence { fill: none; stroke: #278c7c; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 2 17; marker-end: url(#arrow-evidence); }
+      .recovery { fill: none; stroke: #c87610; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 18 14; marker-end: url(#arrow-recovery); }
+      .recovery-plain { fill: none; stroke: #c87610; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 18 14; }
+      .stop { fill: none; stroke: #c87610; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 18 14; }
+      .icon-blue { color: #245799; }
+      .icon-teal { color: #278274; }
+      .icon-amber { color: #bd6c08; }
+    </style>
+
+    <linearGradient id="canvas-gradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f9fbfd"/>
+      <stop offset="1" stop-color="#f3f6fa"/>
+    </linearGradient>
+    <filter id="panel-shadow" x="-8%" y="-8%" width="116%" height="120%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="26" flood-color="#1c2b46" flood-opacity="0.09"/>
+    </filter>
+    <filter id="card-shadow" x="-12%" y="-12%" width="124%" height="132%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#1c2b46" flood-opacity="0.07"/>
+    </filter>
+
+    <marker id="arrow-flow" markerWidth="34" markerHeight="34" refX="29" refY="17" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L34 17 L0 34 Z" fill="#245799"/>
+    </marker>
+    <marker id="arrow-evidence" markerWidth="34" markerHeight="34" refX="29" refY="17" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L34 17 L0 34 Z" fill="#278c7c"/>
+    </marker>
+    <marker id="arrow-recovery" markerWidth="34" markerHeight="34" refX="29" refY="17" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L34 17 L0 34 Z" fill="#c87610"/>
+    </marker>
+
+    <symbol id="icon-user" viewBox="0 0 128 128">
+      <circle cx="64" cy="38" r="22" fill="currentColor"/>
+      <path d="M22 108 C25 72 103 72 106 108" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="icon-loop" viewBox="0 0 128 128">
+      <path d="M103 52 A43 43 0 0 0 31 31" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+      <path d="M31 31 L51 30 M31 31 L32 51" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M25 76 A43 43 0 0 0 97 97" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+      <path d="M97 97 L77 98 M97 97 L96 77" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="64" cy="64" r="16" fill="currentColor"/>
+    </symbol>
+    <symbol id="icon-adapter" viewBox="0 0 128 128">
+      <circle cx="18" cy="34" r="9" fill="currentColor"/>
+      <circle cx="18" cy="94" r="9" fill="currentColor"/>
+      <path d="M30 34 H58 V58 H86 M30 94 H58 V70 H86" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="86" y="49" width="24" height="30" rx="6" fill="none" stroke="currentColor" stroke-width="8"/>
+    </symbol>
+    <symbol id="icon-chip" viewBox="0 0 128 128">
+      <rect x="30" y="30" width="68" height="68" rx="14" fill="none" stroke="currentColor" stroke-width="8"/>
+      <circle cx="64" cy="64" r="15" fill="currentColor"/>
+      <path d="M44 16 V30 M64 16 V30 M84 16 V30 M44 98 V112 M64 98 V112 M84 98 V112 M16 44 H30 M16 64 H30 M16 84 H30 M98 44 H112 M98 64 H112 M98 84 H112" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="icon-request" viewBox="0 0 128 128">
+      <circle cx="24" cy="30" r="8" fill="currentColor"/>
+      <circle cx="24" cy="64" r="8" fill="currentColor"/>
+      <circle cx="24" cy="98" r="8" fill="currentColor"/>
+      <path d="M44 30 H106 M44 64 H92 M44 98 H106" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="icon-validate" viewBox="0 0 128 128">
+      <rect x="20" y="18" width="88" height="92" rx="10" fill="none" stroke="currentColor" stroke-width="8"/>
+      <path d="M40 64 L57 81 L90 43" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-shield" viewBox="0 0 128 128">
+      <path d="M64 14 L104 30 V62 C104 88 88 108 64 118 C40 108 24 88 24 62 V30 Z" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M44 64 L58 78 L85 47" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-executor" viewBox="0 0 128 128">
+      <rect x="31" y="31" width="66" height="66" rx="8" fill="none" stroke="currentColor" stroke-width="8"/>
+      <path d="M16 44 V16 H44 M84 16 H112 V44 M112 84 V112 H84 M44 112 H16 V84" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-tool" viewBox="0 0 128 128">
+      <rect x="16" y="22" width="96" height="84" rx="12" fill="none" stroke="currentColor" stroke-width="8"/>
+      <path d="M16 48 H112 M32 35 H34 M49 35 H51" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+      <path d="M49 78 H79 M69 64 L83 78 L69 92" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-attempt" viewBox="0 0 128 128">
+      <rect x="24" y="18" width="80" height="92" rx="10" fill="none" stroke="currentColor" stroke-width="8"/>
+      <path d="M42 45 H86 M42 66 H86 M42 87 H70" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="94" cy="94" r="18" fill="#edf7f5" stroke="currentColor" stroke-width="7"/>
+      <path d="M94 84 V94 L102 100" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-log" viewBox="0 0 128 128">
+      <rect x="18" y="34" width="82" height="76" rx="8" fill="none" stroke="currentColor" stroke-width="8"/>
+      <path d="M34 18 H110 V94" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M38 57 H80 M38 78 H80" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="icon-state" viewBox="0 0 128 128">
+      <path d="M18 30 H62 M18 64 H62 M18 98 H62 M82 20 V108 M82 64 H108" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="110" cy="64" r="10" fill="currentColor"/>
+    </symbol>
+    <symbol id="icon-verify" viewBox="0 0 128 128">
+      <circle cx="52" cy="52" r="34" fill="none" stroke="currentColor" stroke-width="8"/>
+      <path d="M76 76 L108 108 M35 52 L48 65 L70 39" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-confirmed" viewBox="0 0 96 96">
+      <circle cx="48" cy="48" r="38" fill="currentColor"/>
+      <path d="M29 49 L42 62 L68 33" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-retry" viewBox="0 0 96 96">
+      <path d="M72 34 A30 30 0 1 0 70 67" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+      <path d="M72 34 L52 31 M72 34 L68 15" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-unknown" viewBox="0 0 96 96">
+      <path d="M48 8 L82 28 V68 L48 88 L14 68 V28 Z" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M48 28 V54 M48 70 V71" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+
+  <rect class="canvas" width="3840" height="2160"/>
+
+  <!-- Heading and legend -->
+  <rect x="150" y="62" width="7" height="28" rx="3" fill="#245799"/>
+  <text class="eyebrow" x="176" y="78">SYSTEM MAP</text>
+  <text class="h1" x="150" y="158">BearAgent Runtime</text>
+  <text class="subtitle" x="154" y="214">From model intent to evidence-backed recovery decisions</text>
+
+  <rect x="2475" y="60" width="1215" height="112" rx="16" fill="#ffffff" stroke="#dfe5ed" stroke-width="2" filter="url(#card-shadow)"/>
+  <line x1="2880" y1="84" x2="2880" y2="148" stroke="#e5eaf0" stroke-width="2"/>
+  <line x1="3285" y1="84" x2="3285" y2="148" stroke="#e5eaf0" stroke-width="2"/>
+  <line class="flow" x1="2535" y1="116" x2="2625" y2="116"/>
+  <text class="legend" x="2660" y="118">execution flow</text>
+  <line class="evidence" x1="2940" y1="116" x2="3030" y2="116"/>
+  <text class="legend" x="3065" y="118">persisted evidence</text>
+  <line class="recovery" x1="3345" y1="116" x2="3435" y2="116"/>
+  <text class="legend" x="3470" y="118">recovery decision</text>
+
+  <!-- System boundaries -->
+  <rect class="runtime" x="860" y="270" width="2170" height="1780" rx="24"/>
+  <rect class="external" x="3120" y="270" width="600" height="1780" rx="24"/>
+  <rect class="lane-surface-blue" x="925" y="325" width="2040" height="420" rx="20"/>
+  <rect class="lane-surface-neutral" x="925" y="820" width="2040" height="400" rx="20"/>
+  <rect class="lane-surface-teal" x="925" y="1360" width="2040" height="635" rx="20"/>
+  <rect x="1645" y="244" width="600" height="58" rx="10" fill="#ffffff" stroke="#dce4ee" stroke-width="2"/>
+  <text class="boundary-label" x="1945" y="274">RUNTIME BOUNDARY</text>
+  <rect x="3210" y="244" width="420" height="58" rx="10" fill="#f9fafc" stroke="#dce4ee" stroke-width="2"/>
+  <text class="external-label" x="3420" y="274">EXTERNAL SYSTEMS</text>
+
+  <!-- Lane guides and descriptions -->
+  <line class="divider" x1="100" y1="780" x2="3730" y2="780"/>
+  <line class="divider" x1="100" y1="1300" x2="3730" y2="1300"/>
+
+  <rect x="150" y="342" width="56" height="40" rx="8" fill="#fff3dc" stroke="#efd39e" stroke-width="2"/>
+  <text class="lane-number" x="178" y="363">01</text>
+  <text class="lane-title" x="150" y="430">INTENT &amp; REASONING</text>
+  <text class="lane-note" x="150" y="480">The model proposes.</text>
+  <text class="lane-note" x="150" y="520">The Runtime decides what runs.</text>
+
+  <rect x="150" y="880" width="56" height="40" rx="8" fill="#fff3dc" stroke="#efd39e" stroke-width="2"/>
+  <text class="lane-number" x="178" y="901">02</text>
+  <text class="lane-title" x="150" y="968">CONTROLLED EXECUTION</text>
+  <text class="lane-note" x="150" y="1018">Every Tool action crosses</text>
+  <text class="lane-note" x="150" y="1058">one bounded path.</text>
+
+  <rect x="150" y="1422" width="56" height="40" rx="8" fill="#fff3dc" stroke="#efd39e" stroke-width="2"/>
+  <text class="lane-number" x="178" y="1443">03</text>
+  <text class="lane-title" x="150" y="1510">EVIDENCE &amp; RECOVERY</text>
+  <text class="lane-note" x="150" y="1560">Facts determine whether</text>
+  <text class="lane-note" x="150" y="1600">continuing is safe.</text>
+
+  <!-- Intent and reasoning -->
+  <rect class="card" x="180" y="540" width="500" height="180" rx="20"/>
+  <rect class="icon-tile-blue" x="224" y="574" width="112" height="112" rx="16"/>
+  <use href="#icon-user" class="icon-blue" x="250" y="600" width="60" height="60"/>
+  <text class="card-title align-left" x="380" y="610">User goal</text>
+  <text class="card-note align-left" x="380" y="666">CLI / API</text>
+
+  <rect class="reason-card" x="1000" y="350" width="800" height="340" rx="20"/>
+  <rect class="icon-tile-blue" x="1056" y="406" width="128" height="128" rx="18"/>
+  <use href="#icon-loop" class="icon-blue" x="1080" y="430" width="80" height="80"/>
+  <text class="card-title align-left" x="1228" y="428">Agent Loop</text>
+  <text class="card-note align-left" x="1228" y="484">context · state · budgets</text>
+  <text class="card-note align-left" x="1228" y="526">select the next Activity</text>
+  <rect x="1228" y="584" width="512" height="44" rx="10" fill="#edf3ff" stroke="#d7e3f7" stroke-width="2"/>
+  <text class="small-label" x="1484" y="607">internal BearAgent data only</text>
+
+  <rect class="reason-card" x="2050" y="350" width="740" height="340" rx="20"/>
+  <rect class="icon-tile-blue" x="2106" y="406" width="128" height="128" rx="18"/>
+  <use href="#icon-adapter" class="icon-blue" x="2130" y="430" width="80" height="80"/>
+  <text class="card-title align-left" x="2278" y="428">Model adapter</text>
+  <text class="card-note align-left" x="2278" y="484">translate one explicit protocol</text>
+  <text class="card-note align-left" x="2278" y="526">SDK types stop here</text>
+  <rect x="2278" y="584" width="452" height="44" rx="10" fill="#edf3ff" stroke="#d7e3f7" stroke-width="2"/>
+  <text class="small-label" x="2504" y="607">Responses · Chat · Messages</text>
+
+  <rect class="card" x="3190" y="405" width="460" height="255" rx="20"/>
+  <rect class="icon-tile-neutral" x="3230" y="459" width="112" height="112" rx="16"/>
+  <use href="#icon-chip" class="icon-blue" x="3255" y="484" width="62" height="62"/>
+  <text class="external-title align-left" x="3385" y="489">Model</text>
+  <text class="external-note align-left" x="3385" y="544">external provider</text>
+
+  <path class="flow" d="M680 630 H800 Q860 630 860 570 V520 H1000"/>
+  <path class="flow" d="M1800 500 H2050"/>
+  <path class="flow" d="M2790 500 H3190"/>
+  <path class="flow-back" d="M3190 620 H3060 Q2990 620 2990 690 H1880 Q1820 690 1820 630 H1800"/>
+  <rect x="1835" y="438" width="180" height="42" rx="8" fill="#ffffff" stroke="#e1e7ef" stroke-width="2"/>
+  <text class="small-label" x="1925" y="460">ModelRequest</text>
+  <rect x="2890" y="438" width="200" height="42" rx="8" fill="#ffffff" stroke="#e1e7ef" stroke-width="2"/>
+  <text class="small-label" x="2990" y="460">protocol request</text>
+  <rect x="2210" y="698" width="400" height="42" rx="8" fill="#ffffff" stroke="#e1e7ef" stroke-width="2"/>
+  <text class="small-label" x="2410" y="720">text · ToolRequest · usage</text>
+
+  <!-- Controlled execution -->
+  <rect class="card" x="1000" y="870" width="380" height="300" rx="20"/>
+  <rect class="icon-tile-neutral" x="1122" y="916" width="136" height="136" rx="18"/>
+  <use href="#icon-request" class="icon-blue" x="1146" y="940" width="88" height="88"/>
+  <text class="card-title" x="1190" y="1112">ToolRequest</text>
+
+  <rect class="card" x="1510" y="870" width="420" height="300" rx="20"/>
+  <rect class="icon-tile-neutral" x="1652" y="916" width="136" height="136" rx="18"/>
+  <use href="#icon-validate" class="icon-blue" x="1676" y="940" width="88" height="88"/>
+  <text class="card-title" x="1720" y="1112">Registry + validate</text>
+
+  <rect class="policy-card" x="2060" y="870" width="360" height="300" rx="20"/>
+  <rect class="icon-tile-amber" x="2172" y="916" width="136" height="136" rx="18"/>
+  <use href="#icon-shield" class="icon-amber" x="2196" y="940" width="88" height="88"/>
+  <text class="card-title" x="2240" y="1112">Policy</text>
+
+  <rect class="card" x="2550" y="870" width="420" height="300" rx="20"/>
+  <rect class="icon-tile-neutral" x="2692" y="916" width="136" height="136" rx="18"/>
+  <use href="#icon-executor" class="icon-blue" x="2716" y="940" width="88" height="88"/>
+  <text class="card-title" x="2760" y="1112">Bounded executor</text>
+
+  <rect class="card" x="3180" y="870" width="470" height="300" rx="20"/>
+  <rect class="icon-tile-neutral" x="3220" y="944" width="112" height="112" rx="16"/>
+  <use href="#icon-tool" class="icon-blue" x="3245" y="969" width="62" height="62"/>
+  <text class="external-title align-left" x="3375" y="968">Tool / service</text>
+  <text class="external-note align-left" x="3375" y="1022">workspace · API · MCP</text>
+  <text class="external-note align-left" x="3375" y="1066">external side effect</text>
+
+  <path class="flow" d="M1380 1020 H1510"/>
+  <path class="flow" d="M1930 1020 H2060"/>
+  <path class="flow" d="M2420 1020 H2550"/>
+  <path class="flow" d="M2970 1020 H3180"/>
+  <path class="flow" d="M1400 690 V800 Q1400 830 1360 830 H1190 V870"/>
+
+  <!-- Evidence -->
+  <rect class="evidence-card" x="1000" y="1420" width="410" height="270" rx="20"/>
+  <rect class="icon-tile-teal" x="1139" y="1450" width="132" height="132" rx="18"/>
+  <use href="#icon-attempt" class="icon-teal" x="1161" y="1472" width="88" height="88"/>
+  <text class="card-title" x="1205" y="1640">Attempt</text>
+
+  <rect class="evidence-card" x="1520" y="1420" width="430" height="270" rx="20"/>
+  <rect class="icon-tile-teal" x="1669" y="1450" width="132" height="132" rx="18"/>
+  <use href="#icon-log" class="icon-teal" x="1691" y="1472" width="88" height="88"/>
+  <text class="card-title" x="1735" y="1640">Event log</text>
+
+  <rect class="evidence-card" x="2070" y="1420" width="430" height="270" rx="20"/>
+  <rect class="icon-tile-teal" x="2219" y="1450" width="132" height="132" rx="18"/>
+  <use href="#icon-state" class="icon-teal" x="2241" y="1472" width="88" height="88"/>
+  <text class="card-title" x="2285" y="1640">Reducer / state</text>
+
+  <rect class="evidence-card" x="2630" y="1420" width="340" height="270" rx="20"/>
+  <rect class="icon-tile-teal" x="2734" y="1450" width="132" height="132" rx="18"/>
+  <use href="#icon-verify" class="icon-teal" x="2756" y="1472" width="88" height="88"/>
+  <text class="card-title" x="2800" y="1640">Verify</text>
+
+  <path class="evidence" d="M2760 1170 V1320 H1205 V1420"/>
+  <path class="evidence" d="M3415 1170 V1368 H2800 V1420"/>
+  <path class="evidence" d="M1410 1555 H1520"/>
+  <path class="evidence" d="M1950 1555 H2070"/>
+  <path class="evidence" d="M2500 1555 H2630"/>
+  <rect x="2970" y="1338" width="480" height="54" rx="10" fill="#ffffff" stroke="#e0e6ee" stroke-width="2" filter="url(#card-shadow)"/>
+  <text class="small-label" x="3210" y="1367">receipt / observed state</text>
+
+  <!-- Recovery decisions -->
+  <rect class="evidence-card" x="1040" y="1790" width="500" height="165" rx="18"/>
+  <rect class="icon-tile-teal" x="1078" y="1828" width="88" height="88" rx="14"/>
+  <use href="#icon-confirmed" class="icon-teal" x="1096" y="1846" width="52" height="52"/>
+  <text class="decision-label" x="1205" y="1845">CONFIRMED</text>
+  <text class="decision-note" x="1205" y="1892">reuse result · continue</text>
+
+  <rect class="policy-card" x="1680" y="1790" width="500" height="165" rx="18"/>
+  <rect class="icon-tile-amber" x="1718" y="1828" width="88" height="88" rx="14"/>
+  <use href="#icon-retry" class="icon-amber" x="1736" y="1846" width="52" height="52"/>
+  <text class="decision-label" x="1845" y="1845">SAFE TO RETRY</text>
+  <text class="decision-note" x="1845" y="1892">new Attempt · same limits</text>
+
+  <rect class="unknown-card" x="2320" y="1790" width="500" height="165" rx="18"/>
+  <rect class="icon-tile-amber" x="2358" y="1828" width="88" height="88" rx="14"/>
+  <use href="#icon-unknown" class="icon-amber" x="2376" y="1846" width="52" height="52"/>
+  <text class="decision-label" x="2485" y="1845">UNKNOWN</text>
+  <text class="decision-note" x="2485" y="1892">stop · do not guess</text>
+
+  <path class="recovery" d="M2800 1690 V1745 H1290 V1790"/>
+  <path class="recovery" d="M2800 1690 V1745 H1930 V1790"/>
+  <path class="recovery" d="M2800 1690 V1745 H2570 V1790"/>
+  <path class="recovery-plain" d="M1290 1955 V1995 H1610"/>
+  <path class="recovery-plain" d="M1930 1955 V1995 H1610"/>
+  <path class="recovery" d="M1610 1995 H790 V475 Q790 440 830 440 H1000"/>
+  <path class="stop" d="M2570 1955 V2000 H2970"/>
+  <line x1="2970" y1="1966" x2="2970" y2="2034" stroke="#c87610" stroke-width="10" stroke-linecap="round"/>
+
+  <text class="subtitle" x="1945" y="2120" text-anchor="middle">Execution is bounded. Facts are persisted. Recovery follows evidence.</text>
+</svg>
