@@ -16,8 +16,8 @@ sourceRefs:
 
 :::caution[这是 2026-08-19 的历史快照]
 本页保留 F-0016 实现前的分阶段状态。文中的“尚未实现”只描述当时；当前 AgentLoop、四个 workspace
-Tool 与 `run/inspect/events` 已接通。请从[P1 主学习路线](index.md)或
-[一次文件任务的当前完整路径](agent-loop-file-task.md)开始阅读。
+Tool 与 `run/inspect/events` 已接通。请从[P1 主学习路线](/zh-cn/learn/)或
+[一次文件任务的当前完整路径](/zh-cn/learn/agent-loop-file-task/)开始阅读。
 :::
 
 先看当时的结论：F-0016 开始前，BearAgent 已经有三条可以独立验证的通道：模型调用、Tool 安全执行、
@@ -348,7 +348,7 @@ Approval 和 sandbox 也仍分别属于 P2/P3。
 
 继续阅读：
 
-- [状态和预算怎样计算](runtime-state-and-budgets.md)
-- [一个 Tool 请求为什么要过四道检查](tool-execution-boundary.md)
-- [一次请求怎样穿过 BearAgent](../architecture/runtime-flow.md)
-- [现在实现到了哪里](../project/status.md)
+- [状态和预算怎样计算](/zh-cn/learn/runtime-state-and-budgets/)
+- [一个 Tool 请求为什么要过四道检查](/zh-cn/learn/tool-execution-boundary/)
+- [一次请求怎样穿过 BearAgent](/zh-cn/architecture/runtime-flow/)
+- [现在实现到了哪里](/zh-cn/project/status/)

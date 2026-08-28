@@ -16,14 +16,30 @@ sourceRefs:
   - F-0017
 ---
 
-下面沿一个当前已经接通的 P1 文件任务走一遍：
+下面先看 BearAgent 的稳定架构边界，再沿一个当前已经接通的文件任务走一遍：
 
 ```powershell
 bearagent run "比较 docs 中的架构说明，把结论写到 outputs/report.md"
 ```
 
 命令需要有效的 config v1 和 RunProfile v2；完整准备步骤见
-[P1 命令行完整使用手册](../guides/cli.md)。这里聚焦请求怎样穿过各模块，以及每个边界为什么存在。
+[P1 命令行完整使用手册](/zh-cn/guides/cli/)。这里聚焦请求怎样穿过各模块，以及每个边界为什么存在。
+
+<figure class="chapter-illustration">
+  <img
+    src="/images/runtime-boundary.svg"
+    alt="BearAgent Runtime 架构：用户目标进入 Agent Loop，模型输出经过 adapter，Tool 请求经过 Registry、校验、Policy 和有界 Executor；Attempt、Event、Reducer 状态、Receipt 与外部观测形成证据，验证后决定继续、安全重试或进入 UNKNOWN"
+    width="3840"
+    height="2160"
+    loading="lazy"
+  />
+  <figcaption>实线表示执行，绿色点线表示持久证据，琥珀色虚线表示恢复决定；下面的时序图继续展开当前文件任务中 Event 的精确先后顺序。</figcaption>
+</figure>
+
+:::tip[读图时只追一件事]
+第一次阅读只看“谁把什么交给谁”。第二次再看每个外部调用前后保存了什么 Event。这样比同时记住
+所有类名更容易建立稳定的执行画面。
+:::
 
 ## 总路径先看一遍
 
@@ -140,5 +156,5 @@ CLI 返回 Run ID、最终文本和 Artifact；`inspect` 查询 projection，`ev
 - projection 不能取代 Event 成为事实来源。
 
 这些限制让未来增加 Web、MCP 或更多 Provider 时仍沿同一条执行和记录路径。下一页用
-[P1 的关键架构取舍](p1-decisions.md)解释为什么先选择这条窄路径，再看恶意输入、timeout 或中断时
-[可靠性与安全边界](reliability-boundaries.md)怎样分工。
+[P1 的关键架构取舍](/zh-cn/architecture/p1-decisions/)解释为什么先选择这条窄路径，再看恶意输入、timeout 或中断时
+[可靠性与安全边界](/zh-cn/architecture/reliability-boundaries/)怎样分工。

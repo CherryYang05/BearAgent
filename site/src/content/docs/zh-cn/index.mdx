@@ -1,15 +1,15 @@
 ---
-title: BearAgent 文档
-description: 先用 P1 命令行完成本地文件任务，再由浅入深理解 Run、Event、安全边界、架构取舍和代码。
+title: 从一次任务，读懂 Agent Runtime
+description: 一本可以运行、可以对照源码、也会诚实标出边界的 BearAgent 中文开发书。
 template: splash
 hero:
-  tagline: 先跑通一次任务，再看懂每个边界。
+  tagline: 不从术语表开始。先让 Agent 完成一项本地文件任务，再顺着 Run、Event、Model、Tool 和测试把系统拆开。
   actions:
-    - text: 使用 P1 命令行
+    - text: 开始第一部
       link: /zh-cn/guides/cli/
       icon: right-arrow
       variant: primary
-    - text: 按路线学习
+    - text: 查看全书地图
       link: /zh-cn/learn/
       icon: open-book
 bearStatus: mixed
@@ -18,61 +18,112 @@ sourceRefs:
   - F-0002
   - F-0003
   - F-0004
+  - F-0005
   - F-0006
   - F-0007
   - F-0008
-  - F-0016
   - F-0015
-  - F-0005
+  - F-0016
   - F-0017
 ---
 
 import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-P1 当前只有 CLI：让 Agent 读取指定 workspace，并把完整结果写到 `outputs/**`。最适合的阅读顺序
-不是先读完所有 Spec，而是先看到命令怎样产生 Run ID、Artifact 和 Event，再理解 Runtime 为什么
-限制路径、预算、权限和重试。
+<figure class="book-cover">
+  <img
+    src="/images/bearagent-recovery-cover-4k.webp"
+    alt="模型意图进入 BearAgent Runtime，Event、Receipt 与外部状态汇成恢复证据，证据充分时继续，证据不足时停止"
+    width="3840"
+    height="2160"
+    loading="eager"
+    fetchpriority="high"
+  />
+  <figcaption>4K 章节插画把“意图—执行—证据—判断”压缩成视觉隐喻；精确关系以正文中的架构图和 Mermaid 为准。</figcaption>
+</figure>
+
+<div class="reading-promise">
+  <span class="part-label">这本书怎样教你</span>
+
+  **每一部分都从一个读者会问的问题开始。** 你会先运行或观察一个具体结果，再认识它对应的术语，
+  最后进入代码和测试。页面会明确写出：这是通用 Agent 概念、BearAgent 已实现行为、已接受设计，
+  还是未来计划。
+</div>
+
+BearAgent 是一个 local-first 的个人 Agent Runtime。Runtime 是模型之外那层真正负责执行的软件：它把
+目标交给模型，把模型提出的 Tool 请求变成受限动作，并把发生过的事实保存下来。
+
+目前最适合学习的场景很小：Agent 在指定 workspace 中查找、读取和比较资料，只把完整结果写进
+`outputs/**`。小场景让我们能把模型调用、文件边界、预算、持久化和失败路径逐一看清。
+
+## 六部分，从会用走到会研究
+
+<ol class="book-map">
+  <li>
+    <span><a href="/zh-cn/guides/cli/">先亲手跑一次</a><small>配置模型，启动 Run，再用 inspect 和 events 回看过程。</small></span>
+  </li>
+  <li>
+    <span><a href="/zh-cn/learn/agent-basics/">看懂 Agent 运行</a><small>分清 Model、Context、Tool、Runtime、Run、Activity 和 Event。</small></span>
+  </li>
+  <li>
+    <span><a href="/zh-cn/learn/tool-execution-boundary/">理解安全边界</a><small>看模型输出为什么不可信，路径、Policy 和原子写入怎样兜底。</small></span>
+  </li>
+  <li>
+    <span><a href="/zh-cn/architecture/">拼出系统架构</a><small>把 domain、runtime、application、port、adapter 和 interface 连起来。</small></span>
+  </li>
+  <li>
+    <span><a href="/zh-cn/development/">沿代码继续学习</a><small>按一条真实执行链读源码，用单元、契约、集成和安全测试验证理解。</small></span>
+  </li>
+  <li>
+    <span><a href="/zh-cn/learn/agents-today/">走向研究与扩展</a><small>把恢复、授权、隔离、评测和 Agent 研究问题放回领域全景。</small></span>
+  </li>
+</ol>
+
+## 你现在可以直接选择入口
 
 <CardGrid>
   <LinkCard
-    title="先跑通命令行"
-    description="从源码安装、准备 profile、运行 Run，并用 inspect/events 排查失败。"
+    title="我第一次接触 Agent"
+    description="先用一个文件任务分清 Model、Tool 和 Runtime，不要求框架经验。"
+    href="/zh-cn/start/what-is-bearagent/"
+  />
+  <LinkCard
+    title="我想先把项目跑起来"
+    description="从源码安装、准备配置、运行命令，并处理最常见的失败。"
     href="/zh-cn/guides/cli/"
   />
   <LinkCard
-    title="跟完一条 P1 Run"
-    description="从 objective 到模型、Tool、SQLite、Artifact 和查询，建立完整执行画面。"
-    href="/zh-cn/architecture/runtime-flow/"
-  />
-  <LinkCard
-    title="理解架构取舍"
-    description="为什么先用 CLI/SQLite、默认拒绝、相对路径、原子输出和串行 Loop。"
-    href="/zh-cn/architecture/p1-decisions/"
-  />
-  <LinkCard
-    title="进入代码和测试"
-    description="沿 interfaces → application → ports/adapters 找到实现和验证入口。"
+    title="我想开始读源码"
+    description="先看目录分工，再沿 interface → application → runtime → port/adapter 阅读。"
     href="/zh-cn/development/"
   />
   <LinkCard
-    title="只想知道现在能做什么"
-    description="区分已经完成的 P1、当前边界和更晚的计划。"
+    title="我想做 Agent 研究"
+    description="从长任务、Context、评测、恢复、权限和隔离找到可研究的问题。"
+    href="/zh-cn/learn/open-problems/"
+  />
+  <LinkCard
+    title="我只想确认当前能力"
+    description="查看已经实现、可以复现的证据，以及明确还不能做的事情。"
     href="/zh-cn/project/status/"
   />
 </CardGrid>
 
-:::note[生产 CLI 已接通，P1 已完成]
-`run/inspect/events` 已把显式选择的模型协议、workspace、SQLite、Policy 和 Agent Loop 组装到同一条
-本地路径。config v1、RunProfile v2、三种 protocol adapter、离线 Reality Check 和 DeepSeek V4
-suite v1.1.1 真实 5/5 均已通过。恢复、Approval 和 sandbox 仍不是当前功能。
+:::note[先记住这一条边界]
+P1 已能运行并检查本地文件任务；P2 的中断恢复、P3 的 Approval 与隔离 runner 还没有实现。`site/`
+只展示学习和开发文档，不运行 Runtime，也不承担线上部署。
 :::
 
-## 这套文档分三层
+## 怎样判断页面在讲什么
 
-1. **使用文档**回答“现在怎么运行、配置和排错”，以[CLI 完整手册](/zh-cn/guides/cli/)为入口。
-2. **学习与架构**回答“一次请求怎样流动、为什么这样取舍”，从[P1 学习路线](/zh-cn/learn/)进入。
-3. **开发者文档**回答“代码在哪里、哪些边界不能改坏、什么测试能证明”，从
-   [代码路线](/zh-cn/development/)进入。
+每页都带有内容状态：
 
-工程事实仍以仓库 `docs/`、代码和测试为准。站点不会把未来 Feature 写成当前能力，也不会用学习页
-代替 Spec、ADR 或 Plan。
+| 状态 | 含义 |
+|---|---|
+| `implemented` | 当前代码和测试已经支持，可以按页面给出的入口复现 |
+| `design` | 已接受的 BearAgent 设计，但不等于全部实现 |
+| `planned` | Roadmap 中的方向，还不能当作现有能力 |
+| `concept` | 通用 Agent 知识，不用于证明 BearAgent 行为 |
+| `mixed` | 一页同时讲当前与未来，正文必须逐段说明边界 |
+
+工程事实仍以仓库 `docs/`、代码和测试为准。学习站负责把这些事实组织成一本能连续读下去的书，
+不会复制一套新的项目状态。

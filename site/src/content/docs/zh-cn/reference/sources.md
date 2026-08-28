@@ -4,6 +4,8 @@ description: BearAgent 用哪些书籍、论文、规范和官方工程资料理
 bearStatus: concept
 sourceRefs:
   - AI Agents in Depth
+  - agentic-design-patterns
+  - deepseek-harness
   - METR
   - OpenAI
   - Anthropic
@@ -29,11 +31,15 @@ sourceRefs:
   有限资源，以及怎样筛选信息；
 - [第 4 章：工具](https://bojieli.github.io/ai-agent-book/book/chapter4/)：理解 schema、Tool use 和外部
   行动之间的关系；
-- [第 6 章：Agent 的评估](https://bojieli.github.io/ai-agent-book/book/chapter6/)：从最终结果、过程和成本
+- [第 7 章：Agent 的评估](https://bojieli.github.io/ai-agent-book/book/chapter7/)：从最终结果、过程和成本
   理解 eval。
 
-读完第 1、2、4 章后，可以回到本站的[一项 Agent 任务怎样运转](../learn/agent-basics.md)；第 6 章适合
-和[Agent 仍然难在哪里](../learn/open-problems.md)对照阅读。
+读完第 1、2、4 章后，可以回到本站的[一项 Agent 任务怎样运转](/zh-cn/learn/agent-basics/)；第 7 章适合
+和[Agent 仍然难在哪里](/zh-cn/learn/open-problems/)对照阅读。
+
+- [Agentic Design Patterns 中文翻译](https://github.com/xindoo/agentic-design-patterns)：适合按 Reflection、
+  Tool use、Planning、Multi-Agent 等模式建立索引。模式名称帮助比较方案，不代表每个 Agent 都需要
+  同时实现这些模式。
 
 ## 想知道 Agent 现在能做到什么
 
@@ -112,6 +118,8 @@ Event 和恢复处理。BearAgent 当前未接入 MCP 或 A2A。
 
 ## 想看不同产品怎样组织文档和代码
 
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)：其开发者文档把快速开始、架构、
+  生命周期、能力边界、防御性模式和测试分开，适合参考“教程与工程参考各负其责”的组织方式；
 - [DeepTutor 官方仓库](https://github.com/HKUDS/DeepTutor)与
   [中文文档](https://docs.deeptutor.info/zh-cn/)：观察垂直 Agent 的任务组织和面向不同读者的导航；
 - [Proma 官方仓库](https://github.com/proma-ai/Proma)：观察 local-first 工作区、Provider、Skill 和 MCP
@@ -132,7 +140,7 @@ Event 和恢复处理。BearAgent 当前未接入 MCP 或 A2A。
   对照 `pyproject.toml`、distribution 构建、TestPyPI 和 PyPI 发布的标准流程。
 
 这些资料说明 Python packaging 工具怎样工作，不证明 BearAgent 已经发布。BearAgent 的实际发布版本、
-PyPI 项目归属和可用 CLI 仍以项目 release 记录与[当前状态](../project/status.md)为准。
+PyPI 项目归属和可用 CLI 仍以项目 release 记录与[当前状态](/zh-cn/project/status/)为准。
 
 ## 资料进入本站的规则
 

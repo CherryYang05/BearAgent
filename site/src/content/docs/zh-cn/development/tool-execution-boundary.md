@@ -58,6 +58,6 @@ FakeTool 检查了这个顺序。
 - `tests/security/test_tool_executor.py`：timeout、取消、异常、超大输出和敏感信息。
 
 F-0007 的三个只读 Tool 和 F-0008 的原子写入 Tool 已运行同一条 Executor 路径。具体路径检查见
-[F-0007 workspace 只读 Tool 实现导读](workspace-read-tools.md)，提交点和 Artifact 见
-[F-0008 原子输出与 Artifact 实现导读](atomic-output-artifacts.md)。F-0016 接线时，只调用
+[F-0007 workspace 只读 Tool 实现导读](/zh-cn/development/workspace-read-tools/)，提交点和 Artifact 见
+[F-0008 原子输出与 Artifact 实现导读](/zh-cn/development/atomic-output-artifacts/)。F-0016 接线时，只调用
 `ToolExecutor.execute`，并负责把前后状态写成 Tool Activity Event。

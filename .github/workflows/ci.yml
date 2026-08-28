@@ -67,3 +67,6 @@ jobs:
 
       - name: Check documentation links
         run: uv run python scripts/check_docs.py
+
+      - name: Check documentation governance
+        run: uv run python scripts/check_governance.py

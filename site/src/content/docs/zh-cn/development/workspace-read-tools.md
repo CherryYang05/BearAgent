@@ -88,5 +88,5 @@ Windows 普通用户可能没有创建 symlink 的权限，因此该项会在本
 4. Agent Loop 只能调用 `ToolExecutor`，不能直接调用具体 adapter。
 
 F-0007 仍只负责读取，不写 Event，也不修改 SQLite。F-0008 的写入实现复用同一 boundary，但保持在
-独立模块；详见[原子输出与 Artifact 实现导读](atomic-output-artifacts.md)。F-0016 负责 Agent Loop 和
+独立模块；详见[原子输出与 Artifact 实现导读](/zh-cn/development/atomic-output-artifacts/)。F-0016 负责 Agent Loop 和
 Event 接线。

@@ -66,5 +66,5 @@ Runtime 必须保留这个事实，然后禁止下一次 Activity；它不能为
 确定性计算状态是恢复的前提，但不是完整恢复。当前没有 SQLite 启动扫描、Checkpoint、重试
 Attempt 或 `UNKNOWN`。P2 才会决定进程重启后哪些 Activity 能重试、哪些必须停住。
 
-继续阅读[逐条读懂一次 Run](run-event-reducer-walkthrough.md)，或进入
-[F-0002 代码导读](../development/run-reducer-and-budgets.md)。
+继续阅读[逐条读懂一次 Run](/zh-cn/learn/run-event-reducer-walkthrough/)，或进入
+[F-0002 代码导读](/zh-cn/development/run-reducer-and-budgets/)。

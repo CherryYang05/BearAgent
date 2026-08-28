@@ -3,6 +3,7 @@ title: "Feature: <name>"
 status: draft
 spec_id: F-NNNN
 milestone: P<n>
+change_level: S1
 owner: <name>
 created: YYYY-MM-DD
 last_updated: YYYY-MM-DD
@@ -14,83 +15,71 @@ related_adrs: []
 
 Filename: `docs/specs/F-NNNN-<slug>.md`
 
-## 1. 为什么现在要做
+S1 写完核心部分即可；不适用的条件部分直接写 `N/A` 和原因。S2 必须展开状态、失败恢复、安全、
+迁移与回退，并创建 ADR 和 Plan。不要为了填模板复制代码结构或生成完整类/函数清单。
 
-先写一个具体场景：谁在什么情况下遇到什么问题？仓库中有哪些证据说明问题确实存在？
+## 1. 问题与证据（S1/S2）
 
-## 2. 本次交付
+谁在什么情况下遇到什么问题？仓库中有哪些代码、测试、日志或用户路径说明问题确实存在？
+
+## 2. 目标与非目标（S1/S2）
+
+### 本次交付
 
 - G-1:
 
-## 3. 本次不做
+### 本次不做
 
 - NG-1:
 
-## 4. 需要先说明的约定
-
-只解释本功能新出现的名词。先给例子，再给定义；已经在架构术语表中的词不重复改名。
-
-## 5. 使用场景
+## 3. 场景与可观察行为（S1/S2）
 
 ### Scenario A
 
-用自然语言写清前提、动作和可观察结果；需要严格验收时再补 Given / When / Then。
-
-## 6. 必须满足的行为
+写清前提、动作和用户或调用方看到的结果。只有需要严格验收时才补 Given / When / Then。
 
 - FR-1:
 - FR-2:
 
-## 7. 对外入口和模块连接
+## 4. 对外入口与模块连接（S1/S2）
 
-CLI、API、Tool、Event、配置或 Python 接口有什么变化？同时说明谁调用它、结果交给谁。没有变化则写“无”。
+CLI、API、Tool、Event、配置或 Python 接口有什么变化？谁调用它，结果交给谁？没有变化则写 `N/A`
+和原因。
 
-## 8. 状态和保存的数据
+## 5. 状态与持久化（S2；S1 按需）
 
-说明状态怎样变化、哪些事实会保存、旧数据怎样继续读取。没有持久化则明确写出。
+说明状态转换、保存的事实、兼容读取、migration 和 projection。没有状态或持久化变化时写 `N/A`。
 
-## 9. 失败时会发生什么
+## 6. 失败、恢复与安全边界（S1 简述；S2 完整）
 
-分别说明超时、重试、取消、进程中断、部分成功和 `UNKNOWN`。不要只列名词；写清用户最终看到的状态。
+写清适用的超时、取消、进程中断、部分成功、重试、`UNKNOWN`、权限、secret、输入校验和资源限制。
+不要只列名词；说明失败后用户看到什么，以及系统可以或不可以继续做什么。
 
-## 10. 安全与隐私
+## 7. 上线与回退（S2；S1 按需）
 
-权限、信任边界、secrets、输入校验、资源限制。
+说明启用顺序、兼容窗口、feature flag、migration 和可执行回退。没有上线动作时写 `N/A`。
 
-## 11. 怎样检查执行过程
+## 8. 验收标准与证据（S1/S2）
 
-用户或开发者需要看到哪些 Event、日志、trace、指标和审计信息？
+每个标准必须能够二值判断，并映射到具体测试、脚本、报告或人工演练。
 
-## 12. 上线与回退
+| AC | 可判断的结果 | 证据路径或命令 |
+|---|---|---|
+| AC-1 |  |  |
+| AC-2 |  |  |
 
-本地/服务器启用顺序、feature flag、迁移与回退。
+## 9. 文档影响（S1/S2）
 
-## 13. 验收标准
+每个表面都必须判断，但不要求每个表面都发生修改。没有影响时写 `N/A` 和具体原因。
 
-- AC-1: 可执行且二值判断的标准。
-- AC-2:
+| 表面 | 更新路径，或 `N/A` + 原因 |
+|---|---|
+| Engineering `docs/` |  |
+| Site beginner path |  |
+| Site developer docs |  |
+| Site current status |  |
+| Generated reference |  |
 
-## 14. 验证方式
-
-- Unit:
-- Contract:
-- Integration:
-- Recovery:
-- Security:
-- Eval/manual:
-
-## 15. 文档同步
-
-- [ ] Engineering source of truth (`docs/`)
-- [ ] Site beginner learning path
-- [ ] Site developer documentation
-- [ ] Site current status / milestone summary
-- [ ] Architecture / ADR
-- [ ] Deployment docs
-- [ ] Generated reference
-
-每个 Feature 都要检查以上三个 `site/` 入口。不需要新文章时，写出准备更新的现有页面。
-
-## 16. 尚未决定的问题
+## 10. 尚未决定的问题（S1/S2）
 
 - OQ-1:

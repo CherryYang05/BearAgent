@@ -3,6 +3,42 @@
 本页说明当前已经实现的配置契约。需要可复制的起点时，请使用仓库根目录的
 [config.example.json](../../config.example.json)；实际密钥只写入被 Git 忽略的 `data/config.json`。
 
+初学者最容易混淆两个文件：
+
+```text
+data/config.json
+  回答“连接哪个模型服务”：protocol、base_url、api_key、models
+
+data/p1-run-profile.json
+  回答“这次 Agent 怎样运行”：provider_id、instructions、Tool、预算
+```
+
+Profile 通过 `provider_id` 引用 config。它不会复制 API key、URL 或模型价格。
+
+## 从最小例子开始
+
+下面只展示字段关系；请从仓库示例复制，不要把占位值直接用于运行：
+
+```json
+{
+  "schema_version": 1,
+  "providers": [
+    {
+      "provider_id": "my-provider",
+      "name": "My model service",
+      "protocol": "openai_chat_completions",
+      "base_url": "https://example.invalid/v1",
+      "api_key": "replace-only-in-local-data-file",
+      "models": [{ "model_id": "my-model" }],
+      "default_model": "my-model"
+    }
+  ]
+}
+```
+
+这不是“自动发现”配置。BearAgent 不根据公司名或 URL 猜协议，也不会在一个协议失败后把同一份
+Prompt 和 key 试发给另一个端点。
+
 ## config v1
 
 顶层对象和 Provider 条目都拒绝未声明字段。
@@ -44,3 +80,15 @@ Authorization header 或配置路径。
 
 旧的 [RunProfile v1 示例](../../examples/run-profile-v1.example.json)仍用于兼容已有配置。新配置应使用
 config v1 与 RunProfile v2。
+
+## 配置失败时先看哪里
+
+| 现象 | 先检查 | 为什么在 Run 创建前失败 |
+|---|---|---|
+| 找不到 Provider | profile 的 `provider_id` 是否与 config 完全一致 | 不允许静默换到另一个 Provider |
+| 找不到默认模型 | `default_model` 是否出现在同一条目的 `models` | 不把未知模型名交给 SDK |
+| URL 被拒绝 | 是否为绝对 HTTPS URL，是否含 query、fragment 或账号信息 | 避免把凭据和不稳定参数混进 endpoint |
+| protocol 被拒绝 | 是否为三种精确枚举之一 | adapter 选择必须可审计 |
+| key 看起来正确但仍失败 | 是否有首尾空白、换行或复制进了错误文件 | config 对 secret 仍做有限边界校验 |
+
+更完整的操作和退出码见[命令行手册](../../site/src/content/docs/zh-cn/guides/cli.md)。

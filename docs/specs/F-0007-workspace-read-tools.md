@@ -5,8 +5,8 @@ spec_id: F-0007
 milestone: P1
 owner: CherryYang05
 created: 2026-08-16
-last_updated: 2026-08-16
-implemented_in: "codex/F-0007-workspace-read-tools"
+last_updated: 2026-08-27
+implemented_in: "PR #10"
 related_adrs:
   - ADR-0004
   - ADR-0005

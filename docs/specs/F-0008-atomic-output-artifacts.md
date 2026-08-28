@@ -5,8 +5,8 @@ spec_id: F-0008
 milestone: P1
 owner: CherryYang05
 created: 2026-08-17
-last_updated: 2026-08-17
-implemented_in: "codex/F-0008-atomic-output-artifacts"
+last_updated: 2026-08-27
+implemented_in: "PR #11"
 related_adrs:
   - ADR-0004
   - ADR-0005

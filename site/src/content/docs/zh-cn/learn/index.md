@@ -1,96 +1,105 @@
 ---
-title: P1 学习路线：先会用，再看懂
-description: 先从命令行跑通一次文件任务，再沿同一条 Run 理解 Agent、Event、安全边界和架构取舍。
-bearStatus: concept
+title: 全书阅读地图：从会用到会研究
+description: 六部分、两条捷径和一套每章都能复用的学习方法。
+bearStatus: mixed
 sourceRefs:
   - AI Agents in Depth
+  - agentic-design-patterns
+  - deepseek-harness
   - F-0001
   - F-0002
   - F-0003
   - F-0004
+  - F-0005
   - F-0006
   - F-0007
   - F-0008
   - F-0016
-  - F-0005
   - F-0017
 ---
 
-这条主路径始终使用同一个例子：用户要求 Agent 阅读仓库文档，并把总结写进
-`outputs/summary.md`。先看到命令和结果，再解释背后的模块；不要求读者先读 Feature 历史或背完整
-术语表。
+你不需要先读完全部 Spec，也不需要先背 Agent 术语。本书始终使用同一项任务：
 
-:::note[页面会明确标出实现状态]
-P1 的 CLI、文件 Tool、SQLite、Agent Loop 和查询入口已经接通；DeepSeek V4 suite v1.1.1 已通过
-真实 5/5，P1 已关闭。出现恢复、Approval 或 sandbox 时，页面会直接标明它们属于后续阶段。
+> 阅读 workspace 中的项目资料，把一份总结写进 `outputs/summary.md`。
+
+我们先让它运行，再一层层解释是谁调用模型、谁执行 Tool、谁保存 Event、谁阻止越界。读到开发者
+部分时，你会沿同一条链进入源码和测试。
+
+:::note[开始前知道两件事就够了]
+P1 的 CLI、SQLite、模型 adapter、workspace Tool 和 Agent Loop 已经接通。P2 的进程中断恢复、P3 的
+Approval 与隔离 runner 仍是后续计划。页面一旦跨过这条边界，会直接标明。
 :::
+
+## 六部分分别解决什么问题
+
+| 部分 | 读者问题 | 读完能做到 |
+|---|---|---|
+| 第一部：先亲手跑一次 | “这个项目到底怎么用？” | 配置模型，启动 Run，查看 Artifact、状态和 Event |
+| 第二部：看懂 Agent 运行 | “Model、Tool、Runtime 各干什么？” | 画出一次 Run 的循环，解释状态和预算来源 |
+| 第三部：理解安全边界 | “模型为什么不能直接读写文件？” | 解释 adapter、Policy、路径边界和原子提交 |
+| 第四部：拼出系统架构 | “这些模块为什么这样分？” | 看懂 interface、application、runtime、port 和 adapter |
+| 第五部：沿代码继续学习 | “从哪个文件开始读，怎么验证？” | 顺着调用链找到实现、契约和失败测试 |
+| 第六部：走向研究与扩展 | “今天还有哪些问题没有解决？” | 把恢复、隔离、评测和长任务变成研究问题 |
 
 ```mermaid
 flowchart LR
-    A["1. 跑 CLI"] --> B["2. 分清 Model / Tool / Runtime"]
-    B --> C["3. 跟完一条 Run"]
-    C --> D["4. 看 Event、状态和失败"]
-    D --> E["5. 理解架构取舍"]
+    A["运行一个 Run"] --> B["观察 Event 与 Artifact"]
+    B --> C["解释 Agent Loop"]
+    C --> D["拆开安全边界"]
+    D --> E["进入源码与测试"]
+    E --> F["提出研究问题"]
 ```
 
-## 1. 先跑通 P1 的命令行
+## 第一部：先亲手跑一次
 
-从[P1 命令行完整使用手册](../guides/cli.md)开始。先用零预算 profile 验证 `run/inspect/events`，
-再决定是否配置真实 Provider。你会先看见 Run ID、状态、Activity、Artifact 和有序 Event，而不是
-先面对内部类名。
+从[完整命令行手册](/zh-cn/guides/cli/)开始。它集中说明安装、配置、`doctor`、`run`、`inspect`、
+`events`、退出码、数据位置和排错，不要求你在 Feature 页面之间来回拼步骤。
 
-## 2. 分清模型、Tool 和 Runtime
+随后读[配置一次模型服务](/zh-cn/learn/configure-model-service/)和[运行、检查与读取 Event](/zh-cn/learn/run-inspect-events/)。
+此时先把 Run ID、Artifact 和有序 Event 看成“程序给你的收据”，还不用理解全部字段。
 
-[一项 Agent 任务怎样运转](agent-basics.md)从最小执行循环开始。你会看到模型只是提出下一步，
-文件访问、预算和权限都由 Runtime 控制。
+## 第二部：看懂 Agent 运行
 
-## 3. 跟完一条完整 Run
+依次阅读：
 
-[一次文件任务怎样走完整条执行链](agent-loop-file-task.md)把前面的边界接起来。你会看到 Context
-怎样只从已提交 Event 重建、外部调用为什么发生在 started Event 之后，以及 Tool 失败怎样回到模型。
+1. [一项 Agent 任务怎样运转](/zh-cn/learn/agent-basics/)：分清 Model、Context、Tool 与 Runtime；
+2. [一次文件任务的完整链路](/zh-cn/learn/agent-loop-file-task/)：跟完模型—Tool—模型循环；
+3. [状态和预算怎样计算](/zh-cn/learn/runtime-state-and-budgets/)：理解 Event 与 Reducer；
+4. [逐条读懂一次 Run](/zh-cn/learn/run-event-reducer-walkthrough/)：把抽象规则落到事件序列；
+5. [Event 为什么是事实来源](/zh-cn/learn/durable-events/)：分清“能够重开查询”和“能够恢复执行”。
 
-接着读[一次请求怎样穿过 BearAgent](../architecture/runtime-flow.md)，把 CLI、Application、Provider、
-ToolExecutor 和 SQLite 放进同一张图。
+## 第三部：理解安全边界
 
-如果要使用自己的模型服务，再读[配置一次模型服务，运行不同目标](configure-model-service.md)。它说明
-config v1、RunProfile v2、三种 wire protocol 以及为什么 BearAgent 不猜协议、不 fallback。
+这部分从四个常见误解出发：
 
-## 4. 看懂状态、预算和已保存事实
+- “SDK 对象直接传进 Runtime 更省事” → [模型为什么需要 adapter](/zh-cn/learn/model-provider-boundary/)；
+- “模型都选择 Tool 了，直接调用就行” → [Tool 请求为什么过四道检查](/zh-cn/learn/tool-execution-boundary/)；
+- “拒绝 `..` 就不会越界” → [路径怎样留在 workspace](/zh-cn/learn/workspace-read-boundary/)；
+- “写文件只要 `write_text`” → [为什么不能直接覆盖文件](/zh-cn/learn/atomic-output-boundary/)。
 
-[状态和预算怎样计算](runtime-state-and-budgets.md)解释 Event 与 Reducer 的分工，以及模型次数、
-token、费用、总时间和 Tool 次数何时记账。
+最后用[失败后先问哪三个问题](/zh-cn/learn/recovery-authority-isolation/)把 P1 的记录、P2 的恢复和 P3 的授权/
+隔离分开。
 
-[逐条读懂一次 Run](run-event-reducer-walkthrough.md)把一个模型调用、一次读文件和一次预算拒绝连在
-一起。[持久事实与安全恢复的边界](durable-events.md)随后解释：SQLite 能重开查询，不等于进程会自动
-恢复。
+## 第四、五部：从架构进入源码
 
-## 5. 理解 P1 最重要的取舍
+先读[架构总览](/zh-cn/architecture/)和[一次请求怎样穿过 Runtime](/zh-cn/architecture/runtime-flow/)，再进入
+[源码阅读路线](/zh-cn/development/)。源码页不会只列目录：每篇都会给出读代码的顺序、要守住的不变量、
+最小实验和对应测试。
 
-[P1 为什么这样设计](../architecture/p1-decisions.md)集中解释九项决定：为什么先用 CLI/SQLite，为什么
-核心不传 SDK 对象，为什么状态来自 Event，为什么 Tool 必须经过默认拒绝 Policy，为什么路径不跟随
-链接，为什么输出原子替换，以及为什么 timeout 不会自动重试。
+## 第六部：把困惑变成研究问题
 
-读完后，进入[开发者代码路线](../development/)；它按实际调用关系链接到实现和测试。
+[Agent 今天能做什么](/zh-cn/learn/agents-today/)帮助你判断适合 Agent 的任务形状；[Agent 仍然难在哪里](/zh-cn/learn/open-problems/)
+把长任务、Context、评测、安全、恢复和多 Agent 协作拆成可研究的问题。参考项目只用来解释通用
+概念，不能证明 BearAgent 已经具备同样能力。
 
-## 按问题继续深挖
+## 只有半小时，走这条捷径
 
-| 想弄清的问题 | 页面 |
-|---|---|
-| Provider SDK 为什么不能进入 Runtime | [为什么模型服务需要独立边界](model-provider-boundary.md) |
-| Tool 请求为什么不能直接执行 | [一个 Tool 请求为什么要过四道检查](tool-execution-boundary.md) |
-| Windows/Unix 路径怎样统一并防逃逸 | [workspace 路径边界](workspace-read-boundary.md) |
-| 为什么输出不会留下半份目标 | [原子输出边界](atomic-output-boundary.md) |
-| CLI 与 EventStore 怎样接线 | [从命令行运行并检查一次 Run](run-inspect-events.md) |
+1. [BearAgent 要解决什么问题](/zh-cn/start/what-is-bearagent/)；
+2. [一次文件任务的完整链路](/zh-cn/learn/agent-loop-file-task/)；
+3. [一次请求怎样穿过 Runtime](/zh-cn/architecture/runtime-flow/)；
+4. [现在实现到了哪里](/zh-cn/project/status/)。
 
-行业现状、研究问题和 F-0016 之前的分阶段实现记录放在扩展阅读中，不再打断主路径：
-[Agent 现在发展到哪一步](agents-today.md)、[Agent 仍然难在哪里](open-problems.md)、
-[F-0016 前的实现快照](before-agent-loop.md)。
+## 每章怎样读最有效
 
-当前这条路径已覆盖 F-0017 的离线实现和 DeepSeek V4 suite v1.1.1 真实 5/5。崩溃恢复和用户授权
-分别属于 P2、P3。
-
-## 6. 分清恢复、授权和隔离
-
-[一次失败后，Runtime 应先问哪三个问题](recovery-authority-isolation.md)从写文件超时开始，解释
-Activity 与 Attempt、副作用分类、`UNKNOWN`、参数绑定 Approval 和隔离 runner。页面也说明 hard
-budget 为什么仍要保留，以及 Routing、MCP 和 Memory 为什么不属于 P2/P3。
+先回答开头的具体问题；再自己画一遍流程；然后打开“代码位置”中的第一个文件；最后只运行该章列出
+的最小测试。能够用自己的话解释“失败时会看到什么”，比记住类名更重要。

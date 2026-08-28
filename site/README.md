@@ -1,10 +1,10 @@
-# BearAgent 文档站
+# BearAgent 中文学习书与开发者文档
 
 `site/` 是 BearAgent 的中文学习和开发者网站。工程事实仍由仓库中的 `docs/`、代码和测试确认；
 这里用连续例子解释这些事实，并明确区分已经实现和未来计划。
 
-公开地址：`https://cherryyang05.github.io/BearAgent/`。代码合并后仍需在仓库 Pages 设置中选择
-GitHub Actions 作为 Source，首次部署成功后该地址才会生效。
+它是仓库中的静态文档展示站。当前交付包括本地开发、生产构建、预览和 CI 检查；线上版本之后会
+部署到项目自己的服务器。本仓库现阶段只生成 `site/dist/`，不包含自动发布、服务器凭据或域名配置。
 
 ## 本地运行
 
@@ -15,8 +15,7 @@ npm --prefix=site ci
 npm run dev --prefix=site
 ```
 
-访问 `http://localhost:4321/BearAgent/zh-cn/`。本地也保留 `/BearAgent/`，这样可以提前发现只在
-GitHub Pages 仓库子路径下才会出现的错误链接。
+访问 `http://localhost:4321/zh-cn/`。
 
 验证生产构建和本地搜索：
 
@@ -27,18 +26,28 @@ npm run preview --prefix=site
 
 `site/dist/` 是可重新生成的构建产物，不提交 Git。
 
-## 发布
+## 构建边界
 
-`.github/workflows/deploy-docs.yml` 在 `site/` 变更进入 `main` 后构建并发布 GitHub Pages。普通 PR
-仍只执行 CI 构建，不会部署。workflow 不需要仓库 secret，只使用 GitHub Pages 的短期身份。
+普通 CI 会锁定安装依赖并构建站点，用来发现损坏的 Front Matter、路由、MDX、Mermaid 和搜索索引。
+仓库没有文档部署 workflow，也不需要部署凭据。自有服务器的发布目录、反向代理、TLS 和更新方式
+将在部署前单独确定，不与普通 CI 构建耦合。
 
-## 内容怎样分工
+## 内容怎样像一本书一样分工
 
-- `guides/cli.md`：独立维护 P1 的安装、配置、命令、退出码和排错；
-- `learn/`：按“先会用，再看懂”的顺序解释一次 Run；
-- `architecture/`：解释 Runtime、port、adapter、关键取舍和长期边界；
-- `development/`：提供代码入口、修改约束和验证命令；
-- `project/`：说明产品方向、阶段顺序和当前实现状态。
+- 序章：先回答 BearAgent 是什么、现在能做什么；
+- 第一部：独立 CLI 手册、模型配置和一次真实 Run；
+- 第二部：Model、Context、Tool、Runtime、Event、状态与预算；
+- 第三部：adapter、Policy、workspace 路径和原子输出；
+- 第四部：稳定架构关系与 P1 取舍；
+- 第五部：沿实际调用链进入代码和测试；
+- 第六部：行业现状、研究问题和 BearAgent Roadmap；
+- 附录：术语、来源、构建、发布和历史快照。
 
 CLI 精确契约仍由 F-0005、Schema、代码和测试确认；使用手册负责把它们组织成可执行流程。每个
 Feature 完成时都要检查以上相关页面。不要复制 Spec 原文，也不要用机械术语替换代替重写。
+
+`public/images/bearagent-recovery-cover-4k.webp` 是 GPT Image 生成后以高质量重采样入库的
+3840×2160 章节插画。它只建立“意图—执行—证据—判断”的视觉印象，不承载精确标签。
+`public/images/runtime-boundary.svg` 是可编辑、可用于论文和宣传材料的 3840×2160 矢量母版；同目录的
+`runtime-boundary-4k.png` 是便于演示软件使用的 4K 导出。精确时序仍使用 Mermaid。新增图片必须写
+alt，并检查桌面和 390px 手机裁切。

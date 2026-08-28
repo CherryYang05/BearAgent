@@ -5,8 +5,8 @@ spec_id: F-0005
 milestone: P1
 owner: CherryYang05
 created: 2026-08-20
-last_updated: 2026-08-20
-implemented_in: "codex/F-0005-cli-run-inspect-events"
+last_updated: 2026-08-27
+implemented_in: "PR #13"
 related_adrs: [ADR-0003, ADR-0004, ADR-0009, ADR-0010, ADR-0013, ADR-0014]
 ---
 

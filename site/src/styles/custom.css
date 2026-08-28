@@ -1,38 +1,276 @@
 :root {
-  --sl-color-accent-low: #10244f;
-  --sl-color-accent: #ffad27;
-  --sl-color-accent-high: #ffe0a1;
+  --sl-color-accent-low: #172b50;
+  --sl-color-accent: #ffb13b;
+  --sl-color-accent-high: #ffe4ad;
   --sl-color-white: #f8fafc;
-  --sl-color-gray-1: #e7edf7;
-  --sl-color-gray-2: #b7c3d8;
-  --sl-color-gray-3: #8290aa;
-  --sl-color-gray-4: #53617a;
-  --sl-color-gray-5: #34425c;
-  --sl-color-gray-6: #1e2a43;
-  --sl-color-black: #0a1430;
+  --sl-color-gray-1: #e8edf6;
+  --sl-color-gray-2: #b8c4d6;
+  --sl-color-gray-3: #8491a7;
+  --sl-color-gray-4: #56647b;
+  --sl-color-gray-5: #35435b;
+  --sl-color-gray-6: #1c2941;
+  --sl-color-black: #09142b;
+  --bear-navy: #10213f;
+  --bear-radius: 1.15rem;
+  --bear-shadow: 0 18px 50px rgb(6 20 45 / 14%);
 }
 
 :root[data-theme='light'] {
-  --sl-color-accent-low: #fff0cc;
-  --sl-color-accent: #a75b00;
-  --sl-color-accent-high: #3a2100;
-  --sl-color-white: #0a1430;
-  --sl-color-gray-1: #17223b;
-  --sl-color-gray-2: #33415c;
-  --sl-color-gray-3: #5b6982;
-  --sl-color-gray-4: #97a3b7;
-  --sl-color-gray-5: #cbd3df;
-  --sl-color-gray-6: #e8edf4;
-  --sl-color-gray-7: #f6f8fb;
-  --sl-color-black: #ffffff;
+  --sl-color-accent-low: #fff0cd;
+  --sl-color-accent: #9c5300;
+  --sl-color-accent-high: #351d00;
+  --sl-color-white: #0a1530;
+  --sl-color-gray-1: #17233a;
+  --sl-color-gray-2: #34425a;
+  --sl-color-gray-3: #5d6a80;
+  --sl-color-gray-4: #99a4b5;
+  --sl-color-gray-5: #ccd3de;
+  --sl-color-gray-6: #e9edf3;
+  --sl-color-gray-7: #f7f8fb;
+  --sl-color-black: #fffdf9;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-variant-ligatures: contextual;
+}
+
+.site-title {
+  font-weight: 760;
+  letter-spacing: -0.02em;
+}
+
+.site-title img {
+  width: auto;
+  height: 2.7rem;
+  max-width: min(13.5rem, 52vw);
+}
+
+.hero {
+  gap: clamp(2rem, 6vw, 5rem);
+  padding-block: clamp(3.4rem, 9vw, 7rem);
 }
 
 .hero .tagline {
-  max-width: 44rem;
+  max-width: 42rem;
+  font-size: clamp(1rem, 1.5vw, 1.18rem);
+  line-height: 1.75;
+}
+
+.hero h1 {
+  max-width: 16ch;
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+}
+
+.sl-markdown-content {
+  --sl-content-width: 48rem;
+  font-size: 1.02rem;
+  line-height: 1.82;
+}
+
+.sl-markdown-content > h2 {
+  margin-top: 3.25rem;
+  padding-top: 0.4rem;
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  letter-spacing: -0.025em;
+}
+
+.sl-markdown-content > h3 {
+  margin-top: 2.2rem;
+}
+
+.sl-markdown-content p,
+.sl-markdown-content li {
+  text-wrap: pretty;
+}
+
+.sl-markdown-content table {
+  font-size: 0.94rem;
+}
+
+.sl-markdown-content th {
+  background: color-mix(in srgb, var(--sl-color-accent-low) 60%, transparent);
+}
+
+.card {
+  border-radius: var(--bear-radius);
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.card:hover {
+  border-color: var(--sl-color-accent);
+  box-shadow: 0 12px 32px rgb(6 20 45 / 10%);
+  transform: translateY(-2px);
+}
+
+.book-cover {
+  position: relative;
+  overflow: hidden;
+  margin: 1rem 0 2.6rem;
+  border: 1px solid color-mix(in srgb, var(--sl-color-gray-5) 65%, transparent);
+  border-radius: 1.5rem;
+  background: #f5efe4;
+  box-shadow: var(--bear-shadow);
+}
+
+.book-cover img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.book-cover figcaption {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  max-width: 22rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 0.75rem;
+  background: rgb(9 20 43 / 78%);
+  color: #fff7e8;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  backdrop-filter: blur(12px);
+}
+
+.reading-promise,
+.chapter-intro {
+  margin: 2.5rem 0;
+  padding: clamp(1.3rem, 4vw, 2rem);
+  border: 1px solid color-mix(in srgb, var(--sl-color-accent) 35%, var(--sl-color-gray-5));
+  border-radius: var(--bear-radius);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--sl-color-accent-low) 42%, transparent), transparent 70%),
+    var(--sl-color-black);
+}
+
+.reading-promise strong,
+.chapter-intro strong {
+  color: var(--sl-color-accent-high);
+}
+
+.part-label {
+  display: inline-flex;
+  margin-bottom: 0.65rem;
+  color: var(--sl-color-accent);
+  font-size: 0.78rem;
+  font-weight: 760;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.book-map {
+  counter-reset: book-part;
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0 2.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.book-map li {
+  counter-increment: book-part;
+  display: grid;
+  grid-template-columns: 2.4rem 1fr;
+  gap: 0.8rem;
+  align-items: start;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--sl-color-gray-6) 42%, transparent);
+}
+
+.book-map li::before {
+  content: counter(book-part, decimal-leading-zero);
+  color: var(--sl-color-accent);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.book-map a {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.book-map small {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--sl-color-gray-3);
+  line-height: 1.55;
 }
 
 .mermaid {
   overflow-x: auto;
-  padding-block: 1rem;
+  margin-block: 1.8rem;
+  padding: 1.4rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: var(--bear-radius);
+  background: color-mix(in srgb, var(--sl-color-gray-6) 35%, transparent);
   text-align: center;
+}
+
+.chapter-illustration {
+  overflow: hidden;
+  margin-block: 2rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: var(--bear-radius);
+  background: #f5efe4;
+}
+
+.chapter-illustration img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.chapter-illustration figcaption {
+  padding: 0.7rem 0.9rem;
+  color: var(--sl-color-gray-3);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+@media (min-width: 50rem) {
+  .book-map {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 36rem) {
+  .hero {
+    padding-block: 2.5rem 3rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.45rem, 15vw, 3.6rem);
+  }
+
+  .book-cover {
+    margin-inline: -0.35rem;
+    border-radius: 1rem;
+  }
+
+  .book-cover img {
+    aspect-ratio: 16 / 9;
+  }
+
+  .book-cover figcaption {
+    position: static;
+    max-width: none;
+    border: 0;
+    border-radius: 0;
+    background: var(--bear-navy);
+  }
+
+  .sl-markdown-content {
+    font-size: 1rem;
+  }
 }

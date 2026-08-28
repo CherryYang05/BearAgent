@@ -5,7 +5,7 @@ spec_id: F-0000
 milestone: P0
 owner: CherryYang05
 created: 2026-08-09
-last_updated: 2026-08-13
+last_updated: 2026-08-27
 implemented_in: initial repository commit
 related_adrs:
   - ADR-0006
@@ -119,8 +119,8 @@ P0 只有 CLI 诊断输出；结构化 Run 日志由 P1 定义。
 - [x] Architecture
 - [x] ADR
 - [x] README
-- [ ] Deployment
-- [ ] Generated reference
+- [x] Deployment — N/A；P0 没有部署入口，边界由后续 Feature 定义。
+- [x] Generated reference — N/A；P0 尚未引入公开 schema。
 
 ## 16. 尚未决定的问题
 

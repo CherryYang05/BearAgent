@@ -22,6 +22,16 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 和有界 Agent Loop。F-0017 的 suite v1.1.1 已用 DeepSeek V4 经 production composition 通过四个普通
 任务与安全 canary；脱敏 report 和最终 Reality Check 完成，因此 F-0017/P1 已关闭。
 
+## 三十秒结论
+
+| 问题 | 当前答案 |
+|---|---|
+| 能在本机运行一个真实模型文件任务吗？ | 能，需要有效 config、非零预算和受限 workspace |
+| 能查询任务做过什么吗？ | 能，用 `inspect` 看状态，用 `events` 看有序事实 |
+| 程序中断后会自动继续吗？ | 不会，P2 尚未实现 |
+| 有用户 Approval 或真正的 sandbox 吗？ | 没有，P3 尚未实现 |
+| 文档站可以查看吗？ | 可以；在本地启动开发或生产预览，仓库不负责在线部署 |
+
 ## 已经可以验证
 
 | 已完成部分 | 现在能验证什么 |
@@ -37,7 +47,7 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 | F-0016 有界 Agent Loop | 从已提交 Event 构造 Context，串行调用模型与 Tool，保存 v2 事实；五个 Fake 任务在两种 Store 上通过 |
 | F-0005 生产 CLI 与查询 | `run/inspect/events`、严格 profile、production composition、分页查询和 human/JSON；零预算与 Provider 调用失败保留安全 terminal Run；五个任务通过真实 SQLite/Tools + Fake Provider |
 | F-0017 模型配置与 live gate | config v1、RunProfile v2、三种协议 adapter、RunCreated v3、production selector 与默认关闭的 runner；Fake 5/5 和 DeepSeek V4 live 5/5 分开验证 |
-| F-0015 文档站 | 中文 Starlight、搜索、Mermaid、由浅入深的 P1 路线、独立 CLI 手册和 Pages 发布配置 |
+| F-0015 文档站 | 中文 Starlight、搜索、Mermaid、六部分学习路线、独立 CLI 手册，以及本地开发、构建和预览 |
 
 ## P1 完成证据
 
@@ -48,9 +58,9 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 - 脱敏证据见
   [F-0017 P1 live report v1](https://github.com/CherryYang05/BearAgent/blob/main/docs/evidence/F-0017-p1-live-report-v1.json)。
 
-P1 当前怎样操作见[命令行完整使用手册](../guides/cli.md)；执行链和主要取舍分别见
-[一次请求怎样穿过 BearAgent](../architecture/runtime-flow.md)与
-[P1 为什么这样设计](../architecture/p1-decisions.md)。
+P1 当前怎样操作见[命令行完整使用手册](/zh-cn/guides/cli/)；执行链和主要取舍分别见
+[一次请求怎样穿过 BearAgent](/zh-cn/architecture/runtime-flow/)与
+[P1 为什么这样设计](/zh-cn/architecture/p1-decisions/)。
 
 ## 当前明确不能做
 
@@ -58,9 +68,8 @@ P1 当前怎样操作见[命令行完整使用手册](../guides/cli.md)；执行
 - `inspect/events` 只能查看已提交事实，不能 resume、retry 或修复非终态 Run；
 - RunCreated v3 只增加安全 Provider 选择；Tool 请求和 Artifact 仍随 v2 Event 写入 Store；
 - 还没有用户 Approval、sandbox、服务器 API 或独立 Artifact 查询表；
-- Pages workflow 只在 `main` 或手动触发时部署；F-0015 PR #14 仍待本次改动验证与合并，之后还要
-  确认仓库 Pages Source 和公开 URL；
-- `docs.bearguin.cn` 尚未配置，当前发布目标是 GitHub Pages 项目地址。
+- 文档站没有自动部署 workflow，也没有绑定域名或托管平台；这不是 F-0015 的未完成项；
+- `docs.bearguin.cn` 尚未配置。如果以后需要在线托管，应另行定义部署目标和验收标准。
 
 F-0002 的确定性重放只说明“同一串 Event 会算出同一状态”。它不是 P2 的崩溃恢复，也没有
 Checkpoint、Attempt、RecoveryDecision 或 `UNKNOWN` 处置。P3 的参数绑定 Approval 和隔离 runner、
