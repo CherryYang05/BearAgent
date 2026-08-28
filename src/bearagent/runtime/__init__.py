@@ -2,6 +2,7 @@
 
 from bearagent.runtime.budgets import check_activity_budget
 from bearagent.runtime.context import ContextBuilder, ContextBuilderError
+from bearagent.runtime.fingerprints import build_run_fingerprint
 from bearagent.runtime.policy import FixedToolPolicy
 from bearagent.runtime.pricing import estimate_model_cost_microusd
 from bearagent.runtime.reducer import RunReducerError, reduce_event, reduce_events
@@ -16,6 +17,7 @@ __all__ = [
     "ToolExecutor",
     "ToolRegistry",
     "check_activity_budget",
+    "build_run_fingerprint",
     "estimate_model_cost_microusd",
     "reduce_event",
     "reduce_events",

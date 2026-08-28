@@ -4,6 +4,8 @@ description: 跟随 Event 从校验、transaction、Reducer 到 projection，理
 bearStatus: implemented
 sourceRefs:
   - F-0003
+  - F-0018
+  - ADR-0016
   - SQLite documentation
 ---
 
@@ -80,6 +82,11 @@ get_run(run_id)           读取已验证的当前 projection
 写入触发完整性错误，它报告普通持久化失败；如果 Event 自己与已提交事实冲突，则报告
 `EventStoreConflictError`。两种情况对调用方的处理含义不同。
 
+F-0018 的 K5 会建立一个只在 pending Activity projection 写入时失败的 SQLite trigger。Event insert
+已经执行，但 projection 写入中止；transaction rollback 后换一个新的 Store 重开，Event 与 projection
+都停在之前的 `RunStarted`。CLI 也只能看到 sequence 2。这不是 mock 返回值，而是对现有 transaction
+边界的故障注入。
+
 ## 为什么每次操作都新开 connection
 
 标准库 `sqlite3` 是同步接口，公开方法用 `asyncio.to_thread` 避免阻塞事件循环。每次操作在工作线程
@@ -123,6 +130,7 @@ transaction，内存实现可以复制字典，但两者对合法与非法输入
 |---|---|
 | `tests/contract/test_event_store_contract.py` | 两种 store 是否保持同一使用方式 |
 | `tests/integration/test_sqlite_event_store.py` | WAL、重开、并发同 sequence、projection rollback、表和 sequence 损坏 |
+| `tests/recovery/test_crash_observability.py` | K1-K6 重开查询；K5 证明 Event/projection 没有部分提交 |
 | `tests/security/test_sqlite_event_store.py` | SQL-like payload 只作为数据、错误不泄漏内容和路径、锁超时、超大 payload |
 
 ```powershell

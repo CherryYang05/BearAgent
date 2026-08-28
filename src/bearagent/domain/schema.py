@@ -16,6 +16,11 @@ from bearagent.domain.agent import (
 from bearagent.domain.artifacts import Artifact
 from bearagent.domain.errors import ErrorInfo
 from bearagent.domain.events import Event
+from bearagent.domain.fingerprints import (
+    PolicyFingerprint,
+    RunFingerprint,
+    ToolFingerprint,
+)
 from bearagent.domain.ids import (
     ActivityId,
     ArtifactId,
@@ -50,6 +55,7 @@ from bearagent.domain.run_events import (
     RunCreatedPayload,
     RunCreatedPayloadV2,
     RunCreatedPayloadV3,
+    RunCreatedPayloadV4,
     RunFailedPayload,
     RunFailedPayloadV2,
     RunStartedPayload,
@@ -118,8 +124,11 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     ModelUsage,
     ModelPricing,
     PolicyDecision,
+    PolicyFingerprint,
     PreparedToolRequest,
     RunCreatedPayloadV3,
+    RunCreatedPayloadV4,
+    RunFingerprint,
     RunId,
     RunCreatedPayload,
     RunCreatedPayloadV2,
@@ -146,6 +155,7 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     ToolCallStartedPayload,
     ToolCallStartedPayloadV2,
     ToolExecutionRecord,
+    ToolFingerprint,
     ToolRequest,
     ToolResult,
     ToolSpec,

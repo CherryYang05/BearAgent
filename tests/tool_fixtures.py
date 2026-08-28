@@ -21,6 +21,7 @@ def build_tool_spec(
 ) -> ToolSpec:
     return ToolSpec(
         name=name,
+        spec_version="1",
         description="Read one test resource.",
         input_schema={
             "type": "object",

@@ -124,7 +124,13 @@ class ErrorInfo(DomainModel):
     category: ErrorCategory
     code: ErrorCode
     message: str = Field(min_length=1, max_length=MAX_ERROR_MESSAGE_CHARS)
-    retryable: bool = False
+    retryable: bool = Field(
+        default=False,
+        description=(
+            "Source-side observation that another attempt may succeed; never Runtime "
+            "permission to retry an Activity."
+        ),
+    )
     details: Mapping[str, SafeDetailValue] = Field(
         default_factory=dict,
         max_length=MAX_ERROR_DETAILS,

@@ -1,6 +1,6 @@
 ---
 title: ModelProvider 与三种协议 adapter 实现导读
-description: 从 config.json 走到 protocol factory、流事件翻译、Event v3 和 live gate。
+description: 从 config.json 走到 protocol factory、流事件翻译、v4 Provider selection 和 live gate。
 bearStatus: implemented
 sourceRefs:
   - F-0004
@@ -8,6 +8,7 @@ sourceRefs:
   - F-0017
   - ADR-0015
   - PLAN-F-0017
+  - F-0018
 ---
 
 一次 `bearagent run` 不会把“OpenAI 兼容”当成足够的配置。它先从 RunProfile 取得
@@ -16,6 +17,8 @@ sourceRefs:
 
 F-0004 建立 port 与首个 Responses adapter；F-0017 增加可复用配置、Chat Completions、Anthropic
 Messages、Event v3 和默认关闭的真实模型验收入口。三个 protocol 是产品边界，厂商名不是分支条件。
+F-0018 的新 Run 改写 v4，在同一个 RunCreated payload 中保留这份 Provider selection 并增加 contract
+fingerprint；v3 作为历史读取格式不变。
 
 ## 一次选择怎样进入模型调用
 
@@ -80,9 +83,9 @@ ToolCall 之前结束、完成后又出现关键事件、未知关键 event 或 
 防止 key 出现在配置 model 的 repr/JSON；factory 只在创建选定 adapter 时解封。
 
 Bootstrap 从默认模型构造 `unpriced` 的 `AgentConfig`；真实 gate 单独注入 pricing snapshot。新 Run 使用
-RunCreated v3 保存 `provider_id`、由非密钥 Provider/model 字段计算的 config version、protocol、配置
-model 和 pricing version。它不保存 base URL 或 key。旧 RunCreated v1/v2 与 RunProfile v1 继续可读，SQLite
-不需要新增表或列。
+RunCreated v4 保存 `provider_id`、由非密钥 Provider/model 字段计算的 config version、protocol、配置
+model、pricing version 和 contract fingerprint。它不保存 base URL 或 key。旧 RunCreated v1/v2/v3 与
+RunProfile v1 继续可读，SQLite 不需要新增表或列。
 
 缺少、空白或非法 key 会在数据库和 Run 创建前返回安全的 `invalid_input`。有效 key 不进入
 AgentConfig、Event、SQLite、CLI 输出或 live report。零预算仍会在创建 SDK client 前停止。
@@ -104,7 +107,7 @@ Attempt 的恢复与重试语义。
 - `tests/contract/test_anthropic_messages_provider.py`：Messages 生命周期、tool JSON 与 cached usage；
 - `tests/unit/test_provider_config.py`、`tests/unit/test_run_profile_versions.py`：catalog/profile 边界；
 - `tests/unit/test_provider_composition.py`：三种 protocol 的唯一 factory 选择与延迟缺 key；
-- `tests/integration/test_provider_selection_events.py`：RunCreated v3、查询与旧 Event 兼容；
+- `tests/integration/test_provider_selection_events.py`：RunCreated v4、fingerprint、SQLite 重开与旧 Event 兼容；
 - `tests/unit/test_p1_live_eval.py`、`tests/integration/test_p1_live_eval.py`：默认关闭的 preflight、
   五个隔离任务、SQLite 重开、rubric、canary 和脱敏 report；
 - `tests/architecture/test_import_boundaries.py`：SDK 不能进入 core。

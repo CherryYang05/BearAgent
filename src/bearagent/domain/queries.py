@@ -7,6 +7,7 @@ from pydantic import Field, model_validator
 from bearagent.domain._base import DomainModel
 from bearagent.domain.artifacts import Artifact
 from bearagent.domain.events import Event
+from bearagent.domain.fingerprints import RunFingerprint
 from bearagent.domain.ids import RunId
 from bearagent.domain.providers import ProviderSelection
 from bearagent.domain.runs import RunState
@@ -22,6 +23,7 @@ class RunInspection(DomainModel):
     state: RunState
     artifacts: tuple[Artifact, ...] = ()
     provider_selection: ProviderSelection | None = None
+    run_fingerprint: RunFingerprint | None = None
 
     @model_validator(mode="after")
     def require_one_consistent_run(self) -> Self:

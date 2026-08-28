@@ -8,6 +8,8 @@ sourceRefs:
   - F-0016
   - F-0017
   - ADR-0015
+  - F-0018
+  - ADR-0016
 ---
 
 你运行一个文件任务后，最先要回答的不是“模型说了什么”，而是三个更具体的问题：这次 Run 的 ID
@@ -29,8 +31,9 @@ bearagent run events <run-id> --after-sequence 0 --limit 100
 ```mermaid
 flowchart TB
     C["CLI 校验 objective 和路径"] --> B["bootstrap 读取 Run profile 和 BearAgent config"]
-    B --> G["按显式 protocol 组装一个 Provider、SQLite、Policy 和 workspace Tools"]
-    G --> L["AgentLoop 保存并执行 Run"]
+    B --> G["按显式 protocol 组装 Provider、SQLite、Policy 和 workspace Tools"]
+    G --> F["根据可信注册信息构造 RunFingerprint"]
+    F --> L["AgentLoop 保存并执行 Run"]
     L --> R["RunResult"]
     R --> H["human 或 JSON 输出"]
     D["inspect / events"] --> Q["application query service"]
@@ -65,9 +68,14 @@ RunStarted 和 `budget_exhausted` RunFailed；SDK client 不会创建，模型�
 ## inspect 与 events 看的是不同层次
 
 `inspect` 返回 Reducer 已计算出的完整 RunState，包括预算、usage、Activity、terminal Error 和最后
-sequence。新 Run 还显示 RunCreated v3 保存的 `provider_id`、config version、protocol、配置 model 和
-pricing version（普通 Run 为 `unpriced`），不显示 base URL 或 key。它也会分页扫描已提交的 v2 Tool completed Event，从
-`workspace.write` 结果重建 Artifact 元数据。如果 Event 总量超过可信上限，命令会明确失败，不会把不完整 Artifact 列表说成完整结果。
+sequence。新 Run 还显示 RunCreated v4 保存的 `provider_id`、config version、protocol，以及
+BearAgent/Policy/Tool contract fingerprints，不显示 base URL、key 或完整 Policy 配置。Tool fingerprint
+中的 `spec_version` 标识 schema 之外的 prepare/validation contract，SHA-256 标识完整注册时 ToolSpec。
+它们是声明身份，不是 Git 快照、权限或恢复证据。旧 v1-v3 Run 没有 fingerprint 时返回缺失，不会按
+当前配置伪造历史值。
+
+Query 还会分页扫描已提交的 Tool completed Event，从 `workspace.write` 结果重建 Artifact 元数据。如果
+Event 总量超过可信上限，命令会明确失败，不会把不完整 Artifact 列表说成完整结果。
 
 `events` 返回一页不可变事实，并带回 `next_after_sequence` 和 `has_more`。默认 human 输出每条只显示
 sequence、时间、类型和 schema version，不显示 payload。`--json` 是显式完整导出，可能包含用户目标、
@@ -79,7 +87,15 @@ sequence、时间、类型和 schema version，不显示 payload。`--json` 是�
 PENDING/RUNNING Activity；它不会猜测成功，也不会自动追加 RunFailed。若文件已经写成，但
 ToolCallCompleted 没有提交，查询也不会从文件系统反推一个 Artifact。
 
-自动恢复、retry、Attempt、Receipt 和 `UNKNOWN` 属于 P2。F-0017 已实现默认关闭的 live runner，
+F-0018 用独立子进程把这条规则落到了六个可复现边界：Tool requested/started、`os.replace` 前后、
+Event/projection transaction 和 Model started。最容易误判的是 replace 之后：磁盘上已经是新文件，
+但最后 committed fact 仍是 `ToolCallStarted`，所以 `inspect` 只显示 RUNNING。测试随后用新 SQLite
+adapter 和新的 CLI 进程读取，并确认 Provider/Tool 调用计数没有增加。
+
+`retryable=true` 也只说明错误来源认为另一次尝试可能成功；`ToolRetrySafety` 只是 Tool 声明的粗粒度
+提示。两者都不会让 P1 Runtime 获得重试权限。
+
+自动恢复、retry、Attempt、Receipt 和 `UNKNOWN` 仍属于 P2。F-0017 已实现默认关闭的 live runner，
 真实 gate 仍必须由项目所有者确认 Provider、model、pricing snapshot 和费用上限后单独执行。2026-08-23
 的 DeepSeek V4 suite v1.1.1 已通过 5/5，因此 F-0017/P1 已关闭；runner 默认状态没有改变。
 

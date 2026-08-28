@@ -14,6 +14,8 @@ sourceRefs:
   - ADR-0012
   - ADR-0013
   - ADR-0014
+  - ADR-0016
+  - F-0018
 ---
 
 P1 的目标不是“接一个模型，再给它几个函数”。它要让一次本地文件任务完成后，用户能回答：
@@ -81,6 +83,11 @@ projection，不是第二份事实来源。
 **重要边界：** Event 已持久化不等于 Runtime 会自动恢复。P1 可以重开数据库查询事实，但启动扫描、
 Checkpoint、Attempt 和恢复决定属于 P2。
 
+**Run 使用了哪套声明：** F-0018 让 bootstrap 根据 package version、固定 Policy 和 Registry 中的完整
+ToolSpec 构造 `RunFingerprint`，随 RunCreated v4 一次保存。Tool hash 会覆盖 schema、资源上限、副作用
+和 retry safety；`spec_version` 负责标识 schema 外的 prepare/validation contract。Fingerprint 不进入
+projection，也不是代码快照、权限或恢复证据。旧 Run 缺失时保持缺失，不能拿当前配置补历史。
+
 ## 4. 权限不来自模型或 Prompt
 
 **选择：** 模型只能提出 `ToolRequest`。真正执行必须经过：
@@ -138,6 +145,10 @@ Tool；返回后保存 completed/failed。
 **代价：** 无法并行读取多个文件，长任务吞吐量不是 P1 的优化目标。
 
 **得到什么：** 每次模型调用、Policy 决定、ToolResult、usage 和 Artifact 都能回到同一条 Run 记录。
+
+**进程退出证据：** K1-K6 用独立子进程在 requested/started、`os.replace` 前后、SQLite transaction 和
+Model started 边界直接退出。父进程只用重开的 SQLite、文件与新 CLI 进程判断。K4 明确展示“文件已变，
+但 committed fact 仍是 Tool RUNNING”，因此 P1 不补成功、不构造 Artifact，也不重试。
 
 ## 8. timeout 不会自动撤销或重试副作用
 

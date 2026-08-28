@@ -2,7 +2,11 @@
 
 import re
 from collections.abc import Iterable
+from typing import cast
 
+from pydantic import JsonValue
+
+from bearagent.domain.fingerprints import PolicyFingerprint
 from bearagent.domain.messages import TOOL_NAME_PATTERN
 from bearagent.domain.tools import (
     PolicyDecision,
@@ -12,6 +16,7 @@ from bearagent.domain.tools import (
     ToolSideEffect,
     ToolSpec,
 )
+from bearagent.runtime.fingerprints import policy_fingerprint
 
 _DENIED_SIDE_EFFECTS = frozenset(
     {
@@ -19,6 +24,7 @@ _DENIED_SIDE_EFFECTS = frozenset(
         ToolSideEffect.CODE_EXECUTION,
     }
 )
+_FIXED_POLICY_VERSION = "fixed-tool-policy-v1"
 
 
 class FixedToolPolicy:
@@ -34,11 +40,29 @@ class FixedToolPolicy:
                 raise ValueError("allowed Tool name is invalid")
             validated_names.append(name)
         self._allowed_tool_names = frozenset(validated_names)
+        contract: dict[str, JsonValue] = {
+            "policy_type": "fixed_tool_policy",
+            "version": _FIXED_POLICY_VERSION,
+            "allowed_tool_names": cast(JsonValue, sorted(self._allowed_tool_names)),
+            "hard_denied_side_effects": cast(
+                JsonValue,
+                sorted(effect.value for effect in _DENIED_SIDE_EFFECTS),
+            ),
+        }
+        self._fingerprint = policy_fingerprint(
+            version=_FIXED_POLICY_VERSION,
+            contract=contract,
+        )
 
     @property
     def allowed_tool_names(self) -> frozenset[str]:
         """Return the immutable trusted allowlist snapshot."""
         return self._allowed_tool_names
+
+    @property
+    def fingerprint(self) -> PolicyFingerprint:
+        """Return the snapshotted identity of this trusted static Policy contract."""
+        return self._fingerprint
 
     def evaluate(self, spec: ToolSpec, request: PreparedToolRequest) -> PolicyDecision:
         """Evaluate trusted Tool metadata and normalized arguments."""

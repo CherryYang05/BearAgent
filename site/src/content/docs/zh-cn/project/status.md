@@ -15,12 +15,15 @@ sourceRefs:
   - F-0015
   - F-0005
   - F-0017
+  - F-0018
+  - ADR-0016
 ---
 
 BearAgent 已有本地 `run/inspect/events` CLI。它用 config v1 与 RunProfile v2 显式选择
 Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、固定 Policy、workspace Tools
 和有界 Agent Loop。F-0017 的 suite v1.1.1 已用 DeepSeek V4 经 production composition 通过四个普通
-任务与安全 canary；脱敏 report 和最终 Reality Check 完成，因此 F-0017/P1 已关闭。
+任务与安全 canary；脱敏 report 和最终 Reality Check 完成，因此 F-0017/P1 已关闭。当前分支还用
+RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完成 K1-K6 进程退出观测基线。
 
 ## 三十秒结论
 
@@ -28,6 +31,7 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 |---|---|
 | 能在本机运行一个真实模型文件任务吗？ | 能，需要有效 config、非零预算和受限 workspace |
 | 能查询任务做过什么吗？ | 能，用 `inspect` 看状态，用 `events` 看有序事实 |
+| 能知道 Run 使用了哪版 Tool/Policy 声明吗？ | 新 Run 可以；`inspect` 显示版本和 SHA-256，legacy Run 明确缺失 |
 | 程序中断后会自动继续吗？ | 不会，P2 尚未实现 |
 | 有用户 Approval 或真正的 sandbox 吗？ | 没有，P3 尚未实现 |
 | 文档站可以查看吗？ | 可以；在本地启动开发或生产预览，仓库不负责在线部署 |
@@ -47,6 +51,7 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 | F-0016 有界 Agent Loop | 从已提交 Event 构造 Context，串行调用模型与 Tool，保存 v2 事实；五个 Fake 任务在两种 Store 上通过 |
 | F-0005 生产 CLI 与查询 | `run/inspect/events`、严格 profile、production composition、分页查询和 human/JSON；零预算与 Provider 调用失败保留安全 terminal Run；五个任务通过真实 SQLite/Tools + Fake Provider |
 | F-0017 模型配置与 live gate | config v1、RunProfile v2、三种协议 adapter、RunCreated v3、production selector 与默认关闭的 runner；Fake 5/5 和 DeepSeek V4 live 5/5 分开验证 |
+| F-0018 evidence hardening | ToolSpec/Policy contract fingerprint、RunCreated v4、legacy v1-v3 读取、retryable 非授权语义，以及 K1-K6 SQLite/CLI crash suite |
 | F-0015 文档站 | 中文 Starlight、搜索、Mermaid、六部分学习路线、独立 CLI 手册，以及本地开发、构建和预览 |
 
 ## P1 完成证据
@@ -66,7 +71,8 @@ P1 当前怎样操作见[命令行完整使用手册](/zh-cn/guides/cli/)；执�
 
 - SQLite 可以保存 Event 和 projection，但进程重启后不会自动继续 Run；
 - `inspect/events` 只能查看已提交事实，不能 resume、retry 或修复非终态 Run；
-- RunCreated v3 只增加安全 Provider 选择；Tool 请求和 Artifact 仍随 v2 Event 写入 Store；
+- RunCreated v4 增加安全 Provider 选择与 contract fingerprint；其余 Activity 继续复用 v2 payload shape；
+- K4 即使文件已经 replace，terminal Event 缺失时仍只显示 RUNNING；当前不会 reconcile 或自动补成功；
 - 还没有用户 Approval、sandbox、服务器 API 或独立 Artifact 查询表；
 - 文档站没有自动部署 workflow，也没有绑定域名或托管平台；这不是 F-0015 的未完成项；
 - `docs.bearguin.cn` 尚未配置。如果以后需要在线托管，应另行定义部署目标和验收标准。

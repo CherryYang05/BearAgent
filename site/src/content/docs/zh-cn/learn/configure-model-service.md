@@ -6,6 +6,7 @@ sourceRefs:
   - F-0017
   - ADR-0015
   - F-0005
+  - F-0018
 ---
 
 你不需要为每个问题生成一份 Provider JSON。下面两次运行复用同一份 `config.json` 和 RunProfile；
@@ -110,8 +111,9 @@ uv run bearagent run events <run-id> --json
 
 只有临时使用其他配置时，才需要用 `--config` 或 `--profile` 覆盖默认路径。
 
-缺少、空白或非法 key 时，config 会在创建数据库和 Run 前失败。v2 Run 只用 Event schema v3 保存
-`provider_id`、自动计算的 `config_version` 和 `protocol`，不会保存 base URL、key 或 HTTP header。
+缺少、空白或非法 key 时，config 会在创建数据库和 Run 前失败。新 Run 使用 Event schema v4 保存
+`provider_id`、自动计算的 `config_version`、`protocol` 与可信 contract fingerprint，不会保存 base
+URL、key 或 HTTP header。F-0017 引入的 Event v3 继续可读。
 用户不需要手工填写 `config_version`；非密钥 Provider/model 字段变化时，它会自动变化。
 
 Version 1 profile 仍可读取，并映射到 legacy `openai_responses` 与 `OPENAI_API_KEY`。这是已有配置的

@@ -114,6 +114,7 @@ def initial_events(agent_config: AgentConfig | None = None) -> tuple[Event, ...]
 def tool_spec(name: str) -> ToolSpec:
     return ToolSpec(
         name=name,
+        spec_version="1",
         description=f"Execute {name} safely.",
         input_schema={"type": "object", "properties": {"path": {"type": "string"}}},
         output_schema={"type": "object"},
@@ -364,6 +365,7 @@ def test_context_wraps_combined_tool_schema_overflow_as_a_safe_error() -> None:
     large_specs = tuple(
         ToolSpec(
             name=f"workspace.tool{index}",
+            spec_version="1",
             description="One large test schema.",
             input_schema={"type": "object", "description": "x" * 850_000},
             output_schema={"type": "object"},

@@ -19,6 +19,11 @@ from bearagent.domain.artifacts import (
 )
 from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.events import Event
+from bearagent.domain.fingerprints import (
+    PolicyFingerprint,
+    RunFingerprint,
+    ToolFingerprint,
+)
 from bearagent.domain.ids import (
     ActivityId,
     ArtifactId,
@@ -66,6 +71,7 @@ from bearagent.domain.run_events import (
     RunCreatedPayload,
     RunCreatedPayloadV2,
     RunCreatedPayloadV3,
+    RunCreatedPayloadV4,
     RunFailedPayload,
     RunFailedPayloadV2,
     RunStartedPayload,
@@ -159,15 +165,18 @@ __all__ = [
     "ModelProtocol",
     "OpaqueId",
     "PolicyDecision",
+    "PolicyFingerprint",
     "PolicyOutcome",
     "PolicyReason",
     "PreparedToolRequest",
     "ProviderSelection",
     "RunId",
+    "RunFingerprint",
     "RunCreatedPayload",
     "RunCreatedPayloadV2",
     "RunFailedPayload",
     "RunCreatedPayloadV3",
+    "RunCreatedPayloadV4",
     "RunFailedPayloadV2",
     "RunInput",
     "RunInspection",
@@ -193,6 +202,7 @@ __all__ = [
     "ToolCallStartedPayloadV2",
     "ToolCallPart",
     "ToolExecutionRecord",
+    "ToolFingerprint",
     "ToolRequest",
     "ToolResult",
     "ToolResultPart",

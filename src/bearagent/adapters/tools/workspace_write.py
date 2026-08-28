@@ -54,6 +54,7 @@ class WorkspaceWriteTool:
 
     spec = ToolSpec(
         name="workspace.write",
+        spec_version="1",
         description="Atomically write one bounded UTF-8 text file below outputs/.",
         input_schema=_WriteArguments.model_json_schema(),
         output_schema=_WriteOutput.model_json_schema(),

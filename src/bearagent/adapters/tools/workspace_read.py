@@ -59,6 +59,7 @@ class WorkspaceReadTool:
 
     spec = ToolSpec(
         name="workspace.read",
+        spec_version="1",
         description="Read one bounded page of complete lines from a UTF-8 workspace file.",
         input_schema=_ReadArguments.model_json_schema(),
         output_schema=_ReadOutput.model_json_schema(),

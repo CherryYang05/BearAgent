@@ -20,7 +20,7 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 
 ## 当前计划
 
-- 无。
+- [PLAN-F-0018：强化 P1 执行契约身份与 crash observability](PLAN-F-0018-p1-evidence-hardening.md) — active
 
 ## 已完成计划
 

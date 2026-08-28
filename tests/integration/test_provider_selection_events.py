@@ -5,6 +5,7 @@ from tests.agent_loop_fixtures import (
     TickingClock,
     agent_run_input,
     model_completed,
+    run_fingerprint,
     tool_executor,
 )
 
@@ -14,10 +15,10 @@ from bearagent.application.agent_loop import AgentLoop
 from bearagent.application.run_queries import RunQueryService
 from bearagent.domain.model import ModelFinishReason, ModelTextDelta
 from bearagent.domain.providers import ModelProtocol, ProviderSelection
-from bearagent.domain.run_events import RUN_EVENT_SCHEMA_VERSION_V3
+from bearagent.domain.run_events import RUN_EVENT_SCHEMA_VERSION_V4
 
 
-def test_sqlite_reopen_preserves_v3_provider_selection(tmp_path: Path) -> None:
+def test_sqlite_reopen_preserves_v4_provider_selection_and_fingerprint(tmp_path: Path) -> None:
     database_path = tmp_path / "events.sqlite3"
     selection = ProviderSelection(
         provider_id="primary",
@@ -42,6 +43,7 @@ def test_sqlite_reopen_preserves_v3_provider_selection(tmp_path: Path) -> None:
             tool_executor=tool_executor(),
             clock=TickingClock(),
             provider_selection=selection,
+            run_fingerprint=run_fingerprint(),
         ).run(agent_run_input())
 
         reopened = SqliteEventStore(database_path)
@@ -50,6 +52,7 @@ def test_sqlite_reopen_preserves_v3_provider_selection(tmp_path: Path) -> None:
         events = await reopened.list_events(result.run_id)
 
         assert inspection.provider_selection == selection
-        assert all(event.schema_version == RUN_EVENT_SCHEMA_VERSION_V3 for event in events)
+        assert inspection.run_fingerprint == run_fingerprint()
+        assert all(event.schema_version == RUN_EVENT_SCHEMA_VERSION_V4 for event in events)
 
     asyncio.run(exercise())

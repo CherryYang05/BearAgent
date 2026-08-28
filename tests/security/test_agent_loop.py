@@ -5,6 +5,7 @@ from tests.agent_loop_fixtures import (
     agent_run_input,
     model_completed,
     read_tool_spec,
+    run_fingerprint,
     tool_executor,
 )
 
@@ -35,6 +36,7 @@ def test_raw_provider_exception_is_not_persisted_or_returned() -> None:
         event_store=store,
         tool_executor=tool_executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(agent_run_input()))
@@ -75,6 +77,7 @@ def test_model_cannot_expand_exposed_tools_or_bypass_executor_policy() -> None:
             FixedToolPolicy(),
         ),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(allowed_tool_names=()),
     )
 
     result = asyncio.run(loop.run(agent_run_input()))

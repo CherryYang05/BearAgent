@@ -10,6 +10,7 @@ from typing import Annotated
 
 from pydantic import Field, TypeAdapter, ValidationError
 
+from bearagent import package_version
 from bearagent.adapters.model import (
     AnthropicMessagesProvider,
     OpenAIChatCompletionsProvider,
@@ -24,6 +25,7 @@ from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, Er
 from bearagent.domain.ids import IdGenerator
 from bearagent.domain.providers import ModelProtocol, ProviderSelection
 from bearagent.ports.model import ModelProvider
+from bearagent.runtime.fingerprints import build_run_fingerprint
 from bearagent.runtime.policy import FixedToolPolicy
 from bearagent.runtime.tool_executor import ToolExecutor
 from bearagent.runtime.tool_registry import ToolRegistry
@@ -160,6 +162,11 @@ async def build_run_services(
             tool_executor=executor,
             id_generator=id_generator,
             provider_selection=provider_selection,
+            run_fingerprint=build_run_fingerprint(
+                bearagent_version=package_version(),
+                policy=policy.fingerprint,
+                tool_specs=registry.specs,
+            ),
         ),
         queries=RunQueryService(store),
     )

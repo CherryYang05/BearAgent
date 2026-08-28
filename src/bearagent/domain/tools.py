@@ -15,6 +15,7 @@ from bearagent.domain._base import (
     validate_json_object,
 )
 from bearagent.domain.errors import ErrorCode, ErrorInfo
+from bearagent.domain.fingerprints import CONTRACT_VERSION_PATTERN
 from bearagent.domain.ids import ToolCallId
 from bearagent.domain.messages import TOOL_NAME_PATTERN
 
@@ -43,7 +44,7 @@ class ToolSideEffect(StrEnum):
 
 
 class ToolRetrySafety(StrEnum):
-    """Whether a later runtime may safely retry a Tool call."""
+    """Coarse Tool contract hint; never permission to retry an Activity by itself."""
 
     NOT_SAFE = "not_safe"
     SAFE = "safe"
@@ -83,6 +84,7 @@ class ToolSpec(DomainModel):
     """Trusted registration data and resource limits for one Tool."""
 
     name: str = Field(pattern=TOOL_NAME_PATTERN)
+    spec_version: str = Field(pattern=CONTRACT_VERSION_PATTERN)
     description: str = Field(min_length=1, max_length=MAX_TOOL_DESCRIPTION_CHARS)
     input_schema: Mapping[str, JsonValue]
     output_schema: Mapping[str, JsonValue]

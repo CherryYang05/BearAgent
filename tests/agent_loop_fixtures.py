@@ -2,10 +2,12 @@ from datetime import UTC, datetime, timedelta
 
 from bearagent.adapters.testing import FakeTool
 from bearagent.domain.agent import AgentConfig, AgentSettings, ModelPricing, RunInput
+from bearagent.domain.fingerprints import RunFingerprint
 from bearagent.domain.ids import SessionId
 from bearagent.domain.model import ModelCompleted, ModelFinishReason, ModelUsage
 from bearagent.domain.runs import BudgetLimits
 from bearagent.domain.tools import ToolRetrySafety, ToolSideEffect, ToolSpec
+from bearagent.runtime.fingerprints import build_run_fingerprint
 from bearagent.runtime.policy import FixedToolPolicy
 from bearagent.runtime.tool_executor import ToolExecutor
 from bearagent.runtime.tool_registry import ToolRegistry
@@ -26,6 +28,7 @@ class TickingClock:
 def read_tool_spec() -> ToolSpec:
     return ToolSpec(
         name="workspace.read",
+        spec_version="1",
         description="Read one workspace text file.",
         input_schema={
             "type": "object",
@@ -94,6 +97,20 @@ def tool_executor(tool: FakeTool | None = None) -> ToolExecutor:
         else tool
     )
     return ToolExecutor(ToolRegistry([registered]), FixedToolPolicy(["workspace.read"]))
+
+
+def run_fingerprint(
+    specs: tuple[ToolSpec, ...] | None = None,
+    *,
+    allowed_tool_names: tuple[str, ...] = ("workspace.read",),
+) -> RunFingerprint:
+    """Build a deterministic trusted composition identity for AgentLoop tests."""
+    policy = FixedToolPolicy(allowed_tool_names)
+    return build_run_fingerprint(
+        bearagent_version="0.1.0+test",
+        policy=policy.fingerprint,
+        tool_specs=(read_tool_spec(),) if specs is None else specs,
+    )
 
 
 def model_completed(
