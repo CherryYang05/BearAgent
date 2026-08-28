@@ -1,13 +1,13 @@
 ---
 title: "Feature: identify trusted Run contracts and expose committed crash boundaries"
-status: accepted
+status: implemented
 spec_id: F-0018
 milestone: P1
 change_level: S2
 owner: CherryYang05
 created: 2026-08-28
-last_updated: 2026-08-28
-implemented_in: null
+last_updated: 2026-08-29
+implemented_in: "commit 26f3203"
 related_adrs: [ADR-0002, ADR-0003, ADR-0004, ADR-0007, ADR-0012, ADR-0013, ADR-0014, ADR-0016]
 ---
 

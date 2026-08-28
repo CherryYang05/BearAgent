@@ -1,6 +1,6 @@
 ---
 title: "Implementation Plan: F-0018 P1 evidence hardening"
-status: active
+status: completed
 plan_id: PLAN-F-0018
 related_spec: F-0018
 created: 2026-08-28
@@ -62,7 +62,7 @@ last_updated: 2026-08-29
 
 ### 第 5 步：同步文档与所有质量门，关闭 Feature
 
-- 状态：in_progress；
+- 状态：completed；
 - 交付结果：Roadmap/Architecture/indexes/site/schema/status 与代码一致，Plan/Spec 准确收口；
 - 代码落点：Feature 文档列出的五个文档表面和 generated snapshots；
 - 接入关系：学习页解释用户可见 inspect；开发者页解释 identity/Event v4/crash boundary；
@@ -110,5 +110,5 @@ git diff --check
 - domain、CLI、runtime configuration 三组 schema 生成后 contract tests 通过；
 - Starlight production build：45 pages，Pagefind 索引完成；
 - sdist/wheel 构建成功，隔离安装 wheel 后的 `run/inspect/events` smoke 通过；
-- 当前只剩创建 immutable implementation commit、回填 Feature `implemented_in` 并完成治理关闭，因此
-  第 5 步和本 Plan 暂时保持 `in_progress` / `active`。
+- immutable implementation evidence：`commit 26f3203`；Feature `implemented_in`、Roadmap 与索引已同步，
+  第 5 步和本 Plan 完成。

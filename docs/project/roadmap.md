@@ -67,7 +67,7 @@ P0 建立 Python 3.12、uv、CI、CLI、模块依赖检查、测试替身，以�
 
 ### P1：可检查执行
 
-**P1 基线状态：已完成。** F-0001 至 F-0008、F-0015、F-0016 和 F-0017 均已实现。Runtime gate 在
+**P1 状态：已完成。** F-0001 至 F-0008、F-0015 至 F-0018 均已实现。Runtime gate 在
 2026-08-23 完成；F-0015 随后完成书籍化文档重构和本地站点验收。F-0018 是进入 P2 前的增量 evidence
 hardening；它不重写 P1 exit criteria，也不把已关闭的 P1 基线改回进行中。
 
@@ -83,7 +83,7 @@ P1 已接通：
 v1.1.1 使用 DeepSeek V4 经 production composition 完成四个普通任务和一个安全 canary，结果为
 5/5。证据见 [F-0017 P1 live report](../evidence/F-0017-p1-live-report-v1.json)。
 
-P1 只保证已保存事实可查。F-0018 完成后，新 Run 还会记录可信 Tool/Policy contract identity，并用
+P1 只保证已保存事实可查。F-0018 让新 Run 记录可信 Tool/Policy contract identity，并用
 hard-process 测试验证最后 committed fact 的可见性。进程退出后仍不会自动继续；timeout 也不会撤销
 可能已经发生的副作用。
 
@@ -327,7 +327,7 @@ Spec 的 P2/P3/P4 占位 ID 统一顺延；这次重排不改变任何已接受�
 9. [F-0015：可以连续阅读的 Starlight 文档书](../specs/F-0015-local-starlight-docs-site.md) — implemented
 10. [F-0016：有界 Context 和串行 Agent Loop](../specs/F-0016-bounded-context-agent-loop.md)
 11. [F-0017：模型服务配置与真实 gate](../specs/F-0017-configurable-model-providers-live-gate.md)
-12. [F-0018：可信 Run contract identity 与 crash observability](../specs/F-0018-p1-evidence-hardening.md) — accepted
+12. [F-0018：可信 Run contract identity 与 crash observability](../specs/F-0018-p1-evidence-hardening.md) — implemented
 
 F-0015 的文档内容、本地站点、构建和阅读体验已经实现；部署到某个在线平台不在该 Feature 范围内。
 
