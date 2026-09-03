@@ -431,7 +431,7 @@ Trace       调用嵌套、耗时和 Provider/Tool 路径
 Checkpoint  加快状态重建的快照
 ```
 
-F-0031 的结构化 Log 只输出固定字段：组件、操作、Run/Event/Activity 关联 ID、Event type、sequence、
+F-0019 的结构化 Log 只输出固定字段：组件、操作、Run/Event/Activity 关联 ID、Event type、sequence、
 有限耗时、错误码和异常类型。只有 Event 成功写入数据库后，才会输出对应日志；日志没有 payload、
 message、details、路径或 traceback。即使 stderr 不可写或少了一行日志，Event、Run 和查询结果也保持
 不变。要确认 Run 实际做过什么，仍使用 `inspect/events`；Runtime 不读取日志来恢复状态。
@@ -498,8 +498,8 @@ Policy/Approval、runner 隔离、日志脱敏和备份恢复演练。
 F-0008 已通过 ADR-0012 决定：P1 不设置 Artifact TTL，也不自动清理成功文件；崩溃残留和 reconcile
 留给 P2。对应后续 Feature 开始前仍需决定：
 
-- F-0024：SandboxBackend 选择、runner 资源上限和 Docker/Podman 边界；
-- F-0025/F-0026：P4 HTTP、自托管和备份恢复方案；
+- F-0025：SandboxBackend 选择、runner 资源上限和 Docker/Podman 边界；
+- F-0026/F-0027：P4 HTTP、自托管和备份恢复方案；
 - P4 Web UI：独立前端还是最小服务端页面；
 - 公开发布：Apache-2.0 或 AGPL-3.0。
 

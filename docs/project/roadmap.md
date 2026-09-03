@@ -89,7 +89,7 @@ P1 只保证已保存事实可查。F-0018 让新 Run 记录可信 Tool/Policy c
 hard-process 测试验证最后 committed fact 的可见性。进程退出后仍不会自动继续；timeout 也不会撤销
 可能已经发生的副作用。
 
-F-0031 是不改变 P1 退出状态的追加 hardening：它补齐 accepted F-0016 中的安全结构化日志，只从已经
+F-0019 是不改变 P1 退出状态的追加 hardening：它补齐 accepted F-0016 中的安全结构化日志，只从已经
 提交的 Event 输出固定 envelope/耗时/错误码，并为 bootstrap、CLI 和 EventStore 边界增加有限运行诊断。
 系统不会读取这些日志来判断 Run 状态或决定 P2 恢复。该 Feature 已实现，implementation evidence 为
 `5d9da00`，对应 Plan 已完成。
@@ -304,7 +304,7 @@ P5 把 P1 任务、P2 恢复演练和 P3 安全演练接入统一追踪，比较
 |---|---|
 | model/tool/token/cost/time hard budget | P1 已实现 |
 | 有界 Context、ToolResult 截断、Tool timeout | P1 已实现 |
-| 本机安全结构化运行诊断 | P1 hardening F-0031 |
+| 本机安全结构化运行诊断 | P1 hardening F-0019 |
 | Attempt、失败分类、retry/backoff | P2 |
 | Checkpoint、启动扫描、resume/cancel | P2 |
 | idempotency、Receipt、reconcile、`UNKNOWN` | P2 |
@@ -320,10 +320,11 @@ P5 把 P1 任务、P2 恢复演练和 P3 安全演练接入统一追踪，比较
 ## 11. Feature Backlog
 
 Feature ID 在 Spec 创建后保持稳定。未创建 Spec 的名称只表示计划范围；开始前必须创建 Spec 并声明
-milestone。2026-08-28 为让完成的 P1 Feature 和后续阶段按顺序阅读，项目所有者明确要求把尚未创建
-Spec 的 P2/P3/P4 占位 ID 统一顺延；这次重排不改变任何已接受或已实现 Feature 的 ID。
+milestone。2026-09-04，项目所有者明确要求把新增的 P1 日志 Feature 调整为紧接 F-0018 的 F-0019，
+并把尚未创建 Spec 的 P2/P3/P4 占位 ID 依次顺延。这是进入 P2 前的一次性编号整理，不改变任何
+Feature 的范围或 milestone；本次映射完成后继续遵守稳定 ID 规则。
 
-### P1（基线已关闭；F-0031 追加 hardening 已完成）
+### P1（基线已关闭；F-0019 追加 hardening 已完成）
 
 1. [F-0001：内部 ID、Message 和 Error](../specs/F-0001-domain-ids-messages-errors.md)
 2. [F-0002：Run/Activity 状态和预算](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md)
@@ -337,30 +338,30 @@ Spec 的 P2/P3/P4 占位 ID 统一顺延；这次重排不改变任何已接受�
 10. [F-0016：有界 Context 和串行 Agent Loop](../specs/F-0016-bounded-context-agent-loop.md)
 11. [F-0017：模型服务配置与真实 gate](../specs/F-0017-configurable-model-providers-live-gate.md)
 12. [F-0018：可信 Run contract identity 与 crash observability](../specs/F-0018-p1-evidence-hardening.md) — implemented
-13. [F-0031：安全结构化运行诊断](../specs/F-0031-safe-structured-diagnostics.md) — implemented
+13. [F-0019：安全结构化运行诊断](../specs/F-0019-safe-structured-diagnostics.md) — implemented
 
 F-0015 的文档内容、本地站点、构建和阅读体验已经实现；部署到某个在线平台不在该 Feature 范围内。
 
 ### P2（计划；均未创建 Spec）
 
-1. F-0019：Event-only 状态重建、Checkpoint fallback 和启动检查
-2. F-0020：Attempt、失败分类、恢复语义和有界 retry
-3. F-0021：幂等键、Receipt、reconcile 和 `UNKNOWN` 处置
-4. F-0022：pause/resume/cancel/retry 命令与完整 kill-point suite
+1. F-0020：Event-only 状态重建、Checkpoint fallback 和启动检查
+2. F-0021：Attempt、失败分类、恢复语义和有界 retry
+3. F-0022：幂等键、Receipt、reconcile 和 `UNKNOWN` 处置
+4. F-0023：pause/resume/cancel/retry 命令与完整 kill-point suite
 
 ### P3（计划；均未创建 Spec）
 
-1. F-0023：Grant、三态 Policy 和持久化参数绑定 Approval
-2. F-0024：SandboxBackend、隔离 runner 和受控 shell/code Tool
+1. F-0024：Grant、三态 Policy 和持久化参数绑定 Approval
+2. F-0025：SandboxBackend、隔离 runner 和受控 shell/code Tool
 
 ### P4（计划；均未创建 Spec）
 
-1. F-0025：HTTP API、SSE 续接和单用户认证
-2. F-0026：Compose 加固、HTTPS、备份和空目录恢复
-3. F-0027：版本化只读 Skill
-4. F-0028：受控 MCP Tool
-5. F-0029：Web UI
-6. F-0030：有来源、可删除的 Memory 和上下文压缩
+1. F-0026：HTTP API、SSE 续接和单用户认证
+2. F-0027：Compose 加固、HTTPS、备份和空目录恢复
+3. F-0028：版本化只读 Skill
+4. F-0029：受控 MCP Tool
+5. F-0030：Web UI
+6. F-0031：有来源、可删除的 Memory 和上下文压缩
 
 如果一个条目在写 Spec 时仍无法独立验收，保留现有 ID 的核心范围，并用新的全局 ID 拆出后续
 Feature。一个 Plan 不得同时实现整个阶段。

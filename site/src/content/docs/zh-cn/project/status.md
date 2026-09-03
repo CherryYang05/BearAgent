@@ -17,7 +17,7 @@ sourceRefs:
   - F-0017
   - F-0018
   - ADR-0016
-  - F-0031
+  - F-0019
   - ADR-0017
 ---
 
@@ -55,11 +55,12 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 | F-0005 生产 CLI 与查询 | `run/inspect/events`、严格 profile、production composition、分页查询和 human/JSON；零预算与 Provider 调用失败保留安全 terminal Run；五个任务通过真实 SQLite/Tools + Fake Provider |
 | F-0017 模型配置与 live gate | config v1、RunProfile v2、三种协议 adapter、RunCreated v3、production selector 与默认关闭的 runner；Fake 5/5 和 DeepSeek V4 live 5/5 分开验证 |
 | F-0018 evidence hardening | ToolSpec/Policy contract fingerprint、RunCreated v4、legacy v1-v3 读取、v2/v3/v4 Tool evidence 一致性、retryable 非授权语义，以及 K1-K6 SQLite/CLI crash suite |
+| F-0019 安全结构化诊断 | post-commit Event envelope、有限 Activity 耗时和错误码；bootstrap/CLI/EventStore ops diagnostics；不复制 Event payload，sink 失败不影响 Run |
 | F-0015 文档站 | 中文 Starlight、搜索、Mermaid、六部分学习路线、独立 CLI 手册，以及本地开发、构建和预览 |
 
 ## P1 完成证据
 
-- F-0017 关闭时的离线门禁通过 445 个测试；F-0031 的实现提交 `5d9da00` 在隔离工作树中通过
+- F-0017 关闭时的离线门禁通过 445 个测试；F-0019 的实现提交 `5d9da00` 在隔离工作树中通过
   483 个测试、schema、114 个 Markdown 文件链接、46 页 Starlight 与 sdist/wheel 构建；
 - suite v1.1.1 使用确认的 Provider、model、pricing snapshot、commit 和费用上限；
 - 四个普通任务与安全 canary 通过 5/5；五个独立 SQLite 重开后 inspection/Event/Artifact 一致；

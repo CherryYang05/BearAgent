@@ -3,7 +3,7 @@ title: 为什么诊断日志不能决定 Run 发生了什么
 description: 沿着 DiagnosticRecord、EventStore decorator 和 bootstrap，理解 stderr 日志怎样帮助排错，以及为什么 Run 状态仍只看 Event。
 bearStatus: implemented
 sourceRefs:
-  - F-0031
+  - F-0019
   - ADR-0017
   - ADR-0002
   - ADR-0013
@@ -82,7 +82,7 @@ Event。
 
 ## Log 和 Trace 的当前边界
 
-F-0031 可以用 started/terminal Event 对计算当前进程内的近似 Activity 耗时，但没有 span tree、sampling、
+F-0019 可以用 started/terminal Event 对计算当前进程内的近似 Activity 耗时，但没有 span tree、sampling、
 remote collector 或跨进程 propagation。完整 Trace、OpenTelemetry exporter 和跨版本比较仍属于 P5。
 
 修改这条边界时，优先运行：

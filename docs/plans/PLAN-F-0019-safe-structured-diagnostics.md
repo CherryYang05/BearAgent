@@ -1,15 +1,15 @@
 ---
 title: "Implementation Plan: Safe structured operational diagnostics"
 status: completed
-plan_id: PLAN-F-0031
-related_spec: F-0031
+plan_id: PLAN-F-0019
+related_spec: F-0019
 created: 2026-09-02
 last_updated: 2026-09-04
 ---
 
-# PLAN-F-0031：安全结构化运行诊断
+# PLAN-F-0019：安全结构化运行诊断
 
-关联 Spec：`docs/specs/F-0031-safe-structured-diagnostics.md`
+关联 Spec：`docs/specs/F-0019-safe-structured-diagnostics.md`
 
 ## 开始前确认
 

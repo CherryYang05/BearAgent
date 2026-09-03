@@ -1,7 +1,7 @@
 ---
 title: "Feature: Safe structured operational diagnostics"
 status: implemented
-spec_id: F-0031
+spec_id: F-0019
 milestone: P1
 change_level: S2
 owner: CherryYang05
@@ -11,7 +11,7 @@ implemented_in: 5d9da00
 related_adrs: [ADR-0002, ADR-0007, ADR-0013, ADR-0014, ADR-0017]
 ---
 
-# F-0031：安全输出结构化运行诊断，而不复制 Event 内容
+# F-0019：安全输出结构化运行诊断，而不复制 Event 内容
 
 ## 1. 问题与证据
 
