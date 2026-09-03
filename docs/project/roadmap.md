@@ -91,8 +91,8 @@ hard-process 测试验证最后 committed fact 的可见性。进程退出后仍
 
 F-0019 是不改变 P1 退出状态的追加 hardening：它补齐 accepted F-0016 中的安全结构化日志，只从已经
 提交的 Event 输出固定 envelope/耗时/错误码，并为 bootstrap、CLI 和 EventStore 边界增加有限运行诊断。
-系统不会读取这些日志来判断 Run 状态或决定 P2 恢复。该 Feature 已实现，implementation evidence 为
-`5d9da00`，对应 Plan 已完成。
+系统不会读取这些日志来判断 Run 状态或决定 P2 恢复。该 Feature 已实现，当前 F-0019 编号下的
+implementation evidence 为 `08ee141`，对应 Plan 已完成。
 
 F-0015 提供独立的 Starlight 文档站、渐进式学习路线、CLI 手册和源码导读。它可以本地开发、构建
 和预览，普通 CI 负责验证；在线托管与自动部署不属于 F-0015，也不再作为 P1 的关闭门。

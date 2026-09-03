@@ -7,7 +7,7 @@ change_level: S2
 owner: CherryYang05
 created: 2026-09-02
 last_updated: 2026-09-04
-implemented_in: 5d9da00
+implemented_in: 08ee141
 related_adrs: [ADR-0002, ADR-0007, ADR-0013, ADR-0014, ADR-0017]
 ---
 
