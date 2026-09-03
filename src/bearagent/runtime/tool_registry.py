@@ -14,11 +14,12 @@ class ToolRegistry:
         by_name: dict[str, Tool] = {}
         specs_by_name: dict[str, ToolSpec] = {}
         for tool in tools:
-            name = tool.spec.name
+            spec = tool.spec
+            name = spec.name
             if name in by_name:
                 raise ValueError(f"duplicate Tool name: {name}")
             by_name[name] = tool
-            specs_by_name[name] = tool.spec
+            specs_by_name[name] = spec
         self._tools: Mapping[str, Tool] = MappingProxyType(by_name)
         self._specs_by_name: Mapping[str, ToolSpec] = MappingProxyType(specs_by_name)
         self._specs = tuple(specs_by_name[name] for name in sorted(specs_by_name))

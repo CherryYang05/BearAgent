@@ -6,7 +6,7 @@ milestone: P1
 change_level: S2
 owner: CherryYang05
 created: 2026-08-28
-last_updated: 2026-08-29
+last_updated: 2026-09-02
 implemented_in: "commit 26f3203"
 related_adrs: [ADR-0002, ADR-0003, ADR-0004, ADR-0007, ADR-0012, ADR-0013, ADR-0014, ADR-0016]
 ---
@@ -114,6 +114,9 @@ package version -------┘                                  |
 
 - 新 Run 的全部 P1 Event 使用 schema v4；`RunCreatedPayloadV4` 在 v2 的 objective/AgentConfig 上增加
   `run_fingerprint`，并保留可选的非敏感 `provider_selection`；
+- 使用 v2 execution evidence shape 的 Tool terminal Event（当前为 schema v2/v3/v4）必须与同版本
+  `ToolCallRequested` 中的原始 `ToolRequest` 值相等；Reducer 按解析后的 payload shape 执行这条跨 Event
+  校验，不能靠列举旧版本号决定是否校验；
 - Event v1/v2/v3 payload 含义不变并继续由相同 registry 解析；
 - Reducer 从任意受支持 `RunCreatedPayload` 取得 Session/预算，`RunState` 与 SQLite projection schema 不增加
   fingerprint 字段；
@@ -157,6 +160,7 @@ Run，但不能删除 v4 payload/fingerprint 读取代码。回退不得修改�
 | AC-8 | Event/projection transaction 故障后重开无部分提交 | crash observability K5 + SQLite tests |
 | AC-9 | core/application import 边界、schema、治理、docs、site、package build 和全量测试通过 | 最终验证命令 |
 | AC-10 | 代码与文档没有新增任何 P2/P3 domain 类型或行为 | diff review + governance/docs checks |
+| AC-11 | v2/v3/v4 Tool terminal evidence 都不能把 requested Event 中的原始 ToolRequest 替换成另一请求 | Reducer unit + memory/SQLite Store contract tests |
 
 ## 9. 文档影响
 
@@ -172,3 +176,11 @@ Run，但不能删除 v4 payload/fingerprint 读取代码。回退不得修改�
 
 - OQ-1：N/A。字段、兼容、hash 与 crash harness 边界已由 ADR-0016 决定；实现发现新恢复需求时记录为
   P2 Feature，不扩大本 Spec。
+
+## 11. 完成后维护记录
+
+2026-09-02 的 P1 全仓审计发现：`validate_event_history` 曾用 `{2, 3}` 决定是否核对 Tool terminal
+evidence，导致 F-0018 新增的 schema v4 绕过同一条原始请求一致性检查。修复改为先解析 payload，再按
+`ToolCallCompletedPayloadV2` / `ToolCallFailedPayloadV2` shape 决定是否检查；v2/v3/v4 共用同一组
+Reducer 与两个 Store contract 用例。该修复只拒绝不可信的矛盾历史，不增加 retry、reconcile、恢复或
+授权语义。

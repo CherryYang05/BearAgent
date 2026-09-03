@@ -54,7 +54,7 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 | F-0016 有界 Agent Loop | 从已提交 Event 构造 Context，串行调用模型与 Tool，保存 v2 事实；五个 Fake 任务在两种 Store 上通过 |
 | F-0005 生产 CLI 与查询 | `run/inspect/events`、严格 profile、production composition、分页查询和 human/JSON；零预算与 Provider 调用失败保留安全 terminal Run；五个任务通过真实 SQLite/Tools + Fake Provider |
 | F-0017 模型配置与 live gate | config v1、RunProfile v2、三种协议 adapter、RunCreated v3、production selector 与默认关闭的 runner；Fake 5/5 和 DeepSeek V4 live 5/5 分开验证 |
-| F-0018 evidence hardening | ToolSpec/Policy contract fingerprint、RunCreated v4、legacy v1-v3 读取、retryable 非授权语义，以及 K1-K6 SQLite/CLI crash suite |
+| F-0018 evidence hardening | ToolSpec/Policy contract fingerprint、RunCreated v4、legacy v1-v3 读取、v2/v3/v4 Tool evidence 一致性、retryable 非授权语义，以及 K1-K6 SQLite/CLI crash suite |
 | F-0015 文档站 | 中文 Starlight、搜索、Mermaid、六部分学习路线、独立 CLI 手册，以及本地开发、构建和预览 |
 
 ## P1 完成证据

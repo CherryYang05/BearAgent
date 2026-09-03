@@ -63,8 +63,17 @@ def validate_event_history(prior_events: Iterable[Event], event: Event) -> None:
     """Validate facts that require earlier Event payloads, not projection fields."""
     if event.event_type not in {"ToolCallCompleted", "ToolCallFailed"}:
         return
-    if event.schema_version not in {2, 3}:
+
+    try:
+        terminal = parse_run_event_payload(event)
+    except (KeyError, ValidationError):
+        # reduce_event owns the stable error for an unsupported version or an
+        # invalid payload. History validation only applies when this schema
+        # carries the full execution evidence introduced in v2.
         return
+    if not isinstance(terminal, ToolCallCompletedPayloadV2 | ToolCallFailedPayloadV2):
+        return
+
     history = tuple(prior_events)
     if len(history) < 2:
         _fail_event(event, "versioned Tool terminal Event requires requested Event history.")
@@ -76,15 +85,11 @@ def validate_event_history(prior_events: Iterable[Event], event: Event) -> None:
         _fail_event(event, "versioned Tool terminal Event has invalid requested Event.")
     try:
         requested = parse_run_event_payload(requested_event)
-        terminal = parse_run_event_payload(event)
     except (KeyError, ValidationError) as cause:
         _fail_event(event, "versioned Tool Event history is invalid.", cause=cause)
     if not isinstance(requested, ToolCallRequestedPayloadV2):
         _fail_event(event, "versioned Tool requested Event payload is invalid.")
-    if (
-        isinstance(terminal, ToolCallCompletedPayloadV2 | ToolCallFailedPayloadV2)
-        and terminal.execution.request != requested.request
-    ):
+    if terminal.execution.request != requested.request:
         _fail_event(event, "Tool execution request does not match the requested Activity.")
 
 

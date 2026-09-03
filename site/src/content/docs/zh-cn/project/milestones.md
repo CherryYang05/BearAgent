@@ -5,6 +5,8 @@ bearStatus: mixed
 sourceRefs:
   - roadmap
   - F-0017
+  - F-0018
+  - ADR-0016
 ---
 
 BearAgent 不按“已经写了多少模块”关闭阶段。每个阶段都要在同一组仓库与本地文档任务上给用户
@@ -35,7 +37,9 @@ P1 已完成 SQLite EventStore、三种模型协议 adapter、Registry、固定 
 workspace 读写、原子 Artifact、ContextBuilder、串行 Agent Loop、`run/inspect/events`、Provider
 catalog、RunProfile v2、RunCreated v3 和默认关闭的 live runner。五个 Fake 任务与最终离线 Reality
 Check 通过；suite v1.1.1 又用 DeepSeek V4 经 production 路径完成四个普通任务与安全 canary，并生成
-脱敏 report。
+脱敏 report。F-0018 随后让新 Run 统一写 schema v4，保存声明的 Tool/Policy contract fingerprint，并用
+K1-K6 核对 hard process exit 后最后可见的 committed fact。v2-shaped Tool execution evidence 在 v2、v3、
+v4 都执行同一条原始请求一致性检查；这仍是事实完整性，不是自动恢复。
 
 P1 只保证已经保存的事实可以查看。进程退出后不会自动继续。
 

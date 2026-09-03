@@ -79,9 +79,11 @@ P1 已接通：
 - 默认拒绝 Policy、workspace 读写 Tool、原子 Artifact 和串行 Agent Loop；
 - `run/inspect/events` CLI、Fake 任务集、真实模型 gate 和脱敏证据。
 
-最终离线门禁通过 445 个测试、schema、链接、35 页站点、sdist/wheel 和隔离 CLI smoke。suite
-v1.1.1 使用 DeepSeek V4 经 production composition 完成四个普通任务和一个安全 canary，结果为
-5/5。证据见 [F-0017 P1 live report](../evidence/F-0017-p1-live-report-v1.json)。
+F-0017 关闭时的离线门禁通过 445 个测试、schema、链接、35 页站点、sdist/wheel 和隔离 CLI smoke。
+suite v1.1.1 使用 DeepSeek V4 经 production composition 完成四个普通任务和一个安全 canary，结果为
+5/5。证据见 [F-0017 P1 live report](../evidence/F-0017-p1-live-report-v1.json)。F-0018 关闭时进一步通过
+474 个测试、K1-K6 与 45 页站点构建；后续 2026-09-02 全仓审计又补齐 schema v4 Tool evidence 的
+跨 Event 一致性回归。
 
 P1 只保证已保存事实可查。F-0018 让新 Run 记录可信 Tool/Policy contract identity，并用
 hard-process 测试验证最后 committed fact 的可见性。进程退出后仍不会自动继续；timeout 也不会撤销

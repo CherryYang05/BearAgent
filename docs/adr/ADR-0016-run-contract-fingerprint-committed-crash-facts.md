@@ -62,7 +62,8 @@ ToolSpec/Policy 静态 contract 使用 canonical JSON + SHA-256；Run 创建时�
 5. Composition root 使用声明的 BearAgent package version、Registry snapshot 与 Policy fingerprint 构造
    `RunFingerprint`，再作为必需 BearAgent 类型注入 AgentLoop。Application 不读取包元数据或具体 adapter。
 6. 新 Run 统一写 Event schema v4。`RunCreatedPayloadV4` 保存 fingerprint 和可选 Provider selection；其他
-   v4 payload 继续复用 v2 的 Provider-neutral shape。v1/v2/v3 永久可读。
+   v4 payload 继续复用 v2 的 Provider-neutral shape。依赖这个 shape 的跨 Event 不变量按解析后的 payload
+   类型执行，不能因为新增 schema version 而失效。v1/v2/v3 永久可读。
 7. fingerprint 只存在于 `RunCreated` Event。`RunState`/SQLite projection 不增加字段；inspect 从 committed
    Event 提取，legacy Run 返回 `null`，绝不按当前 Runtime 配置反推。
 8. `ErrorInfo.retryable` 是来源 hint；`ToolRetrySafety` 是粗粒度 contract hint。二者都不是

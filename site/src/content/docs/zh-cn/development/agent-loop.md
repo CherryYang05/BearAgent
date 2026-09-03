@@ -36,7 +36,7 @@ EventStore 中的最新事实
 | `domain/run_events.py` | v1-v4 payload registry；v4 RunCreated 携带 fingerprint，其余 v4 复用 v2 shape |
 | `domain/fingerprints.py` | 有界的 Policy、Tool 与 Run contract identity Value Objects |
 | `domain/tools.py` | 原始/规范化请求、Policy 决定、是否到达 adapter 和 ToolResult 的执行记录 |
-| `runtime/context.py` | 只从已提交 v2 Event 构造 exact ModelRequest |
+| `runtime/context.py` | 从已提交的 v2-shaped Activity Event 构造 exact ModelRequest；当前新 Run 使用 schema v4 |
 | `runtime/model_stream.py` | 有界组装 text delta、Tool call 和唯一 completion |
 | `runtime/pricing.py` | input/output 分别向上取整的整数 micro-USD 估算 |
 | `runtime/fingerprints.py` | 对可信注册信息做 canonical JSON + SHA-256，不读取 adapter 状态 |
@@ -68,7 +68,7 @@ PreparedToolRequest、PolicyDecision、是否真正进入 adapter，以及完整
 Reducer 继续只读取 v1-v4 共有的状态字段，所以 projection schema 不需要 migration。解析 Event 时会
 把冻结 JSON 容器还原成普通 JSON，再按事件类型和 schema version 严格校验。
 
-## 三个容易改坏的边界
+## 五个容易改坏的边界
 
 第一，Provider 和 Tool 只能在 started Event 提交成功后调用。任何 append 失败都原样向上返回；Loop
 不会再追加一个“看起来更完整”的失败 Event，因为事实边界本身已经不可信。
@@ -79,8 +79,10 @@ prepare、Policy、timeout、adapter 调用和输出检查只存在一份。Agen
 第三，调用者取消时 `CancelledError` 原样传播。模型或 Tool Activity 可能保持 RUNNING；P1 不
 添加恢复、自动 retry 或 `UNKNOWN` 来掩盖这个事实。
 
-第四，同一个 ToolCallRequested v2 与 terminal v2 必须包含值相等的原始 ToolRequest。这个检查读取
-Event 历史，不给 Run/Activity projection 添加 v2 专属字段，所以 v1/v2 仍得到相同 projection。
+第四，同一个版本中的 ToolCallRequested 与 v2-shaped terminal evidence 必须包含值相等的原始
+ToolRequest。当前 schema v2、v3、v4 都执行这条检查。Reducer 依据解析后的 payload shape 判断，避免
+新增复用相同 shape 的版本时漏掉校验；检查仍只读取 Event 历史，不给 Run/Activity projection 添加
+版本专属字段。
 
 第五，`ErrorInfo.retryable` 与 `ToolRetrySafety` 只保留来源观测和 Tool contract 声明。AgentLoop 不根据
 它们启动第二次调用。未来的恢复必须建立新的 Attempt 与 RecoveryDecision，不能在当前 Loop 增加隐藏
