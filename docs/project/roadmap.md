@@ -89,8 +89,8 @@ hard-process 测试验证最后 committed fact 的可见性。进程退出后仍
 
 F-0031 是不改变 P1 退出状态的追加 hardening：它补齐 accepted F-0016 中的安全结构化日志，只从已经
 提交的 Event 输出固定 envelope/耗时/错误码，并为 bootstrap、CLI 和 EventStore 边界增加有限运行诊断。
-系统不会读取这些日志来判断 Run 状态或决定 P2 恢复。该 Feature 已接受，当前工作树已经完成质量门，
-active Plan 只等待独立 implementation evidence。
+系统不会读取这些日志来判断 Run 状态或决定 P2 恢复。该 Feature 已实现，implementation evidence 为
+`5d9da00`，对应 Plan 已完成。
 
 F-0015 提供独立的 Starlight 文档站、渐进式学习路线、CLI 手册和源码导读。它可以本地开发、构建
 和预览，普通 CI 负责验证；在线托管与自动部署不属于 F-0015，也不再作为 P1 的关闭门。
@@ -321,7 +321,7 @@ Feature ID 在 Spec 创建后保持稳定。未创建 Spec 的名称只表示计
 milestone。2026-08-28 为让完成的 P1 Feature 和后续阶段按顺序阅读，项目所有者明确要求把尚未创建
 Spec 的 P2/P3/P4 占位 ID 统一顺延；这次重排不改变任何已接受或已实现 Feature 的 ID。
 
-### P1（基线已关闭；F-0031 追加 hardening 进行中）
+### P1（基线已关闭；F-0031 追加 hardening 已完成）
 
 1. [F-0001：内部 ID、Message 和 Error](../specs/F-0001-domain-ids-messages-errors.md)
 2. [F-0002：Run/Activity 状态和预算](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md)
@@ -335,7 +335,7 @@ Spec 的 P2/P3/P4 占位 ID 统一顺延；这次重排不改变任何已接受�
 10. [F-0016：有界 Context 和串行 Agent Loop](../specs/F-0016-bounded-context-agent-loop.md)
 11. [F-0017：模型服务配置与真实 gate](../specs/F-0017-configurable-model-providers-live-gate.md)
 12. [F-0018：可信 Run contract identity 与 crash observability](../specs/F-0018-p1-evidence-hardening.md) — implemented
-13. [F-0031：安全结构化运行诊断](../specs/F-0031-safe-structured-diagnostics.md) — accepted
+13. [F-0031：安全结构化运行诊断](../specs/F-0031-safe-structured-diagnostics.md) — implemented
 
 F-0015 的文档内容、本地站点、构建和阅读体验已经实现；部署到某个在线平台不在该 Feature 范围内。
 

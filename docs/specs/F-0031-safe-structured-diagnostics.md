@@ -1,13 +1,13 @@
 ---
 title: "Feature: Safe structured operational diagnostics"
-status: accepted
+status: implemented
 spec_id: F-0031
 milestone: P1
 change_level: S2
 owner: CherryYang05
 created: 2026-09-02
-last_updated: 2026-09-02
-implemented_in: null
+last_updated: 2026-09-04
+implemented_in: 5d9da00
 related_adrs: [ADR-0002, ADR-0007, ADR-0013, ADR-0014, ADR-0017]
 ---
 

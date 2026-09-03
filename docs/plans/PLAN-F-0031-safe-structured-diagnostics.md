@@ -1,10 +1,10 @@
 ---
 title: "Implementation Plan: Safe structured operational diagnostics"
-status: active
+status: completed
 plan_id: PLAN-F-0031
 related_spec: F-0031
 created: 2026-09-02
-last_updated: 2026-09-02
+last_updated: 2026-09-04
 ---
 
 # PLAN-F-0031：安全结构化运行诊断
@@ -85,15 +85,14 @@ npm run build --prefix=site
 git diff --check
 ```
 
-在取得独立 commit/PR 证据前，Feature 保持 `accepted`、Plan 保持 `active`；本 Plan 要准确记录已经完成
-的技术切片，但不把未授权的 commit/push 当作完成证据。
+实现提交 `5d9da00` 已提供独立、不可变的代码证据；以下门禁在该提交的隔离工作树中重新执行。
 
-## 2026-09-02 工作树验证结果
+## 2026-09-04 实现提交验证结果
 
 - `uv run ruff check .`、`uv run ruff format --check .` 和 `uv run pyright` 通过；
-- `uv run pytest -q` 通过 490 个测试；
+- `uv run pytest -q` 通过 483 个测试；
 - 三个 schema generator 运行后 snapshot 无 diff；
-- governance 检查通过 14 个 Spec、13 个 Plan、17 个 ADR；144 个 Markdown 本地链接通过；
+- governance 检查通过 14 个 Spec、13 个 Plan、17 个 ADR；114 个 Markdown 文件的本地链接通过；
 - Starlight 构建 46 页并生成搜索索引；sdist/wheel 构建成功；
-- `git diff --check` 通过；没有 Event/CLI/runtime configuration schema 或 SQLite migration 变化；
-- 当前仍缺独立 commit/PR immutable evidence，因此 Front Matter 按治理规则保持 `accepted` / `active`。
+- 没有 Event/CLI/runtime configuration schema 或 SQLite migration 变化；
+- Feature Front Matter 已记录 `implemented_in: 5d9da00`，Plan 状态改为 `completed`。

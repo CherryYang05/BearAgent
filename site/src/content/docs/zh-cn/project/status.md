@@ -59,7 +59,8 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 
 ## P1 完成证据
 
-- 最终离线门禁通过 445 个测试、schema、链接、Starlight、sdist/wheel 与隔离 CLI smoke；
+- F-0017 关闭时的离线门禁通过 445 个测试；F-0031 的实现提交 `5d9da00` 在隔离工作树中通过
+  483 个测试、schema、114 个 Markdown 文件链接、46 页 Starlight 与 sdist/wheel 构建；
 - suite v1.1.1 使用确认的 Provider、model、pricing snapshot、commit 和费用上限；
 - 四个普通任务与安全 canary 通过 5/5；五个独立 SQLite 重开后 inspection/Event/Artifact 一致；
 - 总 usage 为 13,640 input、1,415 output tokens，报告费用为 2,324 microUSD；
