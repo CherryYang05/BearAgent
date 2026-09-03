@@ -54,6 +54,7 @@ flowchart TB
 | 固定任务 | 五个版本化文件任务使用 Fake Provider 完成确定性验证；DeepSeek V4 suite v1.1.1 也通过同一 rubric 的真实 5/5 |
 | 用户入口 | `run/inspect/events` CLI、config v1、RunProfile v1/v2、human/JSON renderer 和安全退出码 |
 | 查询 | application query service 只通过 EventStore 读取 projection 与分页 Event，并重建 Artifact 元数据 |
+| 运行诊断 | Event 写入数据库后输出固定字段 stderr JSON Lines；另记录 bootstrap/CLI/EventStore 的有限错误码，不复制 payload |
 | 测试替身 | Fake model、Fake tool、内存 Event store |
 | 文档 | 工程 `docs/` 与可静态发布的 Starlight 学习/开发者站点 |
 
@@ -90,7 +91,7 @@ flowchart TB
     TP --> WA["Workspace tools"]
     TP --> SR["Sandbox runner - P3"]
     EP --> SQ["SQLite adapter"]
-    K --> O["Logs / trace / eval export"]
+    K --> O["Best-effort diagnostics / future trace"]
 ```
 
 ### 4.1 Core、port 和 adapter
@@ -415,16 +416,22 @@ P4 才增加 Run 创建、查询、Event stream、取消、Approval 和 Artifact
 Run。SSE 通过持久 Event sequence 续接，不只依赖内存 token stream。P3 先通过 CLI 完成授权和隔离
 闭环，避免把核心安全语义与公网服务一起调试。
 
-## 14. Event、trace 和评测不是一件事
+## 14. Event、Log、Trace 和评测不是一件事
 
 ```text
-Event      已经发生的领域事实，也是恢复依据
-Trace      调用嵌套、耗时和 Provider/Tool 诊断
-Checkpoint 加快状态重建的快照
+Event       已经发生的领域事实，也是恢复依据
+Log         帮助定位组件和操作为何失败；缺失不改变 Run
+Trace       调用嵌套、耗时和 Provider/Tool 路径
+Checkpoint  加快状态重建的快照
 ```
 
-P1 从固定任务、结构化日志和 Event 查询开始；P2 增加中断恢复断言；P3 增加权限和隔离断言；P5
-再接入 OpenTelemetry 和跨版本报告。
+F-0031 的结构化 Log 只输出固定字段：组件、操作、Run/Event/Activity 关联 ID、Event type、sequence、
+有限耗时、错误码和异常类型。只有 Event 成功写入数据库后，才会输出对应日志；日志没有 payload、
+message、details、路径或 traceback。即使 stderr 不可写或少了一行日志，Event、Run 和查询结果也保持
+不变。要确认 Run 实际做过什么，仍使用 `inspect/events`；Runtime 不读取日志来恢复状态。
+
+P1 从固定任务、安全结构化日志和 Event 查询开始；P2 增加中断恢复断言；P3 增加权限和隔离断言；P5
+再接入从 committed Event 派生的 OpenTelemetry、完整 span 路径和跨版本报告。
 
 评测既看最终答案，也看执行路径：是否只使用允许的最小工具集，是否越权，崩溃后是否重复副作用，
 预算和重试是否符合规则，以及 Prompt/Skill/模型版本变化是否造成回归。

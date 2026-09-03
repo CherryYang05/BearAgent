@@ -91,6 +91,7 @@ export default defineConfig({
             { label: 'workspace 只读 Tool', slug: 'development/workspace-read-tools' },
             { label: '原子输出与 Artifact', slug: 'development/atomic-output-artifacts' },
             { label: '有界 Agent Loop', slug: 'development/agent-loop' },
+            { label: '安全结构化运行诊断', slug: 'development/diagnostics' },
             { label: '生产 CLI 与查询', slug: 'development/run-cli' },
           ],
         },

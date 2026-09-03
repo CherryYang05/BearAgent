@@ -20,7 +20,9 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 
 ## 当前计划
 
-当前没有 active Plan。
+当前 active Plan：
+
+- [PLAN-F-0031：安全结构化运行诊断](PLAN-F-0031-safe-structured-diagnostics.md)
 
 ## 已完成计划
 

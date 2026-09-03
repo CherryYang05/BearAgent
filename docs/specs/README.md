@@ -37,6 +37,7 @@ S1 使用精简范围：问题、目标/非目标、可观察行为、必要失�
   （本地开发、构建、预览、书籍化路线和 CLI 手册已完成；在线托管不在 Feature 范围内）
 - [F-0017：配置自己的模型服务，并用真实模型完成可检查文件任务](F-0017-configurable-model-providers-live-gate.md) — implemented
 - [F-0018：记录 Run 使用的可信执行契约，并展示进程中断前最后确认的事实](F-0018-p1-evidence-hardening.md) — implemented
+- [F-0031：安全输出结构化运行诊断，而不复制 Event 内容](F-0031-safe-structured-diagnostics.md) — accepted
 
 其余计划 Feature 见[路线图 Backlog](../project/roadmap.md#11-feature-backlog)。未创建 Spec 的名称只是
 计划范围，不能授权实现。

@@ -9,6 +9,8 @@ sourceRefs:
   - ADR-0015
   - F-0018
   - ADR-0016
+  - F-0031
+  - ADR-0017
   - cli schema snapshot
 ---
 
@@ -201,9 +203,14 @@ uv run bearagent run "生成 outputs/report.md" --json `
   --database .\data\bearagent.db
 ```
 
-stdout 恰好是一个对象；进度和预分配 Run ID 仍在 stderr，不会破坏 JSON 管道。
+stdout 恰好是一个对象；进度、预分配 Run ID 和一行一条的结构化运行诊断都在 stderr，不会破坏 JSON
+管道。诊断只包含组件、操作、关联 ID、Event type/sequence、有限耗时和错误码，不复制 objective、
+模型文本、Tool 参数/结果或原始异常。
 version 1 的精确 JSON Schema 快照位于 `tests/contract/snapshots/cli_schemas.json`；脚本应按
 `schema_version` 解析，不要依赖 human 文本行。
+
+stderr 不是恢复记录。日志丢失或输出失败不会改变 Run；判断已经发生什么仍使用 `inspect/events`。
+完整 Event JSON 可能含敏感业务内容，不能与默认诊断日志混为一谈。
 
 ## 6. 查看一个 Run 的当前状态
 
