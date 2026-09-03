@@ -110,7 +110,10 @@ def tool_error() -> ErrorInfo:
     )
 
 
-def test_v2_tool_terminal_requires_the_exact_requested_tool_request() -> None:
+@pytest.mark.parametrize("schema_version", (2, 3, 4))
+def test_versioned_tool_terminal_requires_the_exact_requested_tool_request(
+    schema_version: int,
+) -> None:
     run_id, _, events = started_run_events()
     state = reduce_events(events)
     activity_id = ActivityId.new()
@@ -130,7 +133,7 @@ def test_v2_tool_terminal_requires_the_exact_requested_tool_request() -> None:
             tool_name=requested.name,
             request=requested,
         ),
-        schema_version=2,
+        schema_version=schema_version,
     )
     state = reduce_event(state, requested_event)
     started_event = make_event(
@@ -138,7 +141,7 @@ def test_v2_tool_terminal_requires_the_exact_requested_tool_request() -> None:
         4,
         "ToolCallStarted",
         ToolCallStartedPayload(activity_id=activity_id, tool_call_id=tool_call_id),
-        schema_version=2,
+        schema_version=schema_version,
     )
     state = reduce_event(state, started_event)
     error = tool_error()
@@ -165,7 +168,7 @@ def test_v2_tool_terminal_requires_the_exact_requested_tool_request() -> None:
                 ),
             ),
         ),
-        schema_version=2,
+        schema_version=schema_version,
     )
 
     with pytest.raises(RunReducerError, match="does not match"):

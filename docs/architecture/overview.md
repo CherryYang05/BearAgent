@@ -50,7 +50,7 @@ flowchart TB
 | Tool 执行边界 | 有界 Tool 数据、精确 Registry、默认拒绝 Policy 和统一 ToolExecutor |
 | workspace 只读边界 | 一层目录列出、分段 UTF-8 读取、普通字符串搜索和跨平台路径拒绝 |
 | workspace 输出边界 | `outputs/**` UTF-8 原子创建/替换、Artifact 元数据和失败前旧目标保护 |
-| Agent 执行链 | 从已提交 Event 构造有界 Context，串行调用模型与 Tool，保存 v2 Activity 事实与 v4 Run contract identity |
+| Agent 执行链 | 从已提交 Event 构造有界 Context，串行调用模型与 Tool，以 schema v4 保存 v2-shaped Activity 事实和 Run contract identity |
 | 固定任务 | 五个版本化文件任务使用 Fake Provider 完成确定性验证；DeepSeek V4 suite v1.1.1 也通过同一 rubric 的真实 5/5 |
 | 用户入口 | `run/inspect/events` CLI、config v1、RunProfile v1/v2、human/JSON renderer 和安全退出码 |
 | 查询 | application query service 只通过 EventStore 读取 projection 与分页 Event，并重建 Artifact 元数据 |
@@ -185,6 +185,10 @@ P1 同时最多一个 active Activity。pause、cancel、Approval 和 `UNKNOWN` 
 Reducer 只接受同一 Run、连续 sequence、白名单类型和版本，以及合法的状态转换。它返回新的冻结
 `RunState`，不访问数据库、模型、工具、系统时钟或随机数。
 
+Tool terminal Event 如果携带 v2-shaped execution evidence，还必须与同版本 `ToolCallRequested` 中的
+原始 `ToolRequest` 完全一致。当前 schema v2、v3、v4 都执行这条跨 Event 校验；判断依据是解析后的
+payload shape，不是容易漏掉新版本的数字分支。
+
 ### 7.2 预算
 
 Run 创建时固定模型调用次数、工具调用次数、token、费用和总时间上限。模型/工具次数在请求 Event
@@ -284,8 +288,10 @@ contract；完整 ToolSpec 的 canonical JSON SHA-256 随 RunCreated v4 保存�
   -> ToolExecutor 限时执行并检查结果大小
 ```
 
-Registry 拒绝重名和模糊匹配。P1 Policy 默认拒绝，只允许程序启动时列出的名称，并且始终拒绝
-外部写入和代码执行。timeout、异常和超大结果会变成不同的安全 Error；Executor 不自动重试。
+Registry 为每个 Tool 只读取一次冻结 `ToolSpec`，再用同一份注册快照完成名称索引、Provider schema、
+Policy 检查和 Run fingerprint；它同时拒绝重名和模糊匹配。P1 Policy 默认拒绝，只允许程序启动时
+列出的名称，并且始终拒绝外部写入和代码执行。timeout、异常和超大结果会变成不同的安全 Error；
+Executor 不自动重试。
 `CancelledError` 原样传播。
 
 F-0007 的三个只读 Tool 和 F-0008 的 `workspace.write` 已通过这条路径运行测试。F-0016 增加了

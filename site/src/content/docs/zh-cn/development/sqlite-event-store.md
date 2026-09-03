@@ -74,9 +74,11 @@ get_run(run_id)           读取已验证的当前 projection
 3. `_load_run_projection` 恢复之前的 `RunState`；
 4. `_maximum_sequence` 检查 Event 是否从 1 连续到最大 sequence；
 5. `_validate_projection_sequence` 确认 projection 的 `last_sequence` 与事实相同；
-6. `reduce_event` 拒绝非法新 Event 或生成新状态；
-7. 插入 Event，再 upsert Run projection 并重写该 Run 的 Activity projection；
-8. 最后 commit。
+6. `validate_event_history` 核对需要读取旧 payload 的不变量，例如 v2/v3/v4 Tool terminal evidence
+   不能替换 requested Event 的原始 ToolRequest；
+7. `reduce_event` 拒绝非法新 Event 或生成新状态；
+8. 插入 Event，再 upsert Run projection 并重写该 Run 的 Activity projection；
+9. 最后 commit。
 
 任何一步失败都会 rollback。代码特意记录 `event_inserted`：如果 Event insert 已成功、后续 projection
 写入触发完整性错误，它报告普通持久化失败；如果 Event 自己与已提交事实冲突，则报告
@@ -119,7 +121,8 @@ F-0018 的 K5 会建立一个只在 pending Activity projection 写入时失败�
 ## Contract test 怎样帮助理解两个实现
 
 `tests/contract/test_event_store_contract.py` 把相同用例分别跑在 `InMemoryEventStore` 和
-`SqliteEventStore` 上。它检查合法追加、顺序冲突、全局 Event ID 冲突和有界查询。
+`SqliteEventStore` 上。它检查合法追加、顺序冲突、全局 Event ID 冲突、有界查询，以及各个共享
+execution evidence shape 的 schema version 都拒绝矛盾的原始 ToolRequest。
 
 这说明 port 的意义不是“定义了几个方法”，而是调用方能依赖的可观察行为。SQLite 可以使用 SQL
 transaction，内存实现可以复制字典，但两者对合法与非法输入必须给出相同结论。

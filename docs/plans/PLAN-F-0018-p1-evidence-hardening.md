@@ -4,7 +4,7 @@ status: completed
 plan_id: PLAN-F-0018
 related_spec: F-0018
 created: 2026-08-28
-last_updated: 2026-08-29
+last_updated: 2026-09-02
 ---
 
 # PLAN-F-0018：强化 P1 执行契约身份与 crash observability
@@ -74,7 +74,7 @@ last_updated: 2026-08-29
 
 | 风险面 | 结果或 `N/A` + 原因 | 证据 |
 |---|---|---|
-| Persistence / recovery | v4 只扩展 payload JSON；旧 Event 可读；K1-K6 不恢复 | 474 tests + K1-K6 |
+| Persistence / recovery | v4 只扩展 payload JSON；旧 Event 可读；K1-K6 不恢复 | 474 tests at closure；481 tests after audit |
 | Permission / security | fingerprint 严格拒绝配置/Grant 字段，production Event 不含 Provider key | security + composition tests |
 | Timeout / cancel / limits | 既有上限不变；retryable Provider/Tool 各只调用一次 | recovery tests |
 | Migration / rollback | 无 SQL migration；v4 reader 必须保留 | ADR-0016 |
@@ -112,3 +112,17 @@ git diff --check
 - sdist/wheel 构建成功，隔离安装 wheel 后的 `run/inspect/events` smoke 通过；
 - immutable implementation evidence：`commit 26f3203`；Feature `implemented_in`、Roadmap 与索引已同步，
   第 5 步和本 Plan 完成。
+
+## 2026-09-02 完成后全仓审计
+
+- 修复 `validate_event_history` 只列举 schema v2/v3、导致 v4 Tool terminal evidence 绕过原始请求
+  一致性检查的问题；现在按解析后的 v2-shaped payload 类型分派，v2/v3/v4 都运行同一规则；
+- `ToolRegistry` 构造时只读取每个 Tool 的一次冻结 `ToolSpec`，避免名称索引与真正用于 Policy、Provider
+  schema 和 fingerprint 的注册快照分叉；
+- 合并 CLI 三个命令中语义重复的异常分支；删除未调用的 OpenAI 私有 helper 和未实现的空
+  `adapters/sandbox` 占位包，没有新增 P2/P3 类型或行为；
+- 同步 Spec、ADR、Architecture、Roadmap，以及 Reducer、EventStore、Tool、AgentLoop、milestone 和状态
+  开发者文档；学习页与 README 为 `N/A`，因为合法 CLI 行为和读者操作路径没有变化；
+- 最终结果：481 tests passed；Ruff、format、Pyright、三个 schema 生成器、governance、140 个 Markdown
+  链接、45 页 Starlight build、sdist/wheel 和隔离安装后的 `doctor`、`run/inspect/events` smoke 全部通过；
+  domain/CLI/runtime configuration schema 与 SQLite migration 均无变化。
