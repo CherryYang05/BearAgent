@@ -54,3 +54,18 @@ def test_doctor_json_has_stable_non_sensitive_shape(monkeypatch: pytest.MonkeyPa
 def test_doctor_report_rejects_unsupported_python(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "version_info", (3, 13, 0))
     assert build_doctor_report()["status"] == "error"
+
+
+def test_cli_error_keeps_stdout_contract_and_emits_safe_structured_stderr() -> None:
+    result = runner.invoke(app, ["run", "--json", "   "])
+
+    assert result.exit_code == 1
+    stdout = json.loads(result.stdout)
+    stderr = json.loads(result.stderr)
+    assert stdout["command"] == "run"
+    assert stdout["error"]["code"] == "invalid_input"
+    assert stderr["name"] == "operation.failed"
+    assert stderr["component"] == "cli"
+    assert stderr["operation"] == "run"
+    assert stderr["error_code"] == "invalid_input"
+    assert "objective is invalid" not in result.stderr

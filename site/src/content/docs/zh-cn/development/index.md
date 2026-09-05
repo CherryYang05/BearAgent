@@ -10,6 +10,8 @@ sourceRefs:
   - F-0005
   - F-0017
   - F-0018
+  - F-0019
+  - ADR-0017
 ---
 
 开发者文档不复制 Spec，也不把每个目录重新列一遍。它负责回答三个问题：代码从哪里进入、关键
@@ -64,6 +66,7 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 - [F-0007：workspace 只读 Tool](/zh-cn/development/workspace-read-tools/)——跨平台路径边界、list/read/search 和安全测试；
 - [F-0008：原子输出与 Artifact](/zh-cn/development/atomic-output-artifacts/)——同目录暂存、原子提交、结果元数据和故障窗口；
 - [F-0016/F-0018：有界 Agent Loop 与证据边界](/zh-cn/development/agent-loop/)——Context、RunCreated v4、contract fingerprint、串行调度和 K1-K6；
+- [F-0019：安全结构化运行诊断](/zh-cn/development/diagnostics/)——Event 写入数据库后输出有限日志，并保证日志失败不影响 Run；
 - [F-0005：生产 CLI 与查询](/zh-cn/development/run-cli/)——Run profile、composition root、inspect/events、JSON 契约和失败边界；
 - [Feature 完成时怎样更新文档](/zh-cn/development/feature-documentation/)——哪些事实写在 `docs/`，哪些解释写在站点；
 - [本地运行文档站](/zh-cn/guides/local-docs/)——安装、构建和检查 Starlight。

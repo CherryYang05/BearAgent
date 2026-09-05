@@ -11,6 +11,11 @@ from typing import Annotated
 from pydantic import Field, TypeAdapter, ValidationError
 
 from bearagent import package_version
+from bearagent.adapters.diagnostics import (
+    DiagnosticEventStore,
+    JsonLinesDiagnosticSink,
+    operation_failure_record,
+)
 from bearagent.adapters.model import (
     AnthropicMessagesProvider,
     OpenAIChatCompletionsProvider,
@@ -24,6 +29,7 @@ from bearagent.domain.agent import AgentConfig, ModelPricing, RunProfile, RunPro
 from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.ids import IdGenerator
 from bearagent.domain.providers import ModelProtocol, ProviderSelection
+from bearagent.ports.diagnostics import DiagnosticSink, emit_safely
 from bearagent.ports.model import ModelProvider
 from bearagent.runtime.fingerprints import build_run_fingerprint
 from bearagent.runtime.policy import FixedToolPolicy
@@ -114,8 +120,44 @@ async def build_run_services(
     provider_catalog: ProviderCatalog | None = None,
     model_provider: ModelProvider | None = None,
     id_generator: IdGenerator | None = None,
+    diagnostic_sink: DiagnosticSink | None = None,
 ) -> RunServices:
     """Validate inputs, initialize SQLite, and assemble the production Run graph."""
+    sink = diagnostic_sink if diagnostic_sink is not None else JsonLinesDiagnosticSink()
+    try:
+        return await _build_run_services(
+            profile_path=profile_path,
+            config_path=config_path,
+            workspace_path=workspace_path,
+            database_path=database_path,
+            provider_catalog=provider_catalog,
+            model_provider=model_provider,
+            id_generator=id_generator,
+            diagnostic_sink=sink,
+        )
+    except Exception as error:
+        emit_safely(
+            sink,
+            operation_failure_record(
+                component="bootstrap",
+                operation="build_run_services",
+                error=error,
+            ),
+        )
+        raise
+
+
+async def _build_run_services(
+    *,
+    profile_path: str | os.PathLike[str],
+    config_path: str | os.PathLike[str],
+    workspace_path: str | os.PathLike[str],
+    database_path: str | os.PathLike[str],
+    provider_catalog: ProviderCatalog | None,
+    model_provider: ModelProvider | None,
+    id_generator: IdGenerator | None,
+    diagnostic_sink: DiagnosticSink,
+) -> RunServices:
     profile = load_run_profile(profile_path)
     provider_selection, provider_config = _resolve_provider_selection(
         profile,
@@ -151,8 +193,9 @@ async def build_run_services(
             cause=error,
         ) from error
 
-    store = SqliteEventStore(Path(database_path))
-    await store.initialize()
+    sqlite_store = SqliteEventStore(Path(database_path))
+    await sqlite_store.initialize()
+    store = DiagnosticEventStore(sqlite_store, diagnostic_sink)
     return RunServices(
         profile=profile,
         agent_config=agent_config,
@@ -267,23 +310,44 @@ def _build_selected_model_provider(
 
 async def build_run_query_service(
     database_path: str | os.PathLike[str],
+    *,
+    diagnostic_sink: DiagnosticSink | None = None,
 ) -> RunQueryService:
     """Open an existing ordinary database without creating a missing one."""
+    sink = diagnostic_sink if diagnostic_sink is not None else JsonLinesDiagnosticSink()
     try:
         path = await asyncio.to_thread(_require_existing_database, database_path)
-    except (OSError, ValueError) as error:
-        raise BootstrapError(
+        sqlite_store = SqliteEventStore(path)
+        await sqlite_store.initialize()
+        return RunQueryService(DiagnosticEventStore(sqlite_store, sink))
+    except BearAgentError as error:
+        emit_safely(
+            sink,
+            operation_failure_record(
+                component="bootstrap",
+                operation="build_query_service",
+                error=error,
+            ),
+        )
+        raise
+    except Exception as error:
+        safe_error = BootstrapError(
             ErrorInfo(
                 category=ErrorCategory.PERSISTENCE,
                 code=ErrorCode.PERSISTENCE_ERROR,
                 message="Run database is missing or invalid.",
             ),
             cause=error,
-        ) from error
-
-    store = SqliteEventStore(path)
-    await store.initialize()
-    return RunQueryService(store)
+        )
+        emit_safely(
+            sink,
+            operation_failure_record(
+                component="bootstrap",
+                operation="build_query_service",
+                error=safe_error,
+            ),
+        )
+        raise safe_error from error
 
 
 def _is_link_like(path: Path, path_stat: os.stat_result) -> bool:

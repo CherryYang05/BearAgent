@@ -8,6 +8,8 @@ sourceRefs:
   - ADR-0013
   - F-0018
   - ADR-0016
+  - F-0019
+  - ADR-0017
 ---
 
 阅读 F-0016 时，先跟 `AgentLoop.run(RunInput)`，不要从某个模型或文件 adapter 倒推。Loop 只负责
@@ -98,3 +100,8 @@ retry 分支。
 
 F-0005 已用 production composition 和 CLI 调用这条 Loop；重启恢复、Approval 与 sandbox 仍未实现。
 修改 Loop 时，先证明没有旁路已有 port，再更新 Feature Spec、架构、学习页、开发者页和当前状态。
+
+F-0019 没有在 Loop 中增加 logger 分支。production bootstrap 只用 EventStore decorator 在 append 成功后
+输出固定 Event 元数据；sink 失败不能改变这里描述的任何保存或调用顺序。继续阅读
+[结构化诊断为什么不能成为第二套 Event](/zh-cn/development/diagnostics/)了解 Log、Event 和未来 Trace
+之间的边界。

@@ -13,6 +13,7 @@ from typer import _click
 from typer.core import TyperGroup
 
 from bearagent import package_version
+from bearagent.adapters.diagnostics import JsonLinesDiagnosticSink, operation_failure_record
 from bearagent.bootstrap import build_run_query_service, build_run_services
 from bearagent.domain.agent import MAX_OBJECTIVE_CHARS, RunInput
 from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, ErrorInfo
@@ -31,6 +32,7 @@ from bearagent.interfaces.cli.renderers import (
     render_json,
     render_run,
 )
+from bearagent.ports.diagnostics import emit_safely
 
 DEFAULT_PROFILE_PATH = Path("data/p1-run-profile.json")
 DEFAULT_CONFIG_PATH = Path("data/config.json")
@@ -297,6 +299,15 @@ def _exit_with_error(
     json_output: bool,
 ) -> NoReturn:
     info = _safe_error_info(error)
+    emit_safely(
+        JsonLinesDiagnosticSink(),
+        operation_failure_record(
+            component="cli",
+            operation=command,
+            error=error,
+            error_info=info,
+        ),
+    )
     output = CommandErrorOutput(command=command, error=info)
     typer.echo(render_json(output) if json_output else f"Error: {render_error(info)}")
     raise typer.Exit(code=1)
