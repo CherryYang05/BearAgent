@@ -39,5 +39,7 @@ S1 使用精简范围：问题、目标/非目标、可观察行为、必要失�
 - [F-0018：记录 Run 使用的可信执行契约，并展示进程中断前最后确认的事实](F-0018-p1-evidence-hardening.md) — implemented
 - [F-0019：安全输出结构化运行诊断，而不复制 Event 内容](F-0019-safe-structured-diagnostics.md) — implemented
 
+- [F-0032：保护本机运行资料并简化首次使用](F-0032-safe-local-startup.md) — accepted
+
 其余计划 Feature 见[路线图 Backlog](../project/roadmap.md#11-feature-backlog)。未创建 Spec 的名称只是
 计划范围，不能授权实现。

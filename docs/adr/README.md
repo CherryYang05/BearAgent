@@ -28,5 +28,10 @@ ADR 只记录影响多个模块、以后难以反转的技术决定。标题直�
 - [ADR-0017：系统只用 Event 确认执行结果，诊断日志只帮助排错](ADR-0017-event-ledger-with-best-effort-ops-diagnostics.md)
   — accepted
 
+- [ADR-0018：文件工具在打开内容之前排除 Runtime 的配置和记录](ADR-0018-runtime-files-outside-workspace-tools.md)
+  — accepted
+- [ADR-0019：main 推送成功后使用受限身份发布静态文档](ADR-0019-main-push-deploys-docs-with-restricted-key.md)
+  — accepted
+
 新决定使用 [ADR 模板](../templates/adr.md)。被新决定替代的 ADR 不删除，改为 `superseded` 并链接
 到替代它的文档。

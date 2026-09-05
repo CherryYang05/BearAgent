@@ -13,7 +13,11 @@
 
 真正开始改代码前，再读 [AI 辅助开发流程](development/ai-development-sop.md)与根目录
 [`AGENTS.md`](../AGENTS.md)。只想运行 P1 CLI 时，不必先读工程记录，直接使用
+[第一次运行教程](../site/src/content/docs/zh-cn/learn/first-run.md)，按需查阅
 [命令行完整手册](../site/src/content/docs/zh-cn/guides/cli.md)。
+
+本轮审查结论见 [P1 闭环审查](project/p1-closure-review.md)；怎样逐步支撑算法比较见
+[科研 Runtime 规划](project/research-runtime.md)。两者分别记录当前证据与待验证的研究方向。
 
 ## 一个疑问应该去哪找
 

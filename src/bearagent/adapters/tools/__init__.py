@@ -1,6 +1,7 @@
 """Built-in bounded workspace Tool adapters."""
 
 import os
+from pathlib import Path
 
 from bearagent.adapters.tools.workspace_boundary import (
     WorkspaceBoundary,
@@ -43,9 +44,10 @@ def build_workspace_tools(
     root: str | os.PathLike[str],
     *,
     id_generator: IdGenerator | None = None,
+    protected_paths: tuple[Path, ...] = (),
 ) -> tuple[Tool, ...]:
     """Build all P1 workspace Tools around one immutable boundary."""
-    boundary = WorkspaceBoundary(root)
+    boundary = WorkspaceBoundary(root, protected_paths=protected_paths)
     return (
         WorkspaceListTool(boundary),
         WorkspaceReadTool(boundary),

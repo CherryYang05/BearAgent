@@ -75,5 +75,5 @@ P1 的本地文件任务、查询和真实模型 gate 已完成；P2/P3 尚未�
 预览，但它不部署 Runtime，也不绑定在线托管平台。准确清单见[当前实现状态](/zh-cn/project/status/)。
 :::
 
-下一步建议先[亲手运行一次](/zh-cn/guides/cli/)。如果暂时不想配置真实模型，也可以直接阅读
+下一步建议先[亲手运行一次](/zh-cn/learn/first-run/)。如果暂时不想配置真实模型，也可以直接阅读
 [一次文件任务的完整链路](/zh-cn/learn/agent-loop-file-task/)。

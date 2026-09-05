@@ -122,7 +122,12 @@ def normalize_output_path(raw_path: str) -> str:
 class WorkspaceBoundary:
     """Resolve and open ordinary files without following workspace links."""
 
-    def __init__(self, root: str | os.PathLike[str]) -> None:
+    def __init__(
+        self,
+        root: str | os.PathLike[str],
+        *,
+        protected_paths: tuple[Path, ...] = (),
+    ) -> None:
         root_path = Path(root)
         try:
             root_stat = os.stat(root_path, follow_symlinks=False)
@@ -141,6 +146,8 @@ class WorkspaceBoundary:
             raise ValueError("workspace root changed during initialization")
         self._root = resolved_root
         self._root_stat = resolved_stat
+        # These paths come from trusted composition, never from Tool arguments.
+        self._protected_paths = tuple(path.resolve(strict=False) for path in protected_paths)
 
     @property
     def root(self) -> Path:
@@ -168,6 +175,7 @@ class WorkspaceBoundary:
     ) -> StagedWorkspaceOutput:
         """Write and fsync a same-directory temporary file without changing the target."""
         normalized = normalize_output_path(relative_path)
+        self._require_accessible(self._root.joinpath(*normalized.split("/")))
         segments = normalized.split("/")
         parent_relative = "/".join(segments[:-1])
         parent = self._ensure_output_directory(parent_relative, deadline=deadline)
@@ -339,7 +347,11 @@ class WorkspaceBoundary:
                     if portable_path is None:
                         blocked_entries += 1
                         continue
-                    if _is_link_like(entry_path, entry_stat):
+                    if (
+                        self._is_protected(entry_path)
+                        or _is_link_like(entry_path, entry_stat)
+                        or (stat.S_ISREG(entry_stat.st_mode) and entry_stat.st_nlink != 1)
+                    ):
                         entries.append(WorkspaceEntry(portable_path, "blocked", None))
                     elif stat.S_ISDIR(entry_stat.st_mode):
                         entries.append(WorkspaceEntry(portable_path, "directory", None))
@@ -375,6 +387,7 @@ class WorkspaceBoundary:
         expected: Literal["file", "directory"],
     ) -> _ResolvedWorkspacePath:
         normalized = normalize_workspace_path(relative_path)
+        self._require_accessible(self._root.joinpath(*normalized.split("/")))
         self._assert_root_identity()
         segments = () if normalized == "." else tuple(normalized.split("/"))
         current = self._root
@@ -411,6 +424,12 @@ class WorkspaceBoundary:
                 ErrorCode.WORKSPACE_PATH_DENIED,
                 "Workspace path resolves outside the configured root.",
             ) from error
+        self._require_accessible(physical_path)
+        if expected == "file" and current_stat.st_nlink != 1:
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_PATH_DENIED,
+                "Workspace file cannot have multiple hard links.",
+            )
         return _ResolvedWorkspacePath(normalized, current, current_stat)
 
     def _ensure_output_directory(
@@ -431,6 +450,7 @@ class WorkspaceBoundary:
         for segment in normalized.split("/"):
             _check_deadline(deadline)
             current = current / segment
+            self._require_accessible(current)
             try:
                 current_stat = os.stat(current, follow_symlinks=False)
             except FileNotFoundError:
@@ -469,8 +489,8 @@ class WorkspaceBoundary:
             ) from error
         return _ResolvedWorkspacePath(normalized, current, current_stat)
 
-    @staticmethod
-    def _validate_output_target(path: Path) -> None:
+    def _validate_output_target(self, path: Path) -> None:
+        self._require_accessible(path)
         try:
             target_stat = os.stat(path, follow_symlinks=False)
         except FileNotFoundError:
@@ -480,7 +500,7 @@ class WorkspaceBoundary:
                 ErrorCode.WORKSPACE_ACCESS_FAILED,
                 "Workspace output target could not be inspected.",
             ) from error
-        if _is_link_like(path, target_stat):
+        if _is_link_like(path, target_stat) or target_stat.st_nlink != 1:
             raise WorkspaceBoundaryError(
                 ErrorCode.WORKSPACE_PATH_DENIED,
                 "Workspace output target cannot be a link or reparse point.",
@@ -489,6 +509,24 @@ class WorkspaceBoundary:
             raise WorkspaceBoundaryError(
                 ErrorCode.WORKSPACE_WRONG_TYPE,
                 "Workspace output target is not a regular file.",
+            )
+
+    def _is_protected(self, path: Path) -> bool:
+        try:
+            relative = path.relative_to(self._root)
+        except ValueError:
+            return True
+        if relative.parts:
+            first = relative.parts[0].casefold()
+            if first in {"data", ".git", ".env"} or first.startswith(".env."):
+                return True
+        return any(path.is_relative_to(protected) for protected in self._protected_paths)
+
+    def _require_accessible(self, path: Path) -> None:
+        if self._is_protected(path):
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_PATH_DENIED,
+                "Workspace path is reserved for local runtime data or configuration.",
             )
 
     def _assert_root_identity(self) -> None:

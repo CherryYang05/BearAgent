@@ -1,10 +1,10 @@
 <div align="center">
   <img src="docs/assets/BearAgent-logo-1.png" alt="BearAgent：蓝色电路熊头像与蓝橙双色项目名称组成的透明背景组合标识" width="520">
 
-  <h1>BearAgent：可追溯、可恢复的 Agent Runtime</h1>
+  <h1>BearAgent：让 Agent 的执行可检查，让恢复有证据</h1>
 
-  <p><strong>一个在模型决策与外部副作用之间负责执行、诊断与恢复的 local-first Runtime。</strong></p>
-  <p>它记录完整执行事实，在恢复前验证故障判断，并约束外部动作的权限和影响范围。</p>
+  <p><strong>一个执行受限文件任务、保存执行事实的 local-first Agent Runtime。</strong></p>
+  <p>当前可以运行和检查任务；后续将逐步支持安全恢复、受控诊断验证与算法实验。</p>
 
   <p>
     <a href="site/src/content/docs/zh-cn/index.mdx"><img src="https://img.shields.io/badge/Documentation-Read_the_Book-174EA6?style=for-the-badge&amp;logo=bookstack&amp;logoColor=white" alt="阅读 BearAgent 中文学习书"></a>
@@ -46,13 +46,11 @@ BearAgent 把模型输出视为执行提议，而不是执行权限。它在 Age
 一层确定性的 Runtime，统一检查请求、执行 Tool、记录 Event、计算状态，并保留模型、Runtime、Tool
 与外部环境之间的执行关系。
 
-失败发生后，Runtime 不会根据最后一条错误直接重试，而是结合执行阶段、因果关系和外部状态形成可以
-验证的故障判断，再通过结果查询、read-after-write、dry-run、canary 或 reconcile 等低风险操作核对
-判断。只有诊断得到足够证据，并且恢复动作满足权限、状态和影响范围约束后，系统才会复用、重试、
-补偿或继续执行；否则回滚、停止或进入 `UNKNOWN`。
+当前 P1 保存并展示执行事实。后续 P2 将核对外部动作是否完成，再选择复用、重试或停止；P3 将约束
+授权和执行范围。结果核对与故障原因验证是两件事：文件存在可以说明写入结果，却不能单独证明超时原因。
 
-BearAgent 最终要建立的是一条确定性的 diagnosis–verification–recovery 闭环：不仅记录发生了什么，
-还要判断为什么失败、验证恢复依据，并限制错误恢复可能造成的副作用。
+长期目标是让不同诊断、验证与恢复算法在同一个受控 Runtime 中比较。算法可以提出假设与动作，
+执行规则负责检查证据、预算、权限和影响范围。具体实验路线见[科研底座规划](docs/project/research-runtime.md)。
 
 ## 当前可以做什么
 
@@ -62,9 +60,10 @@ BearAgent 最终要建立的是一条确定性的 diagnosis–verification–rec
 
 | 可检查 | 有边界 | 默认拒绝 | 本地优先 |
 |---|---|---|---|
-| Model 与 Tool Activity、Error、预算和 Artifact 关联到同一个 Run | 模型次数、Tool 次数、token、费用和总时间都有 hard budget | Tool 必须经过 Registry、参数规范化、Policy 和 Executor | SQLite、workspace 和 `outputs/**` 默认留在本机 |
+| Model 与 Tool Activity、Error、预算和 Artifact 关联到同一个 Run | 新调用受次数、token 与时间预算限制；费用按配置的本地价格记账 | Tool 必须经过 Registry、参数规范化、Policy 和 Executor | SQLite、workspace 和 `outputs/**` 默认留在本机 |
 
-当前第一个完整场景是**仓库与本地文档研究**：Agent 可以在指定 workspace 中列出、读取和搜索文本，并把完整 UTF-8 结果原子写入 `outputs/**`。任务结束后，可以用 Run ID 查询状态、Artifact 和完整Event 序列。
+当前第一个完整场景是**仓库与本地文档研究**：Agent 可以在指定 workspace 中列出、读取和搜索文本，并把完整 UTF-8 结果原子写入 `outputs/**`。任务结束后，可以用 Run ID 查询状态、Artifact 和完整 Event 序列。
+工作资料可能发给所配置的远程模型；本地优先不代表离线推理。普通 Run 使用 `unpriced`，不计算或限制真实账单。
 
 ## 快速开始
 
@@ -82,21 +81,26 @@ uv run bearagent doctor
 
 ### 2. 准备本机配置
 
-在仓库根目录创建 `data/`，再复制两份示例文件：
+```console
+uv run bearagent init
+```
 
-- `config.example.json` → `data/config.json`
-- `examples/run-profile-v2.example.json` → `data/p1-run-profile.json`
+在生成的 `data/config.json` 中填写协议、URL、API key 与模型，第一次保留 `provider_id: primary`。
+`data/p1-run-profile.json` 已含有限的运行上限；已有配置不会被覆盖。然后离线检查：
 
-- 在 `data/config.json` 中填写模型协议、base URL、API key 和 model；
-- 在 profile 中选择同一个 `provider_id`，并把默认全为 `0` 的预算改为有限值；
-- `data/` 默认被 Git 忽略。不要把 API key 写进 profile、命令、Event、日志或 Git。
+```console
+uv run bearagent doctor --check-config
+```
+
+这只检查本地配置，不测试服务可达性，也不产生模型费用。`data/` 和实际配置/数据库位置受到文件工具保护。
+旧版本没有 `init` 时，可以手动复制配置参考中的两份模板；零预算示例需要自行设置非零预算。
 
 字段含义、完整示例与三种受支持协议见[配置参考](docs/reference/configuration.md)。
 
 ### 3. 启动一次 Run
 
 ```console
-uv run bearagent run "阅读 docs，并把项目简介写到 outputs/intro.md"
+uv run bearagent run "阅读 docs/index.md，并把项目简介写到 outputs/intro.md"
 ```
 
 默认情况下，当前目录是 workspace，Event 写入 `data/bearagent.db`。命令会输出 Run ID、最终状态、
@@ -105,10 +109,11 @@ uv run bearagent run "阅读 docs，并把项目简介写到 outputs/intro.md"
 ### 4. 用 Run ID 回看过程
 
 ```console
-uv run bearagent run inspect <run-id> --json
-uv run bearagent run events <run-id> --after-sequence 0 --limit 100 --json
+uv run bearagent run inspect RUN_ID --json
+uv run bearagent run events RUN_ID --after-sequence 0 --limit 100 --json
 ```
 
+把 `RUN_ID` 换成屏幕显示的实际 ID。`succeeded` 表示模型返回终态回答，仍需亲自核对文件与内容。
 如果命令失败，先保存 Run ID，不要立即删除数据库或重复执行。退出码和排错步骤见
 [CLI 完整手册](site/src/content/docs/zh-cn/guides/cli.md)。
 
@@ -147,7 +152,7 @@ Model 提出 ToolRequest
 
 | 当前可用 | 设计方向 |
 |---|---|
-| `doctor/run/inspect/events` CLI | 进程中断后的安全 resume 与恢复决策 |
+| `init/doctor/run/inspect/events` CLI | 进程中断后的安全 resume 与恢复决策 |
 | Responses、Chat Completions、Anthropic Messages 三种显式协议 | 按 URL 猜协议或失败后自动 fallback（不计划隐式提供） |
 | SQLite Event、projection 与重开查询 | Attempt、Receipt、reconcile 与 `UNKNOWN` |
 | workspace list/read/search 与 `outputs/**` 原子写入 | 受控 sandbox shell/code 与联网 Tool/MCP；不会回退到 host shell |
@@ -163,10 +168,12 @@ Model 提出 ToolRequest
 | 你想做什么 | 从这里开始 |
 |---|---|
 | 从零理解一次 Agent 文件任务 | [全书阅读地图](site/src/content/docs/zh-cn/learn/index.md) |
+| 第一次亲手运行 | [读一份文档并核对结果](site/src/content/docs/zh-cn/learn/first-run.md) |
 | 安装、配置、运行与排错 | [CLI 完整手册](site/src/content/docs/zh-cn/guides/cli.md) |
 | 理解 Runtime 的模块连接 | [一次请求怎样穿过 Runtime](site/src/content/docs/zh-cn/architecture/runtime-flow.md) |
 | 沿代码和测试继续阅读 | [开发者代码路线](site/src/content/docs/zh-cn/development/index.md) |
 | 查看当前状态与阶段目标 | [当前状态](site/src/content/docs/zh-cn/project/status.md) · [Roadmap](docs/project/roadmap.md) |
+| 判断 P1 是否闭环与怎样用于研究 | [P1 审查](docs/project/p1-closure-review.md) · [科研实验规划](docs/project/research-runtime.md) |
 | 修改 Feature | [AGENTS.md](AGENTS.md) · [Feature Specs](docs/specs/README.md) · [ADRs](docs/adr/README.md) |
 
 提交变更前运行完整质量门：

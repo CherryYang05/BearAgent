@@ -117,7 +117,7 @@ adapters   -------------------------------------^
 ```text
 src/bearagent/
 ├── domain/       ID、Message、Event、状态和 Error
-├── runtime/      Reducer、预算、后续执行与恢复规则
+├── runtime/      Reducer、预算、Context、Tool 执行规则；恢复属于 P2
 ├── application/  启动、查询和控制 Run 的用例
 ├── ports/        当前模型、存储、Policy、Tool 的接口要求
 ├── adapters/     当前 Provider、SQLite、文件和测试实现；sandbox 属于 P3
@@ -312,6 +312,11 @@ F-0008 增加 `workspace.write`：只接受有限 UTF-8 文本并写入 `outputs
 
 P1 Policy 只有固定允许/拒绝规则。P3 才增加可配置 Grant 和用户 Approval。
 
+F-0032 在文件访问 Boundary 排除根目录 `data/`、`.git/`、`.env` 与 `.env.*`。bootstrap 另传入实际
+config、profile、数据库及其 SQLite sidecar；显式访问拒绝，遍历标为 blocked 并跳过。多个硬链接的
+普通文件同样被拒绝。四个 workspace Tool 的 `spec_version` 为 `2`。路径没有进入 fingerprint 或日志；
+这不是完整环境快照，也不代替 P3 隔离。决定见 [ADR-0018](../adr/ADR-0018-runtime-files-outside-workspace-tools.md)。
+
 ### 10.3 P3 授权与隔离执行
 
 P3 把 Policy 扩展为 `ALLOW / DENY / REQUIRE_APPROVAL`。Grant 约束主体、动作、资源和限制；
@@ -394,6 +399,8 @@ Runtime 或 Provider 配置持有的 API key 不会被主动复制进 Event、wo
 ### 13.1 P1 CLI
 
 ```text
+bearagent init
+bearagent doctor --check-config
 bearagent run "整理 workspace 中的资料"
 bearagent run inspect <run_id>
 bearagent run events <run_id>
@@ -405,6 +412,11 @@ bearagent doctor
 `provider_id` 选择服务；模型从该 Provider 的 `default_model` 解析；key 只从该 Provider 的 `SecretStr`
 字段读取，并仅在创建 adapter 时解封。人类可读输出与 `--json`
 使用同一个 application result，不复制查询或状态规则。
+
+`init` 仅建立缺失的 config/profile 与数据目录忽略规则；用户填写 config，生成的 profile 使用有限
+非零预算。`doctor --check-config` 和 `build_run_services` 共用 `validate_run_configuration`，前者
+不创建模型 client、数据库或 Run。普通 doctor 仍只检查 Python。`--workspace` 不改变其他默认路径。
+普通 v2 Run 的价格是 `unpriced`；cost=0 不代表免费，费用字段不能限制真实账单。
 
 `inspect` 返回 Reducer projection、RunCreated v4 的安全 Provider 选择与 RunFingerprint，以及从已提交
 v2 shape Tool Event 重建的 Artifact。旧 v1-v3 Run 没有 fingerprint 时明确返回缺失。`events` 使用有界页、
@@ -443,6 +455,10 @@ P1 从固定任务、安全结构化日志和 Event 查询开始；P2 增加中�
 预算和重试是否符合规则，以及 Prompt/Skill/模型版本变化是否造成回归。
 
 ## 15. 安全边界
+
+科研扩展保持“策略提出提议，Runtime 检查执行”的边界。现有 causation ID 不是完整依赖图；P2 要
+另行定义 Attempt、阶段与因果引用的契约。副作用核对、诊断假设验证与授权分别记录，不能互相替代。
+具体阶段和实验设计见[科研 Runtime 规划](../project/research-runtime.md)，这些策略接口尚未实现。
 
 以下输入都不可信：用户附件、workspace 文件、网页、MCP、模型输出、Tool 输出、第三方 Skill、模型
 生成的命令、路径、URL 和代码。

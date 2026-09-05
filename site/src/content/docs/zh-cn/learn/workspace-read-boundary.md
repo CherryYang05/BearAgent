@@ -1,8 +1,10 @@
 ---
 title: Windows 和 Unix 路径为什么先变成同一种写法
 description: 从读取一份文档理解路径规范化、真实文件边界和三个只读 Tool。
-bearStatus: implemented
+bearStatus: mixed
 sourceRefs:
+  - F-0032
+  - ADR-0018
   - F-0007
   - ADR-0011
   - F-0006
@@ -66,10 +68,23 @@ list 只列一层。read 只接受 UTF-8 普通文件，并按完整行分页。
 每个 Tool 的目录数、文件字节、行长、匹配数、结果大小和时间都有可信上限。模型可以请求更小的一页，
 不能把上限调大。
 
+## 在工作区里面，不代表应该交给模型
+
+仓库根是默认 workspace，而 `data/config.json` 保存模型密钥。它没有越界，也不是链接，但仍不该
+成为输入。F-0032 在现有 Boundary 中保留根目录的 `data/`、`.git/`、`.env` 与 `.env.*`，并由可信启动
+代码传入实际配置、profile、数据库及 SQLite sidecar 的位置。
+
+`workspace.list(".")` 会把受保护条目标为 blocked；search 跳过它们；直接 read 返回
+`workspace_path_denied`。写入也不能覆盖自定义位置的配置。四个 Tool 共用这个规则，模型不能修改。
+这层保护不判断普通文章里是否有敏感文字，用户仍要选择合适的工作资料。
+
 ## 链接即使指向内部也不读取
 
 F-0007 保守地拒绝所有 symlink 和 junction。这样会失去一些仓库布局的便利，但同一相对路径只有一个
 含义，递归搜索也不会因为链接环路重复进入目录。
+
+F-0032 还拒绝多硬链接普通文件，防止通过另一个名字读取受保护配置。这些补强已在本地验证，正式
+交付状态以 Spec 为准。
 
 这仍不是 sandbox。F-0007 面向单用户、受控本地 workspace；能够并发替换任意祖先目录的本机攻击者
 属于 P3 隔离挂载和独立 runner 要处理的威胁。

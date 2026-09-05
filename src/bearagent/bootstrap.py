@@ -60,6 +60,17 @@ class RunServices:
     queries: RunQueryService
 
 
+@dataclass(frozen=True, slots=True)
+class RunConfiguration:
+    """Validated offline composition shared by doctor and actual Run startup."""
+
+    profile: RunProfile | RunProfileV2
+    agent_config: AgentConfig
+    provider_selection: ProviderSelection
+    provider_config: ProviderConfig | None
+    registry: ToolRegistry
+
+
 def load_run_profile(profile_path: str | os.PathLike[str]) -> RunProfile | RunProfileV2:
     """Load one bounded UTF-8 JSON profile without accepting links or secrets."""
     path = Path(profile_path)
@@ -158,6 +169,53 @@ async def _build_run_services(
     id_generator: IdGenerator | None,
     diagnostic_sink: DiagnosticSink,
 ) -> RunServices:
+    configured = validate_run_configuration(
+        profile_path=profile_path,
+        config_path=config_path,
+        workspace_path=workspace_path,
+        database_path=database_path,
+        provider_catalog=provider_catalog,
+        id_generator=id_generator,
+    )
+    policy = FixedToolPolicy(configured.agent_config.tool_names)
+    executor = ToolExecutor(configured.registry, policy)
+    provider = (
+        model_provider
+        if model_provider is not None
+        else _build_selected_model_provider(configured.provider_config)
+    )
+    sqlite_store = SqliteEventStore(Path(database_path))
+    await sqlite_store.initialize()
+    store = DiagnosticEventStore(sqlite_store, diagnostic_sink)
+    return RunServices(
+        profile=configured.profile,
+        agent_config=configured.agent_config,
+        agent_loop=AgentLoop(
+            model_provider=provider,
+            event_store=store,
+            tool_executor=executor,
+            id_generator=id_generator,
+            provider_selection=configured.provider_selection,
+            run_fingerprint=build_run_fingerprint(
+                bearagent_version=package_version(),
+                policy=policy.fingerprint,
+                tool_specs=configured.registry.specs,
+            ),
+        ),
+        queries=RunQueryService(store),
+    )
+
+
+def validate_run_configuration(
+    *,
+    profile_path: str | os.PathLike[str],
+    config_path: str | os.PathLike[str],
+    workspace_path: str | os.PathLike[str],
+    database_path: str | os.PathLike[str],
+    provider_catalog: ProviderCatalog | None = None,
+    id_generator: IdGenerator | None = None,
+) -> RunConfiguration:
+    """Validate local inputs without creating a Provider client, database, or Run."""
     profile = load_run_profile(profile_path)
     provider_selection, provider_config = _resolve_provider_selection(
         profile,
@@ -166,7 +224,17 @@ async def _build_run_services(
     )
     agent_config = resolve_agent_config(profile, provider_config)
     try:
-        available_tools = build_workspace_tools(workspace_path, id_generator=id_generator)
+        database = Path(database_path)
+        available_tools = build_workspace_tools(
+            workspace_path,
+            id_generator=id_generator,
+            protected_paths=(
+                Path(config_path),
+                Path(profile_path),
+                database,
+                *(Path(f"{database}{suffix}") for suffix in ("-wal", "-shm", "-journal")),
+            ),
+        )
         available_names = {tool.spec.name for tool in available_tools}
         configured_names = set(agent_config.tool_names)
         if not configured_names <= available_names:
@@ -175,13 +243,6 @@ async def _build_run_services(
         # while the Provider never sees definitions outside this trusted profile.
         registry = ToolRegistry(
             tool for tool in available_tools if tool.spec.name in configured_names
-        )
-        policy = FixedToolPolicy(agent_config.tool_names)
-        executor = ToolExecutor(registry, policy)
-        provider = (
-            model_provider
-            if model_provider is not None
-            else _build_selected_model_provider(provider_config)
         )
     except Exception as error:
         raise BootstrapError(
@@ -193,25 +254,12 @@ async def _build_run_services(
             cause=error,
         ) from error
 
-    sqlite_store = SqliteEventStore(Path(database_path))
-    await sqlite_store.initialize()
-    store = DiagnosticEventStore(sqlite_store, diagnostic_sink)
-    return RunServices(
+    return RunConfiguration(
         profile=profile,
         agent_config=agent_config,
-        agent_loop=AgentLoop(
-            model_provider=provider,
-            event_store=store,
-            tool_executor=executor,
-            id_generator=id_generator,
-            provider_selection=provider_selection,
-            run_fingerprint=build_run_fingerprint(
-                bearagent_version=package_version(),
-                policy=policy.fingerprint,
-                tool_specs=registry.specs,
-            ),
-        ),
-        queries=RunQueryService(store),
+        provider_selection=provider_selection,
+        provider_config=provider_config,
+        registry=registry,
     )
 
 

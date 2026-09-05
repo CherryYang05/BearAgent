@@ -3,6 +3,7 @@ import starlight from '@astrojs/starlight';
 import mermaid from 'astro-mermaid';
 
 export default defineConfig({
+  site: 'https://docs.bearguin.cn',
   integrations: [
     mermaid({
       autoTheme: true,
@@ -34,7 +35,7 @@ export default defineConfig({
       customCss: ['./src/styles/custom.css'],
       sidebar: [
         {
-          label: '序章 · 先建立全局认识',
+          label: '开始 · 先建立全局认识',
           items: [
             { label: 'BearAgent 要解决什么问题', slug: 'start/what-is-bearagent' },
             { label: '现在实现到了哪里', slug: 'project/status' },
@@ -42,15 +43,16 @@ export default defineConfig({
           ],
         },
         {
-          label: '第一部 · 先亲手跑一次',
+          label: '第一步 · 先亲手跑一次',
           items: [
+            { label: '第一次运行：读一份文档', slug: 'learn/first-run' },
             { label: '完整命令行手册', slug: 'guides/cli' },
             { label: '配置一次模型服务', slug: 'learn/configure-model-service' },
             { label: '运行、检查与读取 Event', slug: 'learn/run-inspect-events' },
           ],
         },
         {
-          label: '第二部 · 看懂 Agent 运行',
+          label: '第二步 · 看懂 Agent 运行',
           items: [
             { label: '一项 Agent 任务怎样运转', slug: 'learn/agent-basics' },
             { label: '一次文件任务的完整链路', slug: 'learn/agent-loop-file-task' },
@@ -60,7 +62,7 @@ export default defineConfig({
           ],
         },
         {
-          label: '第三部 · 理解安全边界',
+          label: '第三步 · 理解安全边界',
           items: [
             { label: '模型为什么需要 adapter', slug: 'learn/model-provider-boundary' },
             { label: 'Tool 请求为什么过四道检查', slug: 'learn/tool-execution-boundary' },
@@ -70,7 +72,7 @@ export default defineConfig({
           ],
         },
         {
-          label: '第四部 · 拼出系统架构',
+          label: '第四步 · 拼出系统架构',
           items: [
             { label: '架构总览', slug: 'architecture' },
             { label: '一次请求怎样穿过 Runtime', slug: 'architecture/runtime-flow' },
@@ -80,7 +82,7 @@ export default defineConfig({
           ],
         },
         {
-          label: '第五部 · 沿代码继续学习',
+          label: '第五步 · 沿代码继续学习',
           items: [
             { label: '源码阅读路线', slug: 'development' },
             { label: '领域数据与 Schema', slug: 'development/domain-contracts' },
@@ -96,8 +98,9 @@ export default defineConfig({
           ],
         },
         {
-          label: '第六部 · 走向研究与扩展',
+          label: '第六步 · 走向研究与扩展',
           items: [
+            { label: '从失败到研究实验', slug: 'learn/research-experiments' },
             { label: 'Agent 今天能做什么', slug: 'learn/agents-today' },
             { label: 'Agent 仍然难在哪里', slug: 'learn/open-problems' },
             { label: 'BearAgent 的阶段路线', slug: 'project/milestones' },
@@ -105,7 +108,7 @@ export default defineConfig({
           ],
         },
         {
-          label: '附录 · 查阅与贡献',
+          label: '查阅 · 参考与贡献',
           items: [
             { label: '术语表', slug: 'reference/glossary' },
             { label: '参考资料与阅读路线', slug: 'reference/sources' },
