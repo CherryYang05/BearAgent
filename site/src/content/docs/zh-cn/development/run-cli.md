@@ -8,6 +8,8 @@ sourceRefs:
   - ADR-0014
   - F-0017
   - ADR-0015
+  - F-0018
+  - ADR-0016
 ---
 
 修改 `bearagent run` 时，先沿着 `interfaces -> bootstrap/application -> ports -> adapters` 阅读。CLI 只
@@ -20,7 +22,7 @@ sourceRefs:
 | `domain/agent.py` | 严格、非敏感的 RunProfile v1/v2 |
 | `configuration.py` | config v1 的 Provider 列表、HTTPS/base URL、直接 key、SecretStr、无 pricing 和条目上限 |
 | `domain/providers.py` | `ModelProtocol` 与非敏感 `ProviderSelection` |
-| `domain/queries.py` | RunInspection、Provider 选择与有界 EventPage |
+| `domain/queries.py` | RunInspection、Provider/contract identity 与有界 EventPage |
 | `application/run_queries.py` | 只通过 EventStore 查询 projection、Event 和 Artifact |
 | `bootstrap.py` | 读取 profile/catalog，按显式 protocol 组装 adapter、SQLite、Tools、Policy 与 AgentLoop |
 | `interfaces/cli/contracts.py` | version 1 Run/inspect/events result 与 safe error envelope |
@@ -49,8 +51,9 @@ point、替换竞态、非法 UTF-8、未知字段、非法 URL/key 和未知字
 ## query service 为什么不写 SQL
 
 `RunQueryService.inspect` 先取得 RunState，再以最多 1,000 条一页扫描 Event，总量最多 10,000 条。
-每页必须属于同一个 Run，sequence 连续并且不超过 projection 的 `last_sequence`。RunCreated v3
-经过正式 parser 后提供安全 Provider 选择；v2 ToolCallCompleted payload 才允许提取
+每页必须属于同一个 Run，sequence 连续并且不超过 projection 的 `last_sequence`。RunCreated v4
+经过正式 parser 后提供安全 Provider 选择与 RunFingerprint；legacy v1-v3 保持缺失或原有 Provider
+选择。v2 shape 的 ToolCallCompleted payload 才允许提取
 `workspace.write` Artifact。
 
 `events` 同样先读取 projection，之后只查询当时已提交的有限前缀。返回的 EventPage 验证 Run ID、

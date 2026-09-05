@@ -23,6 +23,8 @@ ADR 只记录影响多个模块、以后难以反转的技术决定。标题直�
   — accepted
 - [ADR-0015：用户配置显式选择模型协议 adapter](ADR-0015-explicit-model-protocol-adapters.md)
   — accepted
+- [ADR-0016：Run 创建时保存可信契约身份，进程中断后只报告已提交事实](ADR-0016-run-contract-fingerprint-committed-crash-facts.md)
+  — accepted
 
 新决定使用 [ADR 模板](../templates/adr.md)。被新决定替代的 ADR 不删除，改为 `superseded` 并链接
 到替代它的文档。

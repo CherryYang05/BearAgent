@@ -72,6 +72,21 @@ def render_inspection(inspection: RunInspection) -> str:
                 f"Provider config version: {selection.config_version}",
             )
         )
+    if inspection.run_fingerprint is not None:
+        fingerprint = inspection.run_fingerprint
+        lines.extend(
+            (
+                f"BearAgent version: {fingerprint.bearagent_version}",
+                (
+                    f"Policy contract: {fingerprint.policy.version} "
+                    f"sha256={fingerprint.policy.sha256}"
+                ),
+            )
+        )
+        lines.extend(
+            f"Tool contract: {tool.name} {tool.spec_version} sha256={tool.sha256}"
+            for tool in fingerprint.tools
+        )
     for activity in state.activities:
         label = activity.kind.value
         if activity.tool_name is not None:

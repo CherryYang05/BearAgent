@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 
 import pytest
-from tests.agent_loop_fixtures import TickingClock
+from tests.agent_loop_fixtures import TickingClock, run_fingerprint
 
 from bearagent.adapters.sqlite import SqliteEventStore
 from bearagent.adapters.testing import InMemoryEventStore, ScriptedFakeModelProvider
@@ -169,14 +169,19 @@ async def execute_task(
     tools = build_workspace_tools(workspace)
     registry = ToolRegistry(tools)
     provider = ScriptedFakeModelProvider(script_for(task))
+    allowed_tool_names = tuple(spec.name for spec in registry.specs)
     loop = AgentLoop(
         model_provider=provider,
         event_store=store,
         tool_executor=ToolExecutor(
             registry,
-            FixedToolPolicy(spec.name for spec in registry.specs),
+            FixedToolPolicy(allowed_tool_names),
         ),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(
+            registry.specs,
+            allowed_tool_names=allowed_tool_names,
+        ),
     )
     result = await loop.run(
         RunInput(

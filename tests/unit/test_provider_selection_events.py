@@ -4,18 +4,22 @@ import pytest
 from pydantic import ValidationError
 from tests.agent_loop_fixtures import (
     TickingClock,
+    agent_config,
     agent_run_input,
+    budget_limits,
     model_completed,
     read_tool_spec,
+    run_fingerprint,
     tool_executor,
 )
+from tests.store_fixtures import make_event, payload_json
 
 from bearagent.adapters.testing import FakeTool, InMemoryEventStore, ScriptedFakeModelProvider
 from bearagent.application.agent_loop import AgentLoop
 from bearagent.application.run_queries import RunQueryService
 from bearagent.domain.agent import RunResult
 from bearagent.domain.events import Event
-from bearagent.domain.ids import ToolCallId
+from bearagent.domain.ids import RunId, SessionId, ToolCallId
 from bearagent.domain.model import (
     ModelFinishReason,
     ModelTextDelta,
@@ -24,8 +28,9 @@ from bearagent.domain.model import (
 from bearagent.domain.providers import ModelProtocol, ProviderSelection
 from bearagent.domain.queries import RunInspection
 from bearagent.domain.run_events import (
-    RUN_EVENT_SCHEMA_VERSION_V3,
+    RUN_EVENT_SCHEMA_VERSION_V4,
     RunCreatedPayloadV3,
+    RunCreatedPayloadV4,
     parse_run_event_payload,
 )
 from bearagent.interfaces.cli.renderers import render_inspection
@@ -56,7 +61,7 @@ def test_provider_selection_is_strict_and_contains_no_connection_fields() -> Non
         )
 
 
-def test_v3_run_reuses_agent_loop_reducer_context_and_query_paths() -> None:
+def test_v4_run_reuses_agent_loop_reducer_context_and_query_paths() -> None:
     tool_call_id = ToolCallId.new()
     provider = ScriptedFakeModelProvider(
         (
@@ -83,6 +88,7 @@ def test_v3_run_reuses_agent_loop_reducer_context_and_query_paths() -> None:
         tool_executor=tool_executor(tool),
         clock=TickingClock(),
         provider_selection=provider_selection(),
+        run_fingerprint=run_fingerprint(),
     )
 
     async def exercise() -> tuple[RunResult, tuple[Event, ...], RunInspection]:
@@ -97,14 +103,46 @@ def test_v3_run_reuses_agent_loop_reducer_context_and_query_paths() -> None:
     assert len(provider.requests) == 2
     assert len(tool.requests) == 1
     assert events
-    assert all(event.schema_version == RUN_EVENT_SCHEMA_VERSION_V3 for event in events)
+    assert all(event.schema_version == RUN_EVENT_SCHEMA_VERSION_V4 for event in events)
     parsed = tuple(parse_run_event_payload(event) for event in events)
-    assert isinstance(parsed[0], RunCreatedPayloadV3)
+    assert isinstance(parsed[0], RunCreatedPayloadV4)
     assert parsed[0].provider_selection == provider_selection()
     assert inspection.provider_selection == provider_selection()
+    assert inspection.run_fingerprint == run_fingerprint()
 
     rendered = render_inspection(inspection)
     assert "Provider ID: primary" in rendered
     assert "Provider protocol: openai_responses" in rendered
+    assert "BearAgent version: 0.1.0+test" in rendered
+    assert "Tool contract: workspace.read 1 sha256=" in rendered
     assert "base_url" not in rendered
     assert "API_KEY" not in rendered
+
+
+def test_query_keeps_v3_provider_selection_read_compatibility() -> None:
+    run_id = RunId.new()
+    legacy = make_event(
+        run_id,
+        1,
+        "RunCreated",
+        payload_json(
+            RunCreatedPayloadV3(
+                session_id=SessionId.new(),
+                budget_limits=budget_limits(),
+                objective="Read a legacy Run.",
+                agent_config=agent_config(),
+                provider_selection=provider_selection(),
+            )
+        ),
+        schema_version=3,
+    )
+
+    async def exercise() -> RunInspection:
+        store = InMemoryEventStore()
+        await store.append(legacy)
+        return await RunQueryService(store).inspect(run_id)
+
+    inspection = asyncio.run(exercise())
+
+    assert inspection.provider_selection == provider_selection()
+    assert inspection.run_fingerprint is None

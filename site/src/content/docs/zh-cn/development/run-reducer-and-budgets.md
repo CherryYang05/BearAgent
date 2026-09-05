@@ -4,7 +4,9 @@ description: 具体 Event、Reducer、预算检查的调用关系、修改顺序
 bearStatus: implemented
 sourceRefs:
   - F-0002
+  - F-0018
   - ADR-0009
+  - ADR-0016
   - domain schema snapshot
 ---
 
@@ -29,9 +31,10 @@ domain/schema.py       把公开数据结构加入兼容性快照
 
 1. 根据 `event_type` 和 `schema_version` 找到精确 payload 类型；
 2. 确认首条 Event、Run ID 和连续 sequence；
-3. 确认当前 Run/Activity 允许这个转换，并且 ID 没有重复；
-4. 如果是新的模型或工具请求，先检查预算；
-5. 创建新的冻结状态，旧状态保持不变。
+3. 对 v2-shaped Tool terminal evidence，确认完整 execution 使用的原始请求与同版本 requested Event 相同；
+4. 确认当前 Run/Activity 允许这个转换，并且 ID 没有重复；
+5. 如果是新的模型或工具请求，先检查预算；
+6. 创建新的冻结状态，旧状态保持不变。
 
 未知类型、未知版本、sequence 缺口、跨 Run 和非法转换都会被拒绝。公开错误只保留稳定 code、
 message 和安全详情，Pydantic 的原始校验文本只作为 Python 异常原因保留。
@@ -40,6 +43,7 @@ message 和安全详情，Pydantic 的原始校验文本只作为 Python 异常�
 
 - 如果 Event 会改变 P1 状态，同时修改 payload、registry、Reducer、测试和 schema 快照；
 - 不兼容的 payload 使用新版本，不要直接改变 v1 的含义；
+- 新版本如果复用已有 payload shape，跨 Event 校验应按解析后的类型生效，不要维护容易漏项的版本号清单；
 - 模型完成或失败时，保留 Provider 已报告的实际 token 和费用，即使已经超限；
 - 模型和工具数据不能提高 `RunCreated` 中的限制；
 - pause、cancel、Attempt、`UNKNOWN` 和 Approval 属于后续阶段，不要提前塞进 P1 状态。

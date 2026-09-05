@@ -50,7 +50,7 @@ flowchart TB
 | Tool 执行边界 | 有界 Tool 数据、精确 Registry、默认拒绝 Policy 和统一 ToolExecutor |
 | workspace 只读边界 | 一层目录列出、分段 UTF-8 读取、普通字符串搜索和跨平台路径拒绝 |
 | workspace 输出边界 | `outputs/**` UTF-8 原子创建/替换、Artifact 元数据和失败前旧目标保护 |
-| Agent 执行链 | 从已提交 Event 构造有界 Context，串行调用模型与 Tool，保存 v2 Activity 事实和 v3 Provider 选择 |
+| Agent 执行链 | 从已提交 Event 构造有界 Context，串行调用模型与 Tool，以 schema v4 保存 v2-shaped Activity 事实和 Run contract identity |
 | 固定任务 | 五个版本化文件任务使用 Fake Provider 完成确定性验证；DeepSeek V4 suite v1.1.1 也通过同一 rubric 的真实 5/5 |
 | 用户入口 | `run/inspect/events` CLI、config v1、RunProfile v1/v2、human/JSON renderer 和安全退出码 |
 | 查询 | application query service 只通过 EventStore 读取 projection 与分页 Event，并重建 Artifact 元数据 |
@@ -61,7 +61,9 @@ flowchart TB
 workspace Tools、固定 Policy 和 AgentLoop 连接。F-0017 的离线测试覆盖三种 adapter、配置选择、
 Event v3 和五任务 live runner；它不会按厂商名、URL 或失败结果猜协议，也不会自动切换 endpoint。
 suite v1.1.1 已用 DeepSeek V4 经 production composition 完成四个普通任务与安全 canary，P1 以 5/5
-关闭并生成脱敏报告。这不代表其他服务或协议已付费联调；持久事实仍不等于进程重启后会自动继续。
+关闭并生成脱敏报告。F-0018 又让新 Run 保存 BearAgent、Policy 和 Tool 的声明 contract fingerprint，
+并用 K1-K6 hard-process suite 核对进程退出后的最后 committed fact。这不代表其他服务或协议已付费
+联调，也不表示进程重启后会自动继续。
 
 ### 3.2 Roadmap 中的后续方向（尚未形成当前实现）
 
@@ -135,6 +137,7 @@ adapter 把 Event 写成 JSON 或数据库字段。SDK 对象和数据库 row �
 - Message 包含 system、user、assistant、tool 角色，以及文本、工具请求和工具结果；
 - Error 包含稳定分类、代码、可重试标志和经过筛选的安全详情；
 - Event 包含自身 ID、Run ID、sequence、类型、版本、带时区时间和 JSON payload。
+- RunFingerprint 包含 BearAgent 声明版本、固定 Policy identity，以及按名称排序的 Tool contract identity。
 
 公开类型冻结、拒绝未知字段，并通过 JSON schema 快照审查变化。详细决定见
 [ADR-0007](../adr/ADR-0007-provider-neutral-domain-schemas.md)。
@@ -182,6 +185,10 @@ P1 同时最多一个 active Activity。pause、cancel、Approval 和 `UNKNOWN` 
 Reducer 只接受同一 Run、连续 sequence、白名单类型和版本，以及合法的状态转换。它返回新的冻结
 `RunState`，不访问数据库、模型、工具、系统时钟或随机数。
 
+Tool terminal Event 如果携带 v2-shaped execution evidence，还必须与同版本 `ToolCallRequested` 中的
+原始 `ToolRequest` 完全一致。当前 schema v2、v3、v4 都执行这条跨 Event 校验；判断依据是解析后的
+payload shape，不是容易漏掉新版本的数字分支。
+
 ### 7.2 预算
 
 Run 创建时固定模型调用次数、工具调用次数、token、费用和总时间上限。模型/工具次数在请求 Event
@@ -211,6 +218,11 @@ occurred_at, causation_id, correlation_id, payload
 ```
 
 不兼容 payload 使用新 schema version 和明确迁移/upcaster，不改变旧 JSON 的含义。
+
+F-0018 的新 Run 统一写 Event schema v4。`RunCreatedPayloadV4` 在已有目标、预算、AgentConfig 和可选
+Provider 选择之外保存 `RunFingerprint`。Fingerprint 由 composition root 根据 package version、
+`FixedToolPolicy` 和 Registry 中的 `ToolSpec` 构造；query 从 sequence 1 的 Event 读取，legacy Run 返回
+缺失，不用当前配置反推历史。SQLite 仍使用已有 `payload_json`，projection 和 migration 都不增加字段。
 
 ### 8.2 P2 将怎样恢复
 
@@ -263,8 +275,10 @@ P1 不自动 retry 或 fallback。调用方必须显式修正配置或重新启�
 ### 10.1 统一 Tool 路径
 
 F-0006 已建立统一入口。F-0007 在这条入口后实现 `workspace.list`、`workspace.read` 和
-`workspace.search`。每个 Tool 先用 `ToolSpec` 声明输入/输出 schema、副作用类别、timeout、输出上限
-和未来能否安全重试。`ToolResult` 返回结构化 JSON 或安全 Error，不只返回任意字符串。
+`workspace.search`。每个 Tool 先用 `ToolSpec` 声明 `spec_version`、输入/输出 schema、副作用类别、
+timeout、输出上限和粗粒度 retry safety。`spec_version` 标识 schema 之外的 prepare/validation 行为
+contract；完整 ToolSpec 的 canonical JSON SHA-256 随 RunCreated v4 保存。`ToolResult` 返回结构化 JSON
+或安全 Error，不只返回任意字符串。
 
 ```text
 模型提出 ToolRequest
@@ -274,8 +288,10 @@ F-0006 已建立统一入口。F-0007 在这条入口后实现 `workspace.list`�
   -> ToolExecutor 限时执行并检查结果大小
 ```
 
-Registry 拒绝重名和模糊匹配。P1 Policy 默认拒绝，只允许程序启动时列出的名称，并且始终拒绝
-外部写入和代码执行。timeout、异常和超大结果会变成不同的安全 Error；Executor 不自动重试。
+Registry 为每个 Tool 只读取一次冻结 `ToolSpec`，再用同一份注册快照完成名称索引、Provider schema、
+Policy 检查和 Run fingerprint；它同时拒绝重名和模糊匹配。P1 Policy 默认拒绝，只允许程序启动时
+列出的名称，并且始终拒绝外部写入和代码执行。timeout、异常和超大结果会变成不同的安全 Error；
+Executor 不自动重试。
 `CancelledError` 原样传播。
 
 F-0007 的三个只读 Tool 和 F-0008 的 `workspace.write` 已通过这条路径运行测试。F-0016 增加了
@@ -389,11 +405,15 @@ bearagent doctor
 字段读取，并仅在创建 adapter 时解封。人类可读输出与 `--json`
 使用同一个 application result，不复制查询或状态规则。
 
-`inspect` 返回 Reducer projection、RunCreated v3 的安全 Provider 选择，以及从已提交 v2 Tool Event
-重建的 Artifact。`events` 使用有界页、
+`inspect` 返回 Reducer projection、RunCreated v4 的安全 Provider 选择与 RunFingerprint，以及从已提交
+v2 shape Tool Event 重建的 Artifact。旧 v1-v3 Run 没有 fingerprint 时明确返回缺失。`events` 使用有界页、
 sequence cursor 和 `has_more`；默认 human 输出不打印 payload，显式 `--json` 才导出完整 Event。查询
 只调用 EventStore port，数据库不存在时不会创建空库。进程中断后的非终态 Run 会原样显示，不会
 自动恢复或伪造 terminal 状态。
+
+K1-K6 测试会在 Tool requested/started、原子 replace 前后、projection transaction 和 Model started
+边界终止独立子进程，再用新 SQLite adapter 与 CLI 检查。即使 K4 的文件已经更新，只要 terminal Event
+没有提交，inspect 仍只显示 RUNNING，不构造 Artifact，也不根据 `retryable` 或 `ToolRetrySafety` 重试。
 
 ### 13.2 P4 HTTP/SSE
 
@@ -471,8 +491,8 @@ Policy/Approval、runner 隔离、日志脱敏和备份恢复演练。
 F-0008 已通过 ADR-0012 决定：P1 不设置 Artifact TTL，也不自动清理成功文件；崩溃残留和 reconcile
 留给 P2。对应后续 Feature 开始前仍需决定：
 
-- F-0012：SandboxBackend 选择、runner 资源上限和 Docker/Podman 边界；
-- F-0013/F-0014：P4 HTTP、自托管和备份恢复方案；
+- F-0024：SandboxBackend 选择、runner 资源上限和 Docker/Podman 边界；
+- F-0025/F-0026：P4 HTTP、自托管和备份恢复方案；
 - P4 Web UI：独立前端还是最小服务端页面；
 - 公开发布：Apache-2.0 或 AGPL-3.0。
 

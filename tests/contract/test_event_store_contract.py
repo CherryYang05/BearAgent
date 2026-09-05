@@ -87,8 +87,10 @@ def test_store_rejects_duplicate_event_identity_globally(
     asyncio.run(exercise())
 
 
-def test_store_rejects_v2_terminal_evidence_for_a_different_request(
+@pytest.mark.parametrize("schema_version", (2, 3, 4))
+def test_store_rejects_versioned_terminal_evidence_for_a_different_request(
     store_factory: StoreFactory,
+    schema_version: int,
 ) -> None:
     async def exercise() -> None:
         store = await store_factory()
@@ -115,7 +117,7 @@ def test_store_rejects_v2_terminal_evidence_for_a_different_request(
                         request=requested,
                     )
                 ),
-                schema_version=2,
+                schema_version=schema_version,
             ),
             make_event(
                 run_id,
@@ -127,7 +129,7 @@ def test_store_rejects_v2_terminal_evidence_for_a_different_request(
                         tool_call_id=tool_call_id,
                     )
                 ),
-                schema_version=2,
+                schema_version=schema_version,
             ),
         )
         for event in initial:
@@ -162,7 +164,7 @@ def test_store_rejects_v2_terminal_evidence_for_a_different_request(
                     ),
                 )
             ),
-            schema_version=2,
+            schema_version=schema_version,
         )
 
         with pytest.raises(RunReducerError, match="does not match"):

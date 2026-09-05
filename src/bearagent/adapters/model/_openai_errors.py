@@ -1,7 +1,5 @@
 """Normalize OpenAI SDK failures without retaining untrusted response data."""
 
-from collections.abc import Mapping
-
 import httpx
 from openai import (
     APIConnectionError,
@@ -91,11 +89,3 @@ def classify_openai_error(cause: BaseException) -> ModelProviderError:
         retryable=False,
         cause=cause,
     )
-
-
-def safe_openai_details(cause: BaseException) -> Mapping[str, SafeDetailValue]:
-    """Return only bounded identifiers if a future adapter needs error context."""
-    details: dict[str, SafeDetailValue] = {}
-    if request_id := safe_detail_text(getattr(cause, "request_id", None)):
-        details["request_id"] = request_id
-    return details

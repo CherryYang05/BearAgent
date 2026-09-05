@@ -68,6 +68,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -641,6 +642,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -677,6 +679,28 @@
         "title": "ModelProtocol",
         "type": "string"
       },
+      "PolicyFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one trusted static Policy evaluator and configuration.",
+        "properties": {
+          "version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "sha256"
+        ],
+        "title": "PolicyFingerprint",
+        "type": "object"
+      },
       "ProviderSelection": {
         "additionalProperties": false,
         "description": "Non-secret Provider identity persisted with a Run.",
@@ -701,6 +725,34 @@
           "protocol"
         ],
         "title": "ProviderSelection",
+        "type": "object"
+      },
+      "RunFingerprint": {
+        "additionalProperties": false,
+        "description": "Trusted contract provenance captured once when a Run is created.",
+        "properties": {
+          "bearagent_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Bearagent Version",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/$defs/PolicyFingerprint"
+          },
+          "tools": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/ToolFingerprint"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "bearagent_version",
+          "policy"
+        ],
+        "title": "RunFingerprint",
         "type": "object"
       },
       "RunId": {
@@ -731,6 +783,17 @@
             "anyOf": [
               {
                 "$ref": "#/$defs/ProviderSelection"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "run_fingerprint": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RunFingerprint"
               },
               {
                 "type": "null"
@@ -873,6 +936,34 @@
         "format": "uuid4",
         "title": "ToolCallId",
         "type": "string"
+      },
+      "ToolFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one registration-time Tool contract.",
+        "properties": {
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "spec_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Spec Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "spec_version",
+          "sha256"
+        ],
+        "title": "ToolFingerprint",
+        "type": "object"
       }
     },
     "additionalProperties": false,
@@ -1246,6 +1337,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },

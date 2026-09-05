@@ -16,6 +16,7 @@ from bearagent.domain.ids import (
     SessionId,
     ToolCallId,
 )
+from bearagent.domain.run_events import LATEST_RUN_EVENT_SCHEMA_VERSION
 from bearagent.runtime.reducer import RunReducerError, reduce_event
 
 BASE_TIME = datetime(2026, 8, 11, 8, 0, tzinfo=UTC)
@@ -131,7 +132,7 @@ def test_unknown_event_type_and_schema_version_fail_closed() -> None:
             "activity_id": str(ActivityId.new()),
             "model_call_id": str(ModelCallId.new()),
         },
-        schema_version=4,
+        schema_version=LATEST_RUN_EVENT_SCHEMA_VERSION + 1,
     )
     with pytest.raises(RunReducerError, match="Unsupported") as caught_version:
         reduce_event(state, unknown_version)

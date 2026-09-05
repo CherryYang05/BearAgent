@@ -7,6 +7,8 @@ sourceRefs:
   - F-0017
   - ADR-0014
   - ADR-0015
+  - F-0018
+  - ADR-0016
   - cli schema snapshot
 ---
 
@@ -149,8 +151,8 @@ base URL、workspace 绝对路径或数据库路径。
 
 BearAgent 故意不提供 `--api-key`。新配置把 key 只写在被 Git 忽略的本机 `data/config.json` 中；不要把
 凭据写进 RunProfile、objective、命令参数、Event、Git、截图或 issue。Config loader 使用 `SecretStr`
-遮蔽 key，Event v3 只保存 `provider_id`、非密钥 `config_version`、protocol、model 和 pricing version，
-不保存 endpoint 或 key。
+遮蔽 key。新 Run 的 Event v4 保存 `provider_id`、非密钥 `config_version`、protocol、model、pricing
+version 与声明的 Policy/Tool contract fingerprint，不保存 endpoint、key 或完整 Policy 配置。
 
 Config v1 缺少、空白或非法 key 时，会在数据库和 Run 创建前返回 `invalid_input`。旧 RunProfile v1 仍
 为兼容已有配置保留：它只支持 legacy OpenAI Responses 路径，并继续读取 `OPENAI_API_KEY` 与可选的

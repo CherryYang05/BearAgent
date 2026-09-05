@@ -2,6 +2,7 @@ import asyncio
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from tests.agent_loop_fixtures import run_fingerprint
 
 from bearagent.adapters.testing import (
     FakeTool,
@@ -43,6 +44,7 @@ class TickingClock:
 def tool_spec() -> ToolSpec:
     return ToolSpec(
         name="workspace.read",
+        spec_version="1",
         description="Read one workspace text file.",
         input_schema={
             "type": "object",
@@ -131,6 +133,7 @@ def test_agent_loop_persists_a_text_run_and_deterministic_cost() -> None:
         event_store=store,
         tool_executor=executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -147,7 +150,7 @@ def test_agent_loop_persists_a_text_run_and_deterministic_cost() -> None:
         "ModelCallCompleted",
         "RunSucceeded",
     )
-    assert all(event.schema_version == 2 for event in events)
+    assert all(event.schema_version == 4 for event in events)
     requested = parse_run_event_payload(events[2])
     assert requested.request == provider.requests[0]  # type: ignore[union-attr]
 
@@ -162,6 +165,7 @@ def test_agent_loop_accepts_a_trusted_preallocated_run_id() -> None:
         event_store=store,
         tool_executor=executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
     run_id = RunId.new()
 
@@ -202,6 +206,7 @@ def test_agent_loop_executes_tool_then_rebuilds_context_for_final_answer() -> No
         event_store=store,
         tool_executor=executor(tool),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -268,6 +273,7 @@ def test_agent_loop_executes_multiple_model_tool_calls_in_returned_order() -> No
         event_store=InMemoryEventStore(),
         tool_executor=executor(tool),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -322,6 +328,7 @@ def test_agent_loop_returns_structured_tool_failure_to_the_model() -> None:
         event_store=store,
         tool_executor=executor(tool),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -343,6 +350,7 @@ def test_agent_loop_fails_on_budget_before_calling_provider() -> None:
         event_store=store,
         tool_executor=executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(run_input(max_model_iterations=0)))
@@ -367,6 +375,7 @@ def test_agent_loop_rejects_unregistered_configured_tool_before_creating_run() -
         event_store=store,
         tool_executor=executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
     invalid_config = AgentConfig.model_validate(
         {**config().model_dump(), "tool_names": ("workspace.write",)}
@@ -392,6 +401,7 @@ def test_agent_loop_discards_partial_output_on_protocol_failure() -> None:
         event_store=store,
         tool_executor=executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -429,6 +439,7 @@ def test_agent_loop_does_not_pretend_missing_provider_usage_is_zero() -> None:
         event_store=store,
         tool_executor=executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -460,6 +471,7 @@ def test_agent_loop_rejects_oversized_tool_arguments_before_model_completion() -
         event_store=store,
         tool_executor=executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -498,6 +510,7 @@ def test_agent_loop_rejects_duplicate_provider_tool_call_identity() -> None:
         event_store=store,
         tool_executor=executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -540,6 +553,7 @@ def test_agent_loop_rejects_provider_tool_call_identity_reused_across_rounds() -
         event_store=store,
         tool_executor=executor(tool),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -571,6 +585,7 @@ def test_agent_loop_fails_safely_when_model_request_event_exceeds_node_limit() -
         event_store=store,
         tool_executor=executor(tool),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint((large_schema_spec,)),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -611,6 +626,7 @@ def test_agent_loop_fails_safely_when_model_request_event_exceeds_byte_limit() -
         event_store=store,
         tool_executor=executor(tool),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint((large_schema_spec,)),
     )
     large_input = RunInput(
         session_id=SessionId.new(),
@@ -663,6 +679,7 @@ def test_agent_loop_compacts_unpersistable_tool_execution_evidence() -> None:
         event_store=store,
         tool_executor=executor(tool),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint((large_spec,)),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -702,6 +719,7 @@ def test_agent_loop_rejects_model_completion_that_cannot_fit_an_event() -> None:
         event_store=store,
         tool_executor=executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(loop.run(run_input()))
@@ -743,6 +761,7 @@ def test_agent_loop_records_maximum_valid_single_call_cost() -> None:
         event_store=InMemoryEventStore(),
         tool_executor=executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
     high_input = RunInput(
         session_id=SessionId.new(),
@@ -791,6 +810,7 @@ def test_agent_loop_records_one_call_token_overshoot_before_stopping() -> None:
         event_store=InMemoryEventStore(),
         tool_executor=executor(),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
     result = asyncio.run(

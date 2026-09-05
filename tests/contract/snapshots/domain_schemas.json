@@ -100,6 +100,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -1111,6 +1112,7 @@
       },
       "retryable": {
         "default": false,
+        "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
         "title": "Retryable",
         "type": "boolean"
       },
@@ -1882,6 +1884,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -2042,6 +2045,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -3091,6 +3095,28 @@
     "title": "PolicyDecision",
     "type": "object"
   },
+  "PolicyFingerprint": {
+    "additionalProperties": false,
+    "description": "Identity of one trusted static Policy evaluator and configuration.",
+    "properties": {
+      "version": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+        "title": "Version",
+        "type": "string"
+      },
+      "sha256": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Sha256",
+        "type": "string"
+      }
+    },
+    "required": [
+      "version",
+      "sha256"
+    ],
+    "title": "PolicyFingerprint",
+    "type": "object"
+  },
   "PreparedToolRequest": {
     "$defs": {
       "JsonValue": {},
@@ -3676,6 +3702,335 @@
     "title": "RunCreatedPayloadV3",
     "type": "object"
   },
+  "RunCreatedPayloadV4": {
+    "$defs": {
+      "AgentConfig": {
+        "additionalProperties": false,
+        "description": "Resolved non-secret Agent snapshot persisted for one Run.",
+        "properties": {
+          "agent_id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "agent_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Agent Version",
+            "type": "string"
+          },
+          "instructions": {
+            "maxLength": 65536,
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "prompt_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "context_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Context Version",
+            "type": "string"
+          },
+          "max_output_tokens": {
+            "exclusiveMinimum": 0,
+            "maximum": 10000000000,
+            "title": "Max Output Tokens",
+            "type": "integer"
+          },
+          "model_timeout_ms": {
+            "exclusiveMinimum": 0,
+            "maximum": 600000,
+            "title": "Model Timeout Ms",
+            "type": "integer"
+          },
+          "max_context_chars": {
+            "exclusiveMinimum": 0,
+            "maximum": 4000000,
+            "title": "Max Context Chars",
+            "type": "integer"
+          },
+          "max_tool_result_bytes": {
+            "maximum": 4000000,
+            "minimum": 128,
+            "title": "Max Tool Result Bytes",
+            "type": "integer"
+          },
+          "tool_names": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 128,
+            "title": "Tool Names",
+            "type": "array"
+          },
+          "model": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$",
+            "title": "Model",
+            "type": "string"
+          },
+          "pricing": {
+            "$ref": "#/$defs/ModelPricing"
+          }
+        },
+        "required": [
+          "agent_id",
+          "agent_version",
+          "instructions",
+          "prompt_version",
+          "context_version",
+          "max_output_tokens",
+          "model_timeout_ms",
+          "max_context_chars",
+          "max_tool_result_bytes",
+          "model",
+          "pricing"
+        ],
+        "title": "AgentConfig",
+        "type": "object"
+      },
+      "BudgetLimits": {
+        "additionalProperties": false,
+        "description": "Finite limits selected by a trusted Run creation boundary.",
+        "properties": {
+          "max_model_iterations": {
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Max Model Iterations",
+            "type": "integer"
+          },
+          "max_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "max_cost_microusd": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Max Cost Microusd",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "maximum": 2678400000,
+            "minimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Max Tool Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_model_iterations",
+          "max_tokens",
+          "max_cost_microusd",
+          "max_wall_time_ms",
+          "max_tool_calls"
+        ],
+        "title": "BudgetLimits",
+        "type": "object"
+      },
+      "ModelPricing": {
+        "additionalProperties": false,
+        "description": "Versioned integer rates used for deterministic local cost estimates.",
+        "properties": {
+          "version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Version",
+            "type": "string"
+          },
+          "input_microusd_per_million_tokens": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Input Microusd Per Million Tokens",
+            "type": "integer"
+          },
+          "output_microusd_per_million_tokens": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Output Microusd Per Million Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "input_microusd_per_million_tokens",
+          "output_microusd_per_million_tokens"
+        ],
+        "title": "ModelPricing",
+        "type": "object"
+      },
+      "ModelProtocol": {
+        "description": "An explicitly selected wire protocol implemented by a model adapter.",
+        "enum": [
+          "openai_responses",
+          "openai_chat_completions",
+          "anthropic_messages"
+        ],
+        "title": "ModelProtocol",
+        "type": "string"
+      },
+      "PolicyFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one trusted static Policy evaluator and configuration.",
+        "properties": {
+          "version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "sha256"
+        ],
+        "title": "PolicyFingerprint",
+        "type": "object"
+      },
+      "ProviderSelection": {
+        "additionalProperties": false,
+        "description": "Non-secret Provider identity persisted with a Run.",
+        "properties": {
+          "provider_id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$",
+            "title": "Provider Id",
+            "type": "string"
+          },
+          "config_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Config Version",
+            "type": "string"
+          },
+          "protocol": {
+            "$ref": "#/$defs/ModelProtocol"
+          }
+        },
+        "required": [
+          "provider_id",
+          "config_version",
+          "protocol"
+        ],
+        "title": "ProviderSelection",
+        "type": "object"
+      },
+      "RunFingerprint": {
+        "additionalProperties": false,
+        "description": "Trusted contract provenance captured once when a Run is created.",
+        "properties": {
+          "bearagent_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Bearagent Version",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/$defs/PolicyFingerprint"
+          },
+          "tools": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/ToolFingerprint"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "bearagent_version",
+          "policy"
+        ],
+        "title": "RunFingerprint",
+        "type": "object"
+      },
+      "SessionId": {
+        "description": "Identify a conversation container.",
+        "format": "uuid4",
+        "title": "SessionId",
+        "type": "string"
+      },
+      "ToolFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one registration-time Tool contract.",
+        "properties": {
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "spec_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Spec Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "spec_version",
+          "sha256"
+        ],
+        "title": "ToolFingerprint",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "v4 Run creation fact with trusted contract provenance.",
+    "properties": {
+      "session_id": {
+        "$ref": "#/$defs/SessionId"
+      },
+      "budget_limits": {
+        "$ref": "#/$defs/BudgetLimits"
+      },
+      "objective": {
+        "maxLength": 1000000,
+        "minLength": 1,
+        "title": "Objective",
+        "type": "string"
+      },
+      "agent_config": {
+        "$ref": "#/$defs/AgentConfig"
+      },
+      "run_fingerprint": {
+        "$ref": "#/$defs/RunFingerprint"
+      },
+      "provider_selection": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ProviderSelection"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "session_id",
+      "budget_limits",
+      "objective",
+      "agent_config",
+      "run_fingerprint"
+    ],
+    "title": "RunCreatedPayloadV4",
+    "type": "object"
+  },
   "RunFailedPayload": {
     "$defs": {
       "ErrorCategory": {
@@ -3745,6 +4100,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -3867,6 +4223,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -3918,6 +4275,86 @@
       "error"
     ],
     "title": "RunFailedPayloadV2",
+    "type": "object"
+  },
+  "RunFingerprint": {
+    "$defs": {
+      "PolicyFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one trusted static Policy evaluator and configuration.",
+        "properties": {
+          "version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "sha256"
+        ],
+        "title": "PolicyFingerprint",
+        "type": "object"
+      },
+      "ToolFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one registration-time Tool contract.",
+        "properties": {
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "spec_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Spec Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "spec_version",
+          "sha256"
+        ],
+        "title": "ToolFingerprint",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Trusted contract provenance captured once when a Run is created.",
+    "properties": {
+      "bearagent_version": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+        "title": "Bearagent Version",
+        "type": "string"
+      },
+      "policy": {
+        "$ref": "#/$defs/PolicyFingerprint"
+      },
+      "tools": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/ToolFingerprint"
+        },
+        "title": "Tools",
+        "type": "array"
+      }
+    },
+    "required": [
+      "bearagent_version",
+      "policy"
+    ],
+    "title": "RunFingerprint",
     "type": "object"
   },
   "RunId": {
@@ -4472,6 +4909,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -4508,6 +4946,28 @@
         "title": "ModelProtocol",
         "type": "string"
       },
+      "PolicyFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one trusted static Policy evaluator and configuration.",
+        "properties": {
+          "version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "sha256"
+        ],
+        "title": "PolicyFingerprint",
+        "type": "object"
+      },
       "ProviderSelection": {
         "additionalProperties": false,
         "description": "Non-secret Provider identity persisted with a Run.",
@@ -4532,6 +4992,34 @@
           "protocol"
         ],
         "title": "ProviderSelection",
+        "type": "object"
+      },
+      "RunFingerprint": {
+        "additionalProperties": false,
+        "description": "Trusted contract provenance captured once when a Run is created.",
+        "properties": {
+          "bearagent_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Bearagent Version",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/$defs/PolicyFingerprint"
+          },
+          "tools": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/ToolFingerprint"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "bearagent_version",
+          "policy"
+        ],
+        "title": "RunFingerprint",
         "type": "object"
       },
       "RunId": {
@@ -4667,6 +5155,34 @@
         "format": "uuid4",
         "title": "ToolCallId",
         "type": "string"
+      },
+      "ToolFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one registration-time Tool contract.",
+        "properties": {
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "spec_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Spec Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "spec_version",
+          "sha256"
+        ],
+        "title": "ToolFingerprint",
+        "type": "object"
       }
     },
     "additionalProperties": false,
@@ -4690,6 +5206,17 @@
         "anyOf": [
           {
             "$ref": "#/$defs/ProviderSelection"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "run_fingerprint": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RunFingerprint"
           },
           {
             "type": "null"
@@ -5395,6 +5922,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -5892,6 +6420,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -6179,6 +6708,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -6508,6 +7038,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -6650,6 +7181,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -7155,6 +7687,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -7387,6 +7920,34 @@
     "title": "ToolExecutionRecord",
     "type": "object"
   },
+  "ToolFingerprint": {
+    "additionalProperties": false,
+    "description": "Identity of one registration-time Tool contract.",
+    "properties": {
+      "name": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+        "title": "Name",
+        "type": "string"
+      },
+      "spec_version": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+        "title": "Spec Version",
+        "type": "string"
+      },
+      "sha256": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Sha256",
+        "type": "string"
+      }
+    },
+    "required": [
+      "name",
+      "spec_version",
+      "sha256"
+    ],
+    "title": "ToolFingerprint",
+    "type": "object"
+  },
   "ToolRequest": {
     "$defs": {
       "JsonValue": {},
@@ -7492,6 +8053,7 @@
           },
           "retryable": {
             "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
             "title": "Retryable",
             "type": "boolean"
           },
@@ -7587,7 +8149,7 @@
     "$defs": {
       "JsonValue": {},
       "ToolRetrySafety": {
-        "description": "Whether a later runtime may safely retry a Tool call.",
+        "description": "Coarse Tool contract hint; never permission to retry an Activity by itself.",
         "enum": [
           "not_safe",
           "safe"
@@ -7613,6 +8175,11 @@
       "name": {
         "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
         "title": "Name",
+        "type": "string"
+      },
+      "spec_version": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+        "title": "Spec Version",
         "type": "string"
       },
       "description": {
@@ -7662,6 +8229,7 @@
     },
     "required": [
       "name",
+      "spec_version",
       "description",
       "input_schema",
       "output_schema",

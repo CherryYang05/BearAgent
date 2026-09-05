@@ -106,12 +106,17 @@ def test_v2_composition_records_selected_provider_without_reading_key_when_injec
     )
     result = asyncio.run(services.agent_loop.run(agent_run_input()))
     inspection = asyncio.run(services.queries.inspect(result.run_id))
+    events = asyncio.run(services.queries.events(result.run_id))
 
     assert inspection.provider_selection is not None
     assert inspection.provider_selection.provider_id == "primary"
     configured_provider = ProviderCatalog.model_validate(catalog_data()).providers[0]
     assert inspection.provider_selection.config_version == configured_provider.configuration_version
     assert inspection.provider_selection.protocol is ModelProtocol.OPENAI_RESPONSES
+    assert inspection.run_fingerprint is not None
+    assert tuple(tool.name for tool in inspection.run_fingerprint.tools) == ("workspace.read",)
+    assert "test-provider-secret" not in inspection.model_dump_json()
+    assert all("test-provider-secret" not in event.model_dump_json() for event in events.events)
     assert services.agent_config.model == "test-model"
     assert services.agent_config.pricing.version == "unpriced"
 

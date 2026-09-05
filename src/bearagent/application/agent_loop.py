@@ -10,6 +10,7 @@ from bearagent.domain.agent import RunInput, RunResult
 from bearagent.domain.artifacts import Artifact, artifact_from_tool_result_data
 from bearagent.domain.errors import ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.events import Event
+from bearagent.domain.fingerprints import RunFingerprint
 from bearagent.domain.ids import (
     ActivityId,
     CausationId,
@@ -24,14 +25,12 @@ from bearagent.domain.messages import Message, TextPart, ToolCallPart
 from bearagent.domain.model import ModelFinishReason, ModelRequest
 from bearagent.domain.providers import ProviderSelection
 from bearagent.domain.run_events import (
-    RUN_EVENT_SCHEMA_VERSION_V2,
-    RUN_EVENT_SCHEMA_VERSION_V3,
+    RUN_EVENT_SCHEMA_VERSION_V4,
     ModelCallCompletedPayloadV2,
     ModelCallFailedPayloadV2,
     ModelCallRequestedPayloadV2,
     ModelCallStartedPayloadV2,
-    RunCreatedPayloadV2,
-    RunCreatedPayloadV3,
+    RunCreatedPayloadV4,
     RunFailedPayloadV2,
     RunStartedPayloadV2,
     RunSucceededPayloadV2,
@@ -76,6 +75,7 @@ class AgentLoop:
         model_provider: ModelProvider,
         event_store: EventStore,
         tool_executor: ToolExecutor,
+        run_fingerprint: RunFingerprint,
         context_builder: ContextBuilder | None = None,
         clock: Clock | None = None,
         id_generator: IdGenerator | None = None,
@@ -88,11 +88,7 @@ class AgentLoop:
         self._context_builder = ContextBuilder() if context_builder is None else context_builder
         self._clock = SystemClock() if clock is None else clock
         self._provider_selection = provider_selection
-        self._event_schema_version = (
-            RUN_EVENT_SCHEMA_VERSION_V2
-            if provider_selection is None
-            else RUN_EVENT_SCHEMA_VERSION_V3
-        )
+        self._run_fingerprint = run_fingerprint
         self._id_generator = Uuid4IdGenerator() if id_generator is None else id_generator
 
     async def run(self, run_input: RunInput, *, run_id: RunId | None = None) -> RunResult:
@@ -104,21 +100,13 @@ class AgentLoop:
         # identifier carries no authority; all execution still starts at append.
         run_id = self._id_generator.new(RunId) if run_id is None else run_id
         correlation_id = self._id_generator.new(CorrelationId)
-        run_created = (
-            RunCreatedPayloadV2(
-                session_id=run_input.session_id,
-                budget_limits=run_input.budget_limits,
-                objective=run_input.objective,
-                agent_config=run_input.agent_config,
-            )
-            if self._provider_selection is None
-            else RunCreatedPayloadV3(
-                session_id=run_input.session_id,
-                budget_limits=run_input.budget_limits,
-                objective=run_input.objective,
-                agent_config=run_input.agent_config,
-                provider_selection=self._provider_selection,
-            )
+        run_created = RunCreatedPayloadV4(
+            session_id=run_input.session_id,
+            budget_limits=run_input.budget_limits,
+            objective=run_input.objective,
+            agent_config=run_input.agent_config,
+            run_fingerprint=self._run_fingerprint,
+            provider_selection=self._provider_selection,
         )
         state = await self._append(
             None,
@@ -533,7 +521,7 @@ class AgentLoop:
             run_id=run_id,
             sequence=1 if state is None else state.last_sequence + 1,
             event_type=event_type,
-            schema_version=self._event_schema_version,
+            schema_version=RUN_EVENT_SCHEMA_VERSION_V4,
             occurred_at=self._clock.now(),
             causation_id=self._id_generator.new(CausationId),
             correlation_id=correlation_id,

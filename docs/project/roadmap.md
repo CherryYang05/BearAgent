@@ -67,8 +67,9 @@ P0 建立 Python 3.12、uv、CI、CLI、模块依赖检查、测试替身，以�
 
 ### P1：可检查执行
 
-**状态：已完成。** F-0001 至 F-0008、F-0015、F-0016 和 F-0017 均已实现。Runtime gate 在
-2026-08-23 完成；F-0015 随后完成书籍化文档重构和本地站点验收。
+**P1 状态：已完成。** F-0001 至 F-0008、F-0015 至 F-0018 均已实现。Runtime gate 在
+2026-08-23 完成；F-0015 随后完成书籍化文档重构和本地站点验收。F-0018 是进入 P2 前的增量 evidence
+hardening；它不重写 P1 exit criteria，也不把已关闭的 P1 基线改回进行中。
 
 P1 已接通：
 
@@ -78,11 +79,15 @@ P1 已接通：
 - 默认拒绝 Policy、workspace 读写 Tool、原子 Artifact 和串行 Agent Loop；
 - `run/inspect/events` CLI、Fake 任务集、真实模型 gate 和脱敏证据。
 
-最终离线门禁通过 445 个测试、schema、链接、35 页站点、sdist/wheel 和隔离 CLI smoke。suite
-v1.1.1 使用 DeepSeek V4 经 production composition 完成四个普通任务和一个安全 canary，结果为
-5/5。证据见 [F-0017 P1 live report](../evidence/F-0017-p1-live-report-v1.json)。
+F-0017 关闭时的离线门禁通过 445 个测试、schema、链接、35 页站点、sdist/wheel 和隔离 CLI smoke。
+suite v1.1.1 使用 DeepSeek V4 经 production composition 完成四个普通任务和一个安全 canary，结果为
+5/5。证据见 [F-0017 P1 live report](../evidence/F-0017-p1-live-report-v1.json)。F-0018 关闭时进一步通过
+474 个测试、K1-K6 与 45 页站点构建；后续 2026-09-02 全仓审计又补齐 schema v4 Tool evidence 的
+跨 Event 一致性回归。
 
-P1 只保证已保存事实可查。进程退出后不会自动继续；timeout 也不会撤销可能已经发生的副作用。
+P1 只保证已保存事实可查。F-0018 让新 Run 记录可信 Tool/Policy contract identity，并用
+hard-process 测试验证最后 committed fact 的可见性。进程退出后仍不会自动继续；timeout 也不会撤销
+可能已经发生的副作用。
 
 F-0015 提供独立的 Starlight 文档站、渐进式学习路线、CLI 手册和源码导读。它可以本地开发、构建
 和预览，普通 CI 负责验证；在线托管与自动部署不属于 F-0015，也不再作为 P1 的关闭门。
@@ -307,10 +312,11 @@ P5 把 P1 任务、P2 恢复演练和 P3 安全演练接入统一追踪，比较
 
 ## 11. Feature Backlog
 
-Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；开始前必须创建 Spec 并声明 milestone。
-移动阶段时不重编号。下面对 F-0013/F-0014 的调整只改变尚未创建 Spec 的计划归属。
+Feature ID 在 Spec 创建后保持稳定。未创建 Spec 的名称只表示计划范围；开始前必须创建 Spec 并声明
+milestone。2026-08-28 为让完成的 P1 Feature 和后续阶段按顺序阅读，项目所有者明确要求把尚未创建
+Spec 的 P2/P3/P4 占位 ID 统一顺延；这次重排不改变任何已接受或已实现 Feature 的 ID。
 
-### P1（已完成）
+### P1（基线已完成；pre-P2 hardening 进行中）
 
 1. [F-0001：内部 ID、Message 和 Error](../specs/F-0001-domain-ids-messages-errors.md)
 2. [F-0002：Run/Activity 状态和预算](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md)
@@ -323,29 +329,30 @@ Feature ID 在全项目稳定。未创建 Spec 的名称只表示计划范围；
 9. [F-0015：可以连续阅读的 Starlight 文档书](../specs/F-0015-local-starlight-docs-site.md) — implemented
 10. [F-0016：有界 Context 和串行 Agent Loop](../specs/F-0016-bounded-context-agent-loop.md)
 11. [F-0017：模型服务配置与真实 gate](../specs/F-0017-configurable-model-providers-live-gate.md)
+12. [F-0018：可信 Run contract identity 与 crash observability](../specs/F-0018-p1-evidence-hardening.md) — implemented
 
 F-0015 的文档内容、本地站点、构建和阅读体验已经实现；部署到某个在线平台不在该 Feature 范围内。
 
 ### P2（计划；均未创建 Spec）
 
-1. F-0009：Event-only 状态重建、Checkpoint fallback 和启动检查
-2. F-0010：Attempt、失败分类、恢复语义和有界 retry
-3. F-0018：幂等键、Receipt、reconcile 和 `UNKNOWN` 处置
-4. F-0019：pause/resume/cancel/retry 命令与完整 kill-point suite
+1. F-0019：Event-only 状态重建、Checkpoint fallback 和启动检查
+2. F-0020：Attempt、失败分类、恢复语义和有界 retry
+3. F-0021：幂等键、Receipt、reconcile 和 `UNKNOWN` 处置
+4. F-0022：pause/resume/cancel/retry 命令与完整 kill-point suite
 
 ### P3（计划；均未创建 Spec）
 
-1. F-0011：Grant、三态 Policy 和持久化参数绑定 Approval
-2. F-0012：SandboxBackend、隔离 runner 和受控 shell/code Tool
+1. F-0023：Grant、三态 Policy 和持久化参数绑定 Approval
+2. F-0024：SandboxBackend、隔离 runner 和受控 shell/code Tool
 
 ### P4（计划；均未创建 Spec）
 
-1. F-0013：HTTP API、SSE 续接和单用户认证
-2. F-0014：Compose 加固、HTTPS、备份和空目录恢复
-3. F-0020：版本化只读 Skill
-4. F-0021：受控 MCP Tool
-5. F-0022：Web UI
-6. F-0023：有来源、可删除的 Memory 和上下文压缩
+1. F-0025：HTTP API、SSE 续接和单用户认证
+2. F-0026：Compose 加固、HTTPS、备份和空目录恢复
+3. F-0027：版本化只读 Skill
+4. F-0028：受控 MCP Tool
+5. F-0029：Web UI
+6. F-0030：有来源、可删除的 Memory 和上下文压缩
 
 如果一个条目在写 Spec 时仍无法独立验收，保留现有 ID 的核心范围，并用新的全局 ID 拆出后续
 Feature。一个 Plan 不得同时实现整个阶段。

@@ -9,6 +9,7 @@ from bearagent.domain._base import DomainModel, thaw_json_mapping
 from bearagent.domain.agent import AgentConfig, ContextBuildReport
 from bearagent.domain.errors import ErrorInfo
 from bearagent.domain.events import Event
+from bearagent.domain.fingerprints import RunFingerprint
 from bearagent.domain.ids import ActivityId, ModelCallId, SessionId, ToolCallId
 from bearagent.domain.messages import TOOL_NAME_PATTERN, Message, MessageRole, ToolCallPart
 from bearagent.domain.model import (
@@ -24,7 +25,8 @@ from bearagent.domain.tools import ToolExecutionRecord, ToolRequest, ToolStatus
 RUN_EVENT_SCHEMA_VERSION = 1
 RUN_EVENT_SCHEMA_VERSION_V2 = 2
 RUN_EVENT_SCHEMA_VERSION_V3 = 3
-LATEST_RUN_EVENT_SCHEMA_VERSION = RUN_EVENT_SCHEMA_VERSION_V3
+RUN_EVENT_SCHEMA_VERSION_V4 = 4
+LATEST_RUN_EVENT_SCHEMA_VERSION = RUN_EVENT_SCHEMA_VERSION_V4
 
 
 class RunCreatedPayload(DomainModel):
@@ -124,6 +126,13 @@ class RunCreatedPayloadV3(RunCreatedPayloadV2):
     """v3 Run creation fact with a non-secret Provider selection."""
 
     provider_selection: ProviderSelection
+
+
+class RunCreatedPayloadV4(RunCreatedPayloadV2):
+    """v4 Run creation fact with trusted contract provenance."""
+
+    run_fingerprint: RunFingerprint
+    provider_selection: ProviderSelection | None = None
 
 
 class RunStartedPayloadV2(RunStartedPayload):
@@ -238,6 +247,7 @@ type RunEventPayload = (
     | ToolCallFailedPayload
     | RunCreatedPayloadV2
     | RunCreatedPayloadV3
+    | RunCreatedPayloadV4
     | RunStartedPayloadV2
     | RunSucceededPayloadV2
     | RunFailedPayloadV2
@@ -289,6 +299,18 @@ _PAYLOAD_TYPES = {
     ("ToolCallStarted", RUN_EVENT_SCHEMA_VERSION_V3): ToolCallStartedPayloadV2,
     ("ToolCallCompleted", RUN_EVENT_SCHEMA_VERSION_V3): ToolCallCompletedPayloadV2,
     ("ToolCallFailed", RUN_EVENT_SCHEMA_VERSION_V3): ToolCallFailedPayloadV2,
+    ("RunCreated", RUN_EVENT_SCHEMA_VERSION_V4): RunCreatedPayloadV4,
+    ("RunStarted", RUN_EVENT_SCHEMA_VERSION_V4): RunStartedPayloadV2,
+    ("RunSucceeded", RUN_EVENT_SCHEMA_VERSION_V4): RunSucceededPayloadV2,
+    ("RunFailed", RUN_EVENT_SCHEMA_VERSION_V4): RunFailedPayloadV2,
+    ("ModelCallRequested", RUN_EVENT_SCHEMA_VERSION_V4): ModelCallRequestedPayloadV2,
+    ("ModelCallStarted", RUN_EVENT_SCHEMA_VERSION_V4): ModelCallStartedPayloadV2,
+    ("ModelCallCompleted", RUN_EVENT_SCHEMA_VERSION_V4): ModelCallCompletedPayloadV2,
+    ("ModelCallFailed", RUN_EVENT_SCHEMA_VERSION_V4): ModelCallFailedPayloadV2,
+    ("ToolCallRequested", RUN_EVENT_SCHEMA_VERSION_V4): ToolCallRequestedPayloadV2,
+    ("ToolCallStarted", RUN_EVENT_SCHEMA_VERSION_V4): ToolCallStartedPayloadV2,
+    ("ToolCallCompleted", RUN_EVENT_SCHEMA_VERSION_V4): ToolCallCompletedPayloadV2,
+    ("ToolCallFailed", RUN_EVENT_SCHEMA_VERSION_V4): ToolCallFailedPayloadV2,
 }
 
 RUN_EVENT_PAYLOAD_TYPES = MappingProxyType(_PAYLOAD_TYPES)

@@ -10,10 +10,12 @@ from tests.agent_loop_fixtures import (
     budget_limits,
     model_completed,
     read_tool_spec,
+    run_fingerprint,
     tool_executor,
 )
 
 from bearagent.adapters.testing import (
+    FakeModelProvider,
     FakeTool,
     InMemoryEventStore,
     ScriptedFakeModelProvider,
@@ -32,7 +34,14 @@ from bearagent.domain.model import (
     ModelTextDelta,
     ModelToolCall,
 )
-from bearagent.domain.runs import RunState
+from bearagent.domain.run_events import (
+    ModelCallFailedPayloadV2,
+    ToolCallFailedPayloadV2,
+    parse_run_event_payload,
+)
+from bearagent.domain.runs import RunState, RunStatus
+from bearagent.domain.tools import ToolRetrySafety
+from bearagent.ports.model import ModelProviderError
 from bearagent.ports.store import EventStoreError
 from bearagent.runtime.policy import FixedToolPolicy
 from bearagent.runtime.tool_executor import ToolExecutor
@@ -91,6 +100,7 @@ def loop_for(
         event_store=store,
         tool_executor=tool_executor(tool),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
     )
 
 
@@ -179,6 +189,7 @@ def test_cancellation_propagates_and_keeps_last_committed_activity_non_terminal(
             event_store=store,
             tool_executor=tool_executor(),
             clock=TickingClock(),
+            run_fingerprint=run_fingerprint(),
         )
         task = asyncio.create_task(loop.run(agent_run_input()))
         await provider.started.wait()
@@ -284,6 +295,87 @@ def test_every_failure_terminal_append_boundary_stops_scheduling(failed_type: st
     assert store.attempted_types.count(failed_type) == 1
 
 
+def test_retryable_provider_failure_is_observed_once_without_automatic_retry() -> None:
+    failure = ErrorInfo(
+        category=ErrorCategory.PROVIDER,
+        code=ErrorCode.PROVIDER_UNAVAILABLE,
+        message="Provider is temporarily unavailable.",
+        retryable=True,
+    )
+    provider = FakeModelProvider((), failure=ModelProviderError(failure))
+    store = InMemoryEventStore()
+    loop = AgentLoop(
+        model_provider=provider,
+        event_store=store,
+        tool_executor=tool_executor(),
+        clock=TickingClock(),
+        run_fingerprint=run_fingerprint(),
+    )
+
+    result = asyncio.run(loop.run(agent_run_input()))
+    events = asyncio.run(store.list_events(result.run_id))
+    failed = parse_run_event_payload(
+        next(event for event in events if event.event_type == "ModelCallFailed")
+    )
+
+    assert result.state.status is RunStatus.FAILED
+    assert len(provider.requests) == 1
+    assert isinstance(failed, ModelCallFailedPayloadV2)
+    assert failed.error.retryable is True
+    assert tuple(event.event_type for event in events).count("ModelCallStarted") == 1
+
+
+def test_retryable_unsafe_tool_failure_does_not_repeat_the_tool_activity() -> None:
+    call_id = ToolCallId.new()
+    provider = ScriptedFakeModelProvider(
+        (
+            (
+                ModelToolCall(
+                    tool_call_id=call_id,
+                    provider_call_id="retryable-tool-failure",
+                    name="workspace.read",
+                    arguments={"path": "docs/index.md"},
+                ),
+                model_completed(ModelFinishReason.TOOL_CALLS),
+            ),
+            (
+                ModelTextDelta(text="The failed Tool was not retried automatically."),
+                model_completed(ModelFinishReason.STOP, request_id="after-tool-failure"),
+            ),
+        )
+    )
+    spec = read_tool_spec().model_copy(update={"retry_safety": ToolRetrySafety.NOT_SAFE})
+    tool = FakeTool(
+        spec,
+        failure=ErrorInfo(
+            category=ErrorCategory.TOOL,
+            code=ErrorCode.TOOL_TIMEOUT,
+            message="Tool timed out.",
+            retryable=True,
+        ),
+    )
+    store = InMemoryEventStore()
+    loop = AgentLoop(
+        model_provider=provider,
+        event_store=store,
+        tool_executor=tool_executor(tool),
+        clock=TickingClock(),
+        run_fingerprint=run_fingerprint((spec,)),
+    )
+
+    result = asyncio.run(loop.run(agent_run_input()))
+    events = asyncio.run(store.list_events(result.run_id))
+    failed = parse_run_event_payload(
+        next(event for event in events if event.event_type == "ToolCallFailed")
+    )
+
+    assert result.state.status is RunStatus.SUCCEEDED
+    assert len(tool.requests) == 1
+    assert isinstance(failed, ToolCallFailedPayloadV2)
+    assert failed.error.retryable is True
+    assert tuple(event.event_type for event in events).count("ToolCallStarted") == 1
+
+
 def test_real_workspace_write_is_not_retried_when_terminal_append_fails(
     tmp_path: Path,
 ) -> None:
@@ -322,6 +414,10 @@ def test_real_workspace_write_is_not_retried_when_terminal_append_fails(
             FixedToolPolicy(spec.name for spec in registry.specs),
         ),
         clock=TickingClock(),
+        run_fingerprint=run_fingerprint(
+            registry.specs,
+            allowed_tool_names=tuple(spec.name for spec in registry.specs),
+        ),
     )
 
     with pytest.raises(EventStoreError):

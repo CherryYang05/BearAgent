@@ -9,6 +9,7 @@ sourceRefs:
   - F-0016
   - F-0005
   - F-0017
+  - F-0018
 ---
 
 开发者文档不复制 Spec，也不把每个目录重新列一遍。它负责回答三个问题：代码从哪里进入、关键
@@ -58,11 +59,11 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 - [F-0001：内部数据类型](/zh-cn/development/domain-contracts/)——ID、Message、Error、Event 以及模型 adapter 的翻译边界；
 - [F-0002：状态和预算](/zh-cn/development/run-reducer-and-budgets/)——具体 Event、Reducer、预算检查和修改顺序；
 - [F-0003：SQLite EventStore](/zh-cn/development/sqlite-event-store/)——transaction、migration、projection 和故障测试；
-- [F-0004/F-0017：ModelProvider 与协议 adapter](/zh-cn/development/model-provider/)——显式 protocol factory、三种流式翻译、Event v3 和 live gate；
+- [F-0004/F-0017：ModelProvider 与协议 adapter](/zh-cn/development/model-provider/)——显式 protocol factory、三种流式翻译、Provider selection 和 live gate；
 - [F-0006：Tool 执行边界](/zh-cn/development/tool-execution-boundary/)——Registry、参数准备、默认拒绝 Policy 和统一 Executor；
 - [F-0007：workspace 只读 Tool](/zh-cn/development/workspace-read-tools/)——跨平台路径边界、list/read/search 和安全测试；
 - [F-0008：原子输出与 Artifact](/zh-cn/development/atomic-output-artifacts/)——同目录暂存、原子提交、结果元数据和故障窗口；
-- [F-0016：有界 Agent Loop](/zh-cn/development/agent-loop/)——Context、v2 Event、串行模型/Tool 调度、故障窗口和固定任务；
+- [F-0016/F-0018：有界 Agent Loop 与证据边界](/zh-cn/development/agent-loop/)——Context、RunCreated v4、contract fingerprint、串行调度和 K1-K6；
 - [F-0005：生产 CLI 与查询](/zh-cn/development/run-cli/)——Run profile、composition root、inspect/events、JSON 契约和失败边界；
 - [Feature 完成时怎样更新文档](/zh-cn/development/feature-documentation/)——哪些事实写在 `docs/`，哪些解释写在站点；
 - [本地运行文档站](/zh-cn/guides/local-docs/)——安装、构建和检查 Starlight。

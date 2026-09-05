@@ -9,6 +9,7 @@ from bearagent.domain.ids import RunId
 from bearagent.domain.queries import EventPage, RunInspection
 from bearagent.domain.run_events import (
     RunCreatedPayloadV3,
+    RunCreatedPayloadV4,
     ToolCallCompletedPayloadV2,
     parse_run_event_payload,
 )
@@ -74,10 +75,14 @@ class RunQueryService:
 
         artifacts: list[Artifact] = []
         provider_selection = None
+        run_fingerprint = None
         try:
             for event in events:
                 payload = parse_run_event_payload(event)
-                if isinstance(payload, RunCreatedPayloadV3):
+                if isinstance(payload, RunCreatedPayloadV4):
+                    provider_selection = payload.provider_selection
+                    run_fingerprint = payload.run_fingerprint
+                elif isinstance(payload, RunCreatedPayloadV3):
                     provider_selection = payload.provider_selection
                 if not isinstance(payload, ToolCallCompletedPayloadV2):
                     continue
@@ -92,6 +97,7 @@ class RunQueryService:
                 state=state,
                 artifacts=tuple(artifacts),
                 provider_selection=provider_selection,
+                run_fingerprint=run_fingerprint,
             )
         except (KeyError, ValidationError, ValueError) as error:
             raise _invalid_history(cause=error) from error

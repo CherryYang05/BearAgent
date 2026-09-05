@@ -171,8 +171,6 @@ def run_objective(
                 database=database,
             )
         )
-    except (BearAgentError, ValidationError, ValueError, OSError) as error:
-        _exit_with_error("run", error, json_output=json_output)
     except Exception as error:
         _exit_with_error("run", error, json_output=json_output)
 
@@ -196,8 +194,6 @@ def inspect_run(
     """Show the reducer projection and committed Artifact metadata."""
     try:
         output = asyncio.run(_inspect_existing_run(run_id=run_id, database=database))
-    except (BearAgentError, ValidationError, ValueError, OSError) as error:
-        _exit_with_error("inspect", error, json_output=json_output)
     except Exception as error:
         _exit_with_error("inspect", error, json_output=json_output)
     typer.echo(render_json(output) if json_output else render_inspection(output.result))
@@ -233,8 +229,6 @@ def list_run_events(
                 limit=limit,
             )
         )
-    except (BearAgentError, ValidationError, ValueError, OSError) as error:
-        _exit_with_error("events", error, json_output=json_output)
     except Exception as error:
         _exit_with_error("events", error, json_output=json_output)
     typer.echo(render_json(output) if json_output else render_events(output.result))

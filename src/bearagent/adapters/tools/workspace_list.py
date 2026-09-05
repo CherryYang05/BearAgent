@@ -65,6 +65,7 @@ class WorkspaceListTool:
 
     spec = ToolSpec(
         name="workspace.list",
+        spec_version="1",
         description="List one page of direct entries in a workspace directory.",
         input_schema=_ListArguments.model_json_schema(),
         output_schema=_ListOutput.model_json_schema(),
