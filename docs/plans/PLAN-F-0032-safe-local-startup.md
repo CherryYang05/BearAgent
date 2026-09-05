@@ -20,9 +20,9 @@ related_spec: F-0032
 - [x] 增加无覆盖初始化和离线配置检查，完整走通新手命令。
 - [x] 重写首次运行路径，校准费用、事实与恢复声明；补齐架构审查和科研规划。
 - [x] 跑完整质量门、构建、链接和浏览器阅读检查，记录当前环境限制。
-- [ ] 安装受限部署身份并验证 main push 后自动构建、原子发布和公网健康检查。服务器身份与本地
-  forced-command 测试已完成；待 workflow 进入 `main` 后补 GitHub 端到端证据。
-- [ ] 按项目所有者后续发布指令记录不可变提交或 PR，再将 Spec/Plan 关闭。
+- [x] 安装受限部署身份，并验证 forced command、原子发布、失败回退边界和公网健康检查。
+- [x] 按项目所有者发布指令记录不可变实现提交，并推送功能分支。
+- [ ] workflow 进入 `main` 后验证真实 push 触发，再更新 Spec 状态并关闭 Plan。
 
 ## 验证记录
 
@@ -70,5 +70,8 @@ host key 指纹已核对，`DOCS_DEPLOY_KEY` 已写入 GitHub Actions Secret，�
 初始化的 link/junction 拒绝测试用受控 junction 判定覆盖拒绝分支；真实文件链接的跨平台行为由既有
 文件工具安全测试覆盖。这不宣称已完成恶意本机并发目录替换防护。
 
-最后一步是交付证据，不在本轮的提交/推送授权内；不能为了通过 governance 编造 `implemented_in`，
-也不能把基线提交当作新实现的证据。本地完成后仍保持唯一 active Plan，待后续提交指令再关闭。
+项目所有者已授权提交和推送。实现提交 `66064df` 已推送到
+`origin/codex/F-0032-safe-local-startup`，远端 hash 与本地一致；该分支没有既有 PR，也没有分支 push
+检查。部署 workflow 只监听 `main`，因此不能把功能分支推送或手工服务器发布写成 main trigger 证据。
+Spec 保持 accepted、`implemented_in` 保持 null，本 Plan 保持唯一 active Plan，待合并后的第一次真实
+workflow 成功再关闭。
