@@ -70,11 +70,13 @@ host key 指纹已核对，`DOCS_DEPLOY_KEY` 已写入 GitHub Actions Secret，�
 初始化的 link/junction 拒绝测试用受控 junction 判定覆盖拒绝分支；真实文件链接的跨平台行为由既有
 文件工具安全测试覆盖。这不宣称已完成恶意本机并发目录替换防护。
 
-项目所有者已授权提交和推送。实现提交 `66064df` 已推送到
-`origin/codex/F-0020-safe-local-startup`，并创建非 Draft PR #23。第一次 PR CI 在 Ubuntu 暴露目录的
-`st_nlink` 通常大于 1：输出目标检查先判断链接数，因而把目录错误报告为硬链接文件；Windows 没有触发
-这个平台差异。实现已调整为先拒绝 link/reparse，再判断普通文件类型，最后只检查普通文件的多硬链接，
-本地针对性 14 tests 和完整 507 tests 通过。最终 PR 检查必须在 GitHub 保持全绿。
+项目所有者已授权提交和推送。实现提交 `66064df` 最初从占位编号分支创建非 Draft PR #23；随后按
+P1 连续编号要求把本 Feature 改为 F-0020，并把未创建 Spec 的后续占位 ID 整体顺延。GitHub 在远端
+分支重命名时自动关闭 PR #23，因此 `origin/codex/F-0020-safe-local-startup` 改由非 Draft PR #24
+继续评审。第一次 PR CI 在 Ubuntu 暴露目录的 `st_nlink` 通常大于 1：输出目标检查先判断链接数，
+因而把目录错误报告为硬链接文件；Windows 没有触发这个平台差异。实现已调整为先拒绝 link/reparse，
+再判断普通文件类型，最后只检查普通文件的多硬链接；本地针对性 14 tests 和完整 507 tests 通过。
+最终 PR 检查必须在 GitHub 保持全绿。
 
 部署 workflow 只监听 `main`，因此不能把功能分支推送或手工服务器发布写成 main trigger 证据。
 Spec 保持 accepted、`implemented_in` 保持 null，本 Plan 保持唯一 active Plan，待合并后的第一次真实
