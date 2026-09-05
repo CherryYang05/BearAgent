@@ -1,17 +1,17 @@
 ---
 title: "Feature: protect local runtime files and simplify first-run setup"
 status: accepted
-spec_id: F-0032
+spec_id: F-0020
 milestone: P1
 change_level: S2
 owner: CherryYang05
 created: 2026-09-05
-last_updated: 2026-09-05
+last_updated: 2026-09-06
 implemented_in: null
 related_adrs: [ADR-0011, ADR-0014, ADR-0015, ADR-0018, ADR-0019]
 ---
 
-# F-0032：初始化一次配置，并把运行资料挡在文件工具之外
+# F-0020：初始化一次配置，并把运行资料挡在文件工具之外
 
 ## 问题与范围
 

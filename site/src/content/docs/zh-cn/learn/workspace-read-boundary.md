@@ -3,7 +3,7 @@ title: Windows 和 Unix 路径为什么先变成同一种写法
 description: 从读取一份文档理解路径规范化、真实文件边界和三个只读 Tool。
 bearStatus: mixed
 sourceRefs:
-  - F-0032
+  - F-0020
   - ADR-0018
   - F-0007
   - ADR-0011
@@ -71,7 +71,7 @@ list 只列一层。read 只接受 UTF-8 普通文件，并按完整行分页。
 ## 在工作区里面，不代表应该交给模型
 
 仓库根是默认 workspace，而 `data/config.json` 保存模型密钥。它没有越界，也不是链接，但仍不该
-成为输入。F-0032 在现有 Boundary 中保留根目录的 `data/`、`.git/`、`.env` 与 `.env.*`，并由可信启动
+成为输入。F-0020 在现有 Boundary 中保留根目录的 `data/`、`.git/`、`.env` 与 `.env.*`，并由可信启动
 代码传入实际配置、profile、数据库及 SQLite sidecar 的位置。
 
 `workspace.list(".")` 会把受保护条目标为 blocked；search 跳过它们；直接 read 返回
@@ -83,7 +83,7 @@ list 只列一层。read 只接受 UTF-8 普通文件，并按完整行分页。
 F-0007 保守地拒绝所有 symlink 和 junction。这样会失去一些仓库布局的便利，但同一相对路径只有一个
 含义，递归搜索也不会因为链接环路重复进入目录。
 
-F-0032 还拒绝多硬链接普通文件，防止通过另一个名字读取受保护配置。这些补强已在本地验证，正式
+F-0020 还拒绝多硬链接普通文件，防止通过另一个名字读取受保护配置。这些补强已在本地验证，正式
 交付状态以 Spec 为准。
 
 这仍不是 sandbox。F-0007 面向单用户、受控本地 workspace；能够并发替换任意祖先目录的本机攻击者

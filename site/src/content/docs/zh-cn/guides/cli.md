@@ -3,7 +3,7 @@ title: 命令行手册：运行、查看与排错
 description: 从源码安装 BearAgent，配置模型服务和 Run profile，运行本地文件任务，并用 inspect/events 核对已经保存的事实。
 bearStatus: mixed
 sourceRefs:
-  - F-0032
+  - F-0020
   - ADR-0018
   - F-0005
   - F-0017
@@ -34,7 +34,7 @@ bearagent run  ------> outputs/** + SQLite Event
 
 :::caution[当前成熟度]
 CLI、SQLite、三种模型协议 adapter、四个 workspace Tool 和 Agent Loop 已经接通。离线 Fake 5/5
-和 2026-08-23 的 DeepSeek V4 suite v1.1.1 真实 5/5 分开验证，构成历史 P1 完成证据。本轮 F-0032
+和 2026-08-23 的 DeepSeek V4 suite v1.1.1 真实 5/5 分开验证，构成历史 P1 完成证据。本轮 F-0020
 补上配置保护、init 与离线检查；代码在本地完成验证，正式交付状态以 Spec 为准。进程中断后可以查询
 已提交事实，但不会自动恢复 Run。P1 也没有 Approval、sandbox、shell、Web UI 或任意网络 Tool。
 :::

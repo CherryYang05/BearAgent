@@ -3,7 +3,7 @@ title: F-0007 workspace 只读 Tool 实现导读
 description: 找到跨平台路径边界、三个 Tool、资源限制和安全测试。
 bearStatus: implemented
 sourceRefs:
-  - F-0032
+  - F-0020
   - ADR-0018
   - F-0007
   - PLAN-F-0007
@@ -52,7 +52,7 @@ symlink、junction 和 reparse point。普通文件打开后，会把句柄的�
 
 ## 资源上限集中在哪里
 
-F-0032 在同一个 Boundary 保护根目录的 `data/`、`.git/`、`.env` 与 `.env.*`；bootstrap 另传入实际
+F-0020 在同一个 Boundary 保护根目录的 `data/`、`.git/`、`.env` 与 `.env.*`；bootstrap 另传入实际
 config、profile、数据库与 SQLite sidecar。列表使用已有 blocked 类型，搜索不进入，直接访问拒绝。
 多个硬链接的文件同样被拒绝。不能只在 read 中加判断，否则 search 会形成旁路；也不能读出秘密后
 才尝试字符串脱敏。四个 workspace Tool 的 `spec_version` 提升为 `2`，Event/SQL schema 不变。

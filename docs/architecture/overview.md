@@ -312,7 +312,7 @@ F-0008 增加 `workspace.write`：只接受有限 UTF-8 文本并写入 `outputs
 
 P1 Policy 只有固定允许/拒绝规则。P3 才增加可配置 Grant 和用户 Approval。
 
-F-0032 在文件访问 Boundary 排除根目录 `data/`、`.git/`、`.env` 与 `.env.*`。bootstrap 另传入实际
+F-0020 在文件访问 Boundary 排除根目录 `data/`、`.git/`、`.env` 与 `.env.*`。bootstrap 另传入实际
 config、profile、数据库及其 SQLite sidecar；显式访问拒绝，遍历标为 blocked 并跳过。多个硬链接的
 普通文件同样被拒绝。四个 workspace Tool 的 `spec_version` 为 `2`。路径没有进入 fingerprint 或日志；
 这不是完整环境快照，也不代替 P3 隔离。决定见 [ADR-0018](../adr/ADR-0018-runtime-files-outside-workspace-tools.md)。
@@ -514,8 +514,8 @@ Policy/Approval、runner 隔离、日志脱敏和备份恢复演练。
 F-0008 已通过 ADR-0012 决定：P1 不设置 Artifact TTL，也不自动清理成功文件；崩溃残留和 reconcile
 留给 P2。对应后续 Feature 开始前仍需决定：
 
-- F-0025：SandboxBackend 选择、runner 资源上限和 Docker/Podman 边界；
-- F-0026/F-0027：P4 HTTP、自托管和备份恢复方案；
+- F-0026：SandboxBackend 选择、runner 资源上限和 Docker/Podman 边界；
+- F-0027/F-0028：P4 HTTP、自托管和备份恢复方案；
 - P4 Web UI：独立前端还是最小服务端页面；
 - 公开发布：Apache-2.0 或 AGPL-3.0。
 

@@ -36,7 +36,7 @@ README 默认 workspace 为仓库根，config 为 `data/config.json`。原实现
 普通文件。在临时目录中放入伪造 API key，read 与递归 search 均返回该值；这条路径还可能进入 Event
 和下一次模型请求。没有读取或发送用户实际凭据。
 
-F-0032 在 Boundary 保护默认运行目录和实际自定义文件；遍历跳过，显式访问拒绝；硬链接别名也被拒绝。
+F-0020 在 Boundary 保护默认运行目录和实际自定义文件；遍历跳过，显式访问拒绝；硬链接别名也被拒绝。
 测试使用真实 SQLite、Workspace Tools、Policy、AgentLoop 与 Fake Provider，验证秘密不进入 Event
 或 Context，而普通输入仍可读。详见 `tests/security/test_runtime_files.py`。
 
@@ -102,10 +102,10 @@ P2 先从 Event-only 重建与 Attempt 开始，再做可核对写入、`UNKNOWN
 
 - 基线：Windows / Python 3.12，490 个测试通过；凭据泄漏用临时伪造文件单独复现。
 - 新增回归：默认/自定义保护、硬链接、Event/Context、初始化和默认 CLI 链路。
-- 完整质量门与站点阅读检查的最终结果记录在 [PLAN-F-0032](../plans/PLAN-F-0032-safe-local-startup.md)。
+- 完整质量门与站点阅读检查的最终结果记录在 [PLAN-F-0020](../plans/PLAN-F-0020-safe-local-startup.md)。
 - 原 F-0017 的真实 5/5 为历史报告；本轮不读取真实 key，也不产生模型费用。
 - 本轮代码和 site 内容仍在本地工作树；没有提交、推送或触发新 CI。文档站已按项目所有者明确授权
   手工部署；这不等于跨平台 CI 通过，也不把 BearAgent Runtime 暴露到公网。
 
-F-0032 的 Spec 保持 accepted、Plan 保持 active，直到按后续发布指令记录不可变的 commit/PR 证据。
+F-0020 的 Spec 保持 accepted、Plan 保持 active，直到按后续发布指令记录不可变的 commit/PR 证据。
 本地实现完成与正式 Feature 关闭是两件事；不使用旧提交冒充新实现证据。

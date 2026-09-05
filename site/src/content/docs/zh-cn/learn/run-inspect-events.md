@@ -3,7 +3,7 @@ title: 从命令行运行并检查一次 Run
 description: 用同一个 SQLite 数据库启动文件任务、查看状态，再分页读取已经提交的 Event。
 bearStatus: mixed
 sourceRefs:
-  - F-0032
+  - F-0020
   - ADR-0018
   - F-0005
   - ADR-0014
@@ -64,7 +64,7 @@ profile 不是“每个 Tool 一份 JSON”，也不需要为每个问题重新�
 权限发生变化时才需要修改配置。
 
 仓库提供的 v1/v2 示例 profile 都把预算设为 0。在其他配置有效时，使用它启动 Run 会保存 RunCreated、
-RunStarted 和 `budget_exhausted` RunFailed，不调用模型或 Tool。F-0032 的 init 则生成有限非零预算，
+RunStarted 和 `budget_exhausted` RunFailed，不调用模型或 Tool。F-0020 的 init 则生成有限非零预算，
 保留示例给故障演练使用。普通 v2 Run 的 unpriced 费用数值不能代表真实账单限额。
 
 凭据缺失要区分两个入口：v2 config 缺少或包含非法 key 时，在创建数据库和 Run 前失败；legacy v1
@@ -104,6 +104,6 @@ adapter 和新的 CLI 进程读取，并确认 Provider/Tool 调用计数没有�
 
 自动恢复、retry、Attempt、Receipt 和 `UNKNOWN` 仍属于 P2。F-0017 已实现默认关闭的 live runner，
 真实 gate 仍必须由项目所有者确认 Provider、model、pricing snapshot 和费用上限后单独执行。2026-08-23
-的 DeepSeek V4 suite v1.1.1 已通过 5/5，构成历史 P1 gate。本轮 F-0032 补强单独记录，runner 默认状态没有改变。
+的 DeepSeek V4 suite v1.1.1 已通过 5/5，构成历史 P1 gate。本轮 F-0020 补强单独记录，runner 默认状态没有改变。
 
 继续阅读[生产 CLI 和查询服务实现导读](/zh-cn/development/run-cli/)，查看代码位置、Schema 和故障测试。

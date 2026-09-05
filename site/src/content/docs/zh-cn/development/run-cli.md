@@ -3,7 +3,7 @@ title: F-0005 生产 CLI 和查询服务实现导读
 description: 找到 Run profile、composition root、EventStore query、CLI JSON 契约和边界测试。
 bearStatus: implemented
 sourceRefs:
-  - F-0032
+  - F-0020
   - ADR-0018
   - F-0005
   - PLAN-F-0005
@@ -33,7 +33,7 @@ sourceRefs:
 
 ## composition root 只做组装
 
-F-0032 的 `local_setup.py` 为用户 CLI 创建缺失的配置模板，不调用模型、不覆盖文件。`doctor --check-config`
+F-0020 的 `local_setup.py` 为用户 CLI 创建缺失的配置模板，不调用模型、不覆盖文件。`doctor --check-config`
 与 `build_run_services` 共用 `validate_run_configuration`，前者只完成本地校验，后者才组装 Provider、
 初始化 SQLite 并创建执行服务。Tool 名单或保护路径规则不在 CLI 复制第二份。
 

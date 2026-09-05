@@ -3,7 +3,7 @@ title: 现在实现到了哪里
 description: 只列出当前分支中已有代码和测试支持的能力。
 bearStatus: mixed
 sourceRefs:
-  - F-0032
+  - F-0020
   - ADR-0018
   - roadmap
   - F-0001
@@ -29,7 +29,7 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 任务与安全 canary；脱敏 report 和最终 Reality Check 完成，因此 F-0017/P1 已关闭。当前分支还用
 RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完成 K1-K6 进程退出观测基线。
 
-2026-09-05 的再次审查发现默认配置可被文件工具读到，历史 gate 没有覆盖这一组合。F-0032 已在本地
+2026-09-05 的再次审查发现默认配置可被文件工具读到，历史 gate 没有覆盖这一组合。F-0020 已在本地
 修复，并增加 `init`、离线配置检查和回归测试；正式提交证据尚待记录，不能以旧 gate 代替这次交付。
 
 ## 三十秒结论
@@ -37,8 +37,8 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 | 问题 | 当前答案 |
 |---|---|
 | 能在本机运行一个真实模型文件任务吗？ | 能，需要有效 config、非零预算和受限 workspace |
-| 第一次需要填写什么？ | 含 F-0032 的源码可用 init 生成文件；填写模型 config，再用 doctor --check-config 离线检查 |
-| Tool 能读取本机模型密钥吗？ | F-0032 拒绝默认运行目录和实际配置路径；普通输入仍需由用户判断是否适合发送给模型 |
+| 第一次需要填写什么？ | 含 F-0020 的源码可用 init 生成文件；填写模型 config，再用 doctor --check-config 离线检查 |
+| Tool 能读取本机模型密钥吗？ | F-0020 拒绝默认运行目录和实际配置路径；普通输入仍需由用户判断是否适合发送给模型 |
 | 能查询任务做过什么吗？ | 能，用 `inspect` 看状态，用 `events` 看有序事实 |
 | 能知道 Run 使用了哪版 Tool/Policy 声明吗？ | 新 Run 可以；`inspect` 显示版本和 SHA-256，legacy Run 明确缺失 |
 | 能用结构化日志定位本机运行失败吗？ | 可以；stderr 提供固定字段诊断，但系统仍只根据 Event 判断 Run 状态 |
@@ -65,7 +65,7 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 | F-0019 安全结构化诊断 | post-commit Event envelope、有限 Activity 耗时和错误码；bootstrap/CLI/EventStore ops diagnostics；不复制 Event payload，sink 失败不影响 Run |
 | F-0015 文档站 | 中文 Starlight、搜索、Mermaid、六步学习路线、独立 CLI 手册，以及本地开发、构建和预览 |
 
-本轮 F-0032 的代码已通过 507 个 Windows 离线测试，包括生产路径的配置泄漏回归与默认命令流程。
+本轮 F-0020 的代码已通过 507 个 Windows 离线测试，包括生产路径的配置泄漏回归与默认命令流程。
 这说明本地补强通过验证；Spec 仍为 accepted，Plan 仍为 active，等待后续交付证据。
 
 ## P1 完成证据

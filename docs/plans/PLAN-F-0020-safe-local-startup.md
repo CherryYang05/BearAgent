@@ -1,13 +1,13 @@
 ---
 title: "Plan: safe local startup and P1 closure review"
 status: active
-plan_id: PLAN-F-0032
-related_spec: F-0032
+plan_id: PLAN-F-0020
+related_spec: F-0020
 ---
 
-# PLAN-F-0032：修复默认访问边界，完成首次使用和 P1 收口审查
+# PLAN-F-0020：修复默认访问边界，完成首次使用和 P1 收口审查
 
-关联 [F-0032](../specs/F-0032-safe-local-startup.md) 与
+关联 [F-0020](../specs/F-0020-safe-local-startup.md) 与
 [ADR-0018](../adr/ADR-0018-runtime-files-outside-workspace-tools.md)。
 
 2026-09-05 基线为 `de99e78`；Windows 离线测试 490 passed。临时伪造 config 同时被 read/search 读取，
@@ -71,7 +71,7 @@ host key 指纹已核对，`DOCS_DEPLOY_KEY` 已写入 GitHub Actions Secret，�
 文件工具安全测试覆盖。这不宣称已完成恶意本机并发目录替换防护。
 
 项目所有者已授权提交和推送。实现提交 `66064df` 已推送到
-`origin/codex/F-0032-safe-local-startup`，并创建非 Draft PR #23。第一次 PR CI 在 Ubuntu 暴露目录的
+`origin/codex/F-0020-safe-local-startup`，并创建非 Draft PR #23。第一次 PR CI 在 Ubuntu 暴露目录的
 `st_nlink` 通常大于 1：输出目标检查先判断链接数，因而把目录错误报告为硬链接文件；Windows 没有触发
 这个平台差异。实现已调整为先拒绝 link/reparse，再判断普通文件类型，最后只检查普通文件的多硬链接，
 本地针对性 14 tests 和完整 507 tests 通过。最终 PR 检查必须在 GitHub 保持全绿。

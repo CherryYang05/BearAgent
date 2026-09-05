@@ -3,7 +3,7 @@ title: 从哪里开始读代码
 description: 先找到当前功能的事实，再沿着调用关系进入实现和测试。
 bearStatus: mixed
 sourceRefs:
-  - F-0032
+  - F-0020
   - ADR-0018
   - AGENTS.md
   - architecture/overview
@@ -70,13 +70,13 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 - [F-0008：原子输出与 Artifact](/zh-cn/development/atomic-output-artifacts/)——同目录暂存、原子提交、结果元数据和故障窗口；
 - [F-0016/F-0018：有界 Agent Loop 与证据边界](/zh-cn/development/agent-loop/)——Context、RunCreated v4、contract fingerprint、串行调度和 K1-K6；
 - [F-0019：安全结构化运行诊断](/zh-cn/development/diagnostics/)——Event 写入数据库后输出有限日志，并保证日志失败不影响 Run；
-- [F-0005/F-0032：生产 CLI 与查询](/zh-cn/development/run-cli/)——默认初始化、离线检查、composition root、inspect/events 和失败边界；
+- [F-0005/F-0020：生产 CLI 与查询](/zh-cn/development/run-cli/)——默认初始化、离线检查、composition root、inspect/events 和失败边界；
 - [Feature 完成时怎样更新文档](/zh-cn/development/feature-documentation/)——哪些事实写在 `docs/`，哪些解释写在站点；
 - [本地运行文档站](/zh-cn/guides/local-docs/)——安装、构建和检查 Starlight。
 
 ## 不同问题去哪里找答案
 
-目前可检查的 P1 主链已经接通。F-0032 的补强在本地完成验证，正式交付证据仍待记录。P2 恢复和 P3
+目前可检查的 P1 主链已经接通。F-0020 的补强在本地完成验证，正式交付证据仍待记录。P2 恢复和 P3
 授权/隔离没有实现；研究策略应通过未来的 port 提出建议，由 Runtime 保持执行约束。顺序和实验指标见
 [从一次失败走向可比较的研究实验](/zh-cn/learn/research-experiments/)。
 

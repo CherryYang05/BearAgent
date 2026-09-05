@@ -3,7 +3,7 @@ title: 为什么做 BearAgent
 description: BearAgent 先服务谁、先完成什么，以及为什么不追求功能数量。
 bearStatus: mixed
 sourceRefs:
-  - F-0032
+  - F-0020
   - product-positioning
   - roadmap
   - F-0017
@@ -15,7 +15,7 @@ BearAgent 想让个人 Agent 在本地可靠地完成长任务：用户能看清
 :::caution[这是产品方向，不是当前功能清单]
 当前已完成工程基础、内部数据类型、状态与预算规则、SQLite EventStore、三种模型协议 adapter、统一
 ToolExecutor、workspace 读写 Tool、原子输出 Artifact、有界 Agent Loop、本地文档站和
-`run/inspect/events` production composition。F-0017 的真实模型 gate 已通过 5/5。本轮 F-0032
+`run/inspect/events` production composition。F-0017 的真实模型 gate 已通过 5/5。本轮 F-0020
 补上配置保护和首次使用入口，本地验证通过、交付证据待记录；P2/P3 仍是规划。
 :::
 

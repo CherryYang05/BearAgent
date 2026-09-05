@@ -20,7 +20,7 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 
 ## 当前计划
 
-- [PLAN-F-0032：保护本机运行资料并简化首次使用](PLAN-F-0032-safe-local-startup.md)
+- [PLAN-F-0020：保护本机运行资料并简化首次使用](PLAN-F-0020-safe-local-startup.md)
 
 ## 已完成计划
 

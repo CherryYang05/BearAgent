@@ -3,7 +3,7 @@ title: 配置一次模型服务，运行不同目标
 description: 在 config.json 填写厂商、URL、API key、模型列表和默认模型。
 bearStatus: mixed
 sourceRefs:
-  - F-0032
+  - F-0020
   - ADR-0018
   - F-0017
   - ADR-0015
