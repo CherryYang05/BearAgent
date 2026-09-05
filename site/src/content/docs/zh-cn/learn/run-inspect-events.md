@@ -1,8 +1,10 @@
 ---
 title: 从命令行运行并检查一次 Run
 description: 用同一个 SQLite 数据库启动文件任务、查看状态，再分页读取已经提交的 Event。
-bearStatus: implemented
+bearStatus: mixed
 sourceRefs:
+  - F-0020
+  - ADR-0018
   - F-0005
   - ADR-0014
   - F-0016
@@ -15,13 +17,14 @@ sourceRefs:
 你运行一个文件任务后，最先要回答的不是“模型说了什么”，而是三个更具体的问题：这次 Run 的 ID
 是什么、最终状态是什么、哪些事实真的保存下来了。F-0005 用三个命令回答它们：
 
-```powershell
-bearagent run "阅读 docs 并把总结写到 outputs/summary.md"
-bearagent run inspect <run-id>
-bearagent run events <run-id> --after-sequence 0 --limit 100
+```console
+uv run bearagent run "阅读 docs 并把总结写到 outputs/summary.md"
+uv run bearagent run inspect RUN_ID
+uv run bearagent run events RUN_ID --after-sequence 0 --limit 100
 ```
 
 第一条命令默认读取 `data/config.json` 和 `data/p1-run-profile.json`，不需要每次重复传入路径。
+把 `RUN_ID` 换成实际值。还没有配置时，先按[第一次运行](/zh-cn/learn/first-run/)完成 init 和离线检查。
 
 本页解释三条命令为什么读取同一批事实。安装、config/profile 全字段、Provider 配置、所有选项、退出码和
 排错步骤见[P1 命令行完整使用手册](/zh-cn/guides/cli/)。
@@ -60,10 +63,12 @@ profile 不是“每个 Tool 一份 JSON”，也不需要为每个问题重新�
 “总结 docs”和“比较两份说明”，每次变化的是 objective。只有服务/model、Agent 指令、预算或 Tool
 权限发生变化时才需要修改配置。
 
-仓库提供的 v1/v2 示例 profile 都把预算设为 0。使用它启动 Run 时，AgentLoop 会保存 RunCreated、
-RunStarted 和 `budget_exhausted` RunFailed；SDK client 不会创建，模型和 Tool 都不会调用。预算非零
-但所选 key 缺失时，首个模型 Activity 和 Run 会以安全的 `provider_authentication` 失败。这两种情况
-都能用 `inspect/events` 查看。
+仓库提供的 v1/v2 示例 profile 都把预算设为 0。在其他配置有效时，使用它启动 Run 会保存 RunCreated、
+RunStarted 和 `budget_exhausted` RunFailed，不调用模型或 Tool。F-0020 的 init 则生成有限非零预算，
+保留示例给故障演练使用。普通 v2 Run 的 unpriced 费用数值不能代表真实账单限额。
+
+凭据缺失要区分两个入口：v2 config 缺少或包含非法 key 时，在创建数据库和 Run 前失败；legacy v1
+环境凭据缺失时，已经建立的 Run 会以 `provider_authentication` 失败。后者可以用 inspect/events 查询。
 
 ## inspect 与 events 看的是不同层次
 
@@ -76,6 +81,8 @@ BearAgent/Policy/Tool contract fingerprints，不显示 base URL、key 或完整
 
 Query 还会分页扫描已提交的 Tool completed Event，从 `workspace.write` 结果重建 Artifact 元数据。如果
 Event 总量超过可信上限，命令会明确失败，不会把不完整 Artifact 列表说成完整结果。
+
+查询显示写入时记录的 hash，不会重新读取文件核验。succeeded 也不等于内容质量合格，仍需亲自验收。
 
 `events` 返回一页不可变事实，并带回 `next_after_sequence` 和 `has_more`。默认 human 输出每条只显示
 sequence、时间、类型和 schema version，不显示 payload。`--json` 是显式完整导出，可能包含用户目标、
@@ -97,6 +104,6 @@ adapter 和新的 CLI 进程读取，并确认 Provider/Tool 调用计数没有�
 
 自动恢复、retry、Attempt、Receipt 和 `UNKNOWN` 仍属于 P2。F-0017 已实现默认关闭的 live runner，
 真实 gate 仍必须由项目所有者确认 Provider、model、pricing snapshot 和费用上限后单独执行。2026-08-23
-的 DeepSeek V4 suite v1.1.1 已通过 5/5，因此 F-0017/P1 已关闭；runner 默认状态没有改变。
+的 DeepSeek V4 suite v1.1.1 已通过 5/5，构成历史 P1 gate。本轮 F-0020 补强单独记录，runner 默认状态没有改变。
 
 继续阅读[生产 CLI 和查询服务实现导读](/zh-cn/development/run-cli/)，查看代码位置、Schema 和故障测试。

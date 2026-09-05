@@ -1,8 +1,10 @@
 ---
 title: 从哪里开始读代码
 description: 先找到当前功能的事实，再沿着调用关系进入实现和测试。
-bearStatus: implemented
+bearStatus: mixed
 sourceRefs:
+  - F-0020
+  - ADR-0018
   - AGENTS.md
   - architecture/overview
   - ai-development-sop
@@ -42,14 +44,15 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 2. 在 `bootstrap.py` 找到 config/profile 怎样选择 adapter 和 Tool；
 3. 在 `application/agent_loop.py` 找到 Model 与 Tool Activity 前后的 Event append；
 4. 在 `runtime/tool_executor.py` 找到 Registry、prepare、Policy 与 adapter 的唯一执行路径；
-5. 运行 `uv run pytest tests/integration/test_agent_loop.py -q`，再把测试中的一个 Tool 名改错，观察有限失败。
+5. 运行 `uv run pytest tests/integration/test_run_cli.py -q`，对照成功、非法输入与查询失败的测试。
 
-不要在练习后保留故意破坏的测试改动。
+随后运行 `uv run pytest tests/security/test_runtime_files.py -q`，观察默认配置和自定义配置怎样被同一个
+文件边界保护。这组测试使用伪造 key，不需要读取你自己的配置。
 
 ## 第一次阅读
 
 1. 先看[当前实现状态](/zh-cn/project/status/)，避免把路线图当成已有功能；
-2. 如果还没实际运行过 P1，先走一遍[CLI 完整手册](/zh-cn/guides/cli/)；
+2. 如果还没实际运行过 P1，先走一遍[第一次运行](/zh-cn/learn/first-run/)；
 3. 用[Runtime 各部分怎样协作](/zh-cn/architecture/)和[P1 架构取舍](/zh-cn/architecture/p1-decisions/)
    理解调用与依赖方向；
 4. 找到当前 Feature 的 Spec、相关 ADR 和 Plan；
@@ -67,11 +70,15 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 - [F-0008：原子输出与 Artifact](/zh-cn/development/atomic-output-artifacts/)——同目录暂存、原子提交、结果元数据和故障窗口；
 - [F-0016/F-0018：有界 Agent Loop 与证据边界](/zh-cn/development/agent-loop/)——Context、RunCreated v4、contract fingerprint、串行调度和 K1-K6；
 - [F-0019：安全结构化运行诊断](/zh-cn/development/diagnostics/)——Event 写入数据库后输出有限日志，并保证日志失败不影响 Run；
-- [F-0005：生产 CLI 与查询](/zh-cn/development/run-cli/)——Run profile、composition root、inspect/events、JSON 契约和失败边界；
+- [F-0005/F-0020：生产 CLI 与查询](/zh-cn/development/run-cli/)——默认初始化、离线检查、composition root、inspect/events 和失败边界；
 - [Feature 完成时怎样更新文档](/zh-cn/development/feature-documentation/)——哪些事实写在 `docs/`，哪些解释写在站点；
 - [本地运行文档站](/zh-cn/guides/local-docs/)——安装、构建和检查 Starlight。
 
 ## 不同问题去哪里找答案
+
+目前可检查的 P1 主链已经接通。F-0020 的补强在本地完成验证，正式交付证据仍待记录。P2 恢复和 P3
+授权/隔离没有实现；研究策略应通过未来的 port 提出建议，由 Runtime 保持执行约束。顺序和实验指标见
+[从一次失败走向可比较的研究实验](/zh-cn/learn/research-experiments/)。
 
 | 你要确认什么 | 首选位置 |
 |---|---|

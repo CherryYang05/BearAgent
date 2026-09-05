@@ -1,7 +1,16 @@
 # BearAgent 配置参考
 
-本页说明当前已经实现的配置契约。需要可复制的起点时，请使用仓库根目录的
-[config.example.json](../../config.example.json)；实际密钥只写入被 Git 忽略的 `data/config.json`。
+先在准备运行的目录执行以下命令，再编辑 `data/config.json` 的服务信息：
+
+```console
+bearagent init
+bearagent doctor --check-config
+```
+
+`init` 建立缺失的 config、profile 和 `data/.gitignore`，保留已有文件。生成的 key 为空，需要用户填写；
+初始化和离线检查不调用模型，也不创建数据库。第一次保留双方的 `provider_id: primary` 即可。
+旧版本也可手动复制 [config 模板](../../config.example.json) 和
+[零预算 profile](../../examples/run-profile-v2.example.json)，分别放到默认位置。
 
 初学者最容易混淆两个文件：
 
@@ -14,6 +23,20 @@ data/p1-run-profile.json
 ```
 
 Profile 通过 `provider_id` 引用 config。它不会复制 API key、URL 或模型价格。
+
+这两个文件以及数据库相对于**执行命令时的当前目录**查找。`--workspace` 只改变 Tool 的工作根目录，
+不会把 config/profile/database 一起搬过去；日常使用保持在同一目录即可，只有切换资料或运行配置时才
+显式覆盖路径。
+
+## 初始化后的运行上限
+
+生成的 profile 允许最多 8 次模型调用、16 次 Tool、80,000 tokens，单次输出最多 1,024 tokens。
+总时间达到 120 秒后不再启动新 Activity，模型单次 timeout 为 30 秒。已经开始的调用仍需结束并记账；
+token 上限也可能被最后一次调用超过。这些是调度与记账规则，不是服务商账单的精确截断。
+
+`max_cost_microusd` 初值为 1,000,000，保留现有预算 schema 所需的有限字段。普通 v2 Run 为 `unpriced`，
+该字段**不能提供一美元账单上限**；`cost_microusd=0` 表示没有按价格计费，不代表免费。实际消费限额
+应在 Provider 侧设置。已有零预算不会被初始化改写；离线检查会提示它不能启动正常文件任务。
 
 ## 从最小例子开始
 
@@ -73,15 +96,23 @@ Authorization header 或配置路径。
 ## 文件和密钥边界
 
 - `config.example.json` 是可提交的占位模板，不得包含真实密钥；
-- `data/config.json` 是默认运行时配置，已被 Git 忽略，只应由本机用户编辑；
+- `data/config.json` 是默认运行时配置，只应由本机用户编辑；init 创建的数据目录忽略规则不改变已跟踪文件；
 - 配置必须是有界、UTF-8 的普通文件；link、特殊或超大文件、读取期间替换会被拒绝；
 - Objective、模型输出和 Tool 输出不能选择、读取或修改 Provider 配置；
+- 根目录 `data/`、`.git/`、`.env`、`.env.*` 对文件 Tool 不可访问；实际 config、profile、数据库及
+  SQLite `-wal`、`-shm`、`-journal` 路径也由 bootstrap 保护，包括自定义位置；
+- 列目录将受保护条目标为 blocked，搜索跳过；直接访问返回 `workspace_path_denied`。多个硬链接的
+  普通文件同样被拒绝，不能通过别名读取配置。这不是任意敏感内容识别或 P3 sandbox；
 - 不要把真实 key 放进命令行、RunProfile、Event、日志、报告、Artifact、截图或 issue。
 
 旧的 [RunProfile v1 示例](../../examples/run-profile-v1.example.json)仍用于兼容已有配置。新配置应使用
 config v1 与 RunProfile v2。
 
 ## 配置失败时先看哪里
+
+`doctor --check-config` 与真正启动共用 `validate_run_configuration`。它检查本地 JSON、引用、Tool
+名单、workspace 和非零预算，不初始化 SQLite，不验证网络、API key 有效性、模型兼容性或账单余额。
+普通 `doctor` 仍只检查 Python 环境；legacy v1 的环境凭据也不会由此检查。
 
 | 现象 | 先检查 | 为什么在 Run 创建前失败 |
 |---|---|---|

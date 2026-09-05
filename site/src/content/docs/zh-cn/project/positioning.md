@@ -3,6 +3,7 @@ title: 为什么做 BearAgent
 description: BearAgent 先服务谁、先完成什么，以及为什么不追求功能数量。
 bearStatus: mixed
 sourceRefs:
+  - F-0020
   - product-positioning
   - roadmap
   - F-0017
@@ -14,8 +15,8 @@ BearAgent 想让个人 Agent 在本地可靠地完成长任务：用户能看清
 :::caution[这是产品方向，不是当前功能清单]
 当前已完成工程基础、内部数据类型、状态与预算规则、SQLite EventStore、三种模型协议 adapter、统一
 ToolExecutor、workspace 读写 Tool、原子输出 Artifact、有界 Agent Loop、本地文档站和
-`run/inspect/events` production composition。F-0017 的真实模型 gate 已通过 5/5，P1 已关闭；P2/P3
-仍是规划，不是当前功能。
+`run/inspect/events` production composition。F-0017 的真实模型 gate 已通过 5/5。本轮 F-0020
+补上配置保护和首次使用入口，本地验证通过、交付证据待记录；P2/P3 仍是规划。
 :::
 
 ## 第一个用户和第一个任务
@@ -37,6 +38,14 @@ BearAgent 首先服务愿意在自己电脑或服务器运行 Agent 的开发者
 
 它选择一个更窄的责任：在个人能够维护的本地系统里，用同一份执行记录回答三个问题——任务
 做过什么、为什么继续或停下、某个外部动作为什么被允许。
+
+## 研究框架从一个能比较的实验开始
+
+长期希望让诊断、验证和恢复算法在同一个 Runtime 中比较：输入与故障条件相同，替换研究策略，观察
+有害动作、恢复质量、延迟和成本怎样变化。Runtime 继续检查预算、权限与副作用结果，策略不能绕过它。
+
+先让规则基线和一个候选算法共用明确的 port，再由真实实验决定接口怎样稳定。当前还不是通用研究
+框架；P2 建立恢复实验，P3 约束有影响的验证动作。具体例子见[从失败到研究问题](/zh-cn/learn/research-experiments/)。
 
 ## 为什么先不做 Web、MCP 和多个 Agent
 

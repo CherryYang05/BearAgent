@@ -1,8 +1,10 @@
 ---
 title: 配置一次模型服务，运行不同目标
 description: 在 config.json 填写厂商、URL、API key、模型列表和默认模型。
-bearStatus: implemented
+bearStatus: mixed
 sourceRefs:
+  - F-0020
+  - ADR-0018
   - F-0017
   - ADR-0015
   - F-0005
@@ -12,7 +14,7 @@ sourceRefs:
 你不需要为每个问题生成一份 Provider JSON。下面两次运行复用同一份 `config.json` 和 RunProfile；
 变化的只有 objective：
 
-```powershell
+```console
 bearagent run "阅读 docs，并把总结写到 outputs/summary.md"
 bearagent run "比较两份设计，并把差异写到 outputs/diff.md"
 ```
@@ -37,15 +39,16 @@ bearagent run "比较两份设计，并把差异写到 outputs/diff.md"
 
 ## 第一步：在本机配置服务和 key
 
-复制 [config 示例](https://github.com/CherryYang05/BearAgent/blob/main/config.example.json)
-到 `data/config.json`，再填写服务提供方给出的值：
+执行 `uv run bearagent init`，打开生成的 `data/config.json` 并填写服务值。旧版本也可手工复制
+[config 示例](https://github.com/CherryYang05/BearAgent/blob/main/config.example.json)。下面是服务配置示意；
+首次使用可保留生成配置中的 `provider_id: primary`，减少两个文件之间的修改：
 
 ```json
 {
   "schema_version": 1,
   "providers": [
     {
-      "provider_id": "deepseek",
+      "provider_id": "primary",
       "name": "DeepSeek",
       "protocol": "openai_chat_completions",
       "base_url": "https://api.deepseek.com",
@@ -87,29 +90,30 @@ SQLite 和 live report 都不保存 key。base URL 必须是没有账号、query
 
 ## 第二步：RunProfile 只选择 Provider
 
-复制 [RunProfile v2 示例](https://github.com/CherryYang05/BearAgent/blob/main/examples/run-profile-v2.example.json)
-到 `data/p1-run-profile.json`。其中：
+`init` 已生成 `data/p1-run-profile.json`，小任务可以先使用其中的有限默认预算。各部分的作用是：
 
 - 顶层 `provider_id` 必须与 config 中的条目一致；
 - `agent_config` 只保存 Agent 指令、Context/Prompt 版本、Tool 白名单和调用限制；
-- `budget_limits` 决定最多运行多少次、使用多少 token、调用多少 Tool 和最多花多少钱。
+- `budget_limits` 决定最多运行多少次、使用多少 token、调用多少 Tool；费用字段只约束有定价的本地账面估算，不代表真实账单限额。
 
 RunProfile v2 不接受 `agent_config.model` 或 `agent_config.pricing`。Bootstrap 会从 Provider 的
 `default_model` 构造 `unpriced` 的内部 `AgentConfig`。公开示例故意把预算设为 0，因此只会留下可检查的
-`budget_exhausted`，不会调用模型。本机 profile 可以在确认费用边界后填写非零预算。
+`budget_exhausted`，不会调用模型。`init` 生成的本机 profile 则使用有限非零预算；普通 Run 不计算真实费用。
 
 ## 第三步：运行并检查
+
+先执行 `uv run bearagent doctor --check-config`。这项检查不联网，也不创建数据库；通过后再运行目标。
 
 CLI 默认读取 `data/config.json` 和 `data/p1-run-profile.json`，因此正常运行不需要重复传路径：
 
 ```console
 uv run bearagent run "阅读 docs，并把总结写到 outputs/summary.md"
 
-uv run bearagent run inspect <run-id> --json
-uv run bearagent run events <run-id> --json
+uv run bearagent run inspect RUN_ID --json
+uv run bearagent run events RUN_ID --json
 ```
 
-只有临时使用其他配置时，才需要用 `--config` 或 `--profile` 覆盖默认路径。
+把 `RUN_ID` 换成实际值。只有临时使用其他配置时，才需要用 `--config` 或 `--profile` 覆盖默认路径。
 
 缺少、空白或非法 key 时，config 会在创建数据库和 Run 前失败。新 Run 使用 Event schema v4 保存
 `provider_id`、自动计算的 `config_version`、`protocol` 与可信 contract fingerprint，不会保存 base
@@ -119,49 +123,14 @@ URL、key 或 HTTP header。F-0017 引入的 Event v3 继续可读。
 Version 1 profile 仍可读取，并映射到 legacy `openai_responses` 与 `OPENAI_API_KEY`。这是已有配置的
 兼容路径；新的 v2 config 使用直接填写的 `api_key`。
 
-## P1 live gate 要单独授权
+## 配置不会成为工作资料
 
-普通 `bearagent run` 只运行当前 objective。P1 live gate 会连续运行四个普通公开 fixture 和一个安全
-canary，可能产生真实费用。它读取同一份本机 config，不在命令中传 key：
+文件访问 Boundary 在打开内容之前保护 `data/` 与实际自定义 config、profile、数据库及 sidecar，
+read 和递归 search 都受同一规则约束。SecretStr 另负责遮蔽配置对象；仅有对象遮蔽，不能防止原始
+文件被其他路径读出。普通输入文件里的敏感内容仍可能发给模型，这不是任意秘密识别器。
 
-```powershell
-$confirmedModel = Read-Host "Confirmed model"
-$confirmedPricingVersion = Read-Host "Confirmed pricing version"
-$inputRate = Read-Host "Input micro-USD per million tokens"
-$outputRate = Read-Host "Output micro-USD per million tokens"
-$confirmedCostCapMicrousd = Read-Host "Maximum suite cost in micro-USD"
-$commit = (git rev-parse HEAD).Trim()
-
-uv run python scripts/run_p1_live_eval.py `
-  --allow-live-api `
-  --expect-provider-id primary `
-  --expect-model $confirmedModel `
-  --expect-pricing-version $confirmedPricingVersion `
-  --input-microusd-per-million-tokens $inputRate `
-  --output-microusd-per-million-tokens $outputRate `
-  --commit $commit `
-  --max-suite-cost-microusd $confirmedCostCapMicrousd
-```
-
-Preflight 先核对 config/profile、key、五个公开 fixture、model、独立 pricing 快照、commit、非零预算和
-Runtime 最坏费用估算。任一条件不符时，不创建数据库、workspace、SDK client 或 Run。Preflight 把已
-校验的 config 保留在内存中交给 production factory，不额外复制一份包含 key 的临时配置文件。
-
-## 多模型已经可配，自动发现仍后置
-
-现在一个 Provider 已经可以显式列出多个 model，并用 `default_model` 选择普通 Run 使用的模型。这个
-形状与 OpenCode 的 Provider/model catalog、Continue 的多模型条目一致；Cline 和 OpenHands 的最低配置
-也都包含 Provider 类型、base URL、API key 和 Model ID。
-
-自动发现不是普通云端 Agent 配置的共同保证。OpenCode 主要对 Ollama、LM Studio 和 vLLM 等已知本地
-服务自动发现；普通自定义服务仍要求明确 Model ID。未来的 `models refresh` 只能把 `/models` 当作
-候选目录，不能据此宣称 ToolCall、streaming、usage、上下文长度或价格兼容。
-
-参考：[OpenCode Providers](https://opencode.ai/docs/providers/)、
-[OpenCode Models](https://opencode.ai/v2/docs/models)、
-[Continue config.yaml](https://docs.continue.dev/reference)、
-[Cline OpenAI Compatible](https://github.com/cline/cline/blob/main/docs/provider-config/openai-compatible.mdx)、
-[OpenHands CLI configuration](https://docs.openhands.dev/openhands/usage/cli/command-reference)。
+五任务 live gate 是研发验收流程，需要单独确认价格、模型与费用，不是普通用户的配置步骤。
+协议和测试入口见[模型 Provider adapter](/zh-cn/development/model-provider/)。
 
 ## “支持 protocol”不等于兼容所有服务
 

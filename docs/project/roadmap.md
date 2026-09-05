@@ -24,6 +24,9 @@ P3 这个动作是否获准，又只能影响哪里？
 - **P3：Authorized and Isolated Execution / 授权与隔离执行。** 危险动作先取得绑定具体参数的
   Grant/Approval，再进入受控 runner。
 
+科研使用沿这条主线逐步扩展：可替换的算法提出诊断与恢复提议，确定性的 Runtime 继续检查状态、
+预算、权限与副作用。实验契约从 P2 开始建立，完整设计见[科研 Runtime 规划](research-runtime.md)。
+
 阶段只由可复现的用户结果关闭。模块存在、ADR 被接受、Checkpoint 能写入或 sandbox 能启动，都
 不能单独算完成。
 
@@ -48,11 +51,15 @@ P0 至 P3 保持单用户、单 Agent、单个 Runtime 进程、SQLite 和 CLI �
 | 阶段 | 状态 | 用户得到什么 | 关闭阶段的关键证据 |
 |---|---|---|---|
 | P0 工程基础 | 已完成 | 仓库可安装、测试，边界和开发规则明确 | 干净安装、CLI、CI、依赖边界、文档规则 |
-| P1 可检查执行 | 已完成 | 固定本地文件任务可完成，过程和失败可查看 | Fake 5/5、真实 5/5、路径拒绝、预算终止、完整 Event |
+| P1 可检查执行 | 历史基线已完成，F-0020 本地补强待交付 | 固定本地文件任务可完成，过程和失败可查看 | 历史 Fake/真实 5/5，加本轮配置保护与初始化回归 |
 | P2 可恢复执行语义 | 未开始 | 中断后根据事实选择安全的下一步 | kill point、Attempt、恢复决策、不重复写入、`UNKNOWN` |
 | P3 授权与隔离执行 | 未开始 | 危险动作获准后只在受控边界内执行 | Approval 篡改阻断、等待批准恢复、runner 资源与 secret 隔离 |
 | P4 接入与日常使用 | 未开始 | 安全自托管后，Skill、MCP、Web 和 Memory 依次接入 | 新入口不绕过 Event、恢复、Policy 和 runner 路径 |
 | P5 持续评测 | 未开始 | 可以比较质量、成本、恢复和安全回归 | 固定数据集、执行路径断言、跨版本报告 |
+
+2026-09-05 重新审查发现默认工作区可读取本机 config。历史 P1 gate 保留，但本轮收口需交付
+[F-0020](../specs/F-0020-safe-local-startup.md) 的安全与首次使用补强；当前是本地实现、验证和待提交阶段。
+细节见 [P1 审查](p1-closure-review.md)，不能用以前的 5/5 覆盖新发现的问题。
 
 P3 是可信 Runtime 内核的完成线。P4 才是把这个内核变成日常可访问产品的阶段。
 
@@ -67,7 +74,7 @@ P0 建立 Python 3.12、uv、CI、CLI、模块依赖检查、测试替身，以�
 
 ### P1：可检查执行
 
-**P1 状态：已完成。** F-0001 至 F-0008、F-0015 至 F-0018 均已实现。Runtime gate 在
+**P1 历史基线：已完成；本轮 F-0020 补强待交付。** F-0001 至 F-0008、F-0015 至 F-0018 均已实现。Runtime gate 在
 2026-08-23 完成；F-0015 随后完成书籍化文档重构和本地站点验收。F-0018 是进入 P2 前的增量 evidence
 hardening；它不重写 P1 exit criteria，也不把已关闭的 P1 基线改回进行中。
 
@@ -99,7 +106,7 @@ F-0015 提供独立的 Starlight 文档站、渐进式学习路线、CLI 手册�
 
 ## 5. P2：可恢复执行语义
 
-**状态：未开始。** P1 已关闭；开始实现前仍要逐个接受对应 Feature Spec。
+**状态：未开始。** 先交付本轮 F-0020 补强，再逐个接受 P2 的 Feature Spec。
 
 ### 5.1 阶段目标
 
@@ -113,8 +120,8 @@ P2 的核心不是“多 retry 几次”，而是让每次恢复决定都有可�
 #### 第一层：状态重建
 
 - 完整 Event 永远是事实来源；
-- Event-only replay 与 `Checkpoint + tail Event` 必须得到相同 RunState 和 state hash；
-- Checkpoint 只加速读取，缺失、损坏或版本不兼容时必须回到完整 Event；
+- 先实现 Event-only replay；加入 Checkpoint 后，与 `Checkpoint + tail Event` 必须得到相同 RunState 和 state hash；
+- Checkpoint 是按实际重放成本选择的加速切片，缺失、损坏或版本不兼容时必须回到完整 Event；
 - 启动扫描只识别非终态 Run 和最后一个已保存边界，不在这一层盲目恢复外部调用。
 
 #### 第二层：Activity 与 Attempt 分开
@@ -173,6 +180,10 @@ NON_IDEMPOTENT + insufficient proof -> UNKNOWN
 
 每个 kill point 都要断言副作用次数、最终状态、恢复决定和可见 Error，而不只断言“程序能重启”。
 
+同时建立版本化实验清单，记录输入 hash、注入位置和真值、策略版本、可见观测、预算、实际结果与
+额外成本。先比较规则恢复与候选策略，实验真值不泄漏给策略。研究上的诊断假设与执行结果分别记录：
+read-after-write 能核对写入，不能单独证明故障根因；复杂因果算法不是 P2 安全恢复的前置条件。
+
 ### 5.5 hard budget、软提示和重复失败
 
 P1 的模型次数、Tool 次数、token、费用和总时间 hard budget 继续作为最终兜底。P2 的 retry 也消耗
@@ -189,13 +200,14 @@ Grant/Approval、sandbox、shell、公开 API、Routing、Memory、MCP、任意�
 
 ### 5.7 P2 Definition of Done
 
-- Event-only 与 Checkpoint replay 在 Windows/Linux 得到等价状态；
+- Event-only replay 在 Windows/Linux 得到等价状态；若加入 Checkpoint，还要通过等价与 fallback 测试；
 - kill-point suite 能从仅有的持久事实恢复，并记录每次 RecoveryDecision；
 - 已确认 workspace 写不重复，replace 前后残留都能正确 reconcile；
 - 只读与幂等操作只在明确上限内重试，每次 Attempt 都可查；
 - 非幂等且证据不足的动作不会自动重做，而是进入可处理的 `UNKNOWN`；
 - cancel 后不再调度新 Activity，重复控制命令不制造重复转换；
 - golden trace 可用 Fake adapter 重放，并精确断言外部副作用次数。
+- 同一故障集至少能比较规则基线与候选策略，包含无故障控制与错误提议；报告样本数、拒判、重复副作用与额外开销。
 
 ## 6. P3：授权与隔离执行
 
@@ -237,6 +249,10 @@ shell/code Tool 只通过独立 `SandboxBackend` runner：
 
 sandbox 不能代替 Policy，Approval 也不能扩大 runner 的文件、网络或资源边界。两道门都通过后动作
 才可执行。
+
+用于验证故障原因的探测、canary、配置变化也属于动作，同样通过这两道门。验证计划要声明预测的
+中间信号、允许扰动、观测窗口与停止条件。服务恢复不单独证明诊断正确；这项研究比较与必须通过的
+工程安全门分开验收，候选算法可以被实验否定。
 
 ### 6.4 与 P2 的连接
 
@@ -284,6 +300,9 @@ Agent routing、multi-agent、通用 progress detector 和大规模 Tool search 
 P5 把 P1 任务、P2 恢复演练和 P3 安全演练接入统一追踪，比较模型、Prompt、Skill 和 Tool 版本带来
 的答案、执行路径、成本和延迟变化。评测从 P1 就存在；P5 负责持续、跨版本地运行这些证据。
 
+实验清单、故障注入真值、策略版本与可比较报告从 P2/P3 就建立。P5 聚合这些已有证据，不延后科研
+最基本的可复现性要求。外部 serving 环境接入单独定义，不把 GPU/网络调度写进核心。
+
 ## 9. P6+：只有需求证明后再做
 
 - Child Run 形式的多个 Agent；
@@ -320,9 +339,9 @@ P5 把 P1 任务、P2 恢复演练和 P3 安全演练接入统一追踪，比较
 ## 11. Feature Backlog
 
 Feature ID 在 Spec 创建后保持稳定。未创建 Spec 的名称只表示计划范围；开始前必须创建 Spec 并声明
-milestone。2026-09-04，项目所有者明确要求把新增的 P1 日志 Feature 调整为紧接 F-0018 的 F-0019，
-并把尚未创建 Spec 的 P2/P3/P4 占位 ID 依次顺延。这是进入 P2 前的一次性编号整理，不改变任何
-Feature 的范围或 milestone；本次映射完成后继续遵守稳定 ID 规则。
+milestone。2026-09-06，项目所有者要求把最后一个 P1 收口 Feature 放在 F-0019 后，并把尚未创建
+Spec 的 P2/P3/P4 占位 ID 依次顺延。这是进入 P2 前的一次性编号整理，不改变任何 Feature 的范围或
+milestone；本次映射完成后继续遵守稳定 ID 规则。
 
 ### P1（基线已关闭；F-0019 追加 hardening 已完成）
 
@@ -339,29 +358,30 @@ Feature 的范围或 milestone；本次映射完成后继续遵守稳定 ID 规�
 11. [F-0017：模型服务配置与真实 gate](../specs/F-0017-configurable-model-providers-live-gate.md)
 12. [F-0018：可信 Run contract identity 与 crash observability](../specs/F-0018-p1-evidence-hardening.md) — implemented
 13. [F-0019：安全结构化运行诊断](../specs/F-0019-safe-structured-diagnostics.md) — implemented
+14. [F-0020：保护本机运行资料并简化首次使用](../specs/F-0020-safe-local-startup.md) — accepted；P1 收口补强
 
 F-0015 的文档内容、本地站点、构建和阅读体验已经实现；部署到某个在线平台不在该 Feature 范围内。
 
 ### P2（计划；均未创建 Spec）
 
-1. F-0020：Event-only 状态重建、Checkpoint fallback 和启动检查
-2. F-0021：Attempt、失败分类、恢复语义和有界 retry
-3. F-0022：幂等键、Receipt、reconcile 和 `UNKNOWN` 处置
-4. F-0023：pause/resume/cancel/retry 命令与完整 kill-point suite
+1. F-0021：Event-only 状态重建、启动检查与可选 Checkpoint fallback
+2. F-0022：Attempt、失败分类、恢复语义和有界 retry
+3. F-0023：幂等键、Receipt、reconcile 和 `UNKNOWN` 处置
+4. F-0024：pause/resume/cancel/retry 命令、kill-point suite 与恢复策略比较
 
 ### P3（计划；均未创建 Spec）
 
-1. F-0024：Grant、三态 Policy 和持久化参数绑定 Approval
-2. F-0025：SandboxBackend、隔离 runner 和受控 shell/code Tool
+1. F-0025：Grant、三态 Policy 和持久化参数绑定 Approval
+2. F-0026：SandboxBackend、隔离 runner 和受控 shell/code Tool
 
 ### P4（计划；均未创建 Spec）
 
-1. F-0026：HTTP API、SSE 续接和单用户认证
-2. F-0027：Compose 加固、HTTPS、备份和空目录恢复
-3. F-0028：版本化只读 Skill
-4. F-0029：受控 MCP Tool
-5. F-0030：Web UI
-6. F-0031：有来源、可删除的 Memory 和上下文压缩
+1. F-0027：HTTP API、SSE 续接和单用户认证
+2. F-0028：Compose 加固、HTTPS、备份和空目录恢复
+3. F-0029：版本化只读 Skill
+4. F-0030：受控 MCP Tool
+5. F-0031：Web UI
+6. F-0032：有来源、可删除的 Memory 和上下文压缩
 
 如果一个条目在写 Spec 时仍无法独立验收，保留现有 ID 的核心范围，并用新的全局 ID 拆出后续
 Feature。一个 Plan 不得同时实现整个阶段。

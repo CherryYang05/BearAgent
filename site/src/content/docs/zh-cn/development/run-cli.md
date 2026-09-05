@@ -3,6 +3,8 @@ title: F-0005 生产 CLI 和查询服务实现导读
 description: 找到 Run profile、composition root、EventStore query、CLI JSON 契约和边界测试。
 bearStatus: implemented
 sourceRefs:
+  - F-0020
+  - ADR-0018
   - F-0005
   - PLAN-F-0005
   - ADR-0014
@@ -30,6 +32,14 @@ sourceRefs:
 | `interfaces/cli/main.py` | Typer 参数、退出码和异步 application 调用 |
 
 ## composition root 只做组装
+
+F-0020 的 `local_setup.py` 为用户 CLI 创建缺失的配置模板，不调用模型、不覆盖文件。`doctor --check-config`
+与 `build_run_services` 共用 `validate_run_configuration`，前者只完成本地校验，后者才组装 Provider、
+初始化 SQLite 并创建执行服务。Tool 名单或保护路径规则不在 CLI 复制第二份。
+
+bootstrap 把实际 config、profile、数据库及 sidecar 位置传给 WorkspaceBoundary。保护在真实访问前执行，
+也覆盖递归搜索和 outputs 中的自定义配置。`tests/security/test_runtime_files.py` 用伪造 key 检查生产
+Event/Context 不泄漏；`tests/integration/test_local_setup_cli.py` 走 init、离线检查、run 与查询全链。
 
 `build_run_services` 先校验 profile、catalog 和 workspace。RunProfile v2 的 `provider_id` 必须精确
 命中一个 catalog 条目；factory 只按条目的 `ModelProtocol` 创建 Responses、Chat Completions 或

@@ -1,0 +1,72 @@
+name: Deploy docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy static docs
+    runs-on: ubuntu-latest
+    environment: docs-production
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+        working-directory: site
+
+      - name: Build static site
+        run: npm run build
+        working-directory: site
+
+      - name: Check the server-side deploy script
+        run: |
+          sh -n scripts/deploy_docs_site_entrypoint.sh
+          bash -n scripts/deploy_docs_site.sh
+
+      - name: Create bounded release archive
+        run: tar -czf site-dist.tar.gz -C site/dist .
+
+      - name: Configure the restricted deploy identity
+        env:
+          DOCS_DEPLOY_KEY: ${{ secrets.DOCS_DEPLOY_KEY }}
+        run: |
+          test -n "$DOCS_DEPLOY_KEY"
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$DOCS_DEPLOY_KEY" > "$HOME/.ssh/docs_deploy_key"
+          chmod 600 "$HOME/.ssh/docs_deploy_key"
+          install -m 600 .github/docs-deploy-known-hosts "$HOME/.ssh/known_hosts"
+
+      - name: Deploy after GitHub accepted the main push
+        run: >-
+          ssh -i "$HOME/.ssh/docs_deploy_key"
+          -o BatchMode=yes
+          -o IdentitiesOnly=yes
+          ubuntu@42.193.108.178
+          < site-dist.tar.gz
+
+      - name: Verify the public site
+        run: |
+          curl --fail --silent --show-error --location --max-time 30 \
+            https://docs.bearguin.cn/zh-cn/ > deployed-index.html
+          grep -Fq '<title>从一次任务，读懂 Agent Runtime | BearAgent</title>' \
+            deployed-index.html
+          curl --fail --silent --show-error --max-time 30 \
+            --output /dev/null https://docs.bearguin.cn/pagefind/pagefind-ui.js

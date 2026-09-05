@@ -1,8 +1,10 @@
 ---
 title: 现在实现到了哪里
 description: 只列出当前分支中已有代码和测试支持的能力。
-bearStatus: implemented
+bearStatus: mixed
 sourceRefs:
+  - F-0020
+  - ADR-0018
   - roadmap
   - F-0001
   - F-0002
@@ -27,17 +29,22 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 任务与安全 canary；脱敏 report 和最终 Reality Check 完成，因此 F-0017/P1 已关闭。当前分支还用
 RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完成 K1-K6 进程退出观测基线。
 
+2026-09-05 的再次审查发现默认配置可被文件工具读到，历史 gate 没有覆盖这一组合。F-0020 已在本地
+修复，并增加 `init`、离线配置检查和回归测试；正式提交证据尚待记录，不能以旧 gate 代替这次交付。
+
 ## 三十秒结论
 
 | 问题 | 当前答案 |
 |---|---|
 | 能在本机运行一个真实模型文件任务吗？ | 能，需要有效 config、非零预算和受限 workspace |
+| 第一次需要填写什么？ | 含 F-0020 的源码可用 init 生成文件；填写模型 config，再用 doctor --check-config 离线检查 |
+| Tool 能读取本机模型密钥吗？ | F-0020 拒绝默认运行目录和实际配置路径；普通输入仍需由用户判断是否适合发送给模型 |
 | 能查询任务做过什么吗？ | 能，用 `inspect` 看状态，用 `events` 看有序事实 |
 | 能知道 Run 使用了哪版 Tool/Policy 声明吗？ | 新 Run 可以；`inspect` 显示版本和 SHA-256，legacy Run 明确缺失 |
 | 能用结构化日志定位本机运行失败吗？ | 可以；stderr 提供固定字段诊断，但系统仍只根据 Event 判断 Run 状态 |
 | 程序中断后会自动继续吗？ | 不会，P2 尚未实现 |
 | 有用户 Approval 或真正的 sandbox 吗？ | 没有，P3 尚未实现 |
-| 文档站可以查看吗？ | 可以；在本地启动开发或生产预览，仓库不负责在线部署 |
+| 文档站可以查看吗？ | 可以；本地可预览，线上为 `https://docs.bearguin.cn/zh-cn/` |
 
 ## 已经可以验证
 
@@ -56,7 +63,10 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 | F-0017 模型配置与 live gate | config v1、RunProfile v2、三种协议 adapter、RunCreated v3、production selector 与默认关闭的 runner；Fake 5/5 和 DeepSeek V4 live 5/5 分开验证 |
 | F-0018 evidence hardening | ToolSpec/Policy contract fingerprint、RunCreated v4、legacy v1-v3 读取、v2/v3/v4 Tool evidence 一致性、retryable 非授权语义，以及 K1-K6 SQLite/CLI crash suite |
 | F-0019 安全结构化诊断 | post-commit Event envelope、有限 Activity 耗时和错误码；bootstrap/CLI/EventStore ops diagnostics；不复制 Event payload，sink 失败不影响 Run |
-| F-0015 文档站 | 中文 Starlight、搜索、Mermaid、六部分学习路线、独立 CLI 手册，以及本地开发、构建和预览 |
+| F-0015 文档站 | 中文 Starlight、搜索、Mermaid、六步学习路线、独立 CLI 手册，以及本地开发、构建和预览 |
+
+本轮 F-0020 的代码已通过 507 个 Windows 离线测试，包括生产路径的配置泄漏回归与默认命令流程。
+这说明本地补强通过验证；Spec 仍为 accepted，Plan 仍为 active，等待后续交付证据。
 
 ## P1 完成证据
 
@@ -68,7 +78,8 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 - 脱敏证据见
   [F-0017 P1 live report v1](https://github.com/CherryYang05/BearAgent/blob/main/docs/evidence/F-0017-p1-live-report-v1.json)。
 
-P1 当前怎样操作见[命令行完整使用手册](/zh-cn/guides/cli/)；执行链和主要取舍分别见
+第一次操作见[读一份文档并核对结果](/zh-cn/learn/first-run/)；选项见[命令行手册](/zh-cn/guides/cli/)。
+执行链和主要取舍分别见
 [一次请求怎样穿过 BearAgent](/zh-cn/architecture/runtime-flow/)与
 [P1 为什么这样设计](/zh-cn/architecture/p1-decisions/)。
 
@@ -80,12 +91,17 @@ P1 当前怎样操作见[命令行完整使用手册](/zh-cn/guides/cli/)；执�
 - RunCreated v4 增加安全 Provider 选择与 contract fingerprint；其余 Activity 继续复用 v2 payload shape；
 - K4 即使文件已经 replace，terminal Event 缺失时仍只显示 RUNNING；当前不会 reconcile 或自动补成功；
 - 还没有用户 Approval、sandbox、服务器 API 或独立 Artifact 查询表；
-- 文档站没有自动部署 workflow，也没有绑定域名或托管平台；这不是 F-0015 的未完成项；
-- `docs.bearguin.cn` 尚未配置。如果以后需要在线托管，应另行定义部署目标和验收标准。
+- 普通 v2 Run 使用 unpriced 账面费用；显示 0 不代表免费或真实账单受限；
+- succeeded 不代替任务质量验收，Artifact hash 也不是查询时对文件的重新校验；
+- 本仓库提供站点源码、构建与 main 推送后的静态发布 workflow。服务器受限身份、原子切换、回退和
+  公网健康检查已经单独验收；workflow 文件进入 `main` 后才会由后续推送自动触发。
 
 F-0002 的确定性重放只说明“同一串 Event 会算出同一状态”。它不是 P2 的崩溃恢复，也没有
 Checkpoint、Attempt、RecoveryDecision 或 `UNKNOWN` 处置。P3 的参数绑定 Approval 和隔离 runner、
 P4 的 HTTP/认证与自托管也都尚未实现。
+
+研究路线从 P2 建立可比较的实验，在 P3 约束验证动作。策略提出建议，Runtime 保留预算、Policy 和
+执行控制；详情见[从一次失败走向研究实验](/zh-cn/learn/research-experiments/)。
 
 ## 文档怎样保持当前
 

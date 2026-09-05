@@ -5,8 +5,8 @@ template: splash
 hero:
   tagline: 不从术语表开始。先让 Agent 完成一项本地文件任务，再顺着 Run、Event、Model、Tool 和测试把系统拆开。
   actions:
-    - text: 开始第一部
-      link: /zh-cn/guides/cli/
+    - text: 开始第一步
+      link: /zh-cn/learn/first-run/
       icon: right-arrow
       variant: primary
     - text: 查看全书地图
@@ -14,6 +14,7 @@ hero:
       icon: open-book
 bearStatus: mixed
 sourceRefs:
+  - F-0020
   - F-0001
   - F-0002
   - F-0003
@@ -55,11 +56,11 @@ BearAgent 是一个 local-first 的个人 Agent Runtime。Runtime 是模型之�
 目前最适合学习的场景很小：Agent 在指定 workspace 中查找、读取和比较资料，只把完整结果写进
 `outputs/**`。小场景让我们能把模型调用、文件边界、预算、持久化和失败路径逐一看清。
 
-## 六部分，从会用走到会研究
+## 六步，从会用走到会研究
 
 <ol class="book-map">
   <li>
-    <span><a href="/zh-cn/guides/cli/">先亲手跑一次</a><small>配置模型，启动 Run，再用 inspect 和 events 回看过程。</small></span>
+    <span><a href="/zh-cn/learn/first-run/">先亲手跑一次</a><small>初始化配置，运行一个小任务，再亲自核对文件和记录。</small></span>
   </li>
   <li>
     <span><a href="/zh-cn/learn/agent-basics/">看懂 Agent 运行</a><small>分清 Model、Context、Tool、Runtime、Run、Activity 和 Event。</small></span>
@@ -74,7 +75,7 @@ BearAgent 是一个 local-first 的个人 Agent Runtime。Runtime 是模型之�
     <span><a href="/zh-cn/development/">沿代码继续学习</a><small>按一条真实执行链读源码，用单元、契约、集成和安全测试验证理解。</small></span>
   </li>
   <li>
-    <span><a href="/zh-cn/learn/agents-today/">走向研究与扩展</a><small>把恢复、授权、隔离、评测和 Agent 研究问题放回领域全景。</small></span>
+    <span><a href="/zh-cn/learn/research-experiments/">走向研究与扩展</a><small>从一次失败提出假设，再比较诊断、干预和恢复策略。</small></span>
   </li>
 </ol>
 
@@ -89,7 +90,7 @@ BearAgent 是一个 local-first 的个人 Agent Runtime。Runtime 是模型之�
   <LinkCard
     title="我想先把项目跑起来"
     description="从源码安装、准备配置、运行命令，并处理最常见的失败。"
-    href="/zh-cn/guides/cli/"
+    href="/zh-cn/learn/first-run/"
   />
   <LinkCard
     title="我想开始读源码"
@@ -99,7 +100,7 @@ BearAgent 是一个 local-first 的个人 Agent Runtime。Runtime 是模型之�
   <LinkCard
     title="我想做 Agent 研究"
     description="从长任务、Context、评测、恢复、权限和隔离找到可研究的问题。"
-    href="/zh-cn/learn/open-problems/"
+    href="/zh-cn/learn/research-experiments/"
   />
   <LinkCard
     title="我只想确认当前能力"

@@ -9,6 +9,7 @@ from bearagent.domain.errors import ErrorInfo
 from bearagent.domain.queries import EventPage, RunInspection
 
 MAX_HUMAN_FINAL_TEXT_CHARS = 50_000
+COST_NOTE = "Cost: local accounting only; unpriced runs do not measure or cap Provider billing."
 
 
 def render_json(value: BaseModel) -> str:
@@ -33,6 +34,7 @@ def render_run(result: RunResult) -> str:
             f"cost_microusd={usage.cost_microusd}, tools={usage.tool_calls}"
         ),
     ]
+    lines.append(COST_NOTE)
     for activity in result.state.activities:
         label = activity.kind.value
         if activity.tool_name is not None:
@@ -63,6 +65,7 @@ def render_inspection(inspection: RunInspection) -> str:
             f"cost_microusd={usage.cost_microusd}, tools={usage.tool_calls}"
         ),
     ]
+    lines.append(COST_NOTE)
     if inspection.provider_selection is not None:
         selection = inspection.provider_selection
         lines.extend(

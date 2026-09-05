@@ -14,7 +14,11 @@ from typer.core import TyperGroup
 
 from bearagent import package_version
 from bearagent.adapters.diagnostics import JsonLinesDiagnosticSink, operation_failure_record
-from bearagent.bootstrap import build_run_query_service, build_run_services
+from bearagent.bootstrap import (
+    build_run_query_service,
+    build_run_services,
+    validate_run_configuration,
+)
 from bearagent.domain.agent import MAX_OBJECTIVE_CHARS, RunInput
 from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.ids import RunId, SessionId
@@ -32,12 +36,14 @@ from bearagent.interfaces.cli.renderers import (
     render_json,
     render_run,
 )
+from bearagent.local_setup import (
+    DEFAULT_CONFIG_PATH,
+    DEFAULT_DATABASE_PATH,
+    DEFAULT_PROFILE_PATH,
+    DEFAULT_WORKSPACE_PATH,
+    initialize_local_config,
+)
 from bearagent.ports.diagnostics import emit_safely
-
-DEFAULT_PROFILE_PATH = Path("data/p1-run-profile.json")
-DEFAULT_CONFIG_PATH = Path("data/config.json")
-DEFAULT_DATABASE_PATH = Path("data/bearagent.db")
-DEFAULT_WORKSPACE_PATH = Path(".")
 
 
 class DoctorReport(TypedDict):
@@ -62,7 +68,7 @@ class DefaultRunGroup(TyperGroup):
 
 app = typer.Typer(
     name="bearagent",
-    help="Durable and secure personal AI Agent Runtime.",
+    help="Run inspectable local file tasks with bounded model and Tool calls.",
     no_args_is_help=True,
     add_completion=False,
 )
@@ -71,6 +77,9 @@ run_app = typer.Typer(
     cls=DefaultRunGroup,
     help="Execute `bearagent run OBJECTIVE`, or inspect an existing durable Run.",
     epilog=(
+        "Defaults: current workspace and data/ configuration/database. "
+        "Execution options: --config, --profile, --workspace, --database, --json. "
+        "Use `bearagent run execute --help` for option details. "
         "Run options may appear before or after OBJECTIVE. "
         "Use `bearagent run -- OBJECTIVE` when the objective is named inspect/events "
         "or begins with a dash."
@@ -122,9 +131,27 @@ def doctor(
         bool,
         typer.Option("--json", help="Emit a machine-readable JSON report."),
     ] = False,
+    check_config: Annotated[
+        bool,
+        typer.Option("--check-config", help="Also validate local Run configuration offline."),
+    ] = False,
+    profile: Annotated[Path, typer.Option("--profile")] = DEFAULT_PROFILE_PATH,
+    config: Annotated[Path, typer.Option("--config")] = DEFAULT_CONFIG_PATH,
+    workspace: Annotated[Path, typer.Option("--workspace")] = DEFAULT_WORKSPACE_PATH,
+    database: Annotated[Path, typer.Option("--database")] = DEFAULT_DATABASE_PATH,
 ) -> None:
     """Check whether the local environment can run this BearAgent version."""
     report = build_doctor_report()
+    if check_config:
+        _check_local_configuration(
+            report,
+            profile=profile,
+            config=config,
+            workspace=workspace,
+            database=database,
+            json_output=json_output,
+        )
+        return
     if json_output:
         typer.echo(json.dumps(report, ensure_ascii=False, sort_keys=True))
     else:
@@ -135,6 +162,67 @@ def doctor(
         typer.echo(f"Status: {report['status']}")
 
     if not report["python_supported"]:
+        raise typer.Exit(code=1)
+
+
+@app.command("init")
+def initialize() -> None:
+    """Create missing local configuration templates; preserve existing files."""
+    try:
+        created = initialize_local_config()
+    except (OSError, ValueError):
+        typer.echo("Error: Could not initialize ordinary files in data/. Existing files were kept.")
+        raise typer.Exit(code=1) from None
+    for path in created:
+        typer.echo(f"Created: {path}")
+    if not created:
+        typer.echo("Existing local configuration kept.")
+    typer.echo("Edit data/config.json: protocol, base_url, api_key, models and default_model.")
+    typer.echo("Then run: bearagent doctor --check-config")
+    typer.echo("Starter limits are finite. Unpriced runs do not measure or cap your Provider bill.")
+
+
+def _check_local_configuration(
+    report: DoctorReport,
+    *,
+    profile: Path,
+    config: Path,
+    workspace: Path,
+    database: Path,
+    json_output: bool,
+) -> None:
+    message = "Local configuration is valid. This does not test service connectivity or billing."
+    ready = False
+    try:
+        configured = validate_run_configuration(
+            profile_path=profile,
+            config_path=config,
+            workspace_path=workspace,
+            database_path=database,
+        )
+        if any(value == 0 for value in configured.profile.budget_limits.model_dump().values()):
+            message = "A Run budget is zero. Set finite positive limits before a file task."
+        else:
+            ready = report["python_supported"]
+            if configured.provider_config is None:
+                message = (
+                    "Legacy profile validated. Environment credentials and service connectivity "
+                    "have not been checked."
+                )
+    except BearAgentError as error:
+        message = error.info.message + " Run bearagent init, then check the local config/profile."
+    result = {
+        **report,
+        "status": "ok" if ready else "error",
+        "configuration_ready": ready,
+        "message": message,
+    }
+    if json_output:
+        typer.echo(json.dumps(result, ensure_ascii=False, sort_keys=True))
+    else:
+        typer.echo(f"Status: {result['status']}")
+        typer.echo(message)
+    if not ready:
         raise typer.Exit(code=1)
 
 

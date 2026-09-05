@@ -98,7 +98,7 @@ class WorkspaceSearchTool:
 
     spec = ToolSpec(
         name="workspace.search",
-        spec_version="1",
+        spec_version="2",
         description="Search for a literal string in bounded UTF-8 workspace files.",
         input_schema=_SearchArguments.model_json_schema(),
         output_schema=_SearchOutput.model_json_schema(),
