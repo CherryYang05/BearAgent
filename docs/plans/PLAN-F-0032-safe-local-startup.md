@@ -30,7 +30,7 @@ related_spec: F-0032
 
 | 检查 | 结果 |
 |---|---|
-| `uv run pytest`，使用本次审查的独立临时/缓存目录 | 507 passed，29.51 秒；包含 contract/schema、integration、security、recovery 和 evals |
+| `uv run pytest`，使用本次审查的独立临时/缓存目录 | 507 passed，最终修复后 25.83 秒；包含 contract/schema、integration、security、recovery 和 evals |
 | 两个新增回归文件 | 17 passed；真实硬链接别名、伪造凭据的生产路径与 Event/Context、离线初始化和默认 CLI 流程 |
 | `uv lock --check` | 通过，锁文件未改动 |
 | `uv run ruff format --check .` / `uv run ruff check .` | 273 个文件格式通过；lint 通过 |
@@ -71,7 +71,11 @@ host key 指纹已核对，`DOCS_DEPLOY_KEY` 已写入 GitHub Actions Secret，�
 文件工具安全测试覆盖。这不宣称已完成恶意本机并发目录替换防护。
 
 项目所有者已授权提交和推送。实现提交 `66064df` 已推送到
-`origin/codex/F-0032-safe-local-startup`，远端 hash 与本地一致；该分支没有既有 PR，也没有分支 push
-检查。部署 workflow 只监听 `main`，因此不能把功能分支推送或手工服务器发布写成 main trigger 证据。
+`origin/codex/F-0032-safe-local-startup`，并创建非 Draft PR #23。第一次 PR CI 在 Ubuntu 暴露目录的
+`st_nlink` 通常大于 1：输出目标检查先判断链接数，因而把目录错误报告为硬链接文件；Windows 没有触发
+这个平台差异。实现已调整为先拒绝 link/reparse，再判断普通文件类型，最后只检查普通文件的多硬链接，
+本地针对性 14 tests 和完整 507 tests 通过。最终 PR 检查必须在 GitHub 保持全绿。
+
+部署 workflow 只监听 `main`，因此不能把功能分支推送或手工服务器发布写成 main trigger 证据。
 Spec 保持 accepted、`implemented_in` 保持 null，本 Plan 保持唯一 active Plan，待合并后的第一次真实
 workflow 成功再关闭。

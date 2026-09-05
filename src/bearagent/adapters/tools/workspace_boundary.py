@@ -500,7 +500,7 @@ class WorkspaceBoundary:
                 ErrorCode.WORKSPACE_ACCESS_FAILED,
                 "Workspace output target could not be inspected.",
             ) from error
-        if _is_link_like(path, target_stat) or target_stat.st_nlink != 1:
+        if _is_link_like(path, target_stat):
             raise WorkspaceBoundaryError(
                 ErrorCode.WORKSPACE_PATH_DENIED,
                 "Workspace output target cannot be a link or reparse point.",
@@ -509,6 +509,11 @@ class WorkspaceBoundary:
             raise WorkspaceBoundaryError(
                 ErrorCode.WORKSPACE_WRONG_TYPE,
                 "Workspace output target is not a regular file.",
+            )
+        if target_stat.st_nlink != 1:
+            raise WorkspaceBoundaryError(
+                ErrorCode.WORKSPACE_PATH_DENIED,
+                "Workspace output target cannot have multiple hard links.",
             )
 
     def _is_protected(self, path: Path) -> bool:
