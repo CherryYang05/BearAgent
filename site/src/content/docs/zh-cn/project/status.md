@@ -3,6 +3,7 @@ title: 现在实现到了哪里
 description: 只列出当前分支中已有代码和测试支持的能力。
 bearStatus: mixed
 sourceRefs:
+  - F-0021
   - F-0020
   - ADR-0018
   - roadmap
@@ -70,6 +71,10 @@ F-0020 的 Spec 为 implemented，Plan 为 completed；
 [PR #24](https://github.com/CherryYang05/BearAgent/pull/24) 的合并提交是 `b167922`。
 [同一提交的 CI](https://github.com/CherryYang05/BearAgent/actions/runs/33987823793) 已通过 Windows、Ubuntu
 和站点构建。2026-09-08 的本地复验同样通过 507 个测试；历史真实模型 gate 没有在本轮重跑。
+
+P1 的收口版本为 [v0.1.0](https://github.com/CherryYang05/BearAgent/tree/v0.1.0)。P2 已进入
+F-0021 设计阶段：先从 Event 重建状态，再检查未结束的 Run。Spec、ADR 和实施计划仍是草案，
+没有新增 replay/check 命令，也没有重试或恢复执行能力。
 
 ## P1 完成证据
 

@@ -20,7 +20,9 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 
 ## 当前计划
 
-暂无 active Plan；P1 已收口。
+暂无 active Plan；P1 已收口，P2 首个 Feature 正在设计。
+
+- [PLAN-F-0021：Event-only 重建与显式启动检查](PLAN-F-0021-event-replay-startup-check.md) — draft，接受 Spec/ADR 后启动实施。
 
 ## 已完成计划
 

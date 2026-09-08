@@ -52,7 +52,7 @@ P0 至 P3 保持单用户、单 Agent、单个 Runtime 进程、SQLite 和 CLI �
 |---|---|---|---|
 | P0 工程基础 | 已完成 | 仓库可安装、测试，边界和开发规则明确 | 干净安装、CLI、CI、依赖边界、文档规则 |
 | P1 可检查执行 | 已完成，2026-09-08 收口 | 固定本地文件任务可完成，过程和失败可查看 | 历史 Fake/真实 5/5、507 个离线测试、跨平台 CI 与 main push 文档发布 |
-| P2 可恢复执行语义 | 未开始 | 中断后根据事实选择安全的下一步 | kill point、Attempt、恢复决策、不重复写入、`UNKNOWN` |
+| P2 可恢复执行语义 | 设计启动，F-0021 draft | 中断后根据事实选择安全的下一步 | kill point、Attempt、恢复决策、不重复写入、`UNKNOWN` |
 | P3 授权与隔离执行 | 未开始 | 危险动作获准后只在受控边界内执行 | Approval 篡改阻断、等待批准恢复、runner 资源与 secret 隔离 |
 | P4 接入与日常使用 | 未开始 | 安全自托管后，Skill、MCP、Web 和 Memory 依次接入 | 新入口不绕过 Event、恢复、Policy 和 runner 路径 |
 | P5 持续评测 | 未开始 | 可以比较质量、成本、恢复和安全回归 | 固定数据集、执行路径断言、跨版本报告 |
@@ -109,7 +109,11 @@ F-0020 追加保护 Runtime 配置和数据库、无覆盖 `init`、离线 `doct
 
 ## 5. P2：可恢复执行语义
 
-**状态：待启动。** P1 已收口；下一步从 F-0021 的 Event-only 重建开始，逐个接受 P2 的 Feature Spec。
+**状态：设计启动（2026-09-08）。** P1 的 annotated tag `v0.1.0` 固定在 `499e244`。
+首个 [F-0021 Spec](../specs/F-0021-event-replay-startup-check.md)、
+[ADR-0020](../adr/ADR-0020-event-replay-before-recovery.md) 与
+[Implementation Plan](../plans/PLAN-F-0021-event-replay-startup-check.md) 已形成草案；接受后从只读重建
+开始实施。现阶段没有新增恢复命令或执行能力，F-0022 至 F-0024 继续逐个接受。
 
 ### 5.1 阶段目标
 
@@ -365,9 +369,9 @@ milestone；本次映射完成后继续遵守稳定 ID 规则。
 
 F-0015 的文档内容、本地站点、构建和阅读体验已经实现；部署到某个在线平台不在该 Feature 范围内。
 
-### P2（计划；均未创建 Spec）
+### P2（F-0021 设计启动；其余为计划）
 
-1. F-0021：Event-only 状态重建、启动检查与可选 Checkpoint fallback
+1. [F-0021：Event-only 状态重建与显式启动检查](../specs/F-0021-event-replay-startup-check.md) — draft；Checkpoint 按重放成本后续评估
 2. F-0022：Attempt、失败分类、恢复语义和有界 retry
 3. F-0023：幂等键、Receipt、reconcile 和 `UNKNOWN` 处置
 4. F-0024：pause/resume/cancel/retry 命令、kill-point suite 与恢复策略比较

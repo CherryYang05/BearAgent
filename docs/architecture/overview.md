@@ -76,6 +76,10 @@ suite v1.1.1 已用 DeepSeek V4 经 production composition 完成四个普通任
 - P4：HTTP/SSE、认证、自托管、Skill、MCP、Web UI、Memory 和受控联网；
 - P5：跨版本 trace 与持续评测。
 
+P2 已从 [F-0021 草案](../specs/F-0021-event-replay-startup-check.md)启动设计：先独立读取 Event、
+重建 Run 并显式检查未结束的执行。专用只读入口、state hash 和快照边界均尚未实现；提案见
+[ADR-0020](../adr/ADR-0020-event-replay-before-recovery.md)。
+
 这些条目用于说明长期连接方向，不表示对应 Feature Spec 已被接受。真正开始实现前，仍要创建并接受
 独立 Feature Spec；具体交付顺序以[路线图](../project/roadmap.md)和当时的 active Plan 为准。
 

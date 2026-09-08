@@ -33,5 +33,8 @@ ADR 只记录影响多个模块、以后难以反转的技术决定。标题直�
 - [ADR-0019：main 推送成功后使用受限身份发布静态文档](ADR-0019-main-push-deploys-docs-with-restricted-key.md)
   — accepted
 
+- [ADR-0020：先独立读取 Event 重建状态，再接入恢复决定](ADR-0020-event-replay-before-recovery.md)
+  — proposed
+
 新决定使用 [ADR 模板](../templates/adr.md)。被新决定替代的 ADR 不删除，改为 `superseded` 并链接
 到替代它的文档。
