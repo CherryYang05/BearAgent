@@ -51,15 +51,15 @@ P0 至 P3 保持单用户、单 Agent、单个 Runtime 进程、SQLite 和 CLI �
 | 阶段 | 状态 | 用户得到什么 | 关闭阶段的关键证据 |
 |---|---|---|---|
 | P0 工程基础 | 已完成 | 仓库可安装、测试，边界和开发规则明确 | 干净安装、CLI、CI、依赖边界、文档规则 |
-| P1 可检查执行 | 历史基线已完成，F-0020 本地补强待交付 | 固定本地文件任务可完成，过程和失败可查看 | 历史 Fake/真实 5/5，加本轮配置保护与初始化回归 |
+| P1 可检查执行 | 已完成，2026-09-08 收口 | 固定本地文件任务可完成，过程和失败可查看 | 历史 Fake/真实 5/5、507 个离线测试、跨平台 CI 与 main push 文档发布 |
 | P2 可恢复执行语义 | 未开始 | 中断后根据事实选择安全的下一步 | kill point、Attempt、恢复决策、不重复写入、`UNKNOWN` |
 | P3 授权与隔离执行 | 未开始 | 危险动作获准后只在受控边界内执行 | Approval 篡改阻断、等待批准恢复、runner 资源与 secret 隔离 |
 | P4 接入与日常使用 | 未开始 | 安全自托管后，Skill、MCP、Web 和 Memory 依次接入 | 新入口不绕过 Event、恢复、Policy 和 runner 路径 |
 | P5 持续评测 | 未开始 | 可以比较质量、成本、恢复和安全回归 | 固定数据集、执行路径断言、跨版本报告 |
 
-2026-09-05 重新审查发现默认工作区可读取本机 config。历史 P1 gate 保留，但本轮收口需交付
-[F-0020](../specs/F-0020-safe-local-startup.md) 的安全与首次使用补强；当前是本地实现、验证和待提交阶段。
-细节见 [P1 审查](p1-closure-review.md)，不能用以前的 5/5 覆盖新发现的问题。
+2026-09-05 审查发现的默认配置可读问题，已由 [F-0020](../specs/F-0020-safe-local-startup.md) 修复，
+并随 PR #24 合入 main。2026-09-08 核对跨平台 CI、真实 main push 部署及 507 个本地测试后完成 P1
+收口；历史真实 5/5 与本轮离线回归分开记录。证据见 [P1 审查](p1-closure-review.md)。
 
 P3 是可信 Runtime 内核的完成线。P4 才是把这个内核变成日常可访问产品的阶段。
 
@@ -74,7 +74,7 @@ P0 建立 Python 3.12、uv、CI、CLI、模块依赖检查、测试替身，以�
 
 ### P1：可检查执行
 
-**P1 历史基线：已完成；本轮 F-0020 补强待交付。** F-0001 至 F-0008、F-0015 至 F-0018 均已实现。Runtime gate 在
+**状态：已完成，2026-09-08 收口。** F-0001 至 F-0008、F-0015 至 F-0020 均已实现。Runtime gate 在
 2026-08-23 完成；F-0015 随后完成书籍化文档重构和本地站点验收。F-0018 是进入 P2 前的增量 evidence
 hardening；它不重写 P1 exit criteria，也不把已关闭的 P1 基线改回进行中。
 
@@ -104,9 +104,12 @@ implementation evidence 为 `08ee141`，对应 Plan 已完成。
 F-0015 提供独立的 Starlight 文档站、渐进式学习路线、CLI 手册和源码导读。它可以本地开发、构建
 和预览，普通 CI 负责验证；在线托管与自动部署不属于 F-0015，也不再作为 P1 的关闭门。
 
+F-0020 追加保护 Runtime 配置和数据库、无覆盖 `init`、离线 `doctor --check-config`，并按独立部署
+切片完成 main push 后的受限静态文档发布。其全部验收项已完成，P1 没有遗留 active Plan。
+
 ## 5. P2：可恢复执行语义
 
-**状态：未开始。** 先交付本轮 F-0020 补强，再逐个接受 P2 的 Feature Spec。
+**状态：待启动。** P1 已收口；下一步从 F-0021 的 Event-only 重建开始，逐个接受 P2 的 Feature Spec。
 
 ### 5.1 阶段目标
 
@@ -343,7 +346,7 @@ milestone。2026-09-06，项目所有者要求把最后一个 P1 收口 Feature 
 Spec 的 P2/P3/P4 占位 ID 依次顺延。这是进入 P2 前的一次性编号整理，不改变任何 Feature 的范围或
 milestone；本次映射完成后继续遵守稳定 ID 规则。
 
-### P1（基线已关闭；F-0019 追加 hardening 已完成）
+### P1（已收口；全部 Feature 已实现）
 
 1. [F-0001：内部 ID、Message 和 Error](../specs/F-0001-domain-ids-messages-errors.md)
 2. [F-0002：Run/Activity 状态和预算](../specs/F-0002-run-reducer-activity-lifecycle-budgets.md)
@@ -358,7 +361,7 @@ milestone；本次映射完成后继续遵守稳定 ID 规则。
 11. [F-0017：模型服务配置与真实 gate](../specs/F-0017-configurable-model-providers-live-gate.md)
 12. [F-0018：可信 Run contract identity 与 crash observability](../specs/F-0018-p1-evidence-hardening.md) — implemented
 13. [F-0019：安全结构化运行诊断](../specs/F-0019-safe-structured-diagnostics.md) — implemented
-14. [F-0020：保护本机运行资料并简化首次使用](../specs/F-0020-safe-local-startup.md) — accepted；P1 收口补强
+14. [F-0020：保护本机运行资料并简化首次使用](../specs/F-0020-safe-local-startup.md) — implemented
 
 F-0015 的文档内容、本地站点、构建和阅读体验已经实现；部署到某个在线平台不在该 Feature 范围内。
 

@@ -100,4 +100,4 @@ uv run bearagent run "阅读 docs/index.md，把项目简介写到 outputs/intro
 解释谁决定下一步、谁真正打开文件，以及为什么这些职责要分开。需要查某个选项时，再打开
 [完整命令行手册](/zh-cn/guides/cli/)。
 
-本文新增的初始化与配置保护对应 F-0020，本地实现已验证；正式交付状态以 Feature Spec 为准。
+初始化与配置保护对应已交付的 F-0020。P1 的验收记录与当前限制见[当前状态](/zh-cn/project/status/)。

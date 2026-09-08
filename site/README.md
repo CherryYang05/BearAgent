@@ -32,8 +32,9 @@ npm run preview --prefix=site
 普通 CI 会锁定安装依赖并构建站点，用来发现损坏的 Front Matter、路由、MDX、Mermaid 和搜索索引。
 `.github/workflows/deploy-docs.yml` 只在 GitHub 接受 `main` 推送后发布；PR 和功能分支不会覆盖线上站点。
 workflow 使用受限 SSH 身份发送构建包，服务器校验包后原子换目录，并在公网健康检查失败时恢复上一版。
-1Panel/OpenResty 直接提供静态文件和 TLS，不需要常驻 Astro 服务。workflow 文件进入 `main` 前，自动触发
-尚未生效；本地构建成功本身也不能证明线上已更新。
+1Panel/OpenResty 直接提供静态文件和 TLS，不需要常驻 Astro 服务。PR #24 合入 `main` 后，
+[首次真实 push 发布](https://github.com/CherryYang05/BearAgent/actions/runs/33987823795)已通过部署与公网
+检查；后续版本仍应核对各自 workflow 的结果，本地构建成功本身不能证明线上已更新。
 
 ## 内容怎样像一本书一样分工
 

@@ -5,9 +5,9 @@ status: accepted
 
 # P1 是否已经可以闭环
 
-**架构与执行主链具备 P1 的基础；本次发现的默认凭据可读问题修复并交付后，才适合按当前代码重新
-确认收口。** P1 的完成线是“有限文件任务可执行，已提交过程和失败可查询”，不是自动恢复，也不是
-任意任务必然完成。历史 5/5 gate 保留为当时的证据，不能覆盖后来发现的缺陷。
+**P1 已于 2026-09-08 完成收口。** 默认凭据可读问题已经修复并随 PR #24 合入 main；跨平台 CI 与
+真实 main push 文档发布均成功。P1 的完成线是“有限文件任务可执行，已提交过程和失败可查询”，
+不是自动恢复，也不是任意任务必然完成。历史 5/5 gate 保留为当时的证据，不能覆盖后来发现的缺陷。
 
 2026-09-05 从 `de99e78` 开始审查，初始工作树干净。审查沿 CLI/config、bootstrap、AgentLoop、Context、
 模型 adapter、Registry/Policy/Executor、workspace 与 SQLite/reducer 跟踪主执行链和失败边界，并检查
@@ -104,8 +104,13 @@ P2 先从 Event-only 重建与 Attempt 开始，再做可核对写入、`UNKNOWN
 - 新增回归：默认/自定义保护、硬链接、Event/Context、初始化和默认 CLI 链路。
 - 完整质量门与站点阅读检查的最终结果记录在 [PLAN-F-0020](../plans/PLAN-F-0020-safe-local-startup.md)。
 - 原 F-0017 的真实 5/5 为历史报告；本轮不读取真实 key，也不产生模型费用。
-- 本轮代码和 site 内容仍在本地工作树；没有提交、推送或触发新 CI。文档站已按项目所有者明确授权
-  手工部署；这不等于跨平台 CI 通过，也不把 BearAgent Runtime 暴露到公网。
+- 代码和 site 内容已经合入 main；最终合并提交为 `b167922`，对应
+  [PR #24](https://github.com/CherryYang05/BearAgent/pull/24)。P1 功能 PR 均已合并；历史重复分支的
+  等价改动已在主线，不重复应用旧文档补丁，也不纳入个人 stash 或工具快照。
+- [main CI](https://github.com/CherryYang05/BearAgent/actions/runs/33987823793) 的 Windows、Ubuntu、
+  Starlight 均成功；[文档部署](https://github.com/CherryYang05/BearAgent/actions/runs/33987823795)
+  确认为 push 触发，受限发布和公网健康检查成功。公开内容仍只有静态文档。
 
-F-0020 的 Spec 保持 accepted、Plan 保持 active，直到按后续发布指令记录不可变的 commit/PR 证据。
-本地实现完成与正式 Feature 关闭是两件事；不使用旧提交冒充新实现证据。
+2026-09-08 在 main 的代码基线上重新验证：507 tests passed（31.54 秒）、锁文件检查、Ruff 和 Pyright
+通过。F-0020 Spec 改为 implemented，Plan 改为 completed；P1 的所有 Feature 与 Plan 均已关闭。
+收口提交通过检查并合入后，以 annotated tag `v0.1.0` 固定 P1 基线，P2 从后续独立 Feature 分支开始。

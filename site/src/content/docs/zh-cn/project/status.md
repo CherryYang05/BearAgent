@@ -29,15 +29,15 @@ Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、
 任务与安全 canary；脱敏 report 和最终 Reality Check 完成，因此 F-0017/P1 已关闭。当前分支还用
 RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完成 K1-K6 进程退出观测基线。
 
-2026-09-05 的再次审查发现默认配置可被文件工具读到，历史 gate 没有覆盖这一组合。F-0020 已在本地
-修复，并增加 `init`、离线配置检查和回归测试；正式提交证据尚待记录，不能以旧 gate 代替这次交付。
+2026-09-05 审查发现的默认配置可读问题，已由 F-0020 修复并合入 main。同时交付 `init`、离线配置
+检查和回归测试。2026-09-08 核对跨平台 CI、507 个离线测试及 main push 文档发布后，P1 完成收口。
 
 ## 三十秒结论
 
 | 问题 | 当前答案 |
 |---|---|
 | 能在本机运行一个真实模型文件任务吗？ | 能，需要有效 config、非零预算和受限 workspace |
-| 第一次需要填写什么？ | 含 F-0020 的源码可用 init 生成文件；填写模型 config，再用 doctor --check-config 离线检查 |
+| 第一次需要填写什么？ | 用 init 生成文件；填写模型 config，再用 doctor --check-config 离线检查 |
 | Tool 能读取本机模型密钥吗？ | F-0020 拒绝默认运行目录和实际配置路径；普通输入仍需由用户判断是否适合发送给模型 |
 | 能查询任务做过什么吗？ | 能，用 `inspect` 看状态，用 `events` 看有序事实 |
 | 能知道 Run 使用了哪版 Tool/Policy 声明吗？ | 新 Run 可以；`inspect` 显示版本和 SHA-256，legacy Run 明确缺失 |
@@ -64,9 +64,12 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 | F-0018 evidence hardening | ToolSpec/Policy contract fingerprint、RunCreated v4、legacy v1-v3 读取、v2/v3/v4 Tool evidence 一致性、retryable 非授权语义，以及 K1-K6 SQLite/CLI crash suite |
 | F-0019 安全结构化诊断 | post-commit Event envelope、有限 Activity 耗时和错误码；bootstrap/CLI/EventStore ops diagnostics；不复制 Event payload，sink 失败不影响 Run |
 | F-0015 文档站 | 中文 Starlight、搜索、Mermaid、六步学习路线、独立 CLI 手册，以及本地开发、构建和预览 |
+| F-0020 本地启动与资料保护 | 保护 Runtime 配置和数据库、拒绝硬链接别名、无覆盖 init、离线配置检查，以及 main push 后的受限静态文档发布 |
 
-本轮 F-0020 的代码已通过 507 个 Windows 离线测试，包括生产路径的配置泄漏回归与默认命令流程。
-这说明本地补强通过验证；Spec 仍为 accepted，Plan 仍为 active，等待后续交付证据。
+F-0020 的 Spec 为 implemented，Plan 为 completed；
+[PR #24](https://github.com/CherryYang05/BearAgent/pull/24) 的合并提交是 `b167922`。
+[同一提交的 CI](https://github.com/CherryYang05/BearAgent/actions/runs/33987823793) 已通过 Windows、Ubuntu
+和站点构建。2026-09-08 的本地复验同样通过 507 个测试；历史真实模型 gate 没有在本轮重跑。
 
 ## P1 完成证据
 
@@ -93,8 +96,10 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 - 还没有用户 Approval、sandbox、服务器 API 或独立 Artifact 查询表；
 - 普通 v2 Run 使用 unpriced 账面费用；显示 0 不代表免费或真实账单受限；
 - succeeded 不代替任务质量验收，Artifact hash 也不是查询时对文件的重新校验；
-- 本仓库提供站点源码、构建与 main 推送后的静态发布 workflow。服务器受限身份、原子切换、回退和
-  公网健康检查已经单独验收；workflow 文件进入 `main` 后才会由后续推送自动触发。
+
+静态文档已支持 main 推送后自动发布。服务器受限身份、原子切换与失败回退已验收；
+[真实 push workflow](https://github.com/CherryYang05/BearAgent/actions/runs/33987823795)
+也已完成部署与公网健康检查。它不会部署 BearAgent Runtime。
 
 F-0002 的确定性重放只说明“同一串 Event 会算出同一状态”。它不是 P2 的崩溃恢复，也没有
 Checkpoint、Attempt、RecoveryDecision 或 `UNKNOWN` 处置。P3 的参数绑定 Approval 和隔离 runner、

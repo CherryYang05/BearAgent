@@ -20,7 +20,7 @@ status: accepted
 
 P1 Runtime 全部在本地开发和验证，不开放 HTTP。F-0015 文档站是独立的静态产物。2026-09-05 起，
 授权发布的 `site/dist/` 由 1Panel/OpenResty 直接作为静态文件提供。本次收口又增加 main 推送后的
-受限自动发布；workflow 文件进入 `main` 后生效。静态站不会启动 Runtime，也不会读取模型密钥或用户数据。
+受限自动发布，已在 PR #24 合入 `main` 后通过真实 push 验收。静态站不会启动 Runtime，也不会读取模型密钥或用户数据。
 P2 在私有服务器演练恢复；P3 仍通过私有通道验证
 Approval 与隔离 runner；只有 P4 的认证、部署和备份恢复全部通过，Agent 服务才通过公网子域名
 提供给项目所有者。
@@ -86,7 +86,7 @@ migration 只返回安全 persistence Error。这里仍是本地命令，不会�
 
 `site/` 保存文档网站源码，`npm run build --prefix=site` 生成 `site/dist/`。开发者可以用本地 dev 或
 preview server 阅读和检查它，CI 负责阻止无法构建的页面进入主线。F-0015 本身没有自动部署 workflow；
-当前线上静态站和后续 main push workflow 是本次收口经项目所有者授权的独立运维结果，不改变 F-0015
+当前线上静态站和已验收的 main push workflow 是 F-0020 经项目所有者授权的交付结果，不改变 F-0015
 的历史范围。workflow 固定服务器 host key，部署私钥只存在 GitHub Secret；服务器公钥只能调用
 root 管理的固定入口，不能选择命令或目录。发布包通过成员类型、路径和大小检查后原子换目录，公网
 健康检查失败时恢复上一版。OpenResty 直接读取静态目录，不监听 Astro 的 4321 端口。
