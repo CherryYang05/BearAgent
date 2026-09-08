@@ -1,12 +1,12 @@
 ---
 title: "Feature: reconstruct Run state from Events and inspect unfinished Runs"
-status: draft
+status: accepted
 spec_id: F-0021
 milestone: P2
 change_level: S2
 owner: CherryYang05
 created: 2026-09-08
-last_updated: 2026-09-08
+last_updated: 2026-09-09
 implemented_in: null
 related_adrs: [ADR-0002, ADR-0003, ADR-0009, ADR-0016, ADR-0020]
 ---
@@ -16,7 +16,7 @@ related_adrs: [ADR-0002, ADR-0003, ADR-0009, ADR-0016, ADR-0020]
 ## 1. 从一次中断后的查询开始
 
 P1 的 `v0.1.0` 已固定在 main 提交 `499e244`。用户启动 P2，首先需要知道数据库中保存了什么，
-再决定后续能否恢复。本 Spec 是首个 Feature 的设计稿；接受后才进入实现，不代表已有恢复命令。
+再决定后续能否恢复。项目所有者于 2026-09-08 授权按本 Spec 开始实现；本地实现已接通，发布提交和跨平台 CI 证据补齐前保持 accepted。
 
 2026-09-08 的临时 SQLite 实验写入 `successful_run_events()` 的 9 条 Event，再删除 Run/Activity
 projection 行。Event 数量仍为 9，Reducer 的参考结果为 `succeeded`、sequence 9；但现有 `inspect`
@@ -39,7 +39,7 @@ Checkpoint 暂不交付：先记录代表性历史的重放成本，再决定是
 
 ## 3. 用户会看到什么
 
-以下命令是拟议接口，尚未实现：
+当前工作分支已实现以下只读接口；P1 的 `v0.1.0` 不包含它们：
 
 ```console
 bearagent run replay RUN_ID
@@ -48,7 +48,7 @@ bearagent run check
 ```
 
 `replay` 只读取指定 Run 的事实。完整历史可重建时，即使 projection 不可用，也返回 Event 推导的
-RunState，并单独报告 `matched / missing / mismatch / unreadable`。它不把“对照失败”当作 Run 失败，
+状态摘要，并单独报告 `matched / missing / mismatch / unreadable`。它不把“对照失败”当作 Run 失败，
 也不把缺失 terminal Event 的 Activity 改为成功或 `UNKNOWN`。
 
 `check` 是显式的启动前检查，不自动附着到每次 `run`。它按有界页扫描 Event 中的 Run ID，显示非终态
@@ -85,16 +85,17 @@ Run 枚举也从 Event 表出发。一次扫描返回有界页及下一页游标
 
 ## 6. 失败、资源和安全边界
 
-拟议初始上限为单 Run 10,000 条 Event、16 MiB 序列化历史；读取前检查数量/字节界限，读取过程中
+上限为单 Run 10,000 条 Event、16 MiB 序列化历史；读取前检查数量/字节界限，读取过程中
 继续累计校验，超过任一上限都报告 `query_limit_exceeded`，不返回被截断却标为完整的 RunState。
 扫描默认每页 100 个 Run，上限 1,000；每个 Run 处理后释放历史，避免整页 payload 同时留在内存。
 空页与带下一页游标的空结果必须可区分，因为当前页可能全是健康终态。
 
-SQL 继续使用参数绑定和有限 busy timeout；读取与计算需要整体 deadline。只在协程外加 timeout
-不能停止 `to_thread` 中的 SQLite 工作，adapter 必须保证工作线程中的查询也有界，并在中断后关闭
-连接。损坏单 Run 可作为安全错误项返回，不能让扫描跳过异常后声称全部健康。
+SQL 使用参数绑定和 50 ms busy timeout；每条命令的读取与计算共用 30 秒 deadline。
+SQLite progress handler 可中断查询，Event 读取和 Reducer 在条目之间检查期限。协程取消会通知
+工作线程并等待连接关闭。单个条目的解析不能被 Python 强行中断，输入大小上限同时约束这段工作。
+损坏单 Run 可作为安全错误项返回，不能让扫描跳过异常后声称全部健康。
 
-人类和 JSON 输出均区分“找到非终态或异常，需要查看”与“检查本身失败”；拟采用退出码 0 表示所查
+人类和 JSON 输出均区分“找到非终态或异常，需要查看”与“检查本身失败”；采用退出码 0 表示所查
 范围正常，1 表示需人工查看的非终态/projection 异常，2 表示参数、历史或读取失败。存在多个结果时
 取最高严重级别。退出码 0 也不代表可以自动恢复；检查输出不能成为 Tool 权限。
 
@@ -110,9 +111,9 @@ SQL 继续使用参数绑定和有限 busy timeout；读取与计算需要整体
 
 ## 8. 验收标准
 
-以下均为待实施标准，不是已通过的测试：
+以下标准已有本地代码与测试；发布提交、远程 Windows/Linux CI 仍待补齐，详见 active Plan。
 
-| AC | 可判断的结果 | 计划证据 |
+| AC | 可判断的结果 | 验证范围 |
 |---|---|---|
 | AC-1 | 同一 v1-v4 历史在内存和 SQLite 得到同一 RunState、sequence 和 state hash | 共用 replay source 契约；现有 schema fixture |
 | AC-2 | projection 行/表缺失、错误终态或字段损坏时仍按完整 Event 重建，并报告对照异常 | 临时 SQLite 集成测试；P1 9 Event 示例扩为回归 |
@@ -125,15 +126,29 @@ SQL 继续使用参数绑定和有限 busy timeout；读取与计算需要整体
 
 ## 9. 文档影响
 
-| 表面 | 计划更新路径或 N/A 原因 |
+| 表面 | 更新路径或 N/A 原因 |
 |---|---|
 | 权威 docs | 本 Spec、ADR-0020、PLAN-F-0021、`docs/architecture/overview.md`、`docs/project/roadmap.md`；说明事实读取与执行边界 |
-| 初学者 | 实现时更新 `site/src/content/docs/zh-cn/learn/durable-events.md`、`learn/index.md`、`guides/cli.md`；加入一个 projection 缺失实例 |
-| 开发者 | 实现时更新 `site/src/content/docs/zh-cn/development/sqlite-event-store.md`、`development/index.md`；说明只读快照与共用契约 |
-| 公开状态 | 本次仅将 `project/status.md`、`project/milestones.md` 标为 P2 设计启动；实现后再添加可用命令 |
-| 生成参考 | 实现时更新新增 domain/CLI schema 快照；当前没有生成类型变更 |
+| 初学者 | 已更新 `site/src/content/docs/zh-cn/learn/durable-events.md`、`learn/index.md`、`guides/cli.md`；加入一个 projection 缺失实例 |
+| 开发者 | 已更新 `site/src/content/docs/zh-cn/development/sqlite-event-store.md`、`development/index.md`；说明只读快照与共用契约 |
+| 公开状态 | `project/status.md`、`project/milestones.md` 区分 P1 发布基线与 F-0021 分支上的只读命令 |
+| 生成参考 | 已更新 domain/CLI schema 快照；只新增查询类型及 `query_timeout` 错误码，不改 Event payload 和 SQL migration |
 
-## 10. 接受前需要确认的范围
+## 10. 本地实现与规模证据
 
-本稿建议首个 Feature 只交付“Event-only 重建 + 显式只读检查”，不附带 projection 自动修复、Checkpoint
-或执行恢复。资源上限、命令与退出码随本稿一并审阅。跨 Feature 的 Attempt 和副作用语义不在本次接受范围。
+`tests/contract/test_event_replay_contract.py` 在内存和 SQLite 上运行相同历史与分页测试；
+`tests/integration/test_event_replay.py` 覆盖损坏、并发、锁等待、大小预检、deadline 与取消；
+`tests/integration/test_replay_cli.py` 检查命令、退出码、内容保护与无配置读取。
+K1-K6 的原有 `tests/recovery/test_crash_observability.py` 增加独立进程 replay/check，比较查询前后的
+数据库事实、模型调用记录与 workspace 文件；wheel smoke 同样新增两条命令。
+
+[规模记录](../evidence/F-0021-replay-benchmark-v1.json)使用临时 SQLite 与合成模型 Activity 历史。
+100 条约 0.020 秒，1,000 条约 0.467 秒，10,000 条在约 30 秒返回 `query_timeout`，没有完整状态结果。
+这是每档一次的 Windows 样本，不能作为其他机器的性能保证。10,000 条是输入上限，不保证所有合法
+历史能在期限内完成；当前 Reducer 的长历史成本仍是限制。Checkpoint 和 Reducer 性能优化留待单独
+设计并验证状态等价，不为本 Feature 增加缓存或迁移。
+
+16 MiB 指各条 Event 的 `model_dump_json()` UTF-8 字节之和；SQL 先检查存储字段大小，再逐条累计
+标准序列化大小。state hash v1 对完整 RunState 加 `state_format_version: 1` 外壳，使用排序键、
+紧凑 JSON、UTF-8、UTC 六位微秒与 `Z`、小写 UUID，再计算 SHA-256。它不包含原始 Event payload；
+完整 RunState 和历史 fingerprint 仅供内部查询，CLI 只序列化内容受限的摘要。

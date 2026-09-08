@@ -43,7 +43,7 @@ S1 使用精简范围：问题、目标/非目标、可观察行为、必要失�
 
 ## P2：可恢复执行语义
 
-- [F-0021：不用 projection，也能重建 Run 并检查未结束的执行](F-0021-event-replay-startup-check.md) — draft
+- [F-0021：不用 projection，也能重建 Run 并检查未结束的执行](F-0021-event-replay-startup-check.md) — accepted
 
 其余计划 Feature 见[路线图 Backlog](../project/roadmap.md#11-feature-backlog)。未创建 Spec 的名称只是
 计划范围，不能授权实现。

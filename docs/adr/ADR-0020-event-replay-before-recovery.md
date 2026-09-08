@@ -1,6 +1,6 @@
 ---
 title: "ADR-0020: read committed Events independently before making recovery decisions"
-status: proposed
+status: accepted
 date: 2026-09-08
 decision_owners: [CherryYang05]
 supersedes: null
@@ -9,7 +9,7 @@ superseded_by: null
 
 # ADR-0020：先独立读取 Event 重建状态，再接入恢复决定
 
-关联 [F-0021](../specs/F-0021-event-replay-startup-check.md)。这是 P2 启动设计，尚未接受或实现。
+关联 [F-0021](../specs/F-0021-event-replay-startup-check.md)。项目所有者于 2026-09-08 授权实现本设计。
 
 ## 为什么需要新的边界
 
@@ -26,7 +26,7 @@ P1 的 EventStore 查询会先验证 projection。这个行为能阻止调用方
 | 先做 Checkpoint，再实现恢复 | 长历史可能更快 | 没有 Event-only 基准时无法验证缓存正确性，引入过早的持久格式 |
 | 引入完整 workflow/checkpointer 框架 | 可以使用已有恢复设施 | 需要将 BearAgent Event、Policy、预算和 Tool 副作用重新映射，当前无必要 |
 
-## 建议采用的决定
+## 已接受的决定
 
 选择独立只读 `EventReplaySource`，保留现有 EventStore 契约。Reader 从 Event 枚举 Run，不借
 projection 的状态筛选候选项。每个 Run 的 Event 边界与对照资料在同一 SQLite 读事务中捕获；核心
@@ -53,7 +53,10 @@ projection 不需要恢复或转换。Checkpoint 以后有实测收益时再单�
 
 同一组 contract tests 运行内存与 SQLite source；故障集覆盖 projection 删除/篡改、未知 schema、
 Event 缺口、双连接追加和取消。复用 K1-K6 的子进程数据，断言重建状态和额外外部调用次数为零。
-为代表性和上限历史记录 Event 数、总字节、耗时、环境和内存边界，作为是否需要 Checkpoint 的依据。
+代表性和上限历史的 Event 数、存储字节、耗时、环境与资源上限见
+[规模记录](../evidence/F-0021-replay-benchmark-v1.json)。10,000 条合成模型 Activity 历史触发 30 秒
+期限，说明输入上限不是时延保证。后续应单独评估 Reducer 成本与 Checkpoint，不把未经等价验证的缓存
+放进本次只读入口。
 
 ## 外部资料与适用范围
 

@@ -8,6 +8,7 @@ from bearagent.domain._base import DomainModel
 from bearagent.domain.agent import RunResult
 from bearagent.domain.errors import ErrorInfo
 from bearagent.domain.queries import EventPage, RunInspection
+from bearagent.domain.replay import ReplaySummary, RunCheckPage
 
 
 class RunCommandOutput(DomainModel):
@@ -42,7 +43,34 @@ class CommandErrorOutput(DomainModel):
     error: ErrorInfo
 
 
+class ReplayCommandOutput(DomainModel):
+    """Content-free result of a read-only Event reconstruction."""
+
+    schema_version: Literal[1] = 1
+    command: Literal["replay"] = "replay"
+    result: ReplaySummary
+
+
+class CheckCommandOutput(DomainModel):
+    """One inspected page, including its cursor even when there are no noteworthy items."""
+
+    schema_version: Literal[1] = 1
+    command: Literal["check"] = "check"
+    result: RunCheckPage
+
+
+class ReplayCommandErrorOutput(DomainModel):
+    """Safe replay/check failure without changing the existing CLI error contract."""
+
+    schema_version: Literal[1] = 1
+    command: Literal["replay", "check"]
+    error: ErrorInfo
+
+
 PUBLIC_CLI_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
+    ReplayCommandOutput,
+    CheckCommandOutput,
+    ReplayCommandErrorOutput,
     CommandErrorOutput,
     EventsCommandOutput,
     InspectCommandOutput,

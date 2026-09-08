@@ -3,6 +3,7 @@ title: 从哪里开始读代码
 description: 先找到当前功能的事实，再沿着调用关系进入实现和测试。
 bearStatus: mixed
 sourceRefs:
+  - F-0021
   - F-0020
   - ADR-0018
   - AGENTS.md
@@ -63,7 +64,7 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 
 - [F-0001：内部数据类型](/zh-cn/development/domain-contracts/)——ID、Message、Error、Event 以及模型 adapter 的翻译边界；
 - [F-0002：状态和预算](/zh-cn/development/run-reducer-and-budgets/)——具体 Event、Reducer、预算检查和修改顺序；
-- [F-0003：SQLite EventStore](/zh-cn/development/sqlite-event-store/)——transaction、migration、projection 和故障测试；
+- [F-0003/F-0021：SQLite EventStore 与只读重建](/zh-cn/development/sqlite-event-store/)——transaction、migration、projection、Event-only 快照与故障测试；
 - [F-0004/F-0017：ModelProvider 与协议 adapter](/zh-cn/development/model-provider/)——显式 protocol factory、三种流式翻译、Provider selection 和 live gate；
 - [F-0006：Tool 执行边界](/zh-cn/development/tool-execution-boundary/)——Registry、参数准备、默认拒绝 Policy 和统一 Executor；
 - [F-0007：workspace 只读 Tool](/zh-cn/development/workspace-read-tools/)——跨平台路径边界、list/read/search 和安全测试；
@@ -77,7 +78,8 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 ## 不同问题去哪里找答案
 
 P1 已于 2026-09-08 收口，F-0020 的配置保护、初始化和离线检查已合入 main，跨平台 CI 通过。P2 恢复和 P3
-授权/隔离没有实现；研究策略应通过未来的 port 提出建议，由 Runtime 保持执行约束。顺序和实验指标见
+授权/隔离没有实现。F-0021 的 replay/check 已在工作分支接通，保持只读，发布提交和远程 CI 仍待补齐。
+研究策略应通过未来的 port 提出建议，由 Runtime 保持执行约束。顺序和实验指标见
 [从一次失败走向可比较的研究实验](/zh-cn/learn/research-experiments/)。
 
 | 你要确认什么 | 首选位置 |

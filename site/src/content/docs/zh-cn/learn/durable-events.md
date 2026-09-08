@@ -1,9 +1,11 @@
 ---
 title: 持久事实与安全恢复的边界
 description: 理解 Event log、projection、transaction，以及为什么持久化还不等于恢复。
-bearStatus: implemented
+bearStatus: mixed
 sourceRefs:
   - F-0003
+  - F-0021
+  - ADR-0020
 ---
 
 一个进程内 reducer 能回答“这串 Event 会得到什么状态”，但进程退出后，内存里的 Event 也会
@@ -33,6 +35,39 @@ Event 是事实，projection 是查询优化。如果二者分开提交，崩溃
 F-0003 的 `run_projections` 和 `activity_projections` 让后续 `inspect` 不必每次重放整个 Event stream。
 读取时仍会验证字段、sequence 和 typed ID；发现非法 JSON、Event 中间缺口或 projection 序号分叉
 就停止，而不是猜一个看似合理的状态。
+
+## projection 读不了，还能知道发生了什么吗？
+
+假设一个 Run 已保存 9 条 Event，最后一条是 `RunSucceeded`，但 projection 的行丢失了。
+`inspect` 会拒绝返回不可信的缓存；F-0021 工作分支增加了另一条只读入口：
+
+```console
+uv run bearagent run replay RUN_ID
+```
+
+它从第一条 Event 开始，交给同一个 Reducer 重建。这个例子会得到 `succeeded`、sequence 9 和
+`projection=missing`。结果描述 Event 推导的状态；命令不会补回数据库中的 projection。
+P1 的 `v0.1.0` 没有这条命令，F-0021 的正式发布进度见[当前状态](/zh-cn/project/status/)。
+
+```mermaid
+flowchart LR
+    E["完整 Event 历史"] --> R["同一个 Reducer"]
+    R --> S["重建状态与 state hash"]
+    P["同一时刻的 projection，可能缺失"] --> C["只读对照"]
+    S --> C
+    C --> O["报告最后 sequence 与差异"]
+```
+
+`matched` 表示状态一致，`missing` 表示 projection 缺失，`mismatch` 表示可读取但与重建不同，
+`unreadable` 表示字段或表结构不能正常读取。Event 自身缺口或格式不受支持时，命令直接报告失败，
+不会跳过坏记录拼出一个状态。
+
+需要发现尚未结束的 Run 时，显式运行 `uv run bearagent run check`。它从 Event 中查找 Run ID，
+所以错误标为终态的 projection 也不能让 Run 漏检。仍有进程执行的 Run 也可能显示 `running`；
+这条结果不能说明它已经崩溃，更不能授权重试。
+
+每个 Run 使用一个一致快照，各页不是整库的同一时刻。查询不读取 workspace，输出也不包含目标、
+消息或 Tool 参数。分页、期限和退出码见[命令行手册](/zh-cn/guides/cli/)。
 
 ## 持久化不等于恢复
 

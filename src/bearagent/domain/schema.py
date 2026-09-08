@@ -43,6 +43,15 @@ from bearagent.domain.model import (
 )
 from bearagent.domain.providers import ProviderSelection
 from bearagent.domain.queries import EventPage, RunInspection
+from bearagent.domain.replay import (
+    EventReplaySnapshot,
+    EventRunPage,
+    ReplayLimits,
+    ReplaySummary,
+    RunCheckItem,
+    RunCheckPage,
+    RunReplay,
+)
 from bearagent.domain.run_events import (
     ModelCallCompletedPayload,
     ModelCallCompletedPayloadV2,
@@ -88,6 +97,13 @@ from bearagent.domain.tools import (
 )
 
 PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
+    ReplayLimits,
+    EventReplaySnapshot,
+    EventRunPage,
+    ReplaySummary,
+    RunReplay,
+    RunCheckItem,
+    RunCheckPage,
     ActivityId,
     ActivityState,
     AgentConfig,

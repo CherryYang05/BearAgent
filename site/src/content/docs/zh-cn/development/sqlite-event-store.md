@@ -1,9 +1,11 @@
 ---
 title: 从一次 append 读懂 SQLite 持久化
 description: 跟随 Event 从校验、transaction、Reducer 到 projection，理解数据库重开、冲突和损坏为什么有不同处理。
-bearStatus: implemented
+bearStatus: mixed
 sourceRefs:
   - F-0003
+  - F-0021
+  - ADR-0020
   - F-0018
   - ADR-0016
   - SQLite documentation
@@ -48,6 +50,36 @@ get_run(run_id)           读取已验证的当前 projection
 `validate_event_query` 对 `after_sequence` 和 `limit` 做严格整数及范围检查。查询边界放在 port 中，
 所以测试内存 adapter 和 SQLite adapter 时，调用方式保持一致。
 
+## 只读重建为什么有独立的 port
+
+F-0021 工作分支的 `EventReplaySource` 提供 `read_run_events` 和 `list_event_run_ids`。它不改变
+EventStore 的三个方法，也没有 append 或 repair。调用链是：
+
+```text
+CLI -> bootstrap -> RunReplayService -> EventReplaySource
+                         |                    |
+                         v                    v
+                    同一个 Reducer      SQLite 只读快照 / 内存快照
+```
+
+SQLite reader 以 `mode=ro` 打开已有数据库，开启 `query_only`、关闭 `trusted_schema`，不调用
+`initialize()`。它仍检查 migration ledger 和 checksum，但不要求 projection 表存在。一个读事务
+同时读取 Event 与 projection，writer 在中途提交时不会把旧 Event 和新 projection 混在一个结果里。
+
+读取前检查 Event 数和存储字节，读取过程中累计标准 JSON 字节。单 Run 上限为 10,000 条、16 MiB，
+check 默认一页 100 个 Run、最多 1,000 个。每条命令共用 30 秒期限；SQLite progress handler 与
+Event 间检查共同停止过期工作。取消协程时先通知工作线程，再等待连接关闭，不让后台查询继续占锁。
+锁等待上限为 50 ms；期限检查有条目粒度，输入上限同时约束单次解析成本。
+
+`RunReplayService` 只保留每个 Run 的摘要，发现坏历史会列出该 Run 的安全错误码，再检查其他 Run。
+整页超时则报告查询失败，不声称完整扫描成功。UUID 顺序只用于分页；跨页新建的 Run 需要后续重扫。
+
+`tests/contract/test_event_replay_contract.py` 在内存和 SQLite 上运行相同的版本、hash、分页和边界
+测试。`tests/integration/test_event_replay.py` 用真实双连接与故障 SQL 验证快照、损坏和取消。
+K1-K6 子进程测试新增 replay/check 后，数据库事实、模型调用记录和 workspace 文件保持不变。
+合成 10,000 条模型 Activity 历史触发 30 秒期限；当前没有 Checkpoint，因此长历史可能明确超时。
+这仍是本地实现，发布与跨平台验证进度见[当前状态](/zh-cn/project/status/)。
+
 ## 初始化不只是“如果没有表就建表”
 
 `initialize()` 在工作线程中执行同步 SQLite 代码。它会：
@@ -71,7 +103,7 @@ get_run(run_id)           读取已验证的当前 projection
 
 1. `_open_initialized` 重新确认 schema、checksum、必需表和 WAL；
 2. `BEGIN IMMEDIATE` 提前取得写锁，让并发 writer 明确竞争；
-3. `_load_run_projection` 恢复之前的 `RunState`；
+3. `load_run_projection` 恢复之前的 `RunState`；
 4. `_maximum_sequence` 检查 Event 是否从 1 连续到最大 sequence；
 5. `_validate_projection_sequence` 确认 projection 的 `last_sequence` 与事实相同；
 6. `validate_event_history` 核对需要读取旧 payload 的不变量，例如 v2/v3/v4 Tool terminal evidence

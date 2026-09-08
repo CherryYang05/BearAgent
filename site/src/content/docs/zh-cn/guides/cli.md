@@ -4,6 +4,8 @@ description: 从源码安装 BearAgent，配置模型服务和 Run profile，运
 bearStatus: mixed
 sourceRefs:
   - F-0020
+  - F-0021
+  - ADR-0020
   - ADR-0018
   - F-0005
   - F-0017
@@ -34,9 +36,9 @@ bearagent run  ------> outputs/** + SQLite Event
 
 :::caution[当前成熟度]
 CLI、SQLite、三种模型协议 adapter、四个 workspace Tool 和 Agent Loop 已经接通。离线 Fake 5/5
-和 2026-08-23 的 DeepSeek V4 suite v1.1.1 真实 5/5 分开验证，构成历史 P1 完成证据。本轮 F-0020
-补上配置保护、init 与离线检查；代码在本地完成验证，正式交付状态以 Spec 为准。进程中断后可以查询
-已提交事实，但不会自动恢复 Run。P1 也没有 Approval、sandbox、shell、Web UI 或任意网络 Tool。
+和 2026-08-23 的 DeepSeek V4 suite v1.1.1 真实 5/5 分开验证，构成历史 P1 完成证据。F-0020 已合入 main，
+P1 已收口。F-0021 工作分支新增只读 replay/check，本地实现不代表已进入 `v0.1.0` 或 main；正式
+交付状态以 Spec 为准。进程中断后可以查询已提交事实，但不会自动恢复 Run。P1 也没有 Approval、sandbox、shell、Web UI 或任意网络 Tool。
 :::
 
 ## 1. 从源码安装
@@ -72,6 +74,8 @@ uv run python -m bearagent doctor --json
 | `bearagent run OBJECTIVE` | 执行一个文件任务 |
 | `bearagent run inspect RUN_ID` | 查看 Reducer projection 与 Artifact |
 | `bearagent run events RUN_ID` | 分页查看已提交 Event |
+| `bearagent run replay RUN_ID` | 从 Event 重建状态并对照 projection；F-0021 分支 |
+| `bearagent run check` | 分页检查未结束或异常的 Run；F-0021 分支 |
 
 ```console
 uv run bearagent --help
@@ -80,9 +84,11 @@ uv run bearagent run --help
 uv run bearagent run execute --help
 uv run bearagent run inspect --help
 uv run bearagent run events --help
+uv run bearagent run replay --help
+uv run bearagent run check --help
 ```
 
-`run --help` 显示命令组、两个查询子命令和默认路径。`run execute --help` 列出执行 Run 的全部选项，
+`run --help` 显示命令组、查询子命令和默认路径。`run execute --help` 列出执行 Run 的全部选项，
 不会真正执行任务。正常使用仍写 `run OBJECTIVE`，不用增加 execute。
 
 ## 2. 使用默认路径
@@ -242,7 +248,57 @@ human 输出只显示 sequence、时间、Event 类型和 schema version。JSON 
 uv run bearagent run events RUN_ID --after-sequence 100 --limit 100 --json
 ```
 
-## 8. 退出码和失败排查
+## 8. projection 不可用或进程中断后，先只读检查
+
+以下入口在 F-0021 工作分支可用，P1 的 `v0.1.0` 不包含它们。它们只读取已有数据库，不需要
+config、profile 或模型凭据，也不调用模型或 Tool。
+
+```console
+uv run bearagent run replay RUN_ID
+uv run bearagent run replay RUN_ID --json
+uv run bearagent run check --limit 100 --json
+```
+
+`replay` 返回 Event 推导的状态、最后 sequence、state hash 和 projection 对照结果。
+例如 Event 已记录 `RunSucceeded`，但 projection 行丢失时，仍显示 `succeeded` 和 `missing`，
+退出 1 提醒查看；查询不会修复这行。若 Event 本身缺口或格式不受支持，则退出 2，不返回完整状态。
+
+| 对照值 | 表示什么 |
+|---|---|
+| `matched` | Event 推导的状态与 projection 相同 |
+| `missing` | Run projection 或所需 projection 表缺失 |
+| `mismatch` | projection 可读，但与重建状态不同 |
+| `unreadable` | projection 字段或结构无法读取 |
+
+`check` 从 Event 查找 Run，不依赖 projection 的状态筛选。结果只列出未结束、projection 异常或
+读取失败的 Run；`scanned_count` 仍包含健康终态。下一页使用 JSON 中的 `next_after_run_id`：
+
+```console
+uv run bearagent run check --after-run-id UUID_FROM_PREVIOUS_PAGE --limit 100 --json
+```
+
+以 `has_more` 判断是否还有下一页。`items` 为空也可能需要翻页；UUID 排序不表示执行先后。
+每个 Run 是独立的一致快照，各页不是整库的同一时刻；并发新建 Run 可能需要重新扫描。
+仍在执行的 Run 也可能显示未结束，不能据此断言崩溃或获准重试。
+
+human 和 JSON 都只输出 ID、状态、sequence、hash、对照值或安全错误码，不导出历史内容。
+state hash 用于比较重建状态，不是 Event 签名或执行权限。两条命令沿用 `data/bearagent.db`，
+只有查询其他数据库时才传 `--database PATH`；不存在数据库会报错，不会创建空库。
+
+单 Run 输入上限为 10,000 条 Event 和 16 MiB；check 每页默认 100、最多 1,000 个 Run。
+每条命令的读取与重建共用 30 秒期限，超过时返回 `query_timeout`。上限内的历史也可能超时：
+本地合成样本中，1,000 条约 0.47 秒，10,000 条触发期限。当前没有 Checkpoint；减少 check 页大小
+可缩小扫描范围，但不能缩短同一个 Run 的完整重建。
+
+| replay/check 退出码 | 表示什么 |
+|---:|---|
+| 0 | 所检查范围为健康终态，不代表允许恢复 |
+| 1 | 有未结束的 Run 或 projection 异常，需要查看 |
+| 2 | 参数、历史、数据库读取或期限失败；有多个结果时取最高严重级别 |
+
+目标恰好是新命令名时，用 `uv run bearagent run -- replay` 或 `uv run bearagent run -- check`。
+
+## 9. 原有命令的退出码和失败排查
 
 | 退出码 | 表示什么 |
 |---:|---|
@@ -260,7 +316,7 @@ uv run bearagent run events RUN_ID --after-sequence 100 --limit 100 --json
 | Run 长期显示 `running` | 进程可能在 Activity 边界中断；P1 只如实显示，不会自动 resume 或补写成功 |
 | 文件存在但 inspect 没有 Artifact | 写入可能完成，但 Tool completed Event 未提交；P1 不从文件系统反推事实 |
 
-## 9. 当前限制
+## 10. 当前限制
 
 - 单用户、单 Agent、单进程；同一 Run 串行执行 Activity；
 - 支持 Responses、Chat Completions 和 Anthropic Messages 三种 wire protocol；一次 DeepSeek V4 真实
@@ -268,7 +324,7 @@ uv run bearagent run events RUN_ID --after-sequence 100 --limit 100 --json
 - 只有四个 workspace Tool；没有 shell、代码执行、浏览器、MCP 或任意 HTTP Tool；
 - Policy 是启动时固定 allowlist，没有用户 Approval 或持久 Grant；
 - SQLite 保存事实，但没有 Checkpoint、resume、retry、Attempt、Receipt 或 `UNKNOWN`；
-- 没有 Run 列表、删除、导出命令、后台 daemon、HTTP API 或 Web UI；
+- check 只报告检查范围与异常项，不是完整 Run 管理列表；没有删除命令、后台 daemon、HTTP API 或 Web UI；
 - 任务产生的 `outputs/**` 和数据库由用户管理，P1 不提供生命周期清理。
 
 想理解这些限制背后的理由，继续读[P1 的关键架构取舍](/zh-cn/architecture/p1-decisions/)。要修改 CLI

@@ -7,9 +7,46 @@ from pydantic import BaseModel
 from bearagent.domain.agent import RunResult
 from bearagent.domain.errors import ErrorInfo
 from bearagent.domain.queries import EventPage, RunInspection
+from bearagent.domain.replay import ReplaySummary, RunCheckPage
 
 MAX_HUMAN_FINAL_TEXT_CHARS = 50_000
 COST_NOTE = "Cost: local accounting only; unpriced runs do not measure or cap Provider billing."
+
+
+def render_replay(result: ReplaySummary) -> str:
+    lines = [
+        f"Run: {result.run_id}",
+        f"Committed status: {result.status.value}",
+        f"Last Event: {result.last_sequence} / {result.last_event_type}",
+        f"State hash (v{result.state_format_version}): {result.state_hash}",
+        f"Projection: {result.projection.value}",
+    ]
+    if result.active_activity_id is not None and result.active_activity_status is not None:
+        lines.append(
+            f"Unfinished Activity: {result.active_activity_id} / "
+            f"{result.active_activity_status.value}"
+        )
+    lines.append("Read-only inspection. No Activity was resumed or retried.")
+    return "\n".join(lines)
+
+
+def render_check(result: RunCheckPage) -> str:
+    lines = [f"Scanned Runs: {result.scanned_count}"]
+    for item in result.items:
+        if item.error_code is not None:
+            lines.append(f"Run {item.run_id}: {item.error_code.value}")
+        elif item.summary is not None:
+            summary = item.summary
+            lines.append(
+                f"Run {item.run_id}: {summary.status.value}; sequence {summary.last_sequence}; "
+                f"{summary.last_event_type}; projection {summary.projection.value}"
+            )
+    if not result.items:
+        lines.append("No unfinished Runs or anomalies in this page.")
+    if result.has_more:
+        lines.append(f"More Runs remain. Continue with --after-run-id {result.next_after_run_id}")
+    lines.append("Read-only inspection. An unfinished Run may still be executing elsewhere.")
+    return "\n".join(lines)
 
 
 def render_json(value: BaseModel) -> str:
