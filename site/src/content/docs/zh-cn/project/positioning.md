@@ -16,7 +16,7 @@ BearAgent 想让个人 Agent 在本地可靠地完成长任务：用户能看清
 当前已完成工程基础、内部数据类型、状态与预算规则、SQLite EventStore、三种模型协议 adapter、统一
 ToolExecutor、workspace 读写 Tool、原子输出 Artifact、有界 Agent Loop、本地文档站和
 `run/inspect/events` production composition。F-0017 的真实模型 gate 已通过 5/5。本轮 F-0020
-补上配置保护和首次使用入口，本地验证通过、交付证据待记录；P2/P3 仍是规划。
+补上配置保护和首次使用入口，已经合入 main 并通过跨平台 CI；P1 于 2026-09-08 收口，P2/P3 仍是规划。
 :::
 
 ## 第一个用户和第一个任务

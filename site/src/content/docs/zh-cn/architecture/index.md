@@ -14,6 +14,7 @@ sourceRefs:
   - F-0008
   - F-0016
   - F-0017
+  - F-0020
 ---
 
 模型请求读取 `docs/architecture/overview.md` 时，BearAgent 需要检查路径、调用文件工具、保存结果，
@@ -71,7 +72,8 @@ CLI 框架和未来的 Web API 都在外层。外层可以导入核心，核心�
 
 ## Runtime 长期负责什么
 
-本轮 P1 收口扩展了工作区访问边界，保护 Runtime 自己的配置与数据库，同时补上初始化和离线配置检查。
+P1 已于 2026-09-08 收口。工作区访问边界保护 Runtime 自己的配置与数据库，初始化和离线配置检查
+也已交付；相关实现与跨平台验收见[当前状态](/zh-cn/project/status/)。
 整体依赖方向与串行执行保留。下一步科研策略只提出可审查提议，状态、预算、Policy 与 Executor 继续
 由核心控制；具体研究路径见[从失败到研究实验](/zh-cn/learn/research-experiments/)。
 

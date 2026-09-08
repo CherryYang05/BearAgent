@@ -40,6 +40,9 @@ flowchart TB
 
 ### 3.1 当前已经实现
 
+P1 已于 2026-09-08 收口，F-0020 的本机资料保护与首次使用补强已合入 main。阶段证据见
+[P1 收口记录](../project/p1-closure-review.md)；进程恢复仍属于 P2。
+
 | 范围 | 已有行为 |
 |---|---|
 | 工程基础 | Python 3.12、uv、CLI doctor、Ruff、Pyright、pytest、CI 和 import boundary 测试 |

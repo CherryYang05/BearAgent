@@ -1,6 +1,6 @@
 ---
 title: "Plan: safe local startup and P1 closure review"
-status: active
+status: completed
 plan_id: PLAN-F-0020
 related_spec: F-0020
 ---
@@ -22,7 +22,7 @@ related_spec: F-0020
 - [x] 跑完整质量门、构建、链接和浏览器阅读检查，记录当前环境限制。
 - [x] 安装受限部署身份，并验证 forced command、原子发布、失败回退边界和公网健康检查。
 - [x] 按项目所有者发布指令记录不可变实现提交，并推送功能分支。
-- [ ] workflow 进入 `main` 后验证真实 push 触发，再更新 Spec 状态并关闭 Plan。
+- [x] workflow 进入 `main` 后验证真实 push 触发，再更新 Spec 状态并关闭 Plan。
 
 ## 验证记录
 
@@ -78,6 +78,20 @@ P1 连续编号要求把本 Feature 改为 F-0020，并把未创建 Spec 的后�
 再判断普通文件类型，最后只检查普通文件的多硬链接；本地针对性 14 tests 和完整 507 tests 通过。
 最终 PR 检查必须在 GitHub 保持全绿。
 
-部署 workflow 只监听 `main`，因此不能把功能分支推送或手工服务器发布写成 main trigger 证据。
-Spec 保持 accepted、`implemented_in` 保持 null，本 Plan 保持唯一 active Plan，待合并后的第一次真实
-workflow 成功再关闭。
+## 2026-09-08：合并后收口
+
+[PR #24](https://github.com/CherryYang05/BearAgent/pull/24) 已于 2026-09-06（北京时间）合入 main，
+合并提交为 `b1679220a47306c17bca1a3d90eac9501d827ca2`。本次核对同一提交的远端结果：
+
+- [CI](https://github.com/CherryYang05/BearAgent/actions/runs/33987823793)：Windows、Ubuntu 与 Starlight 全部成功。
+- [Deploy docs](https://github.com/CherryYang05/BearAgent/actions/runs/33987823795)：event 为 push，
+  构建、受限 SSH 发布、首页与 Pagefind 公网检查全部成功。这是实际 main push 的证据。
+- 本地重新执行 `uv run pytest --basetemp=.pytest-tmp-p1-close-20260908 -o cache_dir=.pytest-state-p1-close-20260908`：
+  507 passed，31.54 秒；包含 K1-K6、安全、契约和确定性任务集。
+- `uv lock --check`、`uv run ruff format --check .`、`uv run ruff check .`、`uv run pyright` 均通过。
+- 收口文字更新后，governance 通过（15 Specs / 14 Plans / 19 ADRs），152 个 Markdown 文件链接通过，
+  `npm run build --prefix=site` 成功生成 48 页、Pagefind 和 sitemap，`git diff --check` 通过。
+  本轮没有改布局；新增验证限于文字顺读、构建与链接，浏览器视觉证据仍是上文的历史记录。
+
+历史手工发布、服务器拒绝任意命令与失败回退证据保留在上文。所有切片完成，Spec 为 implemented，
+本 Plan 为 completed。此次不重跑付费模型 gate，不把历史真实 5/5 写成本轮结果。

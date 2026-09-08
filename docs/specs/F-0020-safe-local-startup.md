@@ -1,13 +1,13 @@
 ---
 title: "Feature: protect local runtime files and simplify first-run setup"
-status: accepted
+status: implemented
 spec_id: F-0020
 milestone: P1
 change_level: S2
 owner: CherryYang05
 created: 2026-09-05
-last_updated: 2026-09-06
-implemented_in: null
+last_updated: 2026-09-08
+implemented_in: "PR #24 / commit b1679220a47306c17bca1a3d90eac9501d827ca2"
 related_adrs: [ADR-0011, ADR-0014, ADR-0015, ADR-0018, ADR-0019]
 ---
 
@@ -74,10 +74,11 @@ workspace 与运行资料物理分开。不得删除数据库、凭据或 Artifa
 - [x] init 重复调用、已有文件、link/junction、部分失败均不覆盖用户资料。
 - [x] 配置检查零网络、零数据库；补全配置后可走 Fake production Run、inspect 与 events。
 - [x] 完整测试、Ruff、Pyright、schema、governance、docs 链接、站点构建与阅读验证通过。
-- [ ] main push workflow、服务器 forced-command key、原子发布与失败回退完成端到端验收。
+- [x] main push workflow、服务器 forced-command key、原子发布与失败回退完成端到端验收。
 
-以上为本地验收，详细命令、507 个测试与环境限制见关联 Plan。尚未记录不可变提交证据，因此 status
-保持 accepted，`implemented_in` 保持 null。
+PR #24 已于 2026-09-06（北京时间）合入 main，合并提交为 `b167922`。对应的 Windows/Linux CI、
+真实 main push 文档发布与公网健康检查均成功，2026-09-08 再次核对；详细链接、507 个测试与环境
+限制见关联 Plan。全部验收项完成，Spec 关闭为 implemented。
 
 | 文档表面 | 更新路径与原因 |
 |---|---|

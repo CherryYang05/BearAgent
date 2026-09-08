@@ -20,10 +20,11 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 
 ## 当前计划
 
-- [PLAN-F-0020：保护本机运行资料并简化首次使用](PLAN-F-0020-safe-local-startup.md)
+暂无 active Plan；P1 已收口。
 
 ## 已完成计划
 
+- [PLAN-F-0020：保护本机运行资料并简化首次使用](PLAN-F-0020-safe-local-startup.md)
 - [PLAN-F-0019：安全结构化运行诊断](PLAN-F-0019-safe-structured-diagnostics.md)
 - [PLAN-F-0018：强化 P1 执行契约身份与 crash observability](PLAN-F-0018-p1-evidence-hardening.md)
 - [PLAN-F-0015：建立并重写 Starlight 文档站](PLAN-F-0015-local-starlight-docs-site.md)
