@@ -1,8 +1,9 @@
 ---
 title: 一次失败后，Runtime 应先问哪三个问题
 description: 用文件写入超时分清记录、恢复、授权与隔离，以及它们为什么不能塞进一个模块。
-bearStatus: planned
+bearStatus: mixed
 sourceRefs:
+  - F-0021
   - roadmap
   - architecture/overview
   - ADR-0002
@@ -18,7 +19,7 @@ BearAgent 会把问题按顺序拆开：
 | 阶段 | Runtime 要回答的问题 | 目前状态 |
 |---|---|---|
 | P1 | 发生了什么？ | 已实现：Event、Reducer、预算和 Artifact 可查 |
-| P2 | 根据已有证据，下一步怎样做才安全？ | 未实现 |
+| P2 | 根据已有证据，下一步怎样做才安全？ | 进行中；F-0021 只读重建已实现，恢复执行仍待交付 |
 | P3 | 这个动作是否获准，又只能影响哪里？ | 未实现 |
 
 这三问看起来接近，实际上负责不同的系统边界。

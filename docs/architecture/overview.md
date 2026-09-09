@@ -69,9 +69,17 @@ suite v1.1.1 已用 DeepSeek V4 经 production composition 完成四个普通任
 并用 K1-K6 hard-process suite 核对进程退出后的最后 committed fact。这不代表其他服务或协议已付费
 联调，也不表示进程重启后会自动继续。
 
+[F-0021](../specs/F-0021-event-replay-startup-check.md) 已交付只读 `run replay` 和 `run check`。
+`EventReplaySource` 从 Event 表枚举 Run，在同一读事务捕获单 Run 的完整 Event 与可用 projection；
+`RunReplayService` 复用 Reducer，返回版本化状态 hash 与 `matched/missing/mismatch/unreadable` 对照。
+projection 行或表缺失不阻止重建；Event 或 migration 损坏仍安全失败。CLI 不读取 config/profile，
+不初始化数据库、不修复 projection、不执行模型或 Tool。[实现提交的 CI](https://github.com/CherryYang05/BearAgent/actions/runs/34251928326)
+已通过 Windows、Ubuntu 和站点检查。P1 tag 不含这些命令；合入状态见 [PR #26](https://github.com/CherryYang05/BearAgent/pull/26)，
+设计决定见 [ADR-0020](../adr/ADR-0020-event-replay-before-recovery.md)。
+
 ### 3.2 Roadmap 中的后续方向（尚未形成当前实现）
 
-- P2：Event-only 状态重建、Checkpoint、Attempt、恢复语义、控制命令和 `UNKNOWN` 处置；
+- P2 后续：Checkpoint、Attempt、恢复语义、控制命令和 `UNKNOWN` 处置；
 - P3：Grant、三态 Policy、参数绑定 Approval 和隔离 runner；
 - P4：HTTP/SSE、认证、自托管、Skill、MCP、Web UI、Memory 和受控联网；
 - P5：跨版本 trace 与持续评测。

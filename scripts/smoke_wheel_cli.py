@@ -89,10 +89,19 @@ def main() -> None:
         run_payload = json.loads(run.stdout)
         run_id = run_payload["result"]["run_id"]
 
-        for command in ("inspect", "events"):
+        config_path.unlink()
+        profile_path.unlink()
+        for command in ("inspect", "events", "replay", "check"):
             result = runner.invoke(
                 cli_main.app,
-                ["run", command, run_id, "--database", str(database_path), "--json"],
+                [
+                    "run",
+                    command,
+                    *([run_id] if command != "check" else []),
+                    "--database",
+                    str(database_path),
+                    "--json",
+                ],
             )
             if result.exit_code != 0:
                 raise RuntimeError(f"installed wheel {command} command failed")
@@ -100,7 +109,7 @@ def main() -> None:
             if payload["command"] != command:
                 raise RuntimeError(f"installed wheel {command} output is invalid")
 
-    print("Installed wheel Run/inspect/events smoke test passed.")
+    print("Installed wheel Run/inspect/events/replay/check smoke test passed.")
 
 
 def _inject_provider(provider: ModelProvider) -> None:

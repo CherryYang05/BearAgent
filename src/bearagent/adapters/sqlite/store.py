@@ -149,7 +149,7 @@ class SqliteEventStore:
         event_inserted = False
         try:
             connection.execute("BEGIN IMMEDIATE")
-            previous_state = _load_run_projection(connection, event.run_id)
+            previous_state = load_run_projection(connection, event.run_id)
             maximum_sequence = _maximum_sequence(connection, event.run_id)
             _validate_projection_sequence(previous_state, maximum_sequence)
             validate_event_history(
@@ -207,7 +207,7 @@ class SqliteEventStore:
         connection = self._open_initialized()
         try:
             connection.execute("BEGIN")
-            state = _load_run_projection(connection, run_id)
+            state = load_run_projection(connection, run_id)
             maximum_sequence = _maximum_sequence(connection, run_id)
             _validate_projection_sequence(state, maximum_sequence)
             rows = cast(
@@ -224,7 +224,7 @@ class SqliteEventStore:
                     (str(run_id), after_sequence, limit),
                 ).fetchall(),
             )
-            events = tuple(_event_from_row(row) for row in rows)
+            events = tuple(decode_event_row(row) for row in rows)
             connection.commit()
             return events
         except EventStoreCorruptionError:
@@ -243,7 +243,7 @@ class SqliteEventStore:
         connection = self._open_initialized()
         try:
             connection.execute("BEGIN")
-            state = _load_run_projection(connection, run_id)
+            state = load_run_projection(connection, run_id)
             maximum_sequence = _maximum_sequence(connection, run_id)
             _validate_projection_sequence(state, maximum_sequence)
             connection.commit()
@@ -279,7 +279,7 @@ class SqliteEventStore:
         connection: sqlite3.Connection | None = None
         try:
             connection = self._connect()
-            _verify_schema(connection)
+            verify_store_schema(connection)
             return connection
         except EventStoreError:
             if connection is not None:
@@ -315,7 +315,9 @@ def _sql_statements(script: str) -> tuple[str, ...]:
     return tuple(statements)
 
 
-def _verify_schema(connection: sqlite3.Connection) -> None:
+def verify_store_schema(
+    connection: sqlite3.Connection, *, require_projections: bool = True
+) -> None:
     table = connection.execute(
         "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'"
     ).fetchone()
@@ -328,7 +330,7 @@ def _verify_schema(connection: sqlite3.Connection) -> None:
     rows = cast(
         list[tuple[object, ...]],
         connection.execute(
-            "SELECT version, name, checksum FROM schema_migrations ORDER BY version"
+            "SELECT version, name, checksum FROM schema_migrations ORDER BY version LIMIT 2"
         ).fetchall(),
     )
     if len(rows) != 1 or _db_int(rows[0][0]) != 1:
@@ -339,7 +341,7 @@ def _verify_schema(connection: sqlite3.Connection) -> None:
         raise EventStoreMigrationError(
             _persistence_info("Applied database migration does not match this build.")
         )
-    _verify_required_tables(connection)
+    _verify_required_tables(connection, require_projections=require_projections)
     journal_mode = cast(tuple[object, ...], connection.execute("PRAGMA journal_mode").fetchone())
     if str(journal_mode[0]).lower() != "wal":
         raise EventStoreCorruptionError(
@@ -347,8 +349,12 @@ def _verify_schema(connection: sqlite3.Connection) -> None:
         )
 
 
-def _verify_required_tables(connection: sqlite3.Connection) -> None:
-    required = {"events", "run_projections", "activity_projections"}
+def _verify_required_tables(
+    connection: sqlite3.Connection, *, require_projections: bool = True
+) -> None:
+    required = (
+        {"events", "run_projections", "activity_projections"} if require_projections else {"events"}
+    )
     rows = cast(
         list[tuple[object, ...]],
         connection.execute(
@@ -359,7 +365,7 @@ def _verify_required_tables(connection: sqlite3.Connection) -> None:
         ).fetchall(),
     )
     present = {str(row[0]) for row in rows}
-    if present != required:
+    if not required <= present:
         raise EventStoreMigrationError(_persistence_info("Database schema is incomplete."))
 
 
@@ -394,7 +400,7 @@ def _validate_projection_sequence(state: RunState | None, maximum_sequence: int 
         )
 
 
-def _event_from_row(row: tuple[object, ...]) -> Event:
+def decode_event_row(row: tuple[object, ...]) -> Event:
     try:
         payload = _decode_json_object(str(row[8]))
         event = Event.model_validate(
@@ -418,7 +424,7 @@ def _event_from_row(row: tuple[object, ...]) -> Event:
         ) from cause
 
 
-def _load_run_projection(connection: sqlite3.Connection, run_id: RunId) -> RunState | None:
+def load_run_projection(connection: sqlite3.Connection, run_id: RunId) -> RunState | None:
     run_row = cast(
         tuple[object, ...] | None,
         connection.execute(
@@ -599,7 +605,7 @@ def _recent_events(
             (str(run_id), before_sequence, limit),
         ).fetchall(),
     )
-    return tuple(_event_from_row(row) for row in reversed(rows))
+    return tuple(decode_event_row(row) for row in reversed(rows))
 
 
 def _decode_json_object(value: str) -> dict[str, object]:
