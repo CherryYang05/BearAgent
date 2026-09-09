@@ -1,6 +1,6 @@
 ---
 title: "Plan: Event-only replay and explicit startup inspection"
-status: active
+status: completed
 plan_id: PLAN-F-0021
 related_spec: F-0021
 created: 2026-09-08
@@ -10,7 +10,7 @@ last_updated: 2026-09-09
 # PLAN-F-0021：先重建一个 Run，再检查尚未结束的执行
 
 关联 [F-0021](../specs/F-0021-event-replay-startup-check.md) 与
-[ADR-0020](../adr/ADR-0020-event-replay-before-recovery.md)。2026-09-08 获准开始实现，本 Plan 为唯一 active Plan。
+[ADR-0020](../adr/ADR-0020-event-replay-before-recovery.md)。2026-09-08 获准开始实现，2026-09-09 完成实现发布与跨平台验证，本 Plan 已 completed。
 
 ## 已核对的起点
 
@@ -33,7 +33,7 @@ last_updated: 2026-09-09
 
 ## 第 1 步：projection 不可用时仍能重建一个 Run
 
-- 状态：本地实现与验证完成。
+- 状态：完成；本地与远程 Windows/Linux 验证通过。
 - 交付：独立只读 source、冻结快照类型、application replay service、版本化 state hash。
 - 连接：SQLite/内存 adapter -> EventReplaySource -> existing Reducer -> 重建结果。
 - 证据：共用 contract；v1-v4、缺失/损坏 projection、坏 Event、数量/字节边界和状态 hash 固定样例。
@@ -42,7 +42,7 @@ last_updated: 2026-09-09
 
 ## 第 2 步：从 Event 发现 Run，报告未结束和异常项
 
-- 状态：本地实现与验证完成。
+- 状态：完成；本地与远程 Windows/Linux 验证通过。
 - 交付：有界枚举、显式游标、逐 Run 快照、非终态边界及 projection 对照；坏历史返回安全错误项。
 - 证据：错误终态 projection 不漏检、全终态页仍能翻页、并发追加不混合快照、锁等待与取消资源释放。
 - 验证：内存/SQLite 共用扫描契约与双连接 integration tests；记录规模、耗时、环境与资源上限。
@@ -50,7 +50,7 @@ last_updated: 2026-09-09
 
 ## 第 3 步：用户可以只读 replay/check，并看清它没有继续执行
 
-- 状态：本地实现与验证完成。
+- 状态：完成；本地与远程 Windows/Linux 验证通过。
 - 交付：bootstrap 组装、human/JSON 输出、命令帮助与退出码；默认数据库路径沿用 P1。
 - 证据：没有 config/key 也能读取；不存在数据库不创建文件；K1-K6 之后重建最后事实且零额外模型、
   Tool、replace；旧 CLI/JSON 保持兼容，新命令名可作为转义后的普通目标。
@@ -61,8 +61,8 @@ last_updated: 2026-09-09
 ## 文档和阶段边界
 
 Spec 所列权威 docs、初学者、开发者和公开状态表面已同步。页面区分 P1 的 main/tag 基线与 F-0021
-工作分支，不把只读检查写成恢复执行。Spec 和 ADR 均为 accepted；Plan 保持唯一 active，以准确
-保留实现提交和远程 CI 的剩余项。F-0022 仍未接受，不在本分支实施。
+Feature 实现，不把只读检查写成恢复执行。Spec 为 implemented、ADR 保持 accepted、Plan 为 completed。
+当前没有 active Plan；F-0022 仍未接受，不在本分支实施。
 
 ## 本地验证（2026-09-08）
 
@@ -87,11 +87,16 @@ Spec 所列权威 docs、初学者、开发者和公开状态表面已同步。�
 - schema 与 HEAD 比较：仅新增 7 个 domain 查询类型、3 个 CLI 结果类型及 `query_timeout` 枚举值；
   既有类型其余结构不变，SQL migration 未修改。`git diff --check` 通过。
 
-## 待补齐的发布证据
+## 收口证据（2026-09-09）
 
-- [ ] 提交本次实现，在 `implemented_in` 记录对应不可变提交或 PR。
-- [ ] 推送实现后核对相同提交的 Windows/Linux CI 与站点构建结果。
-- [ ] 上述证据齐备后，将 Spec 标为 implemented、Plan 标为 completed，并同步索引和公开状态。
+- [x] 实现已提交并推送：[`c1a94da8bc5c90dc49edc07184d7ee076a63b419`](https://github.com/CherryYang05/BearAgent/commit/c1a94da8bc5c90dc49edc07184d7ee076a63b419)。
+- [x] [PR #26](https://github.com/CherryYang05/BearAgent/pull/26) 为 Open、非 Draft，base 为 main，head 为 F-0021 分支。
+- [x] [实现提交的 CI](https://github.com/CherryYang05/BearAgent/actions/runs/34251928326) 全部通过：Windows 555 passed（62.41 秒），
+  Ubuntu 555 passed（39.21 秒），Starlight 构建成功；各平台的 Ruff、Pyright、文档链接和治理检查通过。
+- [x] Spec 已标为 implemented，Plan 已标为 completed；索引、路线图和站点当前状态同步。
 
-2026-09-09 项目所有者授权收口并推送本 Feature。本次先提交实现并创建 PR 验证跨平台 CI，再用实际
-提交与检查结果关闭 Spec/Plan；已有设计提交为 `7a5a468`。Feature 收口不代表合入 main 或发布新 tag。
+收口提交仅更新文档和状态，不改变已验证的生产代码或测试。CI 仍会检查最终 PR head；本节固定引用
+实现提交的不可变证据。Feature 收口不代表合入 main 或发布新 tag，合并状态以 PR 为准。
+
+长历史仍受 30 秒期限约束，Checkpoint 留待单独设计。没有未完成的 F-0021 实现切片，也没有开启
+F-0022 的 Attempt 或恢复执行工作。

@@ -78,7 +78,8 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 ## 不同问题去哪里找答案
 
 P1 已于 2026-09-08 收口，F-0020 的配置保护、初始化和离线检查已合入 main，跨平台 CI 通过。P2 恢复和 P3
-授权/隔离没有实现。F-0021 的 replay/check 已在工作分支接通，保持只读，发布提交和远程 CI 仍待补齐。
+授权/隔离没有实现。F-0021 的 replay/check 已完成收口并通过跨平台 CI，保持只读；
+提交与验证记录见 [PR #26](https://github.com/CherryYang05/BearAgent/pull/26)。
 研究策略应通过未来的 port 提出建议，由 Runtime 保持执行约束。顺序和实验指标见
 [从一次失败走向可比较的研究实验](/zh-cn/learn/research-experiments/)。
 

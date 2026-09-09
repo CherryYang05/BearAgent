@@ -37,8 +37,9 @@ bearagent run  ------> outputs/** + SQLite Event
 :::caution[当前成熟度]
 CLI、SQLite、三种模型协议 adapter、四个 workspace Tool 和 Agent Loop 已经接通。离线 Fake 5/5
 和 2026-08-23 的 DeepSeek V4 suite v1.1.1 真实 5/5 分开验证，构成历史 P1 完成证据。F-0020 已合入 main，
-P1 已收口。F-0021 工作分支新增只读 replay/check，本地实现不代表已进入 `v0.1.0` 或 main；正式
-交付状态以 Spec 为准。进程中断后可以查询已提交事实，但不会自动恢复 Run。P1 也没有 Approval、sandbox、shell、Web UI 或任意网络 Tool。
+P1 已收口。F-0021 的只读 replay/check 已实现并通过跨平台 CI；P1 的 `v0.1.0` 不含这些命令，
+合入状态见 [PR #26](https://github.com/CherryYang05/BearAgent/pull/26)。进程中断后可以查询已提交事实，但不会自动恢复 Run。
+当前也没有 Approval、sandbox、shell、Web UI 或任意网络 Tool。
 :::
 
 ## 1. 从源码安装
@@ -74,8 +75,8 @@ uv run python -m bearagent doctor --json
 | `bearagent run OBJECTIVE` | 执行一个文件任务 |
 | `bearagent run inspect RUN_ID` | 查看 Reducer projection 与 Artifact |
 | `bearagent run events RUN_ID` | 分页查看已提交 Event |
-| `bearagent run replay RUN_ID` | 从 Event 重建状态并对照 projection；F-0021 分支 |
-| `bearagent run check` | 分页检查未结束或异常的 Run；F-0021 分支 |
+| `bearagent run replay RUN_ID` | 从 Event 重建状态并对照 projection；F-0021 |
+| `bearagent run check` | 分页检查未结束或异常的 Run；F-0021 |
 
 ```console
 uv run bearagent --help
@@ -250,7 +251,7 @@ uv run bearagent run events RUN_ID --after-sequence 100 --limit 100 --json
 
 ## 8. projection 不可用或进程中断后，先只读检查
 
-以下入口在 F-0021 工作分支可用，P1 的 `v0.1.0` 不包含它们。它们只读取已有数据库，不需要
+以下入口由 F-0021 交付，P1 的 `v0.1.0` 不包含它们。它们只读取已有数据库，不需要
 config、profile 或模型凭据，也不调用模型或 Tool。
 
 ```console

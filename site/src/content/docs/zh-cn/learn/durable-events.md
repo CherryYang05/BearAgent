@@ -39,7 +39,7 @@ F-0003 的 `run_projections` 和 `activity_projections` 让后续 `inspect` 不�
 ## projection 读不了，还能知道发生了什么吗？
 
 假设一个 Run 已保存 9 条 Event，最后一条是 `RunSucceeded`，但 projection 的行丢失了。
-`inspect` 会拒绝返回不可信的缓存；F-0021 工作分支增加了另一条只读入口：
+`inspect` 会拒绝返回不可信的缓存；F-0021 增加了另一条只读入口：
 
 ```console
 uv run bearagent run replay RUN_ID
@@ -47,7 +47,7 @@ uv run bearagent run replay RUN_ID
 
 它从第一条 Event 开始，交给同一个 Reducer 重建。这个例子会得到 `succeeded`、sequence 9 和
 `projection=missing`。结果描述 Event 推导的状态；命令不会补回数据库中的 projection。
-P1 的 `v0.1.0` 没有这条命令，F-0021 的正式发布进度见[当前状态](/zh-cn/project/status/)。
+P1 的 `v0.1.0` 没有这条命令，F-0021 的实现与交付证据见[当前状态](/zh-cn/project/status/)。
 
 ```mermaid
 flowchart LR

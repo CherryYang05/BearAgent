@@ -52,7 +52,7 @@ get_run(run_id)           读取已验证的当前 projection
 
 ## 只读重建为什么有独立的 port
 
-F-0021 工作分支的 `EventReplaySource` 提供 `read_run_events` 和 `list_event_run_ids`。它不改变
+F-0021 的 `EventReplaySource` 提供 `read_run_events` 和 `list_event_run_ids`。它不改变
 EventStore 的三个方法，也没有 append 或 repair。调用链是：
 
 ```text
@@ -78,7 +78,7 @@ Event 间检查共同停止过期工作。取消协程时先通知工作线程�
 测试。`tests/integration/test_event_replay.py` 用真实双连接与故障 SQL 验证快照、损坏和取消。
 K1-K6 子进程测试新增 replay/check 后，数据库事实、模型调用记录和 workspace 文件保持不变。
 合成 10,000 条模型 Activity 历史触发 30 秒期限；当前没有 Checkpoint，因此长历史可能明确超时。
-这仍是本地实现，发布与跨平台验证进度见[当前状态](/zh-cn/project/status/)。
+本 Feature 已完成实现提交与跨平台验证，证据见[当前状态](/zh-cn/project/status/)。
 
 ## 初始化不只是“如果没有表就建表”
 

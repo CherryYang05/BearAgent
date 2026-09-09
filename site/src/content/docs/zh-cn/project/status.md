@@ -43,7 +43,7 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 | 能查询任务做过什么吗？ | 能，用 `inspect` 看状态，用 `events` 看有序事实 |
 | 能知道 Run 使用了哪版 Tool/Policy 声明吗？ | 新 Run 可以；`inspect` 显示版本和 SHA-256，legacy Run 明确缺失 |
 | 能用结构化日志定位本机运行失败吗？ | 可以；stderr 提供固定字段诊断，但系统仍只根据 Event 判断 Run 状态 |
-| 程序中断后会自动继续吗？ | 不会；F-0021 分支新增只读检查，恢复执行尚未实现 |
+| 程序中断后会自动继续吗？ | 不会；F-0021 提供只读检查，恢复执行尚未实现 |
 | 有用户 Approval 或真正的 sandbox 吗？ | 没有，P3 尚未实现 |
 | 文档站可以查看吗？ | 可以；本地可预览，线上为 `https://docs.bearguin.cn/zh-cn/` |
 
@@ -72,12 +72,14 @@ F-0020 的 Spec 为 implemented，Plan 为 completed；
 [同一提交的 CI](https://github.com/CherryYang05/BearAgent/actions/runs/33987823793) 已通过 Windows、Ubuntu
 和站点构建。2026-09-08 的本地复验同样通过 507 个测试；历史真实模型 gate 没有在本轮重跑。
 
-P1 的收口版本为 [v0.1.0](https://github.com/CherryYang05/BearAgent/tree/v0.1.0)。P2 已进入
-F-0021 的本地实现阶段：工作分支已接通 `run replay` 和 `run check`，projection 缺失或损坏时
-仍从完整 Event 重建状态，再报告未结束的 Run 与对照异常。它们不修复数据、不重试或恢复执行。
-Spec 为 accepted、ADR 为 accepted、Plan 为 active；实现提交与远程 Windows/Linux CI 仍待补齐，
-这些命令尚不属于 P1 tag 或 main 发布基线。10,000 条合成模型历史触发 30 秒期限，长历史性能仍是
-已知限制；Checkpoint 留待单独评估。
+P1 的收口版本为 [v0.1.0](https://github.com/CherryYang05/BearAgent/tree/v0.1.0)。P2 的首个 Feature
+F-0021 已于 2026-09-09 完成收口：`run replay` 和 `run check` 在 projection 缺失或损坏时，仍从
+完整 Event 重建状态，再报告未结束的 Run 与对照异常。它们不修复数据、不重试或恢复执行。
+
+[PR #26](https://github.com/CherryYang05/BearAgent/pull/26) 的实现提交是 `c1a94da`；[同一提交的 CI](https://github.com/CherryYang05/BearAgent/actions/runs/34251928326)
+在 Windows、Ubuntu 各通过 555 个测试，文档站构建成功。Spec 为 implemented、ADR 为 accepted、
+Plan 为 completed。P1 tag 不含这些命令，合入 main 的状态以 PR 为准。10,000 条合成模型历史触发
+30 秒期限，长历史性能仍是已知限制；Checkpoint 留待单独评估。
 
 ## P1 完成证据
 

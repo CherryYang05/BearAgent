@@ -29,7 +29,7 @@ sourceRefs:
 
 :::note[开始前知道两件事就够了]
 P1 的 CLI、SQLite、模型 adapter、workspace Tool 和 Agent Loop 已经接通。P2 的进程中断恢复、P3 的
-Approval 与隔离 runner 仍是后续计划。F-0021 工作分支先接通只读 replay/check，
+Approval 与隔离 runner 仍是后续计划。F-0021 已交付只读 replay/check，
 可从 Event 重建状态与检查未结束的 Run；它们不会继续执行。页面一旦跨过这条边界，会直接标明。
 :::
 

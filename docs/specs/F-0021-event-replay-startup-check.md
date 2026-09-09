@@ -1,13 +1,13 @@
 ---
 title: "Feature: reconstruct Run state from Events and inspect unfinished Runs"
-status: accepted
+status: implemented
 spec_id: F-0021
 milestone: P2
 change_level: S2
 owner: CherryYang05
 created: 2026-09-08
 last_updated: 2026-09-09
-implemented_in: null
+implemented_in: "PR #26 / commit c1a94da8bc5c90dc49edc07184d7ee076a63b419"
 related_adrs: [ADR-0002, ADR-0003, ADR-0009, ADR-0016, ADR-0020]
 ---
 
@@ -16,7 +16,9 @@ related_adrs: [ADR-0002, ADR-0003, ADR-0009, ADR-0016, ADR-0020]
 ## 1. 从一次中断后的查询开始
 
 P1 的 `v0.1.0` 已固定在 main 提交 `499e244`。用户启动 P2，首先需要知道数据库中保存了什么，
-再决定后续能否恢复。项目所有者于 2026-09-08 授权按本 Spec 开始实现；本地实现已接通，发布提交和跨平台 CI 证据补齐前保持 accepted。
+再决定后续能否恢复。项目所有者于 2026-09-08 授权实现，2026-09-09 授权收口并推送。
+实现提交 `c1a94da8bc5c90dc49edc07184d7ee076a63b419` 已通过 [Windows/Linux 与站点 CI](https://github.com/CherryYang05/BearAgent/actions/runs/34251928326)，
+本 Feature 在 [PR #26](https://github.com/CherryYang05/BearAgent/pull/26) 完成收口。合入 main 的状态以 PR 为准。
 
 2026-09-08 的临时 SQLite 实验写入 `successful_run_events()` 的 9 条 Event，再删除 Run/Activity
 projection 行。Event 数量仍为 9，Reducer 的参考结果为 `succeeded`、sequence 9；但现有 `inspect`
@@ -39,7 +41,7 @@ Checkpoint 暂不交付：先记录代表性历史的重放成本，再决定是
 
 ## 3. 用户会看到什么
 
-当前工作分支已实现以下只读接口；P1 的 `v0.1.0` 不包含它们：
+F-0021 已实现以下只读接口；P1 的 `v0.1.0` 不包含它们：
 
 ```console
 bearagent run replay RUN_ID
@@ -111,7 +113,8 @@ SQLite progress handler 可中断查询，Event 读取和 Reducer 在条目之�
 
 ## 8. 验收标准
 
-以下标准已有本地代码与测试；发布提交、远程 Windows/Linux CI 仍待补齐，详见 active Plan。
+以下标准已由本地验证和实现提交的 [跨平台 CI](https://github.com/CherryYang05/BearAgent/actions/runs/34251928326) 覆盖。
+Windows 和 Ubuntu 各 555 个测试通过，Starlight 构建通过；完整命令与边界见 completed Plan。
 
 | AC | 可判断的结果 | 验证范围 |
 |---|---|---|
@@ -129,12 +132,12 @@ SQLite progress handler 可中断查询，Event 读取和 Reducer 在条目之�
 | 表面 | 更新路径或 N/A 原因 |
 |---|---|
 | 权威 docs | 本 Spec、ADR-0020、PLAN-F-0021、`docs/architecture/overview.md`、`docs/project/roadmap.md`；说明事实读取与执行边界 |
-| 初学者 | 已更新 `site/src/content/docs/zh-cn/learn/durable-events.md`、`learn/index.md`、`guides/cli.md`；加入一个 projection 缺失实例 |
+| 初学者 | 已更新 `site/src/content/docs/zh-cn/learn/durable-events.md`、`learn/index.md`、`guides/cli.md`；加入一个 projection 缺失实例，并同步 `learn/recovery-authority-isolation.md`、`start/what-is-bearagent.md` 的阶段边界 |
 | 开发者 | 已更新 `site/src/content/docs/zh-cn/development/sqlite-event-store.md`、`development/index.md`；说明只读快照与共用契约 |
 | 公开状态 | `project/status.md`、`project/milestones.md` 区分 P1 发布基线与 F-0021 分支上的只读命令 |
 | 生成参考 | 已更新 domain/CLI schema 快照；只新增查询类型及 `query_timeout` 错误码，不改 Event payload 和 SQL migration |
 
-## 10. 本地实现与规模证据
+## 10. 实现与规模证据
 
 `tests/contract/test_event_replay_contract.py` 在内存和 SQLite 上运行相同历史与分页测试；
 `tests/integration/test_event_replay.py` 覆盖损坏、并发、锁等待、大小预检、deadline 与取消；
