@@ -54,6 +54,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -1047,6 +1048,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -1353,6 +1355,636 @@
       "has_more"
     ],
     "title": "EventPage",
+    "type": "object"
+  },
+  "EventReplaySnapshot": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ActivityKind": {
+        "description": "Kinds of serial operations tracked by the P1 reducer.",
+        "enum": [
+          "model",
+          "tool"
+        ],
+        "title": "ActivityKind",
+        "type": "string"
+      },
+      "ActivityState": {
+        "additionalProperties": false,
+        "description": "Immutable state for one model or Tool operation.",
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "kind": {
+            "$ref": "#/$defs/ActivityKind"
+          },
+          "status": {
+            "$ref": "#/$defs/ActivityStatus"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Completed At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "model_call_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ModelCallId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "tool_call_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ToolCallId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "tool_name": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tool Name"
+          }
+        },
+        "required": [
+          "activity_id",
+          "kind",
+          "status",
+          "requested_at"
+        ],
+        "title": "ActivityState",
+        "type": "object"
+      },
+      "ActivityStatus": {
+        "description": "P1 Activity lifecycle states.",
+        "enum": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "ActivityStatus",
+        "type": "string"
+      },
+      "BudgetLimits": {
+        "additionalProperties": false,
+        "description": "Finite limits selected by a trusted Run creation boundary.",
+        "properties": {
+          "max_model_iterations": {
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Max Model Iterations",
+            "type": "integer"
+          },
+          "max_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "max_cost_microusd": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Max Cost Microusd",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "maximum": 2678400000,
+            "minimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Max Tool Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_model_iterations",
+          "max_tokens",
+          "max_cost_microusd",
+          "max_wall_time_ms",
+          "max_tool_calls"
+        ],
+        "title": "BudgetLimits",
+        "type": "object"
+      },
+      "BudgetUsage": {
+        "additionalProperties": false,
+        "description": "Actual usage derived only from accepted Run Events.",
+        "properties": {
+          "model_iterations": {
+            "default": 0,
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Model Iterations",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "default": 0,
+            "maximum": 20000000000,
+            "minimum": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "default": 0,
+            "maximum": 20000000000,
+            "minimum": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "cost_microusd": {
+            "default": 0,
+            "maximum": 20001000000000000,
+            "minimum": 0,
+            "title": "Cost Microusd",
+            "type": "integer"
+          },
+          "tool_calls": {
+            "default": 0,
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Tool Calls",
+            "type": "integer"
+          }
+        },
+        "title": "BudgetUsage",
+        "type": "object"
+      },
+      "CausationId": {
+        "description": "Identify the command, Activity, or Event that caused a fact.",
+        "format": "uuid4",
+        "title": "CausationId",
+        "type": "string"
+      },
+      "CorrelationId": {
+        "description": "Correlate facts that belong to one diagnostic flow.",
+        "format": "uuid4",
+        "title": "CorrelationId",
+        "type": "string"
+      },
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "run_not_found",
+          "query_limit_exceeded",
+          "query_timeout",
+          "budget_exhausted",
+          "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
+          "tool_error",
+          "workspace_path_denied",
+          "workspace_not_found",
+          "workspace_wrong_type",
+          "workspace_not_text",
+          "workspace_limit_exceeded",
+          "workspace_access_failed",
+          "persistence_error",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorInfo": {
+        "additionalProperties": false,
+        "description": "Serializable error data that is safe to expose and persist.",
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/ErrorCategory"
+          },
+          "code": {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/$defs/SafeDetailValue"
+            },
+            "maxProperties": 32,
+            "title": "Details",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "ErrorInfo",
+        "type": "object"
+      },
+      "Event": {
+        "additionalProperties": false,
+        "description": "Common envelope for an immutable domain fact.",
+        "properties": {
+          "event_id": {
+            "$ref": "#/$defs/EventId"
+          },
+          "run_id": {
+            "$ref": "#/$defs/RunId"
+          },
+          "sequence": {
+            "minimum": 1,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "event_type": {
+            "pattern": "^[A-Z][A-Za-z0-9]{0,127}$",
+            "title": "Event Type",
+            "type": "string"
+          },
+          "schema_version": {
+            "default": 1,
+            "minimum": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "causation_id": {
+            "$ref": "#/$defs/CausationId"
+          },
+          "correlation_id": {
+            "$ref": "#/$defs/CorrelationId"
+          },
+          "payload": {
+            "additionalProperties": {
+              "$ref": "#/$defs/JsonValue"
+            },
+            "title": "Payload",
+            "type": "object"
+          }
+        },
+        "required": [
+          "event_id",
+          "run_id",
+          "sequence",
+          "event_type",
+          "occurred_at",
+          "causation_id",
+          "correlation_id"
+        ],
+        "title": "Event",
+        "type": "object"
+      },
+      "EventId": {
+        "description": "Identify one immutable persisted fact.",
+        "format": "uuid4",
+        "title": "EventId",
+        "type": "string"
+      },
+      "JsonValue": {},
+      "ModelCallId": {
+        "description": "Identify one model call independently of provider request IDs.",
+        "format": "uuid4",
+        "title": "ModelCallId",
+        "type": "string"
+      },
+      "ProjectionAvailability": {
+        "enum": [
+          "available",
+          "missing",
+          "unreadable"
+        ],
+        "title": "ProjectionAvailability",
+        "type": "string"
+      },
+      "RunId": {
+        "description": "Identify one user-request execution.",
+        "format": "uuid4",
+        "title": "RunId",
+        "type": "string"
+      },
+      "RunState": {
+        "additionalProperties": false,
+        "description": "Immutable Run projection produced by the pure reducer.",
+        "properties": {
+          "run_id": {
+            "$ref": "#/$defs/RunId"
+          },
+          "session_id": {
+            "$ref": "#/$defs/SessionId"
+          },
+          "status": {
+            "$ref": "#/$defs/RunStatus"
+          },
+          "budget_limits": {
+            "$ref": "#/$defs/BudgetLimits"
+          },
+          "budget_usage": {
+            "$ref": "#/$defs/BudgetUsage"
+          },
+          "activities": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/ActivityState"
+            },
+            "title": "Activities",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Completed At"
+          },
+          "terminal_error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "last_sequence": {
+            "minimum": 1,
+            "title": "Last Sequence",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "run_id",
+          "session_id",
+          "status",
+          "budget_limits",
+          "created_at",
+          "last_sequence"
+        ],
+        "title": "RunState",
+        "type": "object"
+      },
+      "RunStatus": {
+        "description": "P1-visible lifecycle states for one Run.",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "RunStatus",
+        "type": "string"
+      },
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "SessionId": {
+        "description": "Identify a conversation container.",
+        "format": "uuid4",
+        "title": "SessionId",
+        "type": "string"
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "One complete committed Run prefix and its optional projection at the same instant.",
+    "properties": {
+      "run_id": {
+        "$ref": "#/$defs/RunId"
+      },
+      "events": {
+        "items": {
+          "$ref": "#/$defs/Event"
+        },
+        "maxItems": 10000,
+        "minItems": 1,
+        "title": "Events",
+        "type": "array"
+      },
+      "projection_availability": {
+        "$ref": "#/$defs/ProjectionAvailability"
+      },
+      "projection": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RunState"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "run_id",
+      "events",
+      "projection_availability"
+    ],
+    "title": "EventReplaySnapshot",
+    "type": "object"
+  },
+  "EventRunPage": {
+    "$defs": {
+      "RunId": {
+        "description": "Identify one user-request execution.",
+        "format": "uuid4",
+        "title": "RunId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "A page of identities discovered in Events, not a temporal or recovery order.",
+    "properties": {
+      "after_run_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RunId"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "limit": {
+        "maximum": 1000,
+        "minimum": 1,
+        "title": "Limit",
+        "type": "integer"
+      },
+      "run_ids": {
+        "items": {
+          "$ref": "#/$defs/RunId"
+        },
+        "maxItems": 1000,
+        "title": "Run Ids",
+        "type": "array"
+      },
+      "next_after_run_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RunId"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "has_more": {
+        "title": "Has More",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "limit",
+      "run_ids",
+      "next_after_run_id",
+      "has_more"
+    ],
+    "title": "EventRunPage",
     "type": "object"
   },
   "Message": {
@@ -1838,6 +2470,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -1999,6 +2632,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -3191,6 +3825,586 @@
     "title": "ProviderSelection",
     "type": "object"
   },
+  "ReplayLimits": {
+    "additionalProperties": false,
+    "description": "Trusted ceilings; callers may lower but cannot bypass the hard limits.",
+    "properties": {
+      "max_events": {
+        "default": 10000,
+        "maximum": 10000,
+        "minimum": 1,
+        "title": "Max Events",
+        "type": "integer"
+      },
+      "max_bytes": {
+        "default": 16777216,
+        "maximum": 16777216,
+        "minimum": 1,
+        "title": "Max Bytes",
+        "type": "integer"
+      },
+      "timeout_ms": {
+        "default": 30000,
+        "maximum": 60000,
+        "minimum": 1,
+        "title": "Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "title": "ReplayLimits",
+    "type": "object"
+  },
+  "ReplaySummary": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ActivityStatus": {
+        "description": "P1 Activity lifecycle states.",
+        "enum": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "ActivityStatus",
+        "type": "string"
+      },
+      "ProjectionComparison": {
+        "enum": [
+          "matched",
+          "missing",
+          "mismatch",
+          "unreadable"
+        ],
+        "title": "ProjectionComparison",
+        "type": "string"
+      },
+      "RunId": {
+        "description": "Identify one user-request execution.",
+        "format": "uuid4",
+        "title": "RunId",
+        "type": "string"
+      },
+      "RunStatus": {
+        "description": "P1-visible lifecycle states for one Run.",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "RunStatus",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Safe public summary; deliberately excludes historical content and error messages.",
+    "properties": {
+      "run_id": {
+        "$ref": "#/$defs/RunId"
+      },
+      "status": {
+        "$ref": "#/$defs/RunStatus"
+      },
+      "last_sequence": {
+        "maximum": 10000,
+        "minimum": 1,
+        "title": "Last Sequence",
+        "type": "integer"
+      },
+      "last_event_type": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+        "title": "Last Event Type",
+        "type": "string"
+      },
+      "state_format_version": {
+        "const": 1,
+        "default": 1,
+        "title": "State Format Version",
+        "type": "integer"
+      },
+      "state_hash": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "State Hash",
+        "type": "string"
+      },
+      "projection": {
+        "$ref": "#/$defs/ProjectionComparison"
+      },
+      "active_activity_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ActivityId"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "active_activity_status": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ActivityStatus"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "run_id",
+      "status",
+      "last_sequence",
+      "last_event_type",
+      "state_hash",
+      "projection"
+    ],
+    "title": "ReplaySummary",
+    "type": "object"
+  },
+  "RunCheckItem": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ActivityStatus": {
+        "description": "P1 Activity lifecycle states.",
+        "enum": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "ActivityStatus",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "run_not_found",
+          "query_limit_exceeded",
+          "query_timeout",
+          "budget_exhausted",
+          "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
+          "tool_error",
+          "workspace_path_denied",
+          "workspace_not_found",
+          "workspace_wrong_type",
+          "workspace_not_text",
+          "workspace_limit_exceeded",
+          "workspace_access_failed",
+          "persistence_error",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ProjectionComparison": {
+        "enum": [
+          "matched",
+          "missing",
+          "mismatch",
+          "unreadable"
+        ],
+        "title": "ProjectionComparison",
+        "type": "string"
+      },
+      "ReplaySummary": {
+        "additionalProperties": false,
+        "description": "Safe public summary; deliberately excludes historical content and error messages.",
+        "properties": {
+          "run_id": {
+            "$ref": "#/$defs/RunId"
+          },
+          "status": {
+            "$ref": "#/$defs/RunStatus"
+          },
+          "last_sequence": {
+            "maximum": 10000,
+            "minimum": 1,
+            "title": "Last Sequence",
+            "type": "integer"
+          },
+          "last_event_type": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Last Event Type",
+            "type": "string"
+          },
+          "state_format_version": {
+            "const": 1,
+            "default": 1,
+            "title": "State Format Version",
+            "type": "integer"
+          },
+          "state_hash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "State Hash",
+            "type": "string"
+          },
+          "projection": {
+            "$ref": "#/$defs/ProjectionComparison"
+          },
+          "active_activity_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ActivityId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "active_activity_status": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ActivityStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "run_id",
+          "status",
+          "last_sequence",
+          "last_event_type",
+          "state_hash",
+          "projection"
+        ],
+        "title": "ReplaySummary",
+        "type": "object"
+      },
+      "RunId": {
+        "description": "Identify one user-request execution.",
+        "format": "uuid4",
+        "title": "RunId",
+        "type": "string"
+      },
+      "RunStatus": {
+        "description": "P1-visible lifecycle states for one Run.",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "RunStatus",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "One noteworthy Run or an explicit safe failure for that Run.",
+    "properties": {
+      "run_id": {
+        "$ref": "#/$defs/RunId"
+      },
+      "summary": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ReplaySummary"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "error_code": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "run_id"
+    ],
+    "title": "RunCheckItem",
+    "type": "object"
+  },
+  "RunCheckPage": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ActivityStatus": {
+        "description": "P1 Activity lifecycle states.",
+        "enum": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "ActivityStatus",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "run_not_found",
+          "query_limit_exceeded",
+          "query_timeout",
+          "budget_exhausted",
+          "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
+          "tool_error",
+          "workspace_path_denied",
+          "workspace_not_found",
+          "workspace_wrong_type",
+          "workspace_not_text",
+          "workspace_limit_exceeded",
+          "workspace_access_failed",
+          "persistence_error",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ProjectionComparison": {
+        "enum": [
+          "matched",
+          "missing",
+          "mismatch",
+          "unreadable"
+        ],
+        "title": "ProjectionComparison",
+        "type": "string"
+      },
+      "ReplaySummary": {
+        "additionalProperties": false,
+        "description": "Safe public summary; deliberately excludes historical content and error messages.",
+        "properties": {
+          "run_id": {
+            "$ref": "#/$defs/RunId"
+          },
+          "status": {
+            "$ref": "#/$defs/RunStatus"
+          },
+          "last_sequence": {
+            "maximum": 10000,
+            "minimum": 1,
+            "title": "Last Sequence",
+            "type": "integer"
+          },
+          "last_event_type": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Last Event Type",
+            "type": "string"
+          },
+          "state_format_version": {
+            "const": 1,
+            "default": 1,
+            "title": "State Format Version",
+            "type": "integer"
+          },
+          "state_hash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "State Hash",
+            "type": "string"
+          },
+          "projection": {
+            "$ref": "#/$defs/ProjectionComparison"
+          },
+          "active_activity_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ActivityId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "active_activity_status": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ActivityStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "run_id",
+          "status",
+          "last_sequence",
+          "last_event_type",
+          "state_hash",
+          "projection"
+        ],
+        "title": "ReplaySummary",
+        "type": "object"
+      },
+      "RunCheckItem": {
+        "additionalProperties": false,
+        "description": "One noteworthy Run or an explicit safe failure for that Run.",
+        "properties": {
+          "run_id": {
+            "$ref": "#/$defs/RunId"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ReplaySummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorCode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "title": "RunCheckItem",
+        "type": "object"
+      },
+      "RunId": {
+        "description": "Identify one user-request execution.",
+        "format": "uuid4",
+        "title": "RunId",
+        "type": "string"
+      },
+      "RunStatus": {
+        "description": "P1-visible lifecycle states for one Run.",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "RunStatus",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Only noteworthy items; pagination counts all scanned Event-backed identities.",
+    "properties": {
+      "after_run_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RunId"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "limit": {
+        "maximum": 1000,
+        "minimum": 1,
+        "title": "Limit",
+        "type": "integer"
+      },
+      "scanned_count": {
+        "maximum": 1000,
+        "minimum": 0,
+        "title": "Scanned Count",
+        "type": "integer"
+      },
+      "items": {
+        "items": {
+          "$ref": "#/$defs/RunCheckItem"
+        },
+        "maxItems": 1000,
+        "title": "Items",
+        "type": "array"
+      },
+      "next_after_run_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RunId"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "has_more": {
+        "title": "Has More",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "limit",
+      "scanned_count",
+      "items",
+      "next_after_run_id",
+      "has_more"
+    ],
+    "title": "RunCheckPage",
+    "type": "object"
+  },
   "RunCreatedPayload": {
     "$defs": {
       "BudgetLimits": {
@@ -4054,6 +5268,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -4177,6 +5392,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -4863,6 +6079,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -5576,6 +6793,637 @@
     "title": "RunProfileV2",
     "type": "object"
   },
+  "RunReplay": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ActivityKind": {
+        "description": "Kinds of serial operations tracked by the P1 reducer.",
+        "enum": [
+          "model",
+          "tool"
+        ],
+        "title": "ActivityKind",
+        "type": "string"
+      },
+      "ActivityState": {
+        "additionalProperties": false,
+        "description": "Immutable state for one model or Tool operation.",
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "kind": {
+            "$ref": "#/$defs/ActivityKind"
+          },
+          "status": {
+            "$ref": "#/$defs/ActivityStatus"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Completed At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "model_call_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ModelCallId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "tool_call_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ToolCallId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "tool_name": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tool Name"
+          }
+        },
+        "required": [
+          "activity_id",
+          "kind",
+          "status",
+          "requested_at"
+        ],
+        "title": "ActivityState",
+        "type": "object"
+      },
+      "ActivityStatus": {
+        "description": "P1 Activity lifecycle states.",
+        "enum": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "ActivityStatus",
+        "type": "string"
+      },
+      "BudgetLimits": {
+        "additionalProperties": false,
+        "description": "Finite limits selected by a trusted Run creation boundary.",
+        "properties": {
+          "max_model_iterations": {
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Max Model Iterations",
+            "type": "integer"
+          },
+          "max_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "max_cost_microusd": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Max Cost Microusd",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "maximum": 2678400000,
+            "minimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Max Tool Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_model_iterations",
+          "max_tokens",
+          "max_cost_microusd",
+          "max_wall_time_ms",
+          "max_tool_calls"
+        ],
+        "title": "BudgetLimits",
+        "type": "object"
+      },
+      "BudgetUsage": {
+        "additionalProperties": false,
+        "description": "Actual usage derived only from accepted Run Events.",
+        "properties": {
+          "model_iterations": {
+            "default": 0,
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Model Iterations",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "default": 0,
+            "maximum": 20000000000,
+            "minimum": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "default": 0,
+            "maximum": 20000000000,
+            "minimum": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "cost_microusd": {
+            "default": 0,
+            "maximum": 20001000000000000,
+            "minimum": 0,
+            "title": "Cost Microusd",
+            "type": "integer"
+          },
+          "tool_calls": {
+            "default": 0,
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Tool Calls",
+            "type": "integer"
+          }
+        },
+        "title": "BudgetUsage",
+        "type": "object"
+      },
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "run_not_found",
+          "query_limit_exceeded",
+          "query_timeout",
+          "budget_exhausted",
+          "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
+          "tool_error",
+          "workspace_path_denied",
+          "workspace_not_found",
+          "workspace_wrong_type",
+          "workspace_not_text",
+          "workspace_limit_exceeded",
+          "workspace_access_failed",
+          "persistence_error",
+          "internal_error"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorInfo": {
+        "additionalProperties": false,
+        "description": "Serializable error data that is safe to expose and persist.",
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/ErrorCategory"
+          },
+          "code": {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/$defs/SafeDetailValue"
+            },
+            "maxProperties": 32,
+            "title": "Details",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "ErrorInfo",
+        "type": "object"
+      },
+      "ModelCallId": {
+        "description": "Identify one model call independently of provider request IDs.",
+        "format": "uuid4",
+        "title": "ModelCallId",
+        "type": "string"
+      },
+      "PolicyFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one trusted static Policy evaluator and configuration.",
+        "properties": {
+          "version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "sha256"
+        ],
+        "title": "PolicyFingerprint",
+        "type": "object"
+      },
+      "ProjectionComparison": {
+        "enum": [
+          "matched",
+          "missing",
+          "mismatch",
+          "unreadable"
+        ],
+        "title": "ProjectionComparison",
+        "type": "string"
+      },
+      "ReplaySummary": {
+        "additionalProperties": false,
+        "description": "Safe public summary; deliberately excludes historical content and error messages.",
+        "properties": {
+          "run_id": {
+            "$ref": "#/$defs/RunId"
+          },
+          "status": {
+            "$ref": "#/$defs/RunStatus"
+          },
+          "last_sequence": {
+            "maximum": 10000,
+            "minimum": 1,
+            "title": "Last Sequence",
+            "type": "integer"
+          },
+          "last_event_type": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Last Event Type",
+            "type": "string"
+          },
+          "state_format_version": {
+            "const": 1,
+            "default": 1,
+            "title": "State Format Version",
+            "type": "integer"
+          },
+          "state_hash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "State Hash",
+            "type": "string"
+          },
+          "projection": {
+            "$ref": "#/$defs/ProjectionComparison"
+          },
+          "active_activity_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ActivityId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "active_activity_status": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ActivityStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "run_id",
+          "status",
+          "last_sequence",
+          "last_event_type",
+          "state_hash",
+          "projection"
+        ],
+        "title": "ReplaySummary",
+        "type": "object"
+      },
+      "RunFingerprint": {
+        "additionalProperties": false,
+        "description": "Trusted contract provenance captured once when a Run is created.",
+        "properties": {
+          "bearagent_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Bearagent Version",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/$defs/PolicyFingerprint"
+          },
+          "tools": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/ToolFingerprint"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "bearagent_version",
+          "policy"
+        ],
+        "title": "RunFingerprint",
+        "type": "object"
+      },
+      "RunId": {
+        "description": "Identify one user-request execution.",
+        "format": "uuid4",
+        "title": "RunId",
+        "type": "string"
+      },
+      "RunState": {
+        "additionalProperties": false,
+        "description": "Immutable Run projection produced by the pure reducer.",
+        "properties": {
+          "run_id": {
+            "$ref": "#/$defs/RunId"
+          },
+          "session_id": {
+            "$ref": "#/$defs/SessionId"
+          },
+          "status": {
+            "$ref": "#/$defs/RunStatus"
+          },
+          "budget_limits": {
+            "$ref": "#/$defs/BudgetLimits"
+          },
+          "budget_usage": {
+            "$ref": "#/$defs/BudgetUsage"
+          },
+          "activities": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/ActivityState"
+            },
+            "title": "Activities",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Completed At"
+          },
+          "terminal_error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "last_sequence": {
+            "minimum": 1,
+            "title": "Last Sequence",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "run_id",
+          "session_id",
+          "status",
+          "budget_limits",
+          "created_at",
+          "last_sequence"
+        ],
+        "title": "RunState",
+        "type": "object"
+      },
+      "RunStatus": {
+        "description": "P1-visible lifecycle states for one Run.",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "RunStatus",
+        "type": "string"
+      },
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "SessionId": {
+        "description": "Identify a conversation container.",
+        "format": "uuid4",
+        "title": "SessionId",
+        "type": "string"
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      },
+      "ToolFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one registration-time Tool contract.",
+        "properties": {
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "spec_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Spec Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "spec_version",
+          "sha256"
+        ],
+        "title": "ToolFingerprint",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Internal reconstructed state; never serialize this object as a CLI report.",
+    "properties": {
+      "state": {
+        "$ref": "#/$defs/RunState"
+      },
+      "summary": {
+        "$ref": "#/$defs/ReplaySummary"
+      },
+      "run_fingerprint": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RunFingerprint"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "state",
+      "summary"
+    ],
+    "title": "RunReplay",
+    "type": "object"
+  },
   "RunResult": {
     "$defs": {
       "ActivityId": {
@@ -5876,6 +7724,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -6374,6 +8223,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -6662,6 +8512,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -6992,6 +8843,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -7135,6 +8987,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -7641,6 +9494,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",
@@ -8007,6 +9861,7 @@
           "invalid_state_transition",
           "run_not_found",
           "query_limit_exceeded",
+          "query_timeout",
           "budget_exhausted",
           "provider_error",
           "provider_timeout",

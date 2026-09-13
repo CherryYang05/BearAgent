@@ -14,7 +14,11 @@ from bearagent.domain.ids import ActivityId, ModelCallId, RunId
 from bearagent.domain.queries import RunInspection
 from bearagent.domain.run_events import ModelCallRequestedPayload, RunStartedPayload
 from bearagent.domain.runs import ActivityStatus, RunStatus
-from bearagent.interfaces.cli.contracts import InspectCommandOutput
+from bearagent.interfaces.cli.contracts import (
+    CheckCommandOutput,
+    InspectCommandOutput,
+    ReplayCommandOutput,
+)
 from bearagent.ports.store import EventStoreError
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
@@ -141,6 +145,15 @@ def test_committed_crash_boundary_is_visible_after_process_restart(
     assert cli_result.result.state.status is RunStatus.RUNNING
     assert cli_result.result.state.last_sequence == len(event_types)
     assert _line_count(model_calls) == calls_before_cli
+    files_before = {
+        str(p.relative_to(workspace)): p.read_bytes() for p in workspace.rglob("*") if p.is_file()
+    }
+    _replay_and_check_with_cli(database_path, run_id, len(event_types), expectation.last_event_type)
+    assert _line_count(model_calls) == calls_before_cli
+    assert {
+        str(p.relative_to(workspace)): p.read_bytes() for p in workspace.rglob("*") if p.is_file()
+    } == files_before
+    assert asyncio.run(_reopen(database_path, run_id)) == (inspection, event_types)
 
 
 def test_k5_projection_failure_rolls_back_event_and_projection_together(tmp_path: Path) -> None:
@@ -189,6 +202,48 @@ def test_k5_projection_failure_rolls_back_event_and_projection_together(tmp_path
 
     cli_result = _inspect_with_cli(database_path, run_id)
     assert cli_result.result.state.last_sequence == 2
+    _replay_and_check_with_cli(database_path, run_id, 2, "RunStarted")
+
+
+def _replay_and_check_with_cli(
+    database: Path,
+    run_id: RunId,
+    sequence: int,
+    event_type: str,
+) -> None:
+    with sqlite3.connect(database) as connection:
+        before = tuple(connection.iterdump())
+    for command in ("replay", "check"):
+        completed = subprocess.run(
+            (
+                sys.executable,
+                "-m",
+                "bearagent",
+                "run",
+                command,
+                *([str(run_id)] if command == "replay" else []),
+                "--database",
+                str(database),
+                "--json",
+            ),
+            cwd=REPOSITORY_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        assert completed.returncode == 1, completed.stderr
+        if command == "replay":
+            summary = ReplayCommandOutput.model_validate_json(completed.stdout).result
+        else:
+            page = CheckCommandOutput.model_validate_json(completed.stdout).result
+            assert page.scanned_count == 1 and len(page.items) == 1
+            summary = page.items[0].summary
+        assert summary is not None
+        assert summary.last_sequence == sequence and summary.last_event_type == event_type
+        assert summary.status is RunStatus.RUNNING
+    with sqlite3.connect(database) as connection:
+        assert tuple(connection.iterdump()) == before
 
 
 async def _reopen(

@@ -16,6 +16,7 @@ from bearagent import package_version
 from bearagent.adapters.diagnostics import JsonLinesDiagnosticSink, operation_failure_record
 from bearagent.bootstrap import (
     build_run_query_service,
+    build_run_replay_service,
     build_run_services,
     validate_run_configuration,
 )
@@ -24,16 +25,21 @@ from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, Er
 from bearagent.domain.ids import RunId, SessionId
 from bearagent.domain.runs import RunStatus
 from bearagent.interfaces.cli.contracts import (
+    CheckCommandOutput,
     CommandErrorOutput,
     EventsCommandOutput,
     InspectCommandOutput,
+    ReplayCommandErrorOutput,
+    ReplayCommandOutput,
     RunCommandOutput,
 )
 from bearagent.interfaces.cli.renderers import (
+    render_check,
     render_error,
     render_events,
     render_inspection,
     render_json,
+    render_replay,
     render_run,
 )
 from bearagent.local_setup import (
@@ -44,6 +50,7 @@ from bearagent.local_setup import (
     initialize_local_config,
 )
 from bearagent.ports.diagnostics import emit_safely
+from bearagent.ports.replay import EventReplayError, replay_error
 
 
 class DoctorReport(TypedDict):
@@ -81,7 +88,7 @@ run_app = typer.Typer(
         "Execution options: --config, --profile, --workspace, --database, --json. "
         "Use `bearagent run execute --help` for option details. "
         "Run options may appear before or after OBJECTIVE. "
-        "Use `bearagent run -- OBJECTIVE` when the objective is named inspect/events "
+        "Use `bearagent run -- OBJECTIVE` when the objective is named inspect/events/replay/check "
         "or begins with a dash."
     ),
     no_args_is_help=True,
@@ -322,6 +329,81 @@ def list_run_events(
     except Exception as error:
         _exit_with_error("events", error, json_output=json_output)
     typer.echo(render_json(output) if json_output else render_events(output.result))
+
+
+@run_app.command("replay")
+def replay_run(
+    run_id: Annotated[str, typer.Argument(help="UUID4 Run identifier.")],
+    database: Annotated[
+        Path, typer.Option("--database", help="Existing SQLite EventStore path.")
+    ] = DEFAULT_DATABASE_PATH,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one versioned JSON result.")
+    ] = False,
+) -> None:
+    """Reconstruct committed state from Events without repairing or executing anything."""
+    try:
+        service = build_run_replay_service(database)
+        result = asyncio.run(service.replay(RunId.parse(run_id))).summary
+    except Exception as error:
+        _exit_replay_error("replay", error, json_output=json_output)
+    typer.echo(
+        render_json(ReplayCommandOutput(result=result)) if json_output else render_replay(result)
+    )
+    if result.needs_attention:
+        raise typer.Exit(code=1)
+
+
+@run_app.command("check")
+def check_runs(
+    after_run_id: Annotated[
+        str | None, typer.Option("--after-run-id", help="Continue after this Run UUID.")
+    ] = None,
+    limit: Annotated[
+        int, typer.Option("--limit", min=1, max=1_000, help="Maximum Run identities to inspect.")
+    ] = 100,
+    database: Annotated[
+        Path, typer.Option("--database", help="Existing SQLite EventStore path.")
+    ] = DEFAULT_DATABASE_PATH,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one versioned JSON result.")
+    ] = False,
+) -> None:
+    """Inspect an Event-backed page for unfinished Runs and projection anomalies."""
+    try:
+        after = RunId.parse(after_run_id) if after_run_id is not None else None
+        service = build_run_replay_service(database)
+        result = asyncio.run(service.check(after_run_id=after, limit=limit))
+    except Exception as error:
+        _exit_replay_error("check", error, json_output=json_output)
+    typer.echo(
+        render_json(CheckCommandOutput(result=result)) if json_output else render_check(result)
+    )
+    if result.exit_code:
+        raise typer.Exit(code=result.exit_code)
+
+
+def _exit_replay_error(
+    command: Literal["replay", "check"], error: BaseException, *, json_output: bool
+) -> NoReturn:
+    if isinstance(error, EventReplayError):
+        info = replay_error(error.info.code).info
+    elif isinstance(error, ValidationError | ValueError):
+        info = replay_error(ErrorCode.INVALID_INPUT).info
+    else:
+        info = replay_error(ErrorCode.PERSISTENCE_ERROR).info
+    emit_safely(
+        JsonLinesDiagnosticSink(),
+        operation_failure_record(
+            component="cli",
+            operation=command,
+            error=error,
+            error_info=info,
+        ),
+    )
+    output = ReplayCommandErrorOutput(command=command, error=info)
+    typer.echo(render_json(output) if json_output else f"Error: {render_error(info)}")
+    raise typer.Exit(code=2)
 
 
 async def _execute_objective(

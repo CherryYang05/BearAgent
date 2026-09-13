@@ -1,0 +1,16 @@
+{
+  "measured_at": "2026-09-08T14:28:25.199101+00:00",
+  "command": "uv run python scripts/benchmark_event_replay.py",
+  "python": "3.12.13",
+  "platform": "Windows",
+  "machine": "AMD64",
+  "sqlite": "3.50.4",
+  "fixture": "Synthetic v1 model Activity history, no projections; fixture creation excluded from timing. One sample per size; no real Provider or user data.",
+  "limits": {"max_events": 10000, "max_bytes": 16777216, "timeout_ms": 30000},
+  "runs": [
+    {"events": 100, "stored_field_bytes": 31479, "elapsed_seconds": 0.02, "last_sequence": 100, "error_code": null},
+    {"events": 1000, "stored_field_bytes": 316780, "elapsed_seconds": 0.467, "last_sequence": 1000, "error_code": null},
+    {"events": 10000, "stored_field_bytes": 3178781, "elapsed_seconds": 29.998, "last_sequence": null, "error_code": "query_timeout"}
+  ],
+  "interpretation": "The input ceilings do not guarantee completion before the deadline. This model Activity fixture exposes long-history reducer cost. Checkpoint and reducer performance changes require separate design and equivalent-state evidence; neither is implemented by F-0021."
+}

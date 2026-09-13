@@ -22,8 +22,10 @@ from bearagent.adapters.model import (
     OpenAIResponsesProvider,
 )
 from bearagent.adapters.sqlite import SqliteEventStore
+from bearagent.adapters.sqlite.replay import SqliteEventReplaySource
 from bearagent.adapters.tools import build_workspace_tools
 from bearagent.application import AgentLoop, RunQueryService
+from bearagent.application.run_replay import RunReplayService
 from bearagent.configuration import ProviderCatalog, ProviderConfig
 from bearagent.domain.agent import AgentConfig, ModelPricing, RunProfile, RunProfileV2
 from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, ErrorInfo
@@ -396,6 +398,11 @@ async def build_run_query_service(
             ),
         )
         raise safe_error from error
+
+
+def build_run_replay_service(database_path: str | os.PathLike[str]) -> RunReplayService:
+    """Compose a readonly reader; schema validation happens inside its bounded transaction."""
+    return RunReplayService(SqliteEventReplaySource(Path(database_path)))
 
 
 def _is_link_like(path: Path, path_stat: os.stat_result) -> bool:

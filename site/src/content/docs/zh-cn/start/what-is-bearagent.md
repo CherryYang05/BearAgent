@@ -3,6 +3,7 @@ title: BearAgent 要解决什么问题
 description: 从一次本地文件任务看清 Model 和 Runtime 的分工，以及项目当前做到哪里。
 bearStatus: mixed
 sourceRefs:
+  - F-0021
   - architecture/overview
   - roadmap
 ---
@@ -71,8 +72,9 @@ P2 才会引入 Attempt、Receipt、reconcile 和 `UNKNOWN`，根据证据选择
 普通失败的另一种叫法。
 
 :::note[当前成熟度]
-P1 的本地文件任务、查询和真实模型 gate 已完成；P2/P3 尚未实现。文档站可以在本地开发、构建和
-预览，但它不部署 Runtime，也不绑定在线托管平台。准确清单见[当前实现状态](/zh-cn/project/status/)。
+P1 的本地文件任务、查询和真实模型 gate 已完成。P2 的 F-0021 已交付只读状态重建与显式检查，
+恢复执行与 P3 授权/隔离仍是后续工作。文档站可以本地预览和静态发布，它不部署 Runtime。
+准确清单见[当前实现状态](/zh-cn/project/status/)。
 :::
 
 下一步建议先[亲手运行一次](/zh-cn/learn/first-run/)。如果暂时不想配置真实模型，也可以直接阅读
