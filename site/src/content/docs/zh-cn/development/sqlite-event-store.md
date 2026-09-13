@@ -78,7 +78,8 @@ Event 间检查共同停止过期工作。取消协程时先通知工作线程�
 测试。`tests/integration/test_event_replay.py` 用真实双连接与故障 SQL 验证快照、损坏和取消。
 K1-K6 子进程测试新增 replay/check 后，数据库事实、模型调用记录和 workspace 文件保持不变。
 合成 10,000 条模型 Activity 历史触发 30 秒期限；当前没有 Checkpoint，因此长历史可能明确超时。
-本 Feature 已完成实现提交与跨平台验证，证据见[当前状态](/zh-cn/project/status/)。
+沿 CLI、port、快照和 Reducer 完整阅读这条路径，见[只读重建怎样穿过源码](/zh-cn/development/event-replay/)；
+交付证据见[当前状态](/zh-cn/project/status/)。
 
 ## 初始化不只是“如果没有表就建表”
 
@@ -174,5 +175,6 @@ uv run pytest tests/integration/test_sqlite_event_store.py
 uv run pytest tests/security/test_sqlite_event_store.py
 ```
 
-数据库重开后能查询已提交事实，不等于 Runtime 会自动继续未完成 Run。当前没有启动扫描、Checkpoint、
-Attempt 或 `UNKNOWN` 处理。持久化解决“事实没有丢”，恢复还要解决“下一步怎样做才安全”。
+数据库重开后能查询已提交事实，不等于 Runtime 会自动继续未完成 Run。当前已有显式的 `run check`，
+但它不会在启动 Run 时自动执行；Checkpoint、Attempt 和 `UNKNOWN` 处理仍未实现。持久化解决
+“事实没有丢”，恢复还要解决“下一步怎样做才安全”。

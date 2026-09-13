@@ -1,6 +1,6 @@
 ---
 title: 命令行手册：运行、查看与排错
-description: 从源码安装 BearAgent，配置模型服务和 Run profile，运行本地文件任务，并用 inspect/events 核对已经保存的事实。
+description: 从源码安装 BearAgent，配置模型服务和 Run profile，运行本地文件任务，并用 inspect/events、只读 replay/check 核对已经保存的事实。
 bearStatus: mixed
 sourceRefs:
   - F-0020
@@ -38,7 +38,7 @@ bearagent run  ------> outputs/** + SQLite Event
 CLI、SQLite、三种模型协议 adapter、四个 workspace Tool 和 Agent Loop 已经接通。离线 Fake 5/5
 和 2026-08-23 的 DeepSeek V4 suite v1.1.1 真实 5/5 分开验证，构成历史 P1 完成证据。F-0020 已合入 main，
 P1 已收口。F-0021 的只读 replay/check 已实现并通过跨平台 CI；P1 的 `v0.1.0` 不含这些命令，
-合入状态见 [PR #26](https://github.com/CherryYang05/BearAgent/pull/26)。进程中断后可以查询已提交事实，但不会自动恢复 Run。
+已于 2026-09-13 随 [PR #26](https://github.com/CherryYang05/BearAgent/pull/26) 合入 main。进程中断后可以查询已提交事实，但不会自动恢复 Run。
 当前也没有 Approval、sandbox、shell、Web UI 或任意网络 Tool。
 :::
 
@@ -293,9 +293,14 @@ state hash 用于比较重建状态，不是 Event 签名或执行权限。两�
 
 | replay/check 退出码 | 表示什么 |
 |---:|---|
-| 0 | 所检查范围为健康终态，不代表允许恢复 |
+| 0 | 所检查范围均为终态且 projection 一致，或 check 范围为空；failed 终态也可退出 0 |
 | 1 | 有未结束的 Run 或 projection 异常，需要查看 |
 | 2 | 参数、历史、数据库读取或期限失败；有多个结果时取最高严重级别 |
+
+退出码 0 不代表原任务成功、产物质量合格或可以恢复执行。`replay --json` 的成功对象以 `result`
+承载摘要；`check --json` 的 `result` 承载一页，其中的 `items` 可包含单 Run `error_code`。
+命令级失败返回 `error`。脚本应同时检查对象形状、错误项与退出码，不把退出 1 的摘要丢弃。
+完整例子见[中断后怎样读懂检查结果](/zh-cn/learn/replay-and-check/)。
 
 目标恰好是新命令名时，用 `uv run bearagent run -- replay` 或 `uv run bearagent run -- check`。
 
@@ -329,4 +334,5 @@ state hash 用于比较重建状态，不是 Event 签名或执行权限。两�
 - 任务产生的 `outputs/**` 和数据库由用户管理，P1 不提供生命周期清理。
 
 想理解这些限制背后的理由，继续读[P1 的关键架构取舍](/zh-cn/architecture/p1-decisions/)。要修改 CLI
-实现，读[生产 CLI 和查询服务实现导读](/zh-cn/development/run-cli/)。
+实现，读[生产 CLI 和查询服务实现导读](/zh-cn/development/run-cli/)；replay/check 的独立路径见
+[只读重建源码导读](/zh-cn/development/event-replay/)。

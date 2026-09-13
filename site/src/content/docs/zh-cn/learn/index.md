@@ -72,7 +72,8 @@ Artifact。中断后自动继续仍属于 P2，当前边界与验收记录见[�
 2. [一次文件任务的完整链路](/zh-cn/learn/agent-loop-file-task/)：跟完模型—Tool—模型循环；
 3. [状态和预算怎样计算](/zh-cn/learn/runtime-state-and-budgets/)：理解 Event 与 Reducer；
 4. [逐条读懂一次 Run](/zh-cn/learn/run-event-reducer-walkthrough/)：把抽象规则落到事件序列；
-5. [Event 为什么是事实来源](/zh-cn/learn/durable-events/)：分清“能够重开查询”和“能够恢复执行”。
+5. [Event 为什么是事实来源](/zh-cn/learn/durable-events/)：理解事务为什么一起保存事实与 projection；
+6. [中断后怎样读懂检查结果](/zh-cn/learn/replay-and-check/)：用 replay/check 区分重建状态、缓存异常和执行恢复。
 
 ## 第三步：理解安全边界
 
@@ -107,6 +108,12 @@ Artifact。中断后自动继续仍属于 P2，当前边界与验收记录见[�
 2. [一次文件任务的完整链路](/zh-cn/learn/agent-loop-file-task/)；
 3. [一次请求怎样穿过 Runtime](/zh-cn/architecture/runtime-flow/)；
 4. [现在实现到了哪里](/zh-cn/project/status/)。
+
+## 已经会用 P1，从这里进入 P2
+
+先读[检查结果解读](/zh-cn/learn/replay-and-check/)，跟完 projection 丢失与文件已写出的两个例子；
+再读[只读重建源码导读](/zh-cn/development/event-replay/)，核对快照、Reducer 和取消边界。最后回到
+[阶段路线](/zh-cn/project/milestones/)，区分已经合入 main 的 F-0021 与后续恢复目标。
 
 ## 每章怎样读最有效
 

@@ -57,7 +57,8 @@ F-0020 补上配置访问保护、无覆盖初始化和离线检查，已随 PR 
 
 2026-09-09，F-0021 从 P1 的 `v0.1.0` 基线完成收口：只读 replay/check 从 Event 重建状态，
 并检查未结束或异常的 Run。[PR #26](https://github.com/CherryYang05/BearAgent/pull/26) 的实现提交通过 Windows/Linux
-与站点 CI。它们不执行恢复，以下仍是 P2 阶段目标。
+与站点 CI，并于 2026-09-13 合入 main。
+[检查结果解读](/zh-cn/learn/replay-and-check/)给出当前用法；它们不执行恢复，以下仍是 P2 阶段目标。
 
 P2 会把一个逻辑 Activity 和它的实际 Attempt 分开。重试会创建新 Attempt，不会覆盖旧失败。
 Runtime 先判断动作是只读、幂等、可核对还是非幂等，再选择复用、重试、reconcile 或

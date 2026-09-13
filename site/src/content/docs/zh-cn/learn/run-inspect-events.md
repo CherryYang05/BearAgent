@@ -5,6 +5,7 @@ bearStatus: mixed
 sourceRefs:
   - F-0020
   - ADR-0018
+  - F-0021
   - F-0005
   - ADR-0014
   - F-0016
@@ -87,6 +88,9 @@ Event 总量超过可信上限，命令会明确失败，不会把不完整 Arti
 `events` 返回一页不可变事实，并带回 `next_after_sequence` 和 `has_more`。默认 human 输出每条只显示
 sequence、时间、类型和 schema version，不显示 payload。`--json` 是显式完整导出，可能包含用户目标、
 模型文本和 ToolResult，不应当作普通日志公开。
+
+projection 不可用时，F-0021 的 `run replay` 可以独立从 Event 重建状态；不知道 Run ID 时，可显式
+运行 `run check`。具体结果与限制见[中断后怎样读懂检查结果](/zh-cn/learn/replay-and-check/)。
 
 ## 中断后会看到什么
 

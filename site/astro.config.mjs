@@ -59,6 +59,7 @@ export default defineConfig({
             { label: '状态和预算怎样计算', slug: 'learn/runtime-state-and-budgets' },
             { label: '逐条读懂一次 Run', slug: 'learn/run-event-reducer-walkthrough' },
             { label: 'Event 为什么是事实来源', slug: 'learn/durable-events' },
+            { label: '中断后怎样读懂检查结果', slug: 'learn/replay-and-check' },
           ],
         },
         {
@@ -88,6 +89,7 @@ export default defineConfig({
             { label: '领域数据与 Schema', slug: 'development/domain-contracts' },
             { label: 'Reducer 与预算', slug: 'development/run-reducer-and-budgets' },
             { label: 'SQLite EventStore', slug: 'development/sqlite-event-store' },
+            { label: 'Event 只读重建与检查', slug: 'development/event-replay' },
             { label: '模型 Provider adapter', slug: 'development/model-provider' },
             { label: 'Tool 执行边界', slug: 'development/tool-execution-boundary' },
             { label: 'workspace 只读 Tool', slug: 'development/workspace-read-tools' },
