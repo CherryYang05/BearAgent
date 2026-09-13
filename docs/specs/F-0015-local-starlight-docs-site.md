@@ -5,7 +5,7 @@ spec_id: F-0015
 milestone: P1
 owner: CherryYang05
 created: 2026-08-10
-last_updated: 2026-08-27
+last_updated: 2026-09-13
 implemented_in: "PR #3, PR #14, and PR #19"
 related_adrs:
   - ADR-0008
@@ -19,7 +19,8 @@ related_adrs:
 第一次接触 Agent 的读者从头学习。BearAgent 还需要一份能先运行、再理解原理、最后进入代码的中文
 文档站。
 
-`site/` 负责展示这套学习内容。它是独立静态站点，不运行 BearAgent Runtime，也不承担线上部署。
+`site/` 负责展示这套学习内容。它是独立静态站点，不运行 BearAgent Runtime。F-0015 负责内容和构建；后来由
+[F-0020](F-0020-safe-local-startup.md) 接入的受限自动部署不属于本 Feature 的实现范围。
 
 ## 2. 本次交付
 
@@ -113,13 +114,15 @@ lockfile 安装失败、无效 Front Matter、损坏的 Markdown/MDX、Mermaid �
 
 ## 10. 安全与隐私
 
-站点不需要 Provider key、用户数据或 Runtime 数据，不嵌入远程分析、评论或动态后端。仓库没有文档
-部署 workflow，因此不需要部署 token、Pages 权限或服务器凭据。依赖更新必须审查 lockfile 并重建。
+站点构建不需要 Provider key、用户数据或 Runtime 数据，不嵌入远程分析、评论或动态后端。F-0015
+不新增部署凭据；仓库现有的受限发布 workflow 由 F-0020 交付，凭据不进入源码。依赖更新必须审查
+lockfile 并重建。
 
 ## 11. 发布边界
 
 F-0015 的“完成”表示文档内容、导航、本地预览、生产构建、搜索和 CI 已通过，不表示某个公网地址
-已经上线。如果以后需要在线托管，应另开范围，说明目标平台、URL、权限、回退和公开访问验收。
+已经上线。在线托管已由 F-0020 单独交付，目标 URL、权限、回退和公开访问验收按其部署文档维护；
+本次扩充不更改发布流程，也不把本地验证当作线上更新证据。
 
 ## 12. 验收标准
 
@@ -129,7 +132,7 @@ F-0015 的“完成”表示文档内容、导航、本地预览、生产构建�
 - AC-4：首页和侧边栏能到达必要页面；
 - AC-5：Mermaid 图可以构建；
 - AC-6：状态页准确区分已实现和 Roadmap；
-- AC-7：CI 构建站点，但仓库不存在文档自动部署 workflow；
+- AC-7：普通 CI 构建站点；F-0015 不新增自动部署 workflow，后续 F-0020 的发布行为按其独立范围维护；
 - AC-8：Python 检查、测试和工程链接继续通过；
 - AC-9：开发者入口、Feature 文档规则和实现导读与学习路径互链；
 - AC-10：站点与工程文档按完整段落重写，不使用机械术语替换；
@@ -149,7 +152,7 @@ F-0015 的“完成”表示文档内容、导航、本地预览、生产构建�
 - Contract：lockfile 安装和生产构建；
 - Integration：普通 CI 同时运行 Python 检查和站点构建；
 - Recovery：删除静态产物后从源码重建；
-- Security：确认没有部署 workflow、凭据或远程分析；
+- Security：确认本 Feature 不变更部署权限、不引入凭据或远程分析；
 - Governance：运行 `uv run python scripts/check_governance.py`，并运行其单元测试；
 - Manual：本地检查导航、搜索、状态提示、Mermaid、桌面与手机排版。
 
@@ -163,6 +166,22 @@ F-0015 的“完成”表示文档内容、导航、本地预览、生产构建�
 - [x] Deployment boundary docs
 - [x] Generated reference（本轮无公开 contract 变化）
 
+### 2026-09-13：补齐 F-0021 的读者说明
+
+本次仍是 F-0015 文档维护，基于已合入 main 的 F-0021 实现，不增加 Runtime 行为或改变 P2 范围。
+新增 `replay/check` 结果解读和源码导读，解释 projection、分页、failed 终态退出码、state hash、
+期限与取消，并把学习地图、CLI、开发者入口和当前状态连接起来。Spec 保持 implemented，Plan 保持 completed。
+
+| 文档表面 | 本次更新路径或 N/A 原因 |
+|---|---|
+| 权威 docs | 本 Spec 与 `docs/plans/PLAN-F-0015-local-starlight-docs-site.md`；记录扩充范围、验证及 F-0020 已接管部署的事实 |
+| 初学者 | `site/src/content/docs/zh-cn/learn/replay-and-check.md`，以及学习地图、durable-events、run-inspect-events 和 CLI 手册 |
+| 开发者 | `site/src/content/docs/zh-cn/development/event-replay.md`、开发者索引和 SQLite 导读 |
+| 公开当前状态 | `site/src/content/docs/zh-cn/project/status.md`、`project/milestones.md`；核实 F-0021 于 2026-09-13 合入 main，P2 尚未完成 |
+
+导航同步更新 `site/astro.config.mjs`。架构、ADR、Schema 与依赖为 N/A：只解释已有实现，无设计、
+公开契约或依赖变化。验证结果记录在 F-0015 Plan 的本次维护条目中。
+
 ## 15. 尚未决定的问题
 
-F-0015 没有开放问题。在线托管不是本 Feature 的待办事项。
+F-0015 没有开放问题。在线托管由 F-0020 维护，不是本 Feature 的待办事项。

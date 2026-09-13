@@ -41,6 +41,7 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 | 第一次需要填写什么？ | 用 init 生成文件；填写模型 config，再用 doctor --check-config 离线检查 |
 | Tool 能读取本机模型密钥吗？ | F-0020 拒绝默认运行目录和实际配置路径；普通输入仍需由用户判断是否适合发送给模型 |
 | 能查询任务做过什么吗？ | 能，用 `inspect` 看状态，用 `events` 看有序事实 |
+| projection 丢失后还能检查吗？ | 可用 `replay` 从有效 Event 重建，受数量、字节和期限限制；`check` 发现未结束或异常的 Run |
 | 能知道 Run 使用了哪版 Tool/Policy 声明吗？ | 新 Run 可以；`inspect` 显示版本和 SHA-256，legacy Run 明确缺失 |
 | 能用结构化日志定位本机运行失败吗？ | 可以；stderr 提供固定字段诊断，但系统仍只根据 Event 判断 Run 状态 |
 | 程序中断后会自动继续吗？ | 不会；F-0021 提供只读检查，恢复执行尚未实现 |
@@ -64,6 +65,7 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 | F-0017 模型配置与 live gate | config v1、RunProfile v2、三种协议 adapter、RunCreated v3、production selector 与默认关闭的 runner；Fake 5/5 和 DeepSeek V4 live 5/5 分开验证 |
 | F-0018 evidence hardening | ToolSpec/Policy contract fingerprint、RunCreated v4、legacy v1-v3 读取、v2/v3/v4 Tool evidence 一致性、retryable 非授权语义，以及 K1-K6 SQLite/CLI crash suite |
 | F-0019 安全结构化诊断 | post-commit Event envelope、有限 Activity 耗时和错误码；bootstrap/CLI/EventStore ops diagnostics；不复制 Event payload，sink 失败不影响 Run |
+| F-0021 只读重建与检查 | 从完整 Event 重建状态，报告 projection 对照、最后提交边界与安全错误；不执行恢复 |
 | F-0015 文档站 | 中文 Starlight、搜索、Mermaid、六步学习路线、独立 CLI 手册，以及本地开发、构建和预览 |
 | F-0020 本地启动与资料保护 | 保护 Runtime 配置和数据库、拒绝硬链接别名、无覆盖 init、离线配置检查，以及 main push 后的受限静态文档发布 |
 
@@ -78,7 +80,9 @@ F-0021 已于 2026-09-09 完成收口：`run replay` 和 `run check` 在 project
 
 [PR #26](https://github.com/CherryYang05/BearAgent/pull/26) 的实现提交是 `c1a94da`；[同一提交的 CI](https://github.com/CherryYang05/BearAgent/actions/runs/34251928326)
 在 Windows、Ubuntu 各通过 555 个测试，文档站构建成功。Spec 为 implemented、ADR 为 accepted、
-Plan 为 completed。P1 tag 不含这些命令，合入 main 的状态以 PR 为准。10,000 条合成模型历史触发
+Plan 为 completed。2026-09-13 已随 PR #26 合入 main，合并提交为 `28fc873`；P1 tag 不含这些命令。
+使用方法见[检查结果解读](/zh-cn/learn/replay-and-check/)，实现入口见[只读重建源码导读](/zh-cn/development/event-replay/)。
+10,000 条合成模型历史触发
 30 秒期限，长历史性能仍是已知限制；Checkpoint 留待单独评估。
 
 ## P1 完成证据

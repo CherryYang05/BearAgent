@@ -4,7 +4,7 @@ status: completed
 plan_id: PLAN-F-0015
 related_spec: F-0015
 created: 2026-08-10
-last_updated: 2026-08-27
+last_updated: 2026-09-13
 ---
 
 # PLAN-F-0015：建立并重写 Starlight 文档站
@@ -123,3 +123,36 @@ Starlight + Pagefind 构建、全部构建后站内 href、两张 3840×2160 资
 产物 href/src 检查，以及桌面和手机浏览器检查再次通过。F-0015 的 Spec 保持 `implemented`，本 Plan
 保持 `completed`。2026-08-27 的治理优化另通过 Ruff、Pyright、459 tests、107 个 Markdown 文件链接
 检查、12 个 Spec / 11 个 Plan / 15 个 ADR 的治理检查，以及 45 页 Starlight 生产构建。
+
+
+## 2026-09-13 文档维护：把只读重建接入学习与源码路线
+
+- 状态：completed；本次只扩充已有能力说明，Spec 保持 implemented，本 Plan 保持 completed。
+- 基线：`D:/BearAgent-F0015` 的 `codex/F-0015-docs-links` 从干净工作区快进到 main 的 `28fc873`；
+  [PR #26](https://github.com/CherryYang05/BearAgent/pull/26) 已于当日合并，P1 tag 不含 replay/check。
+- 交付：新增 `learn/replay-and-check.md` 与 `development/event-replay.md`，分别讲检查结果与源码调用链；
+  两张纵向 Mermaid 图连接 projection 例子与只读重建路径。手机检查后缩短图中标签，避免换行截断。
+- 同步：侧边栏、学习地图、CLI、Event 入门、SQLite 导读、开发者索引、当前状态及阶段成果互链；
+  澄清 failed 终态也可让检查退出 0，check 空结果仍可能有下一页，state hash 不代表完整 Event 内容，
+  显式检查不会自动恢复。Spec 同时澄清 F-0020 已接管受限部署，避免把早期无部署描述当作现状。
+- 事实验证：以下四组离线测试共 **54 passed**（49.29 秒）；只使用测试数据，没有真实模型请求。
+
+```console
+uv run pytest tests/contract/test_event_replay_contract.py tests/integration/test_event_replay.py tests/integration/test_replay_cli.py tests/recovery/test_crash_observability.py --basetemp=.pytest-tmp-f0015-replay -o cache_dir=.pytest-state-f0015-replay -q
+uv run python scripts/check_governance.py
+uv run python scripts/check_docs.py
+npm run build --prefix=site
+git diff --check
+```
+
+治理检查通过 16 个 Spec、15 个 Plan、20 个 ADR；127 个 Markdown 文件本地链接通过；生产构建生成
+50 页及 Pagefind 索引。额外遍历构建后的可导航 href、静态资源 src 和本地 fragment，确认目标可解析；
+canonical 元数据不作为站内导航检查。构建保留原有的大于 500 kB bundle 提示，未修改依赖或打包方式。
+
+浏览器核对两篇新章节的桌面与 390px 手机布局、浅色/深色主题、Mermaid、侧边栏与搜索。
+没有整页横向溢出，较宽的源码表格与代码块在自身区域滚动；未捕获到控制台 error/warn。
+Pagefind 查询 EventReplaySource 可以找到新源码章节。本轮不重跑全量 Runtime 测试或真实 gate：
+生产代码、Schema、依赖和数据库格式均未修改，已有实现的跨平台 555 测试证据仍属于 F-0021。
+
+本次交付记录本地文档修改与提交，不以此宣称远端 CI 或线上文档已更新。回退只需撤销本次文档提交，
+不涉及数据库、运行配置或用户文件。
