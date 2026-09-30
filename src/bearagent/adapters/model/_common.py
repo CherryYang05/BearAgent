@@ -98,6 +98,10 @@ def connection_failure_evidence(cause: BaseException | None) -> ModelFailureEvid
     for _ in range(8):
         if cause is None:
             break
+        if getattr(cause, "response", None) is not None:
+            # A received HTTP response takes precedence over earlier connection
+            # failures in SDK/transport wrappers.
+            break
         if isinstance(cause, httpx.ConnectError | httpx.ConnectTimeout):
             return ModelFailureEvidence(submission=ModelSubmission.NOT_SUBMITTED, usage_known=True)
         if isinstance(cause, httpx.HTTPError):

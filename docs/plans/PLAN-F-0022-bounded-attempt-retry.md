@@ -137,3 +137,13 @@ MockTransport 回归，修正前均发生 3 次请求，修正后均为 1 次且
 - 四个步骤 completed，Spec implemented、ADR accepted、Plan completed；P2 尚未关闭。
 - PR 尚未合入 main，未触发 main 文档部署。后续收口提交只同步上述状态与文档，最终 PR head 的 CI
   仍需在发布后核对；不能用本次实现提交的成功替代新提交的检查结果。
+
+### 补充检查：HTTP 响应证据不能被更早的连接错误覆盖
+
+SDK 包装的 APIStatusError 若关联实际 HTTP response，即使 cause 中还有旧 ConnectError，
+也不能表示未提交。三种协议的补充测试在修正前均发出 3 次请求，修正后要求 1 次；
+connection_failure_evidence 先拒绝 response 证据，再判断连接失败。没有改变既定 retry 范围。
+补充后的完整离线回归：641 passed / 121.08 秒，命令为
+`uv run pytest --basetemp=.pytest-tmp-f22-evidence-final -o cache_dir=.pytest-state-f22-evidence-final -q`。
+Ruff lint/format、Pyright、治理和 159 个文档链接通过。sdist/wheel 重新构建，隔离安装产物的
+run/inspect/events/replay/check/attempts smoke 再次通过。补充提交的远端门禁以 PR checks 为准。

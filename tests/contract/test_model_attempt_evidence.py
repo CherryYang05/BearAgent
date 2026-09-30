@@ -3,7 +3,9 @@ from collections.abc import AsyncIterator
 
 import httpx
 import pytest
+from anthropic import APIStatusError as AnthropicStatusError
 from anthropic import AsyncAnthropic
+from openai import APIStatusError as OpenAIStatusError
 from openai import AsyncOpenAI
 from tests.agent_loop_fixtures import agent_run_input, run_fingerprint, tool_executor
 from tests.integration.test_attempt_execution import ManualClock
@@ -29,6 +31,7 @@ from bearagent.ports.model import ModelProvider
         ("read_error", 1),
         ("read_after_connect", 1),
         ("write_after_connect", 1),
+        ("status_after_connect", 1),
         ("429", 1),
         ("500", 1),
         ("after_headers", 1),
@@ -62,6 +65,13 @@ def test_real_sdk_transport_evidence_and_total_request_bound(
             raise error_type("PRIVATE-IO-ERROR", request=request) from httpx.ConnectError(
                 "PRIVATE-EARLIER-CONNECT-ERROR", request=request
             )
+        if failure == "status_after_connect":
+            error_type = AnthropicStatusError if protocol == "anthropic" else OpenAIStatusError
+            raise error_type(
+                "PRIVATE-STATUS-ERROR",
+                response=httpx.Response(500, request=request),
+                body=None,
+            ) from httpx.ConnectError("PRIVATE-EARLIER-CONNECT-ERROR", request=request)
         if failure == "after_headers":
             return httpx.Response(
                 200, headers={"content-type": "text/event-stream"}, stream=FailedStream()

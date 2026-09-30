@@ -250,3 +250,7 @@ application/attempt_execution.py，继续复用 ToolExecutor 和 ModelProvider p
 真实 SDK transport 测试预留首次资源加载时间，避免一秒 fixture 干扰提交证据验证；未来 migration
 测试使用版本 3，避免与本次新增版本 2 冲突。新增六个三协议读写错误链回归用例。
 生成 schema 的扩展与旧持久 fixture/hash 的不变性分别验证，不能声称所有新旧参考 schema 字节相同。
+
+同轮又补查了 SDK 包装的响应错误：已经收到 HTTP response 时，异常链中更早的 ConnectError
+也不能成为未提交证据。新增三协议各一例 status-after-connect 回归；本轮共新增九例异常链用例，
+同时保留普通 429/5xx、partial stream 与 headers-after-connect 的停止断言。
