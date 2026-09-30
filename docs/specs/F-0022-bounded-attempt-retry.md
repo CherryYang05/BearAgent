@@ -1,13 +1,13 @@
 ---
 title: "Feature: record every Attempt and bound safe retries"
-status: accepted
+status: implemented
 spec_id: F-0022
 milestone: P2
 change_level: S2
 owner: CherryYang05
 created: 2026-09-13
 last_updated: 2026-09-30
-implemented_in: null
+implemented_in: "PR #29 / commit 40d26a5fb3b5d6fe48eef612d685eba2f70f467d"
 related_adrs: [ADR-0002, ADR-0003, ADR-0009, ADR-0013, ADR-0016, ADR-0020, ADR-0021]
 ---
 
@@ -230,8 +230,8 @@ CLI。升级前停止 writer，并用 SQLite backup API 或关闭连接后的完
 |---|---|
 | 权威 docs | 本 Spec、ADR-0021、PLAN-F-0022、三个索引及 roadmap；已更新 architecture/overview 的状态、预算和版本边界 |
 | 初学者 | 已更新 `learn/recovery-authority-isolation.md`、`learn/runtime-state-and-budgets.md`、`learn/index.md` 和 `guides/cli.md`，用一次只读失败示例解释 Attempt |
-| 开发者 | 已更新 `development/agent-loop.md`、`development/run-reducer-and-budgets.md`、`development/tool-execution-boundary.md`、`development/model-provider.md`、`development/sqlite-event-store.md` 与开发者索引 |
-| 公开状态 | 已更新 `project/status.md` 和 `project/milestones.md`；仅声称进程内安全 retry，仍标明 F-0023/F-0024 未交付；README N/A：保留首次 run/inspect/events 的最短入口；新 profile 与 attempts 的选项由 CLI 手册承接 |
+| 开发者 | 已更新 `development/agent-loop.md`、`development/run-reducer-and-budgets.md`、`development/tool-execution-boundary.md`、`development/model-provider.md`、`development/sqlite-event-store.md` 与开发者索引、architecture/index.md、architecture/runtime-flow.md |
+| 公开状态 | 已更新 `project/status.md` 和 `project/milestones.md`；仅声称进程内安全 retry，仍标明 F-0023/F-0024 未交付；README 已更新能力表和当前 P2 范围；新 profile 与 attempts 的详细选项由 CLI 手册承接 |
 | 生成参考 | 已更新 domain/CLI JSON schema，检查旧格式固定样例；已更新 runtime configuration schema 与完整 v3 profile 示例 |
 
 ## 10. 已接受的关键取舍

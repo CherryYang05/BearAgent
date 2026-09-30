@@ -46,7 +46,8 @@ BearAgent 把模型输出视为执行提议，而不是执行权限。它在 Age
 一层确定性的 Runtime，统一检查请求、执行 Tool、记录 Event、计算状态，并保留模型、Runtime、Tool
 与外部环境之间的执行关系。
 
-当前 P1 保存并展示执行事实。后续 P2 将核对外部动作是否完成，再选择复用、重试或停止；P3 将约束
+P1 已完成执行事实的保存与展示；P2 已增加只读重建和进程内有限重试。后续核对外部动作是否完成，
+再选择复用或停止；P3 将约束
 授权和执行范围。结果核对与故障原因验证是两件事：文件存在可以说明写入结果，却不能单独证明超时原因。
 
 长期目标是让不同诊断、验证与恢复算法在同一个受控 Runtime 中比较。算法可以提出假设与动作，
@@ -152,9 +153,9 @@ Model 提出 ToolRequest
 
 | 当前可用 | 设计方向 |
 |---|---|
-| `init/doctor/run/inspect/events` CLI | 进程中断后的安全 resume 与恢复决策 |
+| `init/doctor/run/inspect/events/replay/check/attempts` CLI | 进程中断后的安全 resume 与恢复决策 |
 | Responses、Chat Completions、Anthropic Messages 三种显式协议 | 按 URL 猜协议或失败后自动 fallback（不计划隐式提供） |
-| SQLite Event、projection 与重开查询 | Attempt、Receipt、reconcile 与 `UNKNOWN` |
+| SQLite Event、projection、Attempt 与进程内有限重试 | Receipt、reconcile、重启续跑与 `UNKNOWN` |
 | workspace list/read/search 与 `outputs/**` 原子写入 | 受控 sandbox shell/code 与联网 Tool/MCP；不会回退到 host shell |
 | 固定 allowlist Policy 与五类 hard budget | Grant、用户 Approval 与隔离 runner |
 | Fake 5/5 与一组脱敏真实模型 5/5 证据 | Web UI、Memory、多 Agent 与分布式执行 |

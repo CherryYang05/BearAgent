@@ -116,7 +116,7 @@ F-0020 追加保护 Runtime 配置和数据库、无覆盖 `init`、离线 `doct
 `run replay` 从 Event 重建状态，`run check` 显式检查未结束或异常的 Run；不创建恢复决定或继续执行。
 Spec 为 implemented、Plan 为 completed。[PR #26](https://github.com/CherryYang05/BearAgent/pull/26) 的实现提交 `c1a94da`
 通过 [Windows/Linux 与站点 CI](https://github.com/CherryYang05/BearAgent/actions/runs/34251928326)，合入 main 的状态以 PR 为准。
-10,000 条合成模型历史触发 30 秒期限，Checkpoint 延后单独评估；F-0022 已接通当前进程内的有限 Attempt/retry，默认只尝试一次；F-0023/F-0024 继续逐个接受。
+10,000 条合成模型历史触发 30 秒期限，Checkpoint 延后单独评估；F-0022 已实现当前进程内的有限 Attempt/retry，默认只尝试一次；F-0023/F-0024 继续逐个接受。
 写入核对、Receipt、正式 UNKNOWN 与重启执行控制尚未交付，P2 尚未关闭。
 
 ### 5.1 阶段目标
@@ -376,7 +376,7 @@ F-0015 的文档内容、本地站点、构建和阅读体验已经实现；部�
 ### P2（F-0021 已实现；其余为计划）
 
 1. [F-0021：Event-only 状态重建与显式启动检查](../specs/F-0021-event-replay-startup-check.md) — implemented；PR #26，跨平台 CI 通过；Checkpoint 按重放成本后续评估
-2. [F-0022：Attempt、失败分类、恢复语义和有界 retry](../specs/F-0022-bounded-attempt-retry.md) — accepted；默认单次尝试，按 active Plan 实现
+2. [F-0022：Attempt、失败分类、恢复语义和有界 retry](../specs/F-0022-bounded-attempt-retry.md) — implemented；默认单次尝试，最多 3 次，PR #29 的实现提交跨平台 CI 通过
 3. F-0023：幂等键、Receipt、reconcile 和 `UNKNOWN` 处置
 4. F-0024：pause/resume/cancel/retry 命令、kill-point suite 与恢复策略比较
 

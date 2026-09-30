@@ -135,3 +135,7 @@ SQLite migration 2 原子增加派生缓存，旧 Event/hash 继续可读。重�
 F-0023 核对与 UNKNOWN、F-0024 控制命令尚未交付，P2 尚未关闭。实现与验证记录见
 [PLAN-F-0022](https://github.com/CherryYang05/BearAgent/blob/main/docs/plans/PLAN-F-0022-bounded-attempt-retry.md)。
 该分支的实现状态不表示已合入 main 或已部署线上文档。
+
+F-0022 的实现提交 `40d26a5` 已通过 [Windows/Linux 与站点 CI](https://github.com/CherryYang05/BearAgent/actions/runs/36720358377)：
+两平台各 638 项测试。Spec implemented、Plan completed；[PR #29](https://github.com/CherryYang05/BearAgent/pull/29)
+已开放审查，main 合并与线上部署状态须分别核对。

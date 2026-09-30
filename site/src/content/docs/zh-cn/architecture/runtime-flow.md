@@ -3,6 +3,8 @@ title: 一次请求怎样穿过 BearAgent
 description: 从用户命令到 Model、Tool、EventStore 和最终结果，说明完整 Runtime 路径以及每段当前是否已实现。
 bearStatus: mixed
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - architecture/overview
   - roadmap
   - F-0002
@@ -22,7 +24,7 @@ sourceRefs:
 bearagent run "比较 docs 中的架构说明，把结论写到 outputs/report.md"
 ```
 
-命令需要有效的 config v1 和 RunProfile v2；完整准备步骤见
+命令需要有效的 config v1 和 RunProfile v2/v3；完整准备步骤见
 [P1 命令行完整使用手册](/zh-cn/guides/cli/)。这里聚焦请求怎样穿过各模块，以及每个边界为什么存在。
 
 <figure class="chapter-illustration">
@@ -42,6 +44,13 @@ bearagent run "比较 docs 中的架构说明，把结论写到 outputs/report.m
 :::
 
 ## 总路径先看一遍
+
+下面先画逻辑 Activity。F-0022 在每次实际调用前后还保存 AttemptRequested、AttemptStarted 和
+AttemptSucceeded/Failed；失败后保存恢复决定。只读安全重试仍走同一个 ToolExecutor，每次重查
+prepare、Policy 和预算。默认只有一次尝试，写入不明停止 Run，重启后查询不自动续跑。
+精确时序见[Attempt 与有限重试](/zh-cn/development/bounded-attempt-retry/)。
+
+图中的 Receipt、目标核对、正式 UNKNOWN 与重启恢复仍是后续设计，不能理解为当前实现。
 
 ```mermaid
 sequenceDiagram

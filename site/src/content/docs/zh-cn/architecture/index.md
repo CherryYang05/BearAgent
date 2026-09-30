@@ -3,6 +3,8 @@ title: Runtime 各部分怎样协作
 description: 从一次文件任务理解核心规则、port、adapter 和外部系统之间的边界。
 bearStatus: mixed
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - architecture/overview
   - ADR-0001
   - ADR-0002
@@ -24,7 +26,8 @@ sourceRefs:
 当前已实现领域类型、Run/Activity 状态、Reducer、预算检查、SQLite EventStore、三种显式模型协议
 adapter、Registry、固定 Policy、workspace 读写、Artifact、ContextBuilder 和 application Agent Loop。
 `run/inspect/events` 已接通 catalog/profile 与 production composition，DeepSeek V4 suite v1.1.1
-真实 gate 已通过 5/5；Attempt 与安全恢复属于 P2，用户审批和隔离环境属于 P3。
+真实 gate 已通过 5/5。F-0021 的只读重建与 F-0022 的进程内 Attempt/retry 已实现；
+写入核对和重启续跑仍待 P2 后续交付，用户审批和隔离环境属于 P3。
 :::
 
 ```mermaid

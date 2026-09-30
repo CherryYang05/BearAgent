@@ -1,6 +1,6 @@
 ---
 title: "Plan: inspectable Attempts and bounded safe retry"
-status: active
+status: completed
 plan_id: PLAN-F-0022
 related_spec: F-0022
 created: 2026-09-13
@@ -30,7 +30,7 @@ last_updated: 2026-09-30
 
 ## 第 1 步：同一个 Activity 的两次尝试能保存、查询和重建
 
-- 状态：实现已接通，验证结果见本页末尾。
+- 状态：completed；验证结果见本页末尾。
 - 交付：构造一个只读失败后成功的 v5 Run，在内存与 SQLite 保存两个 Attempt，并得到相同状态、
   两次预算、一份最终结果与可查询决定。暂不连接生产外部调用。
 - 代码落点：domain 类型和 Event parser、runtime Reducer/预算/replay、store adapter/migration；
@@ -44,7 +44,7 @@ last_updated: 2026-09-30
 
 ## 第 2 步：真实 ToolExecutor 在安全证据下重试，并在写入结果不明时停止
 
-- 状态：实现已接通，验证结果见本页末尾。
+- 状态：completed；验证结果见本页末尾。
 - 交付：Fake 模型要求读取，真实 Executor 首次超时、第二次成功；模型只接收一次最终结果。写入
   后报错则停止整个 Run，后续模型或同一响应中排队的 Tool 均不执行。
 - 代码落点：runtime 纯恢复规则、ToolExecutor 执行前记录边界、application AgentLoop/Context。
@@ -57,7 +57,7 @@ last_updated: 2026-09-30
 
 ## 第 3 步：三种模型 adapter 只在明确未提交时重试，CLI 能配置和查看
 
-- 状态：实现已接通，验证结果见本页末尾。
+- 状态：completed；验证结果见本页末尾。
 - 交付：已知未提交的短暂失败可有限重发同一 ModelRequest，未知用量或部分流停止；RunProfile v3、
   bootstrap、human/JSON attempts 查询和帮助接通。默认 max_attempts=1。
 - 代码落点：模型内部失败证据与三协议 adapter、AgentLoop、RunProfile/加载校验、application 查询、CLI。
@@ -71,7 +71,7 @@ last_updated: 2026-09-30
 
 ## 第 4 步：验证新增中断边界并同步读者文档
 
-- 状态：实现已接通，验证结果见本页末尾。
+- 状态：completed；验证结果见本页末尾。
 - 交付：失败 Event 已保存、决定已保存、下一 Started 已保存等边界强制退出进程，再用新进程只读
   replay/check/attempts；最后状态与副作用次数一致，不自动续跑。
 - 重点证据：故障位置、输入 hash、真值、规则版本、预期/实际调用次数和额外成本；真值不传入规则。
@@ -90,7 +90,7 @@ last_updated: 2026-09-30
 | Timeout / cancel / limits | 全部尝试共用 deadline；等待可取消；计数不重置 | Attempt cap、调用预算、deadline、取消、前协程 cleanup 通过；共享五类预算检查继续复用 |
 | Migration / rollback | 旧历史/hash 不变；migration 原子性；新库拒绝旧 writer | 旧 hash/历史契约与迁移回滚通过；旧 writer 的 version 1 guard 拒绝 version 2 ledger |
 | Logs / trace | 固定 envelope，不新增 payload 或路径；无需完整 Trace 系统 | 既有诊断安全 suite 与新查询 canary 通过，日志字段白名单未扩大 |
-| Documentation | Spec 所列四面更新；不能把草案写成已实现或声称 P2 关闭 | 四面路径已更新，明确进程内 retry；P2 仍进行中，发布/CI 待核对 |
+| Documentation | Spec 所列四面更新；不能把草案写成已实现或声称 P2 关闭 | 四面路径已更新，明确进程内 retry；P2 仍进行中，PR #29 与实现提交 CI 已核对 |
 
 ## 已运行的设计基线检查
 
@@ -128,4 +128,12 @@ MockTransport 回归，修正前均发生 3 次请求，修正后均为 1 次且
 - `npm run build`：49 页 Starlight 成功。Windows 缓存写入权限导致首次失败，授权环境重跑成功。
 - 浏览器实测新导读在 1280px/390px 浅色与深色下可读，窄屏无页面横向溢出，代码块独立横向滚动。
 
-远端 Windows/Linux CI 尚待 PR 触发，步骤 4 与本 Plan 保持 active，完成后再关闭。
+远端实现提交验证：
+
+- [PR #29](https://github.com/CherryYang05/BearAgent/pull/29) 为 OPEN、非 Draft。
+- 实现提交 `40d26a5fb3b5d6fe48eef612d685eba2f70f467d` 的
+  [CI 36720358377](https://github.com/CherryYang05/BearAgent/actions/runs/36720358377) 全部成功：
+  Ubuntu 638 passed / 48.39 秒，Windows 638 passed / 97.35 秒，Starlight 构建通过。
+- 四个步骤 completed，Spec implemented、ADR accepted、Plan completed；P2 尚未关闭。
+- PR 尚未合入 main，未触发 main 文档部署。后续收口提交只同步上述状态与文档，最终 PR head 的 CI
+  仍需在发布后核对；不能用本次实现提交的成功替代新提交的检查结果。
