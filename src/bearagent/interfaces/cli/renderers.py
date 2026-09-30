@@ -5,12 +5,43 @@ import json
 from pydantic import BaseModel
 
 from bearagent.domain.agent import RunResult
+from bearagent.domain.attempt_queries import AttemptPage
 from bearagent.domain.errors import ErrorInfo
 from bearagent.domain.queries import EventPage, RunInspection
 from bearagent.domain.replay import ReplaySummary, RunCheckPage
 
 MAX_HUMAN_FINAL_TEXT_CHARS = 50_000
 COST_NOTE = "Cost: local accounting only; unpriced runs do not measure or cap Provider billing."
+
+
+def render_attempts(page: AttemptPage) -> str:
+    lines = [f"Run: {page.run_id}", f"Projection: {page.projection.value}"]
+    if page.recording == "legacy_not_recorded":
+        lines.append("Legacy history did not record Attempts.")
+    for attempt in page.attempts:
+        lines.append(
+            f"Activity {attempt.activity_id}; Attempt #{attempt.number} {attempt.attempt_id}: "
+            f"{attempt.status.value}; reached_adapter={attempt.reached_adapter}"
+        )
+        if attempt.failure_class is not None:
+            lines.append(f"Failure: {attempt.failure_class.value}")
+        known = (
+            "unknown"
+            if attempt.model_evidence and not attempt.model_evidence.usage_known
+            else "known"
+        )
+        lines.append(
+            f"Recorded usage ({known}): input={attempt.input_tokens}, "
+            f"output={attempt.output_tokens}, cost_microusd={attempt.cost_microusd}"
+        )
+        lines.extend(
+            f"Decision: {d.action.value} / {d.reason.value}; delay_ms={d.delay_ms}"
+            for d in attempt.decisions
+        )
+    if page.has_more:
+        lines.append(f"Continue with --after-sequence {page.next_after_sequence}")
+    lines.append("Read-only inspection. No Attempt was resumed or retried.")
+    return "\n".join(lines)
 
 
 def render_replay(result: ReplaySummary) -> str:

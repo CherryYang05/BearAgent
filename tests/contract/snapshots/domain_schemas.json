@@ -1,4 +1,68 @@
 {
+  "ActivityEvidence": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "EventId": {
+        "description": "Identify one immutable persisted fact.",
+        "format": "uuid4",
+        "title": "EventId",
+        "type": "string"
+      },
+      "RecoverySemantics": {
+        "enum": [
+          "read_only",
+          "idempotent",
+          "reconcilable",
+          "non_idempotent"
+        ],
+        "title": "RecoverySemantics",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "request_event_id": {
+        "$ref": "#/$defs/EventId"
+      },
+      "request_sha256": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Request Sha256",
+        "type": "string"
+      },
+      "contract_sha256": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Contract Sha256",
+        "type": "string"
+      },
+      "semantics": {
+        "$ref": "#/$defs/RecoverySemantics"
+      },
+      "timeout_ms": {
+        "maximum": 600000,
+        "minimum": 1,
+        "title": "Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "activity_id",
+      "request_event_id",
+      "request_sha256",
+      "contract_sha256",
+      "semantics",
+      "timeout_ms"
+    ],
+    "title": "ActivityEvidence",
+    "type": "object"
+  },
   "ActivityId": {
     "description": "Identify one model or tool operation.",
     "format": "uuid4",
@@ -78,7 +142,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -521,6 +586,1600 @@
     "format": "uuid4",
     "title": "ArtifactId",
     "type": "string"
+  },
+  "AttemptFailedPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "AttemptId": {
+        "description": "Identify one attempt to execute a logical Activity.",
+        "format": "uuid4",
+        "title": "AttemptId",
+        "type": "string"
+      },
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "run_not_found",
+          "query_limit_exceeded",
+          "query_timeout",
+          "budget_exhausted",
+          "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
+          "tool_error",
+          "workspace_path_denied",
+          "workspace_not_found",
+          "workspace_wrong_type",
+          "workspace_not_text",
+          "workspace_limit_exceeded",
+          "workspace_access_failed",
+          "persistence_error",
+          "internal_error",
+          "effect_indeterminate"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorInfo": {
+        "additionalProperties": false,
+        "description": "Serializable error data that is safe to expose and persist.",
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/ErrorCategory"
+          },
+          "code": {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/$defs/SafeDetailValue"
+            },
+            "maxProperties": 32,
+            "title": "Details",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "ErrorInfo",
+        "type": "object"
+      },
+      "FailureClass": {
+        "enum": [
+          "invalid_input",
+          "transient_infrastructure",
+          "permanent_failure",
+          "permission_denied",
+          "effect_indeterminate"
+        ],
+        "title": "FailureClass",
+        "type": "string"
+      },
+      "ModelFailureEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "submission": {
+            "$ref": "#/$defs/ModelSubmission",
+            "default": "unknown"
+          },
+          "usage_known": {
+            "default": false,
+            "title": "Usage Known",
+            "type": "boolean"
+          }
+        },
+        "title": "ModelFailureEvidence",
+        "type": "object"
+      },
+      "ModelSubmission": {
+        "enum": [
+          "not_submitted",
+          "unknown"
+        ],
+        "title": "ModelSubmission",
+        "type": "string"
+      },
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "attempt_id": {
+        "$ref": "#/$defs/AttemptId"
+      },
+      "outcome_sha256": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Outcome Sha256",
+        "type": "string"
+      },
+      "input_tokens": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Input Tokens",
+        "type": "integer"
+      },
+      "output_tokens": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Output Tokens",
+        "type": "integer"
+      },
+      "cost_microusd": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Cost Microusd",
+        "type": "integer"
+      },
+      "error": {
+        "$ref": "#/$defs/ErrorInfo"
+      },
+      "failure_class": {
+        "$ref": "#/$defs/FailureClass"
+      },
+      "reached_adapter": {
+        "title": "Reached Adapter",
+        "type": "boolean"
+      },
+      "model_evidence": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ModelFailureEvidence"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "activity_id",
+      "attempt_id",
+      "outcome_sha256",
+      "error",
+      "failure_class",
+      "reached_adapter"
+    ],
+    "title": "AttemptFailedPayload",
+    "type": "object"
+  },
+  "AttemptId": {
+    "description": "Identify one attempt to execute a logical Activity.",
+    "format": "uuid4",
+    "title": "AttemptId",
+    "type": "string"
+  },
+  "AttemptPage": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "AttemptId": {
+        "description": "Identify one attempt to execute a logical Activity.",
+        "format": "uuid4",
+        "title": "AttemptId",
+        "type": "string"
+      },
+      "AttemptStatus": {
+        "enum": [
+          "requested",
+          "started",
+          "succeeded",
+          "failed"
+        ],
+        "title": "AttemptStatus",
+        "type": "string"
+      },
+      "AttemptSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "attempt_id": {
+            "$ref": "#/$defs/AttemptId"
+          },
+          "number": {
+            "maximum": 3,
+            "minimum": 1,
+            "title": "Number",
+            "type": "integer"
+          },
+          "requested_sequence": {
+            "minimum": 1,
+            "title": "Requested Sequence",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/$defs/AttemptStatus"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "deadline": {
+            "format": "date-time",
+            "title": "Deadline",
+            "type": "string"
+          },
+          "reached_adapter": {
+            "title": "Reached Adapter",
+            "type": "boolean"
+          },
+          "failure_class": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/FailureClass"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model_evidence": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ModelFailureEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "input_tokens": {
+            "minimum": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "minimum": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "cost_microusd": {
+            "minimum": 0,
+            "title": "Cost Microusd",
+            "type": "integer"
+          },
+          "decisions": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/RecoveryDecision"
+            },
+            "title": "Decisions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "activity_id",
+          "attempt_id",
+          "number",
+          "requested_sequence",
+          "status",
+          "requested_at",
+          "started_at",
+          "completed_at",
+          "deadline",
+          "reached_adapter",
+          "failure_class",
+          "error_code",
+          "model_evidence",
+          "input_tokens",
+          "output_tokens",
+          "cost_microusd"
+        ],
+        "title": "AttemptSummary",
+        "type": "object"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "run_not_found",
+          "query_limit_exceeded",
+          "query_timeout",
+          "budget_exhausted",
+          "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
+          "tool_error",
+          "workspace_path_denied",
+          "workspace_not_found",
+          "workspace_wrong_type",
+          "workspace_not_text",
+          "workspace_limit_exceeded",
+          "workspace_access_failed",
+          "persistence_error",
+          "internal_error",
+          "effect_indeterminate"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "EventId": {
+        "description": "Identify one immutable persisted fact.",
+        "format": "uuid4",
+        "title": "EventId",
+        "type": "string"
+      },
+      "FailureClass": {
+        "enum": [
+          "invalid_input",
+          "transient_infrastructure",
+          "permanent_failure",
+          "permission_denied",
+          "effect_indeterminate"
+        ],
+        "title": "FailureClass",
+        "type": "string"
+      },
+      "ModelFailureEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "submission": {
+            "$ref": "#/$defs/ModelSubmission",
+            "default": "unknown"
+          },
+          "usage_known": {
+            "default": false,
+            "title": "Usage Known",
+            "type": "boolean"
+          }
+        },
+        "title": "ModelFailureEvidence",
+        "type": "object"
+      },
+      "ModelSubmission": {
+        "enum": [
+          "not_submitted",
+          "unknown"
+        ],
+        "title": "ModelSubmission",
+        "type": "string"
+      },
+      "ProjectionComparison": {
+        "enum": [
+          "matched",
+          "missing",
+          "mismatch",
+          "unreadable"
+        ],
+        "title": "ProjectionComparison",
+        "type": "string"
+      },
+      "RecoveryAction": {
+        "enum": [
+          "retry",
+          "return_to_model",
+          "stop_run"
+        ],
+        "title": "RecoveryAction",
+        "type": "string"
+      },
+      "RecoveryDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "attempt_id": {
+            "$ref": "#/$defs/AttemptId"
+          },
+          "failure_event_id": {
+            "$ref": "#/$defs/EventId"
+          },
+          "based_on_sequence": {
+            "minimum": 1,
+            "title": "Based On Sequence",
+            "type": "integer"
+          },
+          "policy_version": {
+            "const": "bounded-retry-v1",
+            "default": "bounded-retry-v1",
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "contract_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Contract Sha256",
+            "type": "string"
+          },
+          "action": {
+            "$ref": "#/$defs/RecoveryAction"
+          },
+          "reason": {
+            "$ref": "#/$defs/RecoveryReason"
+          },
+          "delay_ms": {
+            "default": 0,
+            "maximum": 5000,
+            "minimum": 0,
+            "title": "Delay Ms",
+            "type": "integer"
+          },
+          "supersedes_decision_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/EventId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "event_id": {
+            "$ref": "#/$defs/EventId"
+          },
+          "sequence": {
+            "minimum": 1,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "activity_id",
+          "attempt_id",
+          "failure_event_id",
+          "based_on_sequence",
+          "contract_sha256",
+          "action",
+          "reason",
+          "event_id",
+          "sequence",
+          "occurred_at"
+        ],
+        "title": "RecoveryDecision",
+        "type": "object"
+      },
+      "RecoveryReason": {
+        "enum": [
+          "safe_transient",
+          "attempts_exhausted",
+          "deadline_exhausted",
+          "budget_exhausted",
+          "effect_indeterminate",
+          "model_submission_unknown",
+          "non_retryable",
+          "contract_changed"
+        ],
+        "title": "RecoveryReason",
+        "type": "string"
+      },
+      "RunId": {
+        "description": "Identify one user-request execution.",
+        "format": "uuid4",
+        "title": "RunId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "run_id": {
+        "$ref": "#/$defs/RunId"
+      },
+      "recording": {
+        "enum": [
+          "recorded",
+          "legacy_not_recorded"
+        ],
+        "title": "Recording",
+        "type": "string"
+      },
+      "last_sequence": {
+        "minimum": 1,
+        "title": "Last Sequence",
+        "type": "integer"
+      },
+      "projection": {
+        "$ref": "#/$defs/ProjectionComparison"
+      },
+      "after_sequence": {
+        "minimum": 0,
+        "title": "After Sequence",
+        "type": "integer"
+      },
+      "limit": {
+        "maximum": 1000,
+        "minimum": 1,
+        "title": "Limit",
+        "type": "integer"
+      },
+      "attempts": {
+        "items": {
+          "$ref": "#/$defs/AttemptSummary"
+        },
+        "maxItems": 1000,
+        "title": "Attempts",
+        "type": "array"
+      },
+      "next_after_sequence": {
+        "minimum": 0,
+        "title": "Next After Sequence",
+        "type": "integer"
+      },
+      "has_more": {
+        "title": "Has More",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "run_id",
+      "recording",
+      "last_sequence",
+      "projection",
+      "after_sequence",
+      "limit",
+      "attempts",
+      "next_after_sequence",
+      "has_more"
+    ],
+    "title": "AttemptPage",
+    "type": "object"
+  },
+  "AttemptRequestedPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "AttemptId": {
+        "description": "Identify one attempt to execute a logical Activity.",
+        "format": "uuid4",
+        "title": "AttemptId",
+        "type": "string"
+      },
+      "EventId": {
+        "description": "Identify one immutable persisted fact.",
+        "format": "uuid4",
+        "title": "EventId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "attempt_id": {
+        "$ref": "#/$defs/AttemptId"
+      },
+      "number": {
+        "maximum": 3,
+        "minimum": 1,
+        "title": "Number",
+        "type": "integer"
+      },
+      "request_event_id": {
+        "$ref": "#/$defs/EventId"
+      },
+      "deadline": {
+        "format": "date-time",
+        "title": "Deadline",
+        "type": "string"
+      },
+      "prior_decision_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/EventId"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "activity_id",
+      "attempt_id",
+      "number",
+      "request_event_id",
+      "deadline"
+    ],
+    "title": "AttemptRequestedPayload",
+    "type": "object"
+  },
+  "AttemptStartedPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "AttemptId": {
+        "description": "Identify one attempt to execute a logical Activity.",
+        "format": "uuid4",
+        "title": "AttemptId",
+        "type": "string"
+      },
+      "JsonValue": {},
+      "PolicyDecision": {
+        "additionalProperties": false,
+        "description": "A safe Policy result that contains no request argument copy.",
+        "properties": {
+          "outcome": {
+            "$ref": "#/$defs/PolicyOutcome"
+          },
+          "reason": {
+            "$ref": "#/$defs/PolicyReason"
+          }
+        },
+        "required": [
+          "outcome",
+          "reason"
+        ],
+        "title": "PolicyDecision",
+        "type": "object"
+      },
+      "PolicyOutcome": {
+        "description": "P1 Policy outcomes.",
+        "enum": [
+          "allow",
+          "deny"
+        ],
+        "title": "PolicyOutcome",
+        "type": "string"
+      },
+      "PolicyReason": {
+        "description": "Stable reasons for the P1 fixed Policy decision.",
+        "enum": [
+          "allowed",
+          "tool_not_allowed",
+          "side_effect_denied"
+        ],
+        "title": "PolicyReason",
+        "type": "string"
+      },
+      "PreparedToolRequest": {
+        "additionalProperties": false,
+        "description": "Tool request after pure, Tool-specific validation and normalization.",
+        "properties": {
+          "tool_call_id": {
+            "$ref": "#/$defs/ToolCallId"
+          },
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "arguments": {
+            "additionalProperties": {
+              "$ref": "#/$defs/JsonValue"
+            },
+            "title": "Arguments",
+            "type": "object"
+          }
+        },
+        "required": [
+          "tool_call_id",
+          "name"
+        ],
+        "title": "PreparedToolRequest",
+        "type": "object"
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "attempt_id": {
+        "$ref": "#/$defs/AttemptId"
+      },
+      "prepared": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/PreparedToolRequest"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "policy": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/PolicyDecision"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "activity_id",
+      "attempt_id"
+    ],
+    "title": "AttemptStartedPayload",
+    "type": "object"
+  },
+  "AttemptState": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "AttemptId": {
+        "description": "Identify one attempt to execute a logical Activity.",
+        "format": "uuid4",
+        "title": "AttemptId",
+        "type": "string"
+      },
+      "AttemptStatus": {
+        "enum": [
+          "requested",
+          "started",
+          "succeeded",
+          "failed"
+        ],
+        "title": "AttemptStatus",
+        "type": "string"
+      },
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "run_not_found",
+          "query_limit_exceeded",
+          "query_timeout",
+          "budget_exhausted",
+          "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
+          "tool_error",
+          "workspace_path_denied",
+          "workspace_not_found",
+          "workspace_wrong_type",
+          "workspace_not_text",
+          "workspace_limit_exceeded",
+          "workspace_access_failed",
+          "persistence_error",
+          "internal_error",
+          "effect_indeterminate"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorInfo": {
+        "additionalProperties": false,
+        "description": "Serializable error data that is safe to expose and persist.",
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/ErrorCategory"
+          },
+          "code": {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/$defs/SafeDetailValue"
+            },
+            "maxProperties": 32,
+            "title": "Details",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "ErrorInfo",
+        "type": "object"
+      },
+      "EventId": {
+        "description": "Identify one immutable persisted fact.",
+        "format": "uuid4",
+        "title": "EventId",
+        "type": "string"
+      },
+      "FailureClass": {
+        "enum": [
+          "invalid_input",
+          "transient_infrastructure",
+          "permanent_failure",
+          "permission_denied",
+          "effect_indeterminate"
+        ],
+        "title": "FailureClass",
+        "type": "string"
+      },
+      "ModelFailureEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "submission": {
+            "$ref": "#/$defs/ModelSubmission",
+            "default": "unknown"
+          },
+          "usage_known": {
+            "default": false,
+            "title": "Usage Known",
+            "type": "boolean"
+          }
+        },
+        "title": "ModelFailureEvidence",
+        "type": "object"
+      },
+      "ModelSubmission": {
+        "enum": [
+          "not_submitted",
+          "unknown"
+        ],
+        "title": "ModelSubmission",
+        "type": "string"
+      },
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "attempt_id": {
+        "$ref": "#/$defs/AttemptId"
+      },
+      "number": {
+        "maximum": 3,
+        "minimum": 1,
+        "title": "Number",
+        "type": "integer"
+      },
+      "request_event_id": {
+        "$ref": "#/$defs/EventId"
+      },
+      "deadline": {
+        "format": "date-time",
+        "title": "Deadline",
+        "type": "string"
+      },
+      "prior_decision_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/EventId"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "requested_sequence": {
+        "minimum": 1,
+        "title": "Requested Sequence",
+        "type": "integer"
+      },
+      "requested_at": {
+        "format": "date-time",
+        "title": "Requested At",
+        "type": "string"
+      },
+      "status": {
+        "$ref": "#/$defs/AttemptStatus",
+        "default": "requested"
+      },
+      "started_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Started At"
+      },
+      "prepared_sha256": {
+        "anyOf": [
+          {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Prepared Sha256"
+      },
+      "terminal_event_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/EventId"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "completed_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Completed At"
+      },
+      "outcome_sha256": {
+        "anyOf": [
+          {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Outcome Sha256"
+      },
+      "error": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ErrorInfo"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "failure_class": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/FailureClass"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "reached_adapter": {
+        "default": false,
+        "title": "Reached Adapter",
+        "type": "boolean"
+      },
+      "model_evidence": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ModelFailureEvidence"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "input_tokens": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Input Tokens",
+        "type": "integer"
+      },
+      "output_tokens": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Output Tokens",
+        "type": "integer"
+      },
+      "cost_microusd": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Cost Microusd",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "activity_id",
+      "attempt_id",
+      "number",
+      "request_event_id",
+      "deadline",
+      "requested_sequence",
+      "requested_at"
+    ],
+    "title": "AttemptState",
+    "type": "object"
+  },
+  "AttemptSucceededPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "AttemptId": {
+        "description": "Identify one attempt to execute a logical Activity.",
+        "format": "uuid4",
+        "title": "AttemptId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "attempt_id": {
+        "$ref": "#/$defs/AttemptId"
+      },
+      "outcome_sha256": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Outcome Sha256",
+        "type": "string"
+      },
+      "input_tokens": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Input Tokens",
+        "type": "integer"
+      },
+      "output_tokens": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Output Tokens",
+        "type": "integer"
+      },
+      "cost_microusd": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Cost Microusd",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "activity_id",
+      "attempt_id",
+      "outcome_sha256"
+    ],
+    "title": "AttemptSucceededPayload",
+    "type": "object"
+  },
+  "AttemptSummary": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "AttemptId": {
+        "description": "Identify one attempt to execute a logical Activity.",
+        "format": "uuid4",
+        "title": "AttemptId",
+        "type": "string"
+      },
+      "AttemptStatus": {
+        "enum": [
+          "requested",
+          "started",
+          "succeeded",
+          "failed"
+        ],
+        "title": "AttemptStatus",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "run_not_found",
+          "query_limit_exceeded",
+          "query_timeout",
+          "budget_exhausted",
+          "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
+          "tool_error",
+          "workspace_path_denied",
+          "workspace_not_found",
+          "workspace_wrong_type",
+          "workspace_not_text",
+          "workspace_limit_exceeded",
+          "workspace_access_failed",
+          "persistence_error",
+          "internal_error",
+          "effect_indeterminate"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "EventId": {
+        "description": "Identify one immutable persisted fact.",
+        "format": "uuid4",
+        "title": "EventId",
+        "type": "string"
+      },
+      "FailureClass": {
+        "enum": [
+          "invalid_input",
+          "transient_infrastructure",
+          "permanent_failure",
+          "permission_denied",
+          "effect_indeterminate"
+        ],
+        "title": "FailureClass",
+        "type": "string"
+      },
+      "ModelFailureEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "submission": {
+            "$ref": "#/$defs/ModelSubmission",
+            "default": "unknown"
+          },
+          "usage_known": {
+            "default": false,
+            "title": "Usage Known",
+            "type": "boolean"
+          }
+        },
+        "title": "ModelFailureEvidence",
+        "type": "object"
+      },
+      "ModelSubmission": {
+        "enum": [
+          "not_submitted",
+          "unknown"
+        ],
+        "title": "ModelSubmission",
+        "type": "string"
+      },
+      "RecoveryAction": {
+        "enum": [
+          "retry",
+          "return_to_model",
+          "stop_run"
+        ],
+        "title": "RecoveryAction",
+        "type": "string"
+      },
+      "RecoveryDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "attempt_id": {
+            "$ref": "#/$defs/AttemptId"
+          },
+          "failure_event_id": {
+            "$ref": "#/$defs/EventId"
+          },
+          "based_on_sequence": {
+            "minimum": 1,
+            "title": "Based On Sequence",
+            "type": "integer"
+          },
+          "policy_version": {
+            "const": "bounded-retry-v1",
+            "default": "bounded-retry-v1",
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "contract_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Contract Sha256",
+            "type": "string"
+          },
+          "action": {
+            "$ref": "#/$defs/RecoveryAction"
+          },
+          "reason": {
+            "$ref": "#/$defs/RecoveryReason"
+          },
+          "delay_ms": {
+            "default": 0,
+            "maximum": 5000,
+            "minimum": 0,
+            "title": "Delay Ms",
+            "type": "integer"
+          },
+          "supersedes_decision_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/EventId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "event_id": {
+            "$ref": "#/$defs/EventId"
+          },
+          "sequence": {
+            "minimum": 1,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "activity_id",
+          "attempt_id",
+          "failure_event_id",
+          "based_on_sequence",
+          "contract_sha256",
+          "action",
+          "reason",
+          "event_id",
+          "sequence",
+          "occurred_at"
+        ],
+        "title": "RecoveryDecision",
+        "type": "object"
+      },
+      "RecoveryReason": {
+        "enum": [
+          "safe_transient",
+          "attempts_exhausted",
+          "deadline_exhausted",
+          "budget_exhausted",
+          "effect_indeterminate",
+          "model_submission_unknown",
+          "non_retryable",
+          "contract_changed"
+        ],
+        "title": "RecoveryReason",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "attempt_id": {
+        "$ref": "#/$defs/AttemptId"
+      },
+      "number": {
+        "maximum": 3,
+        "minimum": 1,
+        "title": "Number",
+        "type": "integer"
+      },
+      "requested_sequence": {
+        "minimum": 1,
+        "title": "Requested Sequence",
+        "type": "integer"
+      },
+      "status": {
+        "$ref": "#/$defs/AttemptStatus"
+      },
+      "requested_at": {
+        "format": "date-time",
+        "title": "Requested At",
+        "type": "string"
+      },
+      "started_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Started At"
+      },
+      "completed_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Completed At"
+      },
+      "deadline": {
+        "format": "date-time",
+        "title": "Deadline",
+        "type": "string"
+      },
+      "reached_adapter": {
+        "title": "Reached Adapter",
+        "type": "boolean"
+      },
+      "failure_class": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/FailureClass"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "error_code": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "model_evidence": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ModelFailureEvidence"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "input_tokens": {
+        "minimum": 0,
+        "title": "Input Tokens",
+        "type": "integer"
+      },
+      "output_tokens": {
+        "minimum": 0,
+        "title": "Output Tokens",
+        "type": "integer"
+      },
+      "cost_microusd": {
+        "minimum": 0,
+        "title": "Cost Microusd",
+        "type": "integer"
+      },
+      "decisions": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/RecoveryDecision"
+        },
+        "title": "Decisions",
+        "type": "array"
+      }
+    },
+    "required": [
+      "activity_id",
+      "attempt_id",
+      "number",
+      "requested_sequence",
+      "status",
+      "requested_at",
+      "started_at",
+      "completed_at",
+      "deadline",
+      "reached_adapter",
+      "failure_class",
+      "error_code",
+      "model_evidence",
+      "input_tokens",
+      "output_tokens",
+      "cost_microusd"
+    ],
+    "title": "AttemptSummary",
+    "type": "object"
   },
   "BudgetExhaustion": {
     "$defs": {
@@ -1072,7 +2731,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -1630,7 +3290,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -2494,7 +4155,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -2656,7 +4318,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -3280,6 +4943,32 @@
     "title": "ModelCompleted",
     "type": "object"
   },
+  "ModelFailureEvidence": {
+    "$defs": {
+      "ModelSubmission": {
+        "enum": [
+          "not_submitted",
+          "unknown"
+        ],
+        "title": "ModelSubmission",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "submission": {
+        "$ref": "#/$defs/ModelSubmission",
+        "default": "unknown"
+      },
+      "usage_known": {
+        "default": false,
+        "title": "Usage Known",
+        "type": "boolean"
+      }
+    },
+    "title": "ModelFailureEvidence",
+    "type": "object"
+  },
   "ModelPricing": {
     "additionalProperties": false,
     "description": "Versioned integer rates used for deterministic local cost estimates.",
@@ -3825,6 +5514,238 @@
     "title": "ProviderSelection",
     "type": "object"
   },
+  "RecoveryDecision": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "AttemptId": {
+        "description": "Identify one attempt to execute a logical Activity.",
+        "format": "uuid4",
+        "title": "AttemptId",
+        "type": "string"
+      },
+      "EventId": {
+        "description": "Identify one immutable persisted fact.",
+        "format": "uuid4",
+        "title": "EventId",
+        "type": "string"
+      },
+      "RecoveryAction": {
+        "enum": [
+          "retry",
+          "return_to_model",
+          "stop_run"
+        ],
+        "title": "RecoveryAction",
+        "type": "string"
+      },
+      "RecoveryReason": {
+        "enum": [
+          "safe_transient",
+          "attempts_exhausted",
+          "deadline_exhausted",
+          "budget_exhausted",
+          "effect_indeterminate",
+          "model_submission_unknown",
+          "non_retryable",
+          "contract_changed"
+        ],
+        "title": "RecoveryReason",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "attempt_id": {
+        "$ref": "#/$defs/AttemptId"
+      },
+      "failure_event_id": {
+        "$ref": "#/$defs/EventId"
+      },
+      "based_on_sequence": {
+        "minimum": 1,
+        "title": "Based On Sequence",
+        "type": "integer"
+      },
+      "policy_version": {
+        "const": "bounded-retry-v1",
+        "default": "bounded-retry-v1",
+        "title": "Policy Version",
+        "type": "string"
+      },
+      "contract_sha256": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Contract Sha256",
+        "type": "string"
+      },
+      "action": {
+        "$ref": "#/$defs/RecoveryAction"
+      },
+      "reason": {
+        "$ref": "#/$defs/RecoveryReason"
+      },
+      "delay_ms": {
+        "default": 0,
+        "maximum": 5000,
+        "minimum": 0,
+        "title": "Delay Ms",
+        "type": "integer"
+      },
+      "supersedes_decision_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/EventId"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "event_id": {
+        "$ref": "#/$defs/EventId"
+      },
+      "sequence": {
+        "minimum": 1,
+        "title": "Sequence",
+        "type": "integer"
+      },
+      "occurred_at": {
+        "format": "date-time",
+        "title": "Occurred At",
+        "type": "string"
+      }
+    },
+    "required": [
+      "activity_id",
+      "attempt_id",
+      "failure_event_id",
+      "based_on_sequence",
+      "contract_sha256",
+      "action",
+      "reason",
+      "event_id",
+      "sequence",
+      "occurred_at"
+    ],
+    "title": "RecoveryDecision",
+    "type": "object"
+  },
+  "RecoveryDecisionPayload": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "AttemptId": {
+        "description": "Identify one attempt to execute a logical Activity.",
+        "format": "uuid4",
+        "title": "AttemptId",
+        "type": "string"
+      },
+      "EventId": {
+        "description": "Identify one immutable persisted fact.",
+        "format": "uuid4",
+        "title": "EventId",
+        "type": "string"
+      },
+      "RecoveryAction": {
+        "enum": [
+          "retry",
+          "return_to_model",
+          "stop_run"
+        ],
+        "title": "RecoveryAction",
+        "type": "string"
+      },
+      "RecoveryReason": {
+        "enum": [
+          "safe_transient",
+          "attempts_exhausted",
+          "deadline_exhausted",
+          "budget_exhausted",
+          "effect_indeterminate",
+          "model_submission_unknown",
+          "non_retryable",
+          "contract_changed"
+        ],
+        "title": "RecoveryReason",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "activity_id": {
+        "$ref": "#/$defs/ActivityId"
+      },
+      "attempt_id": {
+        "$ref": "#/$defs/AttemptId"
+      },
+      "failure_event_id": {
+        "$ref": "#/$defs/EventId"
+      },
+      "based_on_sequence": {
+        "minimum": 1,
+        "title": "Based On Sequence",
+        "type": "integer"
+      },
+      "policy_version": {
+        "const": "bounded-retry-v1",
+        "default": "bounded-retry-v1",
+        "title": "Policy Version",
+        "type": "string"
+      },
+      "contract_sha256": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Contract Sha256",
+        "type": "string"
+      },
+      "action": {
+        "$ref": "#/$defs/RecoveryAction"
+      },
+      "reason": {
+        "$ref": "#/$defs/RecoveryReason"
+      },
+      "delay_ms": {
+        "default": 0,
+        "maximum": 5000,
+        "minimum": 0,
+        "title": "Delay Ms",
+        "type": "integer"
+      },
+      "supersedes_decision_id": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/EventId"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "activity_id",
+      "attempt_id",
+      "failure_event_id",
+      "based_on_sequence",
+      "contract_sha256",
+      "action",
+      "reason"
+    ],
+    "title": "RecoveryDecisionPayload",
+    "type": "object"
+  },
   "ReplayLimits": {
     "additionalProperties": false,
     "description": "Trusted ceilings; callers may lower but cannot bypass the hard limits.",
@@ -3922,8 +5843,11 @@
         "type": "string"
       },
       "state_format_version": {
-        "const": 1,
         "default": 1,
+        "enum": [
+          1,
+          2
+        ],
         "title": "State Format Version",
         "type": "integer"
       },
@@ -3967,6 +5891,40 @@
       "projection"
     ],
     "title": "ReplaySummary",
+    "type": "object"
+  },
+  "RetryPolicy": {
+    "additionalProperties": false,
+    "properties": {
+      "version": {
+        "const": "bounded-retry-v1",
+        "default": "bounded-retry-v1",
+        "title": "Version",
+        "type": "string"
+      },
+      "max_attempts": {
+        "default": 1,
+        "maximum": 3,
+        "minimum": 1,
+        "title": "Max Attempts",
+        "type": "integer"
+      },
+      "initial_backoff_ms": {
+        "default": 250,
+        "maximum": 5000,
+        "minimum": 1,
+        "title": "Initial Backoff Ms",
+        "type": "integer"
+      },
+      "max_backoff_ms": {
+        "default": 2000,
+        "maximum": 5000,
+        "minimum": 1,
+        "title": "Max Backoff Ms",
+        "type": "integer"
+      }
+    },
+    "title": "RetryPolicy",
     "type": "object"
   },
   "RunCheckItem": {
@@ -4020,7 +5978,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -4057,8 +6016,11 @@
             "type": "string"
           },
           "state_format_version": {
-            "const": 1,
             "default": 1,
+            "enum": [
+              1,
+              2
+            ],
             "title": "State Format Version",
             "type": "integer"
           },
@@ -4208,7 +6170,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -4245,8 +6208,11 @@
             "type": "string"
           },
           "state_format_version": {
-            "const": 1,
             "default": 1,
+            "enum": [
+              1,
+              2
+            ],
             "title": "State Format Version",
             "type": "integer"
           },
@@ -5245,6 +7211,423 @@
     "title": "RunCreatedPayloadV4",
     "type": "object"
   },
+  "RunCreatedPayloadV5": {
+    "$defs": {
+      "AgentConfig": {
+        "additionalProperties": false,
+        "description": "Resolved non-secret Agent snapshot persisted for one Run.",
+        "properties": {
+          "agent_id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "agent_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Agent Version",
+            "type": "string"
+          },
+          "instructions": {
+            "maxLength": 65536,
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "prompt_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "context_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Context Version",
+            "type": "string"
+          },
+          "max_output_tokens": {
+            "exclusiveMinimum": 0,
+            "maximum": 10000000000,
+            "title": "Max Output Tokens",
+            "type": "integer"
+          },
+          "model_timeout_ms": {
+            "exclusiveMinimum": 0,
+            "maximum": 600000,
+            "title": "Model Timeout Ms",
+            "type": "integer"
+          },
+          "max_context_chars": {
+            "exclusiveMinimum": 0,
+            "maximum": 4000000,
+            "title": "Max Context Chars",
+            "type": "integer"
+          },
+          "max_tool_result_bytes": {
+            "maximum": 4000000,
+            "minimum": 128,
+            "title": "Max Tool Result Bytes",
+            "type": "integer"
+          },
+          "tool_names": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 128,
+            "title": "Tool Names",
+            "type": "array"
+          },
+          "model": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$",
+            "title": "Model",
+            "type": "string"
+          },
+          "pricing": {
+            "$ref": "#/$defs/ModelPricing"
+          }
+        },
+        "required": [
+          "agent_id",
+          "agent_version",
+          "instructions",
+          "prompt_version",
+          "context_version",
+          "max_output_tokens",
+          "model_timeout_ms",
+          "max_context_chars",
+          "max_tool_result_bytes",
+          "model",
+          "pricing"
+        ],
+        "title": "AgentConfig",
+        "type": "object"
+      },
+      "BudgetLimits": {
+        "additionalProperties": false,
+        "description": "Finite limits selected by a trusted Run creation boundary.",
+        "properties": {
+          "max_model_iterations": {
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Max Model Iterations",
+            "type": "integer"
+          },
+          "max_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "max_cost_microusd": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Max Cost Microusd",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "maximum": 2678400000,
+            "minimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Max Tool Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_model_iterations",
+          "max_tokens",
+          "max_cost_microusd",
+          "max_wall_time_ms",
+          "max_tool_calls"
+        ],
+        "title": "BudgetLimits",
+        "type": "object"
+      },
+      "ModelPricing": {
+        "additionalProperties": false,
+        "description": "Versioned integer rates used for deterministic local cost estimates.",
+        "properties": {
+          "version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Version",
+            "type": "string"
+          },
+          "input_microusd_per_million_tokens": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Input Microusd Per Million Tokens",
+            "type": "integer"
+          },
+          "output_microusd_per_million_tokens": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Output Microusd Per Million Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "input_microusd_per_million_tokens",
+          "output_microusd_per_million_tokens"
+        ],
+        "title": "ModelPricing",
+        "type": "object"
+      },
+      "ModelProtocol": {
+        "description": "An explicitly selected wire protocol implemented by a model adapter.",
+        "enum": [
+          "openai_responses",
+          "openai_chat_completions",
+          "anthropic_messages"
+        ],
+        "title": "ModelProtocol",
+        "type": "string"
+      },
+      "PolicyFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one trusted static Policy evaluator and configuration.",
+        "properties": {
+          "version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "sha256"
+        ],
+        "title": "PolicyFingerprint",
+        "type": "object"
+      },
+      "ProviderSelection": {
+        "additionalProperties": false,
+        "description": "Non-secret Provider identity persisted with a Run.",
+        "properties": {
+          "provider_id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$",
+            "title": "Provider Id",
+            "type": "string"
+          },
+          "config_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Config Version",
+            "type": "string"
+          },
+          "protocol": {
+            "$ref": "#/$defs/ModelProtocol"
+          }
+        },
+        "required": [
+          "provider_id",
+          "config_version",
+          "protocol"
+        ],
+        "title": "ProviderSelection",
+        "type": "object"
+      },
+      "RecoverySemantics": {
+        "enum": [
+          "read_only",
+          "idempotent",
+          "reconcilable",
+          "non_idempotent"
+        ],
+        "title": "RecoverySemantics",
+        "type": "string"
+      },
+      "RetryPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "const": "bounded-retry-v1",
+            "default": "bounded-retry-v1",
+            "title": "Version",
+            "type": "string"
+          },
+          "max_attempts": {
+            "default": 1,
+            "maximum": 3,
+            "minimum": 1,
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "initial_backoff_ms": {
+            "default": 250,
+            "maximum": 5000,
+            "minimum": 1,
+            "title": "Initial Backoff Ms",
+            "type": "integer"
+          },
+          "max_backoff_ms": {
+            "default": 2000,
+            "maximum": 5000,
+            "minimum": 1,
+            "title": "Max Backoff Ms",
+            "type": "integer"
+          }
+        },
+        "title": "RetryPolicy",
+        "type": "object"
+      },
+      "RunFingerprint": {
+        "additionalProperties": false,
+        "description": "Trusted contract provenance captured once when a Run is created.",
+        "properties": {
+          "bearagent_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Bearagent Version",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/$defs/PolicyFingerprint"
+          },
+          "tools": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/ToolFingerprint"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "bearagent_version",
+          "policy"
+        ],
+        "title": "RunFingerprint",
+        "type": "object"
+      },
+      "SessionId": {
+        "description": "Identify a conversation container.",
+        "format": "uuid4",
+        "title": "SessionId",
+        "type": "string"
+      },
+      "ToolFingerprint": {
+        "additionalProperties": false,
+        "description": "Identity of one registration-time Tool contract.",
+        "properties": {
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "spec_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "title": "Spec Version",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "spec_version",
+          "sha256"
+        ],
+        "title": "ToolFingerprint",
+        "type": "object"
+      },
+      "ToolRecoveryContract": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "spec_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Spec Sha256",
+            "type": "string"
+          },
+          "semantics": {
+            "$ref": "#/$defs/RecoverySemantics"
+          },
+          "timeout_ms": {
+            "maximum": 600000,
+            "minimum": 1,
+            "title": "Timeout Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "spec_sha256",
+          "semantics",
+          "timeout_ms"
+        ],
+        "title": "ToolRecoveryContract",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "v5 captures retry rules separately from the unchanged historical fingerprint.",
+    "properties": {
+      "session_id": {
+        "$ref": "#/$defs/SessionId"
+      },
+      "budget_limits": {
+        "$ref": "#/$defs/BudgetLimits"
+      },
+      "objective": {
+        "maxLength": 1000000,
+        "minLength": 1,
+        "title": "Objective",
+        "type": "string"
+      },
+      "agent_config": {
+        "$ref": "#/$defs/AgentConfig"
+      },
+      "run_fingerprint": {
+        "$ref": "#/$defs/RunFingerprint"
+      },
+      "provider_selection": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ProviderSelection"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "retry_policy": {
+        "$ref": "#/$defs/RetryPolicy"
+      },
+      "recovery_contracts": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/ToolRecoveryContract"
+        },
+        "title": "Recovery Contracts",
+        "type": "array"
+      }
+    },
+    "required": [
+      "session_id",
+      "budget_limits",
+      "objective",
+      "agent_config",
+      "run_fingerprint",
+      "retry_policy"
+    ],
+    "title": "RunCreatedPayloadV5",
+    "type": "object"
+  },
   "RunFailedPayload": {
     "$defs": {
       "ErrorCategory": {
@@ -5292,7 +7675,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -5416,7 +7800,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -6103,7 +8488,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -6793,6 +9179,198 @@
     "title": "RunProfileV2",
     "type": "object"
   },
+  "RunProfileV3": {
+    "$defs": {
+      "AgentSettings": {
+        "additionalProperties": false,
+        "description": "User-editable Agent behavior without Provider-owned model fields.",
+        "properties": {
+          "agent_id": {
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "agent_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Agent Version",
+            "type": "string"
+          },
+          "instructions": {
+            "maxLength": 65536,
+            "minLength": 1,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "prompt_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "context_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Context Version",
+            "type": "string"
+          },
+          "max_output_tokens": {
+            "exclusiveMinimum": 0,
+            "maximum": 10000000000,
+            "title": "Max Output Tokens",
+            "type": "integer"
+          },
+          "model_timeout_ms": {
+            "exclusiveMinimum": 0,
+            "maximum": 600000,
+            "title": "Model Timeout Ms",
+            "type": "integer"
+          },
+          "max_context_chars": {
+            "exclusiveMinimum": 0,
+            "maximum": 4000000,
+            "title": "Max Context Chars",
+            "type": "integer"
+          },
+          "max_tool_result_bytes": {
+            "maximum": 4000000,
+            "minimum": 128,
+            "title": "Max Tool Result Bytes",
+            "type": "integer"
+          },
+          "tool_names": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 128,
+            "title": "Tool Names",
+            "type": "array"
+          }
+        },
+        "required": [
+          "agent_id",
+          "agent_version",
+          "instructions",
+          "prompt_version",
+          "context_version",
+          "max_output_tokens",
+          "model_timeout_ms",
+          "max_context_chars",
+          "max_tool_result_bytes"
+        ],
+        "title": "AgentSettings",
+        "type": "object"
+      },
+      "BudgetLimits": {
+        "additionalProperties": false,
+        "description": "Finite limits selected by a trusted Run creation boundary.",
+        "properties": {
+          "max_model_iterations": {
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Max Model Iterations",
+            "type": "integer"
+          },
+          "max_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "max_cost_microusd": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Max Cost Microusd",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "maximum": 2678400000,
+            "minimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Max Tool Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_model_iterations",
+          "max_tokens",
+          "max_cost_microusd",
+          "max_wall_time_ms",
+          "max_tool_calls"
+        ],
+        "title": "BudgetLimits",
+        "type": "object"
+      },
+      "RetryPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "const": "bounded-retry-v1",
+            "default": "bounded-retry-v1",
+            "title": "Version",
+            "type": "string"
+          },
+          "max_attempts": {
+            "default": 1,
+            "maximum": 3,
+            "minimum": 1,
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "initial_backoff_ms": {
+            "default": 250,
+            "maximum": 5000,
+            "minimum": 1,
+            "title": "Initial Backoff Ms",
+            "type": "integer"
+          },
+          "max_backoff_ms": {
+            "default": 2000,
+            "maximum": 5000,
+            "minimum": 1,
+            "title": "Max Backoff Ms",
+            "type": "integer"
+          }
+        },
+        "title": "RetryPolicy",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Version 3 explicitly bounds in-process retries; legacy profiles remain single-attempt.",
+    "properties": {
+      "schema_version": {
+        "const": 3,
+        "default": 3,
+        "title": "Schema Version",
+        "type": "integer"
+      },
+      "provider_id": {
+        "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,63}$",
+        "title": "Provider Id",
+        "type": "string"
+      },
+      "agent_config": {
+        "$ref": "#/$defs/AgentSettings"
+      },
+      "budget_limits": {
+        "$ref": "#/$defs/BudgetLimits"
+      },
+      "retry_policy": {
+        "$ref": "#/$defs/RetryPolicy"
+      }
+    },
+    "required": [
+      "provider_id",
+      "agent_config",
+      "budget_limits"
+    ],
+    "title": "RunProfileV3",
+    "type": "object"
+  },
   "RunReplay": {
     "$defs": {
       "ActivityId": {
@@ -7054,7 +9632,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -7158,8 +9737,11 @@
             "type": "string"
           },
           "state_format_version": {
-            "const": 1,
             "default": 1,
+            "enum": [
+              1,
+              2
+            ],
             "title": "State Format Version",
             "type": "integer"
           },
@@ -7748,7 +10330,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -8247,7 +10830,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -8431,6 +11015,957 @@
     "title": "RunState",
     "type": "object"
   },
+  "RunStateV5": {
+    "$defs": {
+      "ActivityEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "request_event_id": {
+            "$ref": "#/$defs/EventId"
+          },
+          "request_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Request Sha256",
+            "type": "string"
+          },
+          "contract_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Contract Sha256",
+            "type": "string"
+          },
+          "semantics": {
+            "$ref": "#/$defs/RecoverySemantics"
+          },
+          "timeout_ms": {
+            "maximum": 600000,
+            "minimum": 1,
+            "title": "Timeout Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "activity_id",
+          "request_event_id",
+          "request_sha256",
+          "contract_sha256",
+          "semantics",
+          "timeout_ms"
+        ],
+        "title": "ActivityEvidence",
+        "type": "object"
+      },
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "ActivityKind": {
+        "description": "Kinds of serial operations tracked by the P1 reducer.",
+        "enum": [
+          "model",
+          "tool"
+        ],
+        "title": "ActivityKind",
+        "type": "string"
+      },
+      "ActivityState": {
+        "additionalProperties": false,
+        "description": "Immutable state for one model or Tool operation.",
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "kind": {
+            "$ref": "#/$defs/ActivityKind"
+          },
+          "status": {
+            "$ref": "#/$defs/ActivityStatus"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Completed At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "model_call_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ModelCallId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "tool_call_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ToolCallId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "tool_name": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tool Name"
+          }
+        },
+        "required": [
+          "activity_id",
+          "kind",
+          "status",
+          "requested_at"
+        ],
+        "title": "ActivityState",
+        "type": "object"
+      },
+      "ActivityStatus": {
+        "description": "P1 Activity lifecycle states.",
+        "enum": [
+          "pending",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "ActivityStatus",
+        "type": "string"
+      },
+      "AttemptId": {
+        "description": "Identify one attempt to execute a logical Activity.",
+        "format": "uuid4",
+        "title": "AttemptId",
+        "type": "string"
+      },
+      "AttemptState": {
+        "additionalProperties": false,
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "attempt_id": {
+            "$ref": "#/$defs/AttemptId"
+          },
+          "number": {
+            "maximum": 3,
+            "minimum": 1,
+            "title": "Number",
+            "type": "integer"
+          },
+          "request_event_id": {
+            "$ref": "#/$defs/EventId"
+          },
+          "deadline": {
+            "format": "date-time",
+            "title": "Deadline",
+            "type": "string"
+          },
+          "prior_decision_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/EventId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "requested_sequence": {
+            "minimum": 1,
+            "title": "Requested Sequence",
+            "type": "integer"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/AttemptStatus",
+            "default": "requested"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Started At"
+          },
+          "prepared_sha256": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Prepared Sha256"
+          },
+          "terminal_event_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/EventId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Completed At"
+          },
+          "outcome_sha256": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Outcome Sha256"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "failure_class": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/FailureClass"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "reached_adapter": {
+            "default": false,
+            "title": "Reached Adapter",
+            "type": "boolean"
+          },
+          "model_evidence": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ModelFailureEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "input_tokens": {
+            "default": 0,
+            "minimum": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "default": 0,
+            "minimum": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "cost_microusd": {
+            "default": 0,
+            "minimum": 0,
+            "title": "Cost Microusd",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "activity_id",
+          "attempt_id",
+          "number",
+          "request_event_id",
+          "deadline",
+          "requested_sequence",
+          "requested_at"
+        ],
+        "title": "AttemptState",
+        "type": "object"
+      },
+      "AttemptStatus": {
+        "enum": [
+          "requested",
+          "started",
+          "succeeded",
+          "failed"
+        ],
+        "title": "AttemptStatus",
+        "type": "string"
+      },
+      "BudgetLimits": {
+        "additionalProperties": false,
+        "description": "Finite limits selected by a trusted Run creation boundary.",
+        "properties": {
+          "max_model_iterations": {
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Max Model Iterations",
+            "type": "integer"
+          },
+          "max_tokens": {
+            "maximum": 10000000000,
+            "minimum": 0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "max_cost_microusd": {
+            "maximum": 1000000000000,
+            "minimum": 0,
+            "title": "Max Cost Microusd",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "maximum": 2678400000,
+            "minimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          },
+          "max_tool_calls": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Max Tool Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_model_iterations",
+          "max_tokens",
+          "max_cost_microusd",
+          "max_wall_time_ms",
+          "max_tool_calls"
+        ],
+        "title": "BudgetLimits",
+        "type": "object"
+      },
+      "BudgetUsage": {
+        "additionalProperties": false,
+        "description": "Actual usage derived only from accepted Run Events.",
+        "properties": {
+          "model_iterations": {
+            "default": 0,
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Model Iterations",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "default": 0,
+            "maximum": 20000000000,
+            "minimum": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "default": 0,
+            "maximum": 20000000000,
+            "minimum": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "cost_microusd": {
+            "default": 0,
+            "maximum": 20001000000000000,
+            "minimum": 0,
+            "title": "Cost Microusd",
+            "type": "integer"
+          },
+          "tool_calls": {
+            "default": 0,
+            "maximum": 1000000,
+            "minimum": 0,
+            "title": "Tool Calls",
+            "type": "integer"
+          }
+        },
+        "title": "BudgetUsage",
+        "type": "object"
+      },
+      "ErrorCategory": {
+        "description": "Stable high-level class used for handling and aggregation.",
+        "enum": [
+          "validation",
+          "budget",
+          "provider",
+          "tool",
+          "persistence",
+          "internal"
+        ],
+        "title": "ErrorCategory",
+        "type": "string"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "run_not_found",
+          "query_limit_exceeded",
+          "query_timeout",
+          "budget_exhausted",
+          "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
+          "tool_error",
+          "workspace_path_denied",
+          "workspace_not_found",
+          "workspace_wrong_type",
+          "workspace_not_text",
+          "workspace_limit_exceeded",
+          "workspace_access_failed",
+          "persistence_error",
+          "internal_error",
+          "effect_indeterminate"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorInfo": {
+        "additionalProperties": false,
+        "description": "Serializable error data that is safe to expose and persist.",
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/ErrorCategory"
+          },
+          "code": {
+            "$ref": "#/$defs/ErrorCode"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "description": "Source-side observation that another attempt may succeed; never Runtime permission to retry an Activity.",
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/$defs/SafeDetailValue"
+            },
+            "maxProperties": 32,
+            "title": "Details",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category",
+          "code",
+          "message"
+        ],
+        "title": "ErrorInfo",
+        "type": "object"
+      },
+      "EventId": {
+        "description": "Identify one immutable persisted fact.",
+        "format": "uuid4",
+        "title": "EventId",
+        "type": "string"
+      },
+      "FailureClass": {
+        "enum": [
+          "invalid_input",
+          "transient_infrastructure",
+          "permanent_failure",
+          "permission_denied",
+          "effect_indeterminate"
+        ],
+        "title": "FailureClass",
+        "type": "string"
+      },
+      "ModelCallId": {
+        "description": "Identify one model call independently of provider request IDs.",
+        "format": "uuid4",
+        "title": "ModelCallId",
+        "type": "string"
+      },
+      "ModelFailureEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "submission": {
+            "$ref": "#/$defs/ModelSubmission",
+            "default": "unknown"
+          },
+          "usage_known": {
+            "default": false,
+            "title": "Usage Known",
+            "type": "boolean"
+          }
+        },
+        "title": "ModelFailureEvidence",
+        "type": "object"
+      },
+      "ModelSubmission": {
+        "enum": [
+          "not_submitted",
+          "unknown"
+        ],
+        "title": "ModelSubmission",
+        "type": "string"
+      },
+      "RecoveryAction": {
+        "enum": [
+          "retry",
+          "return_to_model",
+          "stop_run"
+        ],
+        "title": "RecoveryAction",
+        "type": "string"
+      },
+      "RecoveryDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "attempt_id": {
+            "$ref": "#/$defs/AttemptId"
+          },
+          "failure_event_id": {
+            "$ref": "#/$defs/EventId"
+          },
+          "based_on_sequence": {
+            "minimum": 1,
+            "title": "Based On Sequence",
+            "type": "integer"
+          },
+          "policy_version": {
+            "const": "bounded-retry-v1",
+            "default": "bounded-retry-v1",
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "contract_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Contract Sha256",
+            "type": "string"
+          },
+          "action": {
+            "$ref": "#/$defs/RecoveryAction"
+          },
+          "reason": {
+            "$ref": "#/$defs/RecoveryReason"
+          },
+          "delay_ms": {
+            "default": 0,
+            "maximum": 5000,
+            "minimum": 0,
+            "title": "Delay Ms",
+            "type": "integer"
+          },
+          "supersedes_decision_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/EventId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "event_id": {
+            "$ref": "#/$defs/EventId"
+          },
+          "sequence": {
+            "minimum": 1,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "activity_id",
+          "attempt_id",
+          "failure_event_id",
+          "based_on_sequence",
+          "contract_sha256",
+          "action",
+          "reason",
+          "event_id",
+          "sequence",
+          "occurred_at"
+        ],
+        "title": "RecoveryDecision",
+        "type": "object"
+      },
+      "RecoveryReason": {
+        "enum": [
+          "safe_transient",
+          "attempts_exhausted",
+          "deadline_exhausted",
+          "budget_exhausted",
+          "effect_indeterminate",
+          "model_submission_unknown",
+          "non_retryable",
+          "contract_changed"
+        ],
+        "title": "RecoveryReason",
+        "type": "string"
+      },
+      "RecoverySemantics": {
+        "enum": [
+          "read_only",
+          "idempotent",
+          "reconcilable",
+          "non_idempotent"
+        ],
+        "title": "RecoverySemantics",
+        "type": "string"
+      },
+      "RetryPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "const": "bounded-retry-v1",
+            "default": "bounded-retry-v1",
+            "title": "Version",
+            "type": "string"
+          },
+          "max_attempts": {
+            "default": 1,
+            "maximum": 3,
+            "minimum": 1,
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "initial_backoff_ms": {
+            "default": 250,
+            "maximum": 5000,
+            "minimum": 1,
+            "title": "Initial Backoff Ms",
+            "type": "integer"
+          },
+          "max_backoff_ms": {
+            "default": 2000,
+            "maximum": 5000,
+            "minimum": 1,
+            "title": "Max Backoff Ms",
+            "type": "integer"
+          }
+        },
+        "title": "RetryPolicy",
+        "type": "object"
+      },
+      "RunId": {
+        "description": "Identify one user-request execution.",
+        "format": "uuid4",
+        "title": "RunId",
+        "type": "string"
+      },
+      "RunStatus": {
+        "description": "P1-visible lifecycle states for one Run.",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "RunStatus",
+        "type": "string"
+      },
+      "SafeDetailValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "SessionId": {
+        "description": "Identify a conversation container.",
+        "format": "uuid4",
+        "title": "SessionId",
+        "type": "string"
+      },
+      "ToolCallId": {
+        "description": "Correlate one tool request with its result.",
+        "format": "uuid4",
+        "title": "ToolCallId",
+        "type": "string"
+      },
+      "ToolRecoveryContract": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+            "title": "Name",
+            "type": "string"
+          },
+          "spec_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Spec Sha256",
+            "type": "string"
+          },
+          "semantics": {
+            "$ref": "#/$defs/RecoverySemantics"
+          },
+          "timeout_ms": {
+            "maximum": 600000,
+            "minimum": 1,
+            "title": "Timeout Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "spec_sha256",
+          "semantics",
+          "timeout_ms"
+        ],
+        "title": "ToolRecoveryContract",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "v2 state format, kept separate so historical v1 hashes never change.",
+    "properties": {
+      "run_id": {
+        "$ref": "#/$defs/RunId"
+      },
+      "session_id": {
+        "$ref": "#/$defs/SessionId"
+      },
+      "status": {
+        "$ref": "#/$defs/RunStatus"
+      },
+      "budget_limits": {
+        "$ref": "#/$defs/BudgetLimits"
+      },
+      "budget_usage": {
+        "$ref": "#/$defs/BudgetUsage"
+      },
+      "activities": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/ActivityState"
+        },
+        "title": "Activities",
+        "type": "array"
+      },
+      "created_at": {
+        "format": "date-time",
+        "title": "Created At",
+        "type": "string"
+      },
+      "started_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Started At"
+      },
+      "completed_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Completed At"
+      },
+      "terminal_error": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ErrorInfo"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "last_sequence": {
+        "minimum": 1,
+        "title": "Last Sequence",
+        "type": "integer"
+      },
+      "event_schema_version": {
+        "const": 5,
+        "default": 5,
+        "title": "Event Schema Version",
+        "type": "integer"
+      },
+      "retry_policy": {
+        "$ref": "#/$defs/RetryPolicy"
+      },
+      "recovery_contracts": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/ToolRecoveryContract"
+        },
+        "title": "Recovery Contracts",
+        "type": "array"
+      },
+      "activity_evidence": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/ActivityEvidence"
+        },
+        "title": "Activity Evidence",
+        "type": "array"
+      },
+      "attempts": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/AttemptState"
+        },
+        "title": "Attempts",
+        "type": "array"
+      },
+      "recovery_decisions": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/RecoveryDecision"
+        },
+        "title": "Recovery Decisions",
+        "type": "array"
+      },
+      "last_occurred_at": {
+        "format": "date-time",
+        "title": "Last Occurred At",
+        "type": "string"
+      }
+    },
+    "required": [
+      "run_id",
+      "session_id",
+      "status",
+      "budget_limits",
+      "created_at",
+      "last_sequence",
+      "retry_policy",
+      "last_occurred_at"
+    ],
+    "title": "RunStateV5",
+    "type": "object"
+  },
   "RunSucceededPayload": {
     "additionalProperties": false,
     "description": "Payload for a successful terminal transition.",
@@ -8536,7 +12071,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -8867,7 +12403,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -9011,7 +12548,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -9518,7 +13056,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -9802,6 +13341,50 @@
     "title": "ToolFingerprint",
     "type": "object"
   },
+  "ToolRecoveryContract": {
+    "$defs": {
+      "RecoverySemantics": {
+        "enum": [
+          "read_only",
+          "idempotent",
+          "reconcilable",
+          "non_idempotent"
+        ],
+        "title": "RecoverySemantics",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$",
+        "title": "Name",
+        "type": "string"
+      },
+      "spec_sha256": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Spec Sha256",
+        "type": "string"
+      },
+      "semantics": {
+        "$ref": "#/$defs/RecoverySemantics"
+      },
+      "timeout_ms": {
+        "maximum": 600000,
+        "minimum": 1,
+        "title": "Timeout Ms",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "name",
+      "spec_sha256",
+      "semantics",
+      "timeout_ms"
+    ],
+    "title": "ToolRecoveryContract",
+    "type": "object"
+  },
   "ToolRequest": {
     "$defs": {
       "JsonValue": {},
@@ -9885,7 +13468,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"

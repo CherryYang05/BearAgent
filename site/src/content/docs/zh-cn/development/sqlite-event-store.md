@@ -3,6 +3,8 @@ title: 从一次 append 读懂 SQLite 持久化
 description: 跟随 Event 从校验、transaction、Reducer 到 projection，理解数据库重开、冲突和损坏为什么有不同处理。
 bearStatus: mixed
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - F-0003
   - F-0021
   - ADR-0020
@@ -22,7 +24,7 @@ flowchart TB
     C --> D["读取旧 projection 和 Event 最大 sequence"]
     D --> E["调用同一个 reduce_event"]
     E --> F["INSERT Event"]
-    F --> G["写 Run / Activity projection"]
+    F --> G["写 Run / Activity / v5 Attempt projection"]
     G --> H["COMMIT"]
 ```
 
@@ -84,7 +86,7 @@ K1-K6 子进程测试新增 replay/check 后，数据库事实、模型调用记
 
 `initialize()` 在工作线程中执行同步 SQLite 代码。它会：
 
-1. 建立父目录并读取打包的 `0001_initial.sql`；
+1. 建立父目录并读取打包的 `0001_initial.sql` 与 `0002_attempt_projections.sql`；
 2. 计算 migration 文件 SHA-256；
 3. 打开连接并启用 WAL；
 4. 在 `BEGIN IMMEDIATE` 中建立或读取 migration ledger；
@@ -174,5 +176,16 @@ uv run pytest tests/integration/test_sqlite_event_store.py
 uv run pytest tests/security/test_sqlite_event_store.py
 ```
 
-数据库重开后能查询已提交事实，不等于 Runtime 会自动继续未完成 Run。当前没有启动扫描、Checkpoint、
-Attempt 或 `UNKNOWN` 处理。持久化解决“事实没有丢”，恢复还要解决“下一步怎样做才安全”。
+数据库重开后能查询已提交事实，不等于 Runtime 会自动继续未完成 Run。当前没有自动启动扫描、Checkpoint、
+重启续跑或 `UNKNOWN` 处理；Attempt 与进程内有限 retry 已由 F-0022 实现。持久化解决“事实没有丢”，恢复还要解决“下一步怎样做才安全”。
+
+## migration 2 只增加派生状态
+
+F-0022 增加 run_attempt_projections，保存独立 RunStateV5 的序列化缓存，包含 Attempt 和恢复决定。
+它与 Event、Run/Activity projection 同一事务提交；0001 与旧 Event 不改写，旧 Run 不补造 Attempt。
+查询 v5 projection 时还校验它与逻辑 projection 一致。缺失或可疑缓存仍可用 Event-only replay 检查。
+
+升级前保存一致备份，停止旧 writer。migration 失败回滚；旧 writer 会拒绝 migration 2。
+关闭 retry 不会降级 schema；回退旧二进制需要升级前备份或新库。故障测试位于
+`tests/integration/test_attempt_migration.py`，版本与查询说明见
+[有限重试导读](/zh-cn/development/bounded-attempt-retry/)。

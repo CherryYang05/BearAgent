@@ -4,9 +4,11 @@ import json
 from collections.abc import Mapping
 from typing import cast
 
+import httpx
 from pydantic import JsonValue, ValidationError
 
 from bearagent.domain._base import thaw_json_mapping, validate_json_object
+from bearagent.domain.attempts import ModelFailureEvidence, ModelSubmission
 from bearagent.domain.errors import ErrorCategory, ErrorCode, ErrorInfo, SafeDetailValue
 from bearagent.domain.ids import ToolCallId
 from bearagent.domain.model import MAX_MODEL_OUTPUT_CHARS, ModelToolCall
@@ -47,6 +49,9 @@ def provider_error(
             details={} if details is None else details,
         ),
         cause=cause,
+        evidence=connection_failure_evidence(cause)
+        if code in {ErrorCode.PROVIDER_TIMEOUT, ErrorCode.PROVIDER_UNAVAILABLE}
+        else None,
     )
 
 
@@ -86,3 +91,19 @@ def canonical_json_mapping(value: Mapping[str, JsonValue]) -> str:
         separators=(",", ":"),
         sort_keys=True,
     )
+
+
+def connection_failure_evidence(cause: BaseException | None) -> ModelFailureEvidence:
+    """Only a concrete HTTP transport connect failure proves no model request was sent."""
+    for _ in range(8):
+        if cause is None:
+            break
+        if isinstance(cause, httpx.ConnectError | httpx.ConnectTimeout):
+            return ModelFailureEvidence(submission=ModelSubmission.NOT_SUBMITTED, usage_known=True)
+        if isinstance(cause, httpx.HTTPError):
+            # Read/write/protocol failures can follow submission. Do not search
+            # their older causes for a connection failure and erase that fact.
+            break
+        # Explicit SDK exception chaining is trusted adapter evidence; messages are never parsed.
+        cause = cause.__cause__
+    return ModelFailureEvidence()

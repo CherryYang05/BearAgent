@@ -3,6 +3,8 @@ title: F-0006 Tool 执行边界实现导读
 description: 从请求数据进入 Registry、Policy 和 Executor，并找到对应测试。
 bearStatus: implemented
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - F-0006
   - PLAN-F-0006
   - F-0016
@@ -22,6 +24,7 @@ ToolExecutor.execute_recorded(request)
   -> ToolRegistry.get(name)
   -> Tool.prepare(request)
   -> ToolPolicy.evaluate(spec, prepared_request)
+  -> before_execute：v5 提交 AttemptStarted，重查剩余期限
   -> Tool.execute(prepared_request)
   -> ToolResult
 ```
@@ -72,3 +75,13 @@ F-0007 的三个只读 Tool 和 F-0008 的原子写入 Tool 已运行同一条 E
 [F-0008 原子输出与 Artifact 实现导读](/zh-cn/development/atomic-output-artifacts/)。F-0016 接线后，
 AgentLoop 调用 `ToolExecutor.execute_recorded`，把原始/规范化请求、Policy 决定、adapter 到达标志和结果
 写入 Tool Activity Event；旧的 `execute` 仍复用同一私有执行路径，只返回其中的 `ToolResult`。
+
+## 有限重试仍经过同一条执行路径
+
+F-0022 的 AttemptRunner 每次调用 execute_recorded 都重新查 Registry、prepare 和 Policy。
+参数 hash 或恢复契约漂移、Policy 拒绝、Started 保存失败都不能进入 adapter。保存失败原样传播，
+不能转换成普通 Tool 错误再重试。timeout 等待前一个协程清理退出后才允许下一次尝试。
+
+写入进入 adapter 后失败会停止整个 Run，避免排队的 Tool 或后续模型重复提议写入。
+具体故障用例见 `tests/integration/test_attempt_execution.py`，完整时序见
+[有限重试导读](/zh-cn/development/bounded-attempt-retry/)。

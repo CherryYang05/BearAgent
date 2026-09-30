@@ -3,7 +3,7 @@
 from pydantic import BaseModel
 
 from bearagent.configuration import ProviderCatalog
-from bearagent.domain.agent import RunProfile, RunProfileV2
+from bearagent.domain.agent import RunProfile, RunProfileV2, RunProfileV3
 from bearagent.evaluation.p1 import EvalSuite
 from bearagent.evaluation.p1_live import LiveEvalReport, LivePreflightReport
 
@@ -14,6 +14,7 @@ PUBLIC_RUNTIME_CONFIGURATION_MODELS: tuple[type[BaseModel], ...] = (
     ProviderCatalog,
     RunProfile,
     RunProfileV2,
+    RunProfileV3,
 )
 
 

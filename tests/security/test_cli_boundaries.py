@@ -78,7 +78,7 @@ def test_future_database_migration_fails_without_schema_details(tmp_path: Path) 
     with sqlite3.connect(database_path) as connection:
         connection.execute(
             "INSERT INTO schema_migrations(version, name, checksum) VALUES (?, ?, ?)",
-            (2, "private-future-migration.sql", "a" * 64),
+            (3, "private-future-migration.sql", "a" * 64),
         )
 
     result = runner.invoke(

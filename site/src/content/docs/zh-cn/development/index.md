@@ -3,6 +3,8 @@ title: 从哪里开始读代码
 description: 先找到当前功能的事实，再沿着调用关系进入实现和测试。
 bearStatus: mixed
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - F-0021
   - F-0020
   - ADR-0018
@@ -69,7 +71,7 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 - [F-0006：Tool 执行边界](/zh-cn/development/tool-execution-boundary/)——Registry、参数准备、默认拒绝 Policy 和统一 Executor；
 - [F-0007：workspace 只读 Tool](/zh-cn/development/workspace-read-tools/)——跨平台路径边界、list/read/search 和安全测试；
 - [F-0008：原子输出与 Artifact](/zh-cn/development/atomic-output-artifacts/)——同目录暂存、原子提交、结果元数据和故障窗口；
-- [F-0016/F-0018：有界 Agent Loop 与证据边界](/zh-cn/development/agent-loop/)——Context、RunCreated v4、contract fingerprint、串行调度和 K1-K6；
+- [F-0016/F-0018：有界 Agent Loop 与证据边界](/zh-cn/development/agent-loop/)——Context、RunCreated v5、contract fingerprint、串行调度和 K1-K6；
 - [F-0019：安全结构化运行诊断](/zh-cn/development/diagnostics/)——Event 写入数据库后输出有限日志，并保证日志失败不影响 Run；
 - [F-0005/F-0020：生产 CLI 与查询](/zh-cn/development/run-cli/)——默认初始化、离线检查、composition root、inspect/events 和失败边界；
 - [Feature 完成时怎样更新文档](/zh-cn/development/feature-documentation/)——哪些事实写在 `docs/`，哪些解释写在站点；
@@ -77,8 +79,8 @@ RunState。第三遍再读安全测试，确认你看到的是受测试约束的
 
 ## 不同问题去哪里找答案
 
-P1 已于 2026-09-08 收口，F-0020 的配置保护、初始化和离线检查已合入 main，跨平台 CI 通过。P2 恢复和 P3
-授权/隔离没有实现。F-0021 的 replay/check 已完成收口并通过跨平台 CI，保持只读；
+P1 已于 2026-09-08 收口，F-0020 的配置保护、初始化和离线检查已合入 main，跨平台 CI 通过。重启恢复和 P3
+授权/隔离仍待交付；F-0022 已实现当前进程内的有限重试。F-0021 的 replay/check 已完成收口并通过跨平台 CI，保持只读；
 提交与验证记录见 [PR #26](https://github.com/CherryYang05/BearAgent/pull/26)。
 研究策略应通过未来的 port 提出建议，由 Runtime 保持执行约束。顺序和实验指标见
 [从一次失败走向可比较的研究实验](/zh-cn/learn/research-experiments/)。
@@ -97,3 +99,6 @@ S1 只写足够验收的精简 Spec，只有多片实施时才增加 Plan；S2 �
 没有受到影响时记录 `N/A` 和原因，不为内部重构制造站点改动。
 
 聊天讨论可以提出问题，但不会自动改变这些事实。决定只有写入仓库并通过审查后才生效。
+
+有限重试从[Attempt 与恢复决定导读](/zh-cn/development/bounded-attempt-retry/)进入。先跟一次只读超时，
+再检查 Policy 变化、写入不明和进程退出用例。

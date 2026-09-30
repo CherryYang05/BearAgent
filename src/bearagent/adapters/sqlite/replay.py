@@ -235,6 +235,16 @@ def _projection(
     try:
         run_count, run_bytes = _table_size(connection, "run_projections", _RUN_COLUMNS, run_id)
         count, size = _table_size(connection, "activity_projections", _ACTIVITY_COLUMNS, run_id)
+        attempt_table = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='run_attempt_projections'"
+        ).fetchone()
+        if attempt_table is not None:
+            attempt_count, attempt_bytes = _table_size(
+                connection, "run_attempt_projections", ("run_id", "state_json"), run_id
+            )
+            if attempt_count > 1:
+                return None, ProjectionAvailability.UNREADABLE
+            size += attempt_bytes
         control.check()
         if count > MAX_REPLAY_EVENTS or run_count > 1 or run_bytes + size > MAX_REPLAY_BYTES:
             return None, ProjectionAvailability.UNREADABLE

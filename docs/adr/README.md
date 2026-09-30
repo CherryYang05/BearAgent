@@ -35,6 +35,8 @@ ADR 只记录影响多个模块、以后难以反转的技术决定。标题直�
 
 - [ADR-0020：先独立读取 Event 重建状态，再接入恢复决定](ADR-0020-event-replay-before-recovery.md)
   — accepted
+- [ADR-0021：先保存每次 Attempt 的事实，再根据证据决定是否重试](ADR-0021-attempt-ledger-before-retry.md)
+  — accepted
 
 新决定使用 [ADR 模板](../templates/adr.md)。被新决定替代的 ADR 不删除，改为 `superseded` 并链接
 到替代它的文档。

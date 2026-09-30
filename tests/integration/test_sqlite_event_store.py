@@ -81,7 +81,7 @@ def test_initialize_rejects_incompatible_migration(tmp_path: Path, tamper: str) 
             connection.execute(
                 """
                 INSERT INTO schema_migrations(version, name, checksum)
-                VALUES (2, 'future.sql', ?)
+                VALUES (3, 'future.sql', ?)
                 """,
                 ("0" * 64,),
             )

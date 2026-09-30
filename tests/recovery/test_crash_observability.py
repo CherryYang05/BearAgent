@@ -58,7 +58,7 @@ CRASH_EXPECTATIONS = (
     ),
     CrashExpectation(
         point="k3_before_replace",
-        last_event_type="ToolCallStarted",
+        last_event_type="AttemptStarted",
         activity_status=ActivityStatus.RUNNING,
         crash_marker="before_replace",
         model_calls=1,
@@ -66,7 +66,7 @@ CRASH_EXPECTATIONS = (
     ),
     CrashExpectation(
         point="k4_after_replace",
-        last_event_type="ToolCallStarted",
+        last_event_type="AttemptStarted",
         activity_status=ActivityStatus.RUNNING,
         crash_marker="after_replace",
         model_calls=1,

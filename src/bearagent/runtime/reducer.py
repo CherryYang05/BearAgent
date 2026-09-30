@@ -5,6 +5,7 @@ from typing import NoReturn
 
 from pydantic import ValidationError
 
+from bearagent.domain.attempts import RunStateV5
 from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.events import Event
 from bearagent.domain.ids import ActivityId, ModelCallId, ToolCallId
@@ -14,6 +15,7 @@ from bearagent.domain.run_events import (
     ModelCallRequestedPayload,
     ModelCallStartedPayload,
     RunCreatedPayload,
+    RunFailedPayload,
     RunStartedPayload,
     RunSucceededPayload,
     ToolCallCompletedPayload,
@@ -33,6 +35,7 @@ from bearagent.domain.runs import (
     RunState,
     RunStatus,
 )
+from bearagent.runtime.attempt_reducer import reduce_attempt_event
 from bearagent.runtime.budgets import check_activity_budget
 
 
@@ -61,6 +64,10 @@ def reduce_events(events: Iterable[Event]) -> RunState:
 
 def validate_event_history(prior_events: Iterable[Event], event: Event) -> None:
     """Validate facts that require earlier Event payloads, not projection fields."""
+    if event.schema_version == 5:
+        # v5 keeps bounded request/outcome hashes in its versioned state. Attempt
+        # Events mean the request is no longer two Events before the terminal.
+        return
     if event.event_type not in {"ToolCallCompleted", "ToolCallFailed"}:
         return
 
@@ -94,6 +101,20 @@ def validate_event_history(prior_events: Iterable[Event], event: Event) -> None:
 
 
 def reduce_event(state: RunState | None, event: Event) -> RunState:
+    """Dispatch explicit historical semantics without changing old RunState values."""
+    if event.schema_version == 5 or isinstance(state, RunStateV5):
+        try:
+            return reduce_attempt_event(state, event, apply_logical=_reduce_legacy_event)
+        except RunReducerError:
+            raise
+        except BearAgentError as cause:
+            raise RunReducerError(cause.info, cause=cause) from cause
+        except (ValueError, KeyError) as cause:
+            _fail_event(event, "Run Attempt evidence is inconsistent.", cause=cause)
+    return _reduce_legacy_event(state, event)
+
+
+def _reduce_legacy_event(state: RunState | None, event: Event) -> RunState:
     """Apply one validated Event without mutating the previous state."""
     try:
         payload = parse_run_event_payload(event)
@@ -167,6 +188,8 @@ def reduce_event(state: RunState | None, event: Event) -> RunState:
                 completed_at=event.occurred_at,
                 last_sequence=event.sequence,
             )
+        if not isinstance(payload, RunFailedPayload):
+            _fail_event(event, "Unsupported logical Run payload.")
         _require_terminal_ready(state, event)
         return _replace_state(
             state,
@@ -202,7 +225,8 @@ def _request_model(
     )
     usage = _replace_usage(
         state.budget_usage,
-        model_iterations=state.budget_usage.model_iterations + 1,
+        model_iterations=state.budget_usage.model_iterations
+        + (0 if isinstance(state, RunStateV5) else 1),
     )
     return _replace_state(
         state,
@@ -251,7 +275,11 @@ def _complete_model(
         status=ActivityStatus.SUCCEEDED,
         completed_at=event.occurred_at,
     )
-    usage = _model_usage(state, payload.input_tokens, payload.output_tokens, payload.cost_microusd)
+    usage = (
+        state.budget_usage
+        if isinstance(state, RunStateV5)
+        else _model_usage(state, payload.input_tokens, payload.output_tokens, payload.cost_microusd)
+    )
     return _with_activity(state, event, updated, budget_usage=usage)
 
 
@@ -274,7 +302,11 @@ def _fail_model(
         completed_at=event.occurred_at,
         error=payload.error,
     )
-    usage = _model_usage(state, payload.input_tokens, payload.output_tokens, payload.cost_microusd)
+    usage = (
+        state.budget_usage
+        if isinstance(state, RunStateV5)
+        else _model_usage(state, payload.input_tokens, payload.output_tokens, payload.cost_microusd)
+    )
     return _with_activity(state, event, updated, budget_usage=usage)
 
 
@@ -296,7 +328,7 @@ def _request_tool(
     )
     usage = _replace_usage(
         state.budget_usage,
-        tool_calls=state.budget_usage.tool_calls + 1,
+        tool_calls=state.budget_usage.tool_calls + (0 if isinstance(state, RunStateV5) else 1),
     )
     return _replace_state(
         state,
@@ -488,9 +520,9 @@ def _with_activity(
 
 
 def _replace_state(state: RunState, **changes: object) -> RunState:
-    values = {name: getattr(state, name) for name in RunState.model_fields}
+    values = {name: getattr(state, name) for name in type(state).model_fields}
     values.update(changes)
-    return RunState.model_validate(values)
+    return type(state).model_validate(values)
 
 
 def _replace_activity_state(activity: ActivityState, **changes: object) -> ActivityState:

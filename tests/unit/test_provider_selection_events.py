@@ -28,7 +28,7 @@ from bearagent.domain.model import (
 from bearagent.domain.providers import ModelProtocol, ProviderSelection
 from bearagent.domain.queries import RunInspection
 from bearagent.domain.run_events import (
-    RUN_EVENT_SCHEMA_VERSION_V4,
+    RUN_EVENT_SCHEMA_VERSION_V5,
     RunCreatedPayloadV3,
     RunCreatedPayloadV4,
     parse_run_event_payload,
@@ -61,7 +61,7 @@ def test_provider_selection_is_strict_and_contains_no_connection_fields() -> Non
         )
 
 
-def test_v4_run_reuses_agent_loop_reducer_context_and_query_paths() -> None:
+def test_v5_run_reuses_agent_loop_reducer_context_and_query_paths() -> None:
     tool_call_id = ToolCallId.new()
     provider = ScriptedFakeModelProvider(
         (
@@ -103,7 +103,7 @@ def test_v4_run_reuses_agent_loop_reducer_context_and_query_paths() -> None:
     assert len(provider.requests) == 2
     assert len(tool.requests) == 1
     assert events
-    assert all(event.schema_version == RUN_EVENT_SCHEMA_VERSION_V4 for event in events)
+    assert all(event.schema_version == RUN_EVENT_SCHEMA_VERSION_V5 for event in events)
     parsed = tuple(parse_run_event_payload(event) for event in events)
     assert isinstance(parsed[0], RunCreatedPayloadV4)
     assert parsed[0].provider_selection == provider_selection()

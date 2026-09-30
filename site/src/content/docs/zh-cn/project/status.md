@@ -3,6 +3,8 @@ title: 现在实现到了哪里
 description: 只列出当前分支中已有代码和测试支持的能力。
 bearStatus: mixed
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - F-0021
   - F-0020
   - ADR-0018
@@ -24,11 +26,11 @@ sourceRefs:
   - ADR-0017
 ---
 
-BearAgent 已有本地 `run/inspect/events` CLI。它用 config v1 与 RunProfile v2 显式选择
+BearAgent 已有本地 `run/inspect/events` CLI。它用 config v1 与 RunProfile v2/v3 显式选择
 Responses、Chat Completions 或 Anthropic Messages 协议，再组装 SQLite、固定 Policy、workspace Tools
 和有界 Agent Loop。F-0017 的 suite v1.1.1 已用 DeepSeek V4 经 production composition 通过四个普通
 任务与安全 canary；脱敏 report 和最终 Reality Check 完成，因此 F-0017/P1 已关闭。当前分支还用
-RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完成 K1-K6 进程退出观测基线。
+RunCreated v5 保存声明的 BearAgent/Policy/Tool contract identity，并完成 K1-K6 进程退出观测基线。
 
 2026-09-05 审查发现的默认配置可读问题，已由 F-0020 修复并合入 main。同时交付 `init`、离线配置
 检查和回归测试。2026-09-08 核对跨平台 CI、507 个离线测试及 main push 文档发布后，P1 完成收口。
@@ -43,7 +45,7 @@ RunCreated v4 保存声明的 BearAgent/Policy/Tool contract identity，并完�
 | 能查询任务做过什么吗？ | 能，用 `inspect` 看状态，用 `events` 看有序事实 |
 | 能知道 Run 使用了哪版 Tool/Policy 声明吗？ | 新 Run 可以；`inspect` 显示版本和 SHA-256，legacy Run 明确缺失 |
 | 能用结构化日志定位本机运行失败吗？ | 可以；stderr 提供固定字段诊断，但系统仍只根据 Event 判断 Run 状态 |
-| 程序中断后会自动继续吗？ | 不会；F-0021 提供只读检查，恢复执行尚未实现 |
+| 程序中断后会自动继续吗？ | 不会；提供只读检查，F-0022 的有限重试只在当前进程发生 |
 | 有用户 Approval 或真正的 sandbox 吗？ | 没有，P3 尚未实现 |
 | 文档站可以查看吗？ | 可以；本地可预览，线上为 `https://docs.bearguin.cn/zh-cn/` |
 
@@ -101,7 +103,7 @@ Plan 为 completed。P1 tag 不含这些命令，合入 main 的状态以 PR 为
 - SQLite 可以保存 Event 和 projection，但进程重启后不会自动继续 Run；
 - stderr diagnostics 不是持久 Event，也没有 OpenTelemetry、远程 collector、完整 span tree 或 traceback；
 - `inspect/events` 只能查看已提交事实，不能 resume、retry 或修复非终态 Run；
-- RunCreated v4 增加安全 Provider 选择与 contract fingerprint；其余 Activity 继续复用 v2 payload shape；
+- 新 RunCreated v5 保存安全 Provider 选择、contract fingerprint、retry policy 和恢复契约；
 - K4 即使文件已经 replace，terminal Event 缺失时仍只显示 RUNNING；当前不会 reconcile 或自动补成功；
 - 还没有用户 Approval、sandbox、服务器 API 或独立 Artifact 查询表；
 - 普通 v2 Run 使用 unpriced 账面费用；显示 0 不代表免费或真实账单受限；
@@ -111,8 +113,8 @@ Plan 为 completed。P1 tag 不含这些命令，合入 main 的状态以 PR 为
 [真实 push workflow](https://github.com/CherryYang05/BearAgent/actions/runs/33987823795)
 也已完成部署与公网健康检查。它不会部署 BearAgent Runtime。
 
-F-0002 的确定性重放只说明“同一串 Event 会算出同一状态”。它不是 P2 的崩溃恢复，也没有
-Checkpoint、Attempt、RecoveryDecision 或 `UNKNOWN` 处置。P3 的参数绑定 Approval 和隔离 runner、
+F-0002 的确定性重放只说明“同一串 Event 会算出同一状态”。它不代表崩溃续跑。F-0022 已增加 Attempt 与 RecoveryDecision，但仍没有
+Checkpoint、Receipt、重启续跑或 `UNKNOWN` 处置。P3 的参数绑定 Approval 和隔离 runner、
 P4 的 HTTP/认证与自托管也都尚未实现。
 
 研究路线从 P2 建立可比较的实验，在 P3 约束验证动作。策略提出建议，Runtime 保留预算、Policy 和
@@ -122,3 +124,14 @@ P4 的 HTTP/认证与自托管也都尚未实现。
 
 每个 Feature 完成时，同时更新工程 `docs/`、相关学习页、开发者入口和本页。只有实现事实变化时
 才修改状态；单纯改写说明不会把规划能力变成当前能力。
+
+## F-0022：每次尝试可查，安全失败才有限重试
+
+当前分支已接通 v5 Attempt、持久恢复决定、RunProfile v3 和 run attempts。默认只尝试一次，显式最多
+三次；每次重试消耗同一预算并重新经过 Tool prepare/Policy。模型只在连接阶段明确未提交且已知零
+用量时重发。写入结果不明会停止整个 Run，不执行排队 Tool 或下一次模型。
+
+SQLite migration 2 原子增加派生缓存，旧 Event/hash 继续可读。重启后 replay/check/attempts 只查询；
+F-0023 核对与 UNKNOWN、F-0024 控制命令尚未交付，P2 尚未关闭。实现与验证记录见
+[PLAN-F-0022](https://github.com/CherryYang05/BearAgent/blob/main/docs/plans/PLAN-F-0022-bounded-attempt-retry.md)。
+该分支的实现状态不表示已合入 main 或已部署线上文档。

@@ -18,6 +18,7 @@ from bearagent.domain.model import (
     ModelFinishReason,
     ModelTextDelta,
     ModelToolCall,
+    ModelUsage,
 )
 from bearagent.domain.tools import ToolRequest
 
@@ -47,6 +48,8 @@ class ModelStreamCollector:
 
     def __init__(self) -> None:
         self.discarded_output_chars = 0
+        self.received_event = False
+        self.reported_usage: ModelUsage | None = None
 
     async def collect(
         self,
@@ -58,6 +61,7 @@ class ModelStreamCollector:
         completion: ModelCompleted | None = None
 
         async for event in stream:
+            self.received_event = True
             event_value = _runtime_value(event)
             if completion is not None:
                 raise self._error("Model stream emitted data after completion.")
@@ -77,6 +81,7 @@ class ModelStreamCollector:
                 tool_calls.append(event_value)
             elif isinstance(event_value, ModelCompleted):
                 completion = event_value
+                self.reported_usage = completion.usage
             else:
                 raise self._error("Model stream emitted an unsupported event.")
 

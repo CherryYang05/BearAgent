@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from bearagent.domain._base import DomainModel
 from bearagent.domain.agent import RunResult
+from bearagent.domain.attempt_queries import AttemptPage
 from bearagent.domain.errors import ErrorInfo
 from bearagent.domain.queries import EventPage, RunInspection
 from bearagent.domain.replay import ReplaySummary, RunCheckPage
@@ -63,11 +64,18 @@ class ReplayCommandErrorOutput(DomainModel):
     """Safe replay/check failure without changing the existing CLI error contract."""
 
     schema_version: Literal[1] = 1
-    command: Literal["replay", "check"]
+    command: Literal["replay", "check", "attempts"]
     error: ErrorInfo
 
 
+class AttemptsCommandOutput(DomainModel):
+    schema_version: Literal[1] = 1
+    command: Literal["attempts"] = "attempts"
+    result: AttemptPage
+
+
 PUBLIC_CLI_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
+    AttemptsCommandOutput,
     ReplayCommandOutput,
     CheckCommandOutput,
     ReplayCommandErrorOutput,

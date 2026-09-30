@@ -95,7 +95,7 @@ class ReplaySummary(DomainModel):
     status: RunStatus
     last_sequence: int = Field(ge=1, le=MAX_REPLAY_EVENTS, strict=True)
     last_event_type: str = Field(pattern=r"^[A-Za-z][A-Za-z0-9_.-]{0,127}$")
-    state_format_version: Literal[1] = 1
+    state_format_version: Literal[1, 2] = 1
     state_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     projection: ProjectionComparison
     active_activity_id: ActivityId | None = None

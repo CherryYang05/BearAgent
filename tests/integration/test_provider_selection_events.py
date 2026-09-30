@@ -15,10 +15,10 @@ from bearagent.application.agent_loop import AgentLoop
 from bearagent.application.run_queries import RunQueryService
 from bearagent.domain.model import ModelFinishReason, ModelTextDelta
 from bearagent.domain.providers import ModelProtocol, ProviderSelection
-from bearagent.domain.run_events import RUN_EVENT_SCHEMA_VERSION_V4
+from bearagent.domain.run_events import RUN_EVENT_SCHEMA_VERSION_V5
 
 
-def test_sqlite_reopen_preserves_v4_provider_selection_and_fingerprint(tmp_path: Path) -> None:
+def test_sqlite_reopen_preserves_v5_provider_selection_and_fingerprint(tmp_path: Path) -> None:
     database_path = tmp_path / "events.sqlite3"
     selection = ProviderSelection(
         provider_id="primary",
@@ -53,6 +53,6 @@ def test_sqlite_reopen_preserves_v4_provider_selection_and_fingerprint(tmp_path:
 
         assert inspection.provider_selection == selection
         assert inspection.run_fingerprint == run_fingerprint()
-        assert all(event.schema_version == RUN_EVENT_SCHEMA_VERSION_V4 for event in events)
+        assert all(event.schema_version == RUN_EVENT_SCHEMA_VERSION_V5 for event in events)
 
     asyncio.run(exercise())

@@ -3,6 +3,8 @@ title: 全书阅读地图：从会用到会研究
 description: 六步、两条捷径和一套每章都能复用的学习方法。
 bearStatus: mixed
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - AI Agents in Depth
   - agentic-design-patterns
   - deepseek-harness
@@ -112,3 +114,9 @@ Artifact。中断后自动继续仍属于 P2，当前边界与验收记录见[�
 
 先回答开头的具体问题；再自己画一遍流程；然后打开“代码位置”中的第一个文件；最后只运行该章列出
 的最小测试。能够用自己的话解释“失败时会看到什么”，比记住类名更重要。
+
+## 看懂一次失败后的有限重试
+
+P2 已增加进程内的 Attempt 与恢复决定。先读[失败后先问哪三个问题](/zh-cn/learn/recovery-authority-isolation/)，
+再用[命令行手册](/zh-cn/guides/cli/)查看尝试次数；开发者可继续读
+[一次读取失败，什么时候可以再试](/zh-cn/development/bounded-attempt-retry/)。重启续跑与写入核对仍待实现。

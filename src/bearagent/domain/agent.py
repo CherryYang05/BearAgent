@@ -6,6 +6,7 @@ from pydantic import Field, field_validator, model_validator
 
 from bearagent.domain._base import DomainModel
 from bearagent.domain.artifacts import Artifact
+from bearagent.domain.attempts import RetryPolicy
 from bearagent.domain.ids import RunId, SessionId, ToolCallId
 from bearagent.domain.messages import TOOL_NAME_PATTERN
 from bearagent.domain.model import (
@@ -169,8 +170,18 @@ class RunProfileV2(DomainModel):
     budget_limits: BudgetLimits
 
 
+class RunProfileV3(DomainModel):
+    """Version 3 explicitly bounds in-process retries; legacy profiles remain single-attempt."""
+
+    schema_version: Literal[3] = 3
+    provider_id: str = Field(pattern=PROVIDER_ID_PATTERN)
+    agent_config: AgentSettings
+    budget_limits: BudgetLimits
+    retry_policy: RetryPolicy = Field(default_factory=RetryPolicy)
+
+
 type RunProfileDocument = Annotated[
-    RunProfile | RunProfileV2,
+    RunProfile | RunProfileV2 | RunProfileV3,
     Field(discriminator="schema_version"),
 ]
 

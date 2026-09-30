@@ -1,13 +1,24 @@
 """Serial P1 Agent Loop coordinated across persisted Activity boundaries."""
 
 import asyncio
+import random
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import Protocol
 
 from pydantic import BaseModel, ValidationError
 
+from bearagent.application.attempt_execution import AttemptRunner
 from bearagent.domain.agent import RunInput, RunResult
 from bearagent.domain.artifacts import Artifact, artifact_from_tool_result_data
+from bearagent.domain.attempts import (
+    RecoveryAction,
+    RecoveryReason,
+    RecoverySemantics,
+    RetryPolicy,
+    RunStateV5,
+    ToolRecoveryContract,
+)
 from bearagent.domain.errors import ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.events import Event
 from bearagent.domain.fingerprints import RunFingerprint
@@ -21,35 +32,32 @@ from bearagent.domain.ids import (
     RunId,
     Uuid4IdGenerator,
 )
-from bearagent.domain.messages import Message, TextPart, ToolCallPart
-from bearagent.domain.model import ModelFinishReason, ModelRequest
+from bearagent.domain.messages import TextPart, ToolCallPart
+from bearagent.domain.model import ModelFinishReason
 from bearagent.domain.providers import ProviderSelection
 from bearagent.domain.run_events import (
-    RUN_EVENT_SCHEMA_VERSION_V4,
-    ModelCallCompletedPayloadV2,
+    RUN_EVENT_SCHEMA_VERSION_V5,
     ModelCallFailedPayloadV2,
     ModelCallRequestedPayloadV2,
     ModelCallStartedPayloadV2,
-    RunCreatedPayloadV4,
+    RunCreatedPayloadV5,
     RunFailedPayloadV2,
     RunStartedPayloadV2,
     RunSucceededPayloadV2,
-    ToolCallCompletedPayloadV2,
     ToolCallFailedPayloadV2,
     ToolCallRequestedPayloadV2,
     ToolCallStartedPayloadV2,
 )
 from bearagent.domain.runs import ActivityKind, RunState
-from bearagent.domain.tools import ToolExecutionRecord, ToolRequest, ToolResult, ToolStatus
-from bearagent.ports.model import ModelProvider, ModelProviderError
+from bearagent.domain.tools import (
+    ToolRequest,
+    ToolSideEffect,
+)
+from bearagent.ports.model import ModelProvider
 from bearagent.ports.store import MAX_EVENT_QUERY_LIMIT, EventStore
+from bearagent.runtime.attempts import evidence_hash
 from bearagent.runtime.budgets import check_activity_budget
 from bearagent.runtime.context import ContextBuilder, ContextBuilderError
-from bearagent.runtime.model_stream import (
-    ModelStreamCollector,
-    ModelStreamProtocolError,
-)
-from bearagent.runtime.pricing import estimate_model_cost_microusd
 from bearagent.runtime.tool_executor import ToolExecutor
 
 
@@ -80,7 +88,13 @@ class AgentLoop:
         clock: Clock | None = None,
         id_generator: IdGenerator | None = None,
         provider_selection: ProviderSelection | None = None,
+        retry_policy: RetryPolicy | None = None,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        random_int: Callable[[int, int], int] = random.randint,
     ) -> None:
+        self._retry_policy = RetryPolicy() if retry_policy is None else retry_policy
+        self._sleep = sleep
+        self._random_int = random_int
         self._model_provider = model_provider
         self._event_store = event_store
         self._tool_executor = tool_executor
@@ -100,13 +114,25 @@ class AgentLoop:
         # identifier carries no authority; all execution still starts at append.
         run_id = self._id_generator.new(RunId) if run_id is None else run_id
         correlation_id = self._id_generator.new(CorrelationId)
-        run_created = RunCreatedPayloadV4(
+        run_created = RunCreatedPayloadV5(
             session_id=run_input.session_id,
             budget_limits=run_input.budget_limits,
             objective=run_input.objective,
             agent_config=run_input.agent_config,
             run_fingerprint=self._run_fingerprint,
             provider_selection=self._provider_selection,
+            retry_policy=self._retry_policy,
+            recovery_contracts=tuple(
+                ToolRecoveryContract(
+                    name=spec.name,
+                    spec_sha256=evidence_hash(spec),
+                    semantics=RecoverySemantics.READ_ONLY
+                    if spec.side_effect is ToolSideEffect.READ_ONLY
+                    else RecoverySemantics.NON_IDEMPOTENT,
+                    timeout_ms=spec.timeout_ms,
+                )
+                for spec in sorted(self._tool_specs, key=lambda spec: spec.name)
+            ),
         )
         state = await self._append(
             None,
@@ -179,121 +205,18 @@ class AgentLoop:
                 ),
             )
 
-            collector = ModelStreamCollector()
-            try:
-                async with asyncio.timeout(context.request.timeout_ms / 1_000):
-                    response = await collector.collect(self._model_provider.stream(context.request))
-            except asyncio.CancelledError:
-                raise
-            except ModelStreamProtocolError as error:
-                return await self._fail_model(
-                    state,
-                    correlation_id,
-                    activity_id,
-                    model_call_id,
-                    error.info,
-                    error.discarded_output_chars,
-                    artifacts,
-                )
-            except ModelProviderError as error:
-                return await self._fail_model(
-                    state,
-                    correlation_id,
-                    activity_id,
-                    model_call_id,
-                    error.info,
-                    collector.discarded_output_chars,
-                    artifacts,
-                )
-            except TimeoutError:
-                return await self._fail_model(
-                    state,
-                    correlation_id,
-                    activity_id,
-                    model_call_id,
-                    _provider_error(ErrorCode.PROVIDER_TIMEOUT, "Model call timed out."),
-                    collector.discarded_output_chars,
-                    artifacts,
-                )
-            except Exception:
-                return await self._fail_model(
-                    state,
-                    correlation_id,
-                    activity_id,
-                    model_call_id,
-                    _provider_error(ErrorCode.PROVIDER_ERROR, "Model call failed."),
-                    collector.discarded_output_chars,
-                    artifacts,
-                )
-
-            identity_error = _reused_tool_identity_error(context.request, response.message)
-            if identity_error is not None:
-                return await self._fail_model(
-                    state,
-                    correlation_id,
-                    activity_id,
-                    model_call_id,
-                    identity_error,
-                    collector.discarded_output_chars,
-                    artifacts,
-                )
-
-            usage = response.completion.usage
-            if usage is None:
-                return await self._fail_model(
-                    state,
-                    correlation_id,
-                    activity_id,
-                    model_call_id,
-                    _provider_error(
-                        ErrorCode.PROVIDER_PROTOCOL_ERROR,
-                        "Model completion did not include usage.",
-                    ),
-                    collector.discarded_output_chars,
-                    artifacts,
-                )
-            cost_microusd = estimate_model_cost_microusd(
-                usage.input_tokens,
-                usage.output_tokens,
-                run_input.agent_config.pricing,
+            runner = self._attempt_runner(state, activity_id, correlation_id)
+            response = await runner.model(
+                context.request,
+                self._model_provider,
+                call_id=model_call_id,
+                pricing=run_input.agent_config.pricing,
             )
-            try:
-                completed_event = self._build_event(
-                    state,
-                    run_id,
-                    correlation_id,
-                    "ModelCallCompleted",
-                    ModelCallCompletedPayloadV2(
-                        activity_id=activity_id,
-                        model_call_id=model_call_id,
-                        input_tokens=usage.input_tokens,
-                        output_tokens=usage.output_tokens,
-                        cost_microusd=cost_microusd,
-                        message=response.message,
-                        provider_request_id=response.completion.provider_request_id,
-                        provider_model=response.completion.model,
-                        finish_reason=response.completion.finish_reason,
-                    ),
-                )
-            except ValidationError:
-                return await self._fail_model(
-                    state,
-                    correlation_id,
-                    activity_id,
-                    model_call_id,
-                    _provider_error(
-                        ErrorCode.PROVIDER_PROTOCOL_ERROR,
-                        "Model completion exceeds the Event persistence boundary.",
-                    ),
-                    collector.discarded_output_chars,
-                    artifacts,
-                    input_tokens=usage.input_tokens,
-                    output_tokens=usage.output_tokens,
-                    cost_microusd=cost_microusd,
-                )
-            state = await self._event_store.append(completed_event)
+            state = runner.state
+            if isinstance(response, ModelCallFailedPayloadV2):
+                return await self._fail_run(state, correlation_id, response.error, artifacts)
 
-            if response.completion.finish_reason is ModelFinishReason.STOP:
+            if response.finish_reason is ModelFinishReason.STOP:
                 final_text = "".join(
                     part.text for part in response.message.parts if isinstance(part, TextPart)
                 )
@@ -354,63 +277,24 @@ class AgentLoop:
                         tool_call_id=request.tool_call_id,
                     ),
                 )
-                execution = await self._tool_executor.execute_recorded(request)
-                if execution.result.status is ToolStatus.SUCCEEDED:
-                    terminal_type = "ToolCallCompleted"
-                    terminal_payload: BaseModel = ToolCallCompletedPayloadV2(
-                        activity_id=tool_activity_id,
-                        tool_call_id=request.tool_call_id,
-                        execution=execution,
-                    )
-                else:
-                    error = execution.result.error
-                    if error is None:
-                        return await self._fail_run(
-                            state,
-                            correlation_id,
-                            _internal_error(),
-                            artifacts,
-                        )
-                    terminal_type = "ToolCallFailed"
-                    terminal_payload = ToolCallFailedPayloadV2(
-                        activity_id=tool_activity_id,
-                        tool_call_id=request.tool_call_id,
-                        error=error,
-                        execution=execution,
-                    )
-                try:
-                    terminal_event = self._build_event(
-                        state,
-                        run_id,
-                        correlation_id,
-                        terminal_type,
-                        terminal_payload,
-                    )
-                except ValidationError:
-                    persistence_error = _tool_persistence_error()
-                    compact_execution = _compact_execution_failure(
-                        execution,
-                        persistence_error,
-                    )
-                    state = await self._append(
-                        state,
-                        run_id,
-                        correlation_id,
-                        "ToolCallFailed",
-                        ToolCallFailedPayloadV2(
-                            activity_id=tool_activity_id,
-                            tool_call_id=request.tool_call_id,
-                            error=persistence_error,
-                            execution=compact_execution,
-                        ),
-                    )
-                    return await self._fail_run(
-                        state,
-                        correlation_id,
-                        persistence_error,
-                        artifacts,
-                    )
-                state = await self._event_store.append(terminal_event)
+                runner = self._attempt_runner(state, tool_activity_id, correlation_id)
+                terminal = await runner.tool(request, self._tool_executor)
+                state = runner.state
+                execution = terminal.execution
+                if isinstance(terminal, ToolCallFailedPayloadV2):
+                    decision = state.recovery_decisions[-1]
+                    if (
+                        decision.action is RecoveryAction.STOP_RUN
+                        or execution.persistence_truncated
+                    ):
+                        error = terminal.error
+                        if decision.reason is RecoveryReason.EFFECT_INDETERMINATE:
+                            error = ErrorInfo(
+                                category=ErrorCategory.TOOL,
+                                code=ErrorCode.EFFECT_INDETERMINATE,
+                                message="Tool effect is indeterminate; Run stopped.",
+                            )
+                        return await self._fail_run(state, correlation_id, error, artifacts)
                 try:
                     artifact = artifact_from_tool_result_data(
                         execution.request.name, execution.result.data
@@ -440,36 +324,24 @@ class AgentLoop:
             )
         return events
 
-    async def _fail_model(
+    def _attempt_runner(
         self,
         state: RunState,
-        correlation_id: CorrelationId,
         activity_id: ActivityId,
-        model_call_id: ModelCallId,
-        error: ErrorInfo,
-        discarded_output_chars: int,
-        artifacts: list[Artifact],
-        *,
-        input_tokens: int = 0,
-        output_tokens: int = 0,
-        cost_microusd: int = 0,
-    ) -> RunResult:
-        state = await self._append(
-            state,
-            state.run_id,
-            correlation_id,
-            "ModelCallFailed",
-            ModelCallFailedPayloadV2(
-                activity_id=activity_id,
-                model_call_id=model_call_id,
-                error=error,
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                cost_microusd=cost_microusd,
-                discarded_output_chars=discarded_output_chars,
-            ),
+        correlation_id: CorrelationId,
+    ) -> AttemptRunner:
+        if not isinstance(state, RunStateV5):
+            raise ValueError("AgentLoop requires a v5 Run")
+        return AttemptRunner(
+            state=state,
+            activity_id=activity_id,
+            correlation_id=correlation_id,
+            store=self._event_store,
+            now=self._clock.now,
+            ids=self._id_generator,
+            sleep=self._sleep,
+            random_int=self._random_int,
         )
-        return await self._fail_run(state, correlation_id, error, artifacts)
 
     async def _fail_run(
         self,
@@ -521,49 +393,14 @@ class AgentLoop:
             run_id=run_id,
             sequence=1 if state is None else state.last_sequence + 1,
             event_type=event_type,
-            schema_version=RUN_EVENT_SCHEMA_VERSION_V4,
-            occurred_at=self._clock.now(),
+            schema_version=RUN_EVENT_SCHEMA_VERSION_V5,
+            occurred_at=max(self._clock.now(), state.last_occurred_at)
+            if isinstance(state, RunStateV5)
+            else self._clock.now(),
             causation_id=self._id_generator.new(CausationId),
             correlation_id=correlation_id,
             payload=payload.model_dump(mode="json"),
         )
-
-
-def _provider_error(code: ErrorCode, message: str) -> ErrorInfo:
-    return ErrorInfo(
-        category=ErrorCategory.PROVIDER,
-        code=code,
-        message=message,
-    )
-
-
-def _reused_tool_identity_error(request: ModelRequest, message: Message) -> ErrorInfo | None:
-    previous_calls = tuple(
-        part
-        for previous_message in request.messages
-        for part in previous_message.parts
-        if isinstance(part, ToolCallPart)
-    )
-    previous_tool_call_ids = {str(part.tool_call_id) for part in previous_calls}
-    previous_provider_call_ids = {
-        part.provider_call_id for part in previous_calls if part.provider_call_id is not None
-    }
-    if any(
-        isinstance(part, ToolCallPart)
-        and (
-            str(part.tool_call_id) in previous_tool_call_ids
-            or (
-                part.provider_call_id is not None
-                and part.provider_call_id in previous_provider_call_ids
-            )
-        )
-        for part in message.parts
-    ):
-        return _provider_error(
-            ErrorCode.PROVIDER_PROTOCOL_ERROR,
-            "Model completion reused a Tool call identity.",
-        )
-    return None
 
 
 def _internal_error() -> ErrorInfo:
@@ -579,28 +416,4 @@ def _context_persistence_error() -> ErrorInfo:
         category=ErrorCategory.VALIDATION,
         code=ErrorCode.INVALID_INPUT,
         message="Model request exceeds the Event persistence boundary.",
-    )
-
-
-def _tool_persistence_error() -> ErrorInfo:
-    return ErrorInfo(
-        category=ErrorCategory.TOOL,
-        code=ErrorCode.TOOL_OUTPUT_TOO_LARGE,
-        message="Tool execution evidence exceeds the Event persistence boundary.",
-    )
-
-
-def _compact_execution_failure(
-    execution: ToolExecutionRecord,
-    error: ErrorInfo,
-) -> ToolExecutionRecord:
-    return ToolExecutionRecord(
-        request=execution.request,
-        reached_adapter=execution.reached_adapter,
-        result=ToolResult(
-            tool_call_id=execution.request.tool_call_id,
-            status=ToolStatus.FAILED,
-            error=error,
-        ),
-        persistence_truncated=True,
     )

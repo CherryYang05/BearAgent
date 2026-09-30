@@ -1,4 +1,453 @@
 {
+  "AttemptsCommandOutput": {
+    "$defs": {
+      "ActivityId": {
+        "description": "Identify one model or tool operation.",
+        "format": "uuid4",
+        "title": "ActivityId",
+        "type": "string"
+      },
+      "AttemptId": {
+        "description": "Identify one attempt to execute a logical Activity.",
+        "format": "uuid4",
+        "title": "AttemptId",
+        "type": "string"
+      },
+      "AttemptPage": {
+        "additionalProperties": false,
+        "properties": {
+          "run_id": {
+            "$ref": "#/$defs/RunId"
+          },
+          "recording": {
+            "enum": [
+              "recorded",
+              "legacy_not_recorded"
+            ],
+            "title": "Recording",
+            "type": "string"
+          },
+          "last_sequence": {
+            "minimum": 1,
+            "title": "Last Sequence",
+            "type": "integer"
+          },
+          "projection": {
+            "$ref": "#/$defs/ProjectionComparison"
+          },
+          "after_sequence": {
+            "minimum": 0,
+            "title": "After Sequence",
+            "type": "integer"
+          },
+          "limit": {
+            "maximum": 1000,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "attempts": {
+            "items": {
+              "$ref": "#/$defs/AttemptSummary"
+            },
+            "maxItems": 1000,
+            "title": "Attempts",
+            "type": "array"
+          },
+          "next_after_sequence": {
+            "minimum": 0,
+            "title": "Next After Sequence",
+            "type": "integer"
+          },
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "run_id",
+          "recording",
+          "last_sequence",
+          "projection",
+          "after_sequence",
+          "limit",
+          "attempts",
+          "next_after_sequence",
+          "has_more"
+        ],
+        "title": "AttemptPage",
+        "type": "object"
+      },
+      "AttemptStatus": {
+        "enum": [
+          "requested",
+          "started",
+          "succeeded",
+          "failed"
+        ],
+        "title": "AttemptStatus",
+        "type": "string"
+      },
+      "AttemptSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "attempt_id": {
+            "$ref": "#/$defs/AttemptId"
+          },
+          "number": {
+            "maximum": 3,
+            "minimum": 1,
+            "title": "Number",
+            "type": "integer"
+          },
+          "requested_sequence": {
+            "minimum": 1,
+            "title": "Requested Sequence",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/$defs/AttemptStatus"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "deadline": {
+            "format": "date-time",
+            "title": "Deadline",
+            "type": "string"
+          },
+          "reached_adapter": {
+            "title": "Reached Adapter",
+            "type": "boolean"
+          },
+          "failure_class": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/FailureClass"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model_evidence": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ModelFailureEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "input_tokens": {
+            "minimum": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "minimum": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "cost_microusd": {
+            "minimum": 0,
+            "title": "Cost Microusd",
+            "type": "integer"
+          },
+          "decisions": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/RecoveryDecision"
+            },
+            "title": "Decisions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "activity_id",
+          "attempt_id",
+          "number",
+          "requested_sequence",
+          "status",
+          "requested_at",
+          "started_at",
+          "completed_at",
+          "deadline",
+          "reached_adapter",
+          "failure_class",
+          "error_code",
+          "model_evidence",
+          "input_tokens",
+          "output_tokens",
+          "cost_microusd"
+        ],
+        "title": "AttemptSummary",
+        "type": "object"
+      },
+      "ErrorCode": {
+        "description": "Initial stable error codes; later Features may add specific codes.",
+        "enum": [
+          "invalid_input",
+          "invalid_event",
+          "invalid_state_transition",
+          "run_not_found",
+          "query_limit_exceeded",
+          "query_timeout",
+          "budget_exhausted",
+          "provider_error",
+          "provider_timeout",
+          "provider_rate_limited",
+          "provider_unavailable",
+          "provider_authentication",
+          "provider_permission_denied",
+          "provider_invalid_request",
+          "provider_refused",
+          "provider_protocol_error",
+          "tool_not_found",
+          "tool_invalid_input",
+          "tool_permission_denied",
+          "tool_timeout",
+          "tool_output_too_large",
+          "tool_error",
+          "workspace_path_denied",
+          "workspace_not_found",
+          "workspace_wrong_type",
+          "workspace_not_text",
+          "workspace_limit_exceeded",
+          "workspace_access_failed",
+          "persistence_error",
+          "internal_error",
+          "effect_indeterminate"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "EventId": {
+        "description": "Identify one immutable persisted fact.",
+        "format": "uuid4",
+        "title": "EventId",
+        "type": "string"
+      },
+      "FailureClass": {
+        "enum": [
+          "invalid_input",
+          "transient_infrastructure",
+          "permanent_failure",
+          "permission_denied",
+          "effect_indeterminate"
+        ],
+        "title": "FailureClass",
+        "type": "string"
+      },
+      "ModelFailureEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "submission": {
+            "$ref": "#/$defs/ModelSubmission",
+            "default": "unknown"
+          },
+          "usage_known": {
+            "default": false,
+            "title": "Usage Known",
+            "type": "boolean"
+          }
+        },
+        "title": "ModelFailureEvidence",
+        "type": "object"
+      },
+      "ModelSubmission": {
+        "enum": [
+          "not_submitted",
+          "unknown"
+        ],
+        "title": "ModelSubmission",
+        "type": "string"
+      },
+      "ProjectionComparison": {
+        "enum": [
+          "matched",
+          "missing",
+          "mismatch",
+          "unreadable"
+        ],
+        "title": "ProjectionComparison",
+        "type": "string"
+      },
+      "RecoveryAction": {
+        "enum": [
+          "retry",
+          "return_to_model",
+          "stop_run"
+        ],
+        "title": "RecoveryAction",
+        "type": "string"
+      },
+      "RecoveryDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "activity_id": {
+            "$ref": "#/$defs/ActivityId"
+          },
+          "attempt_id": {
+            "$ref": "#/$defs/AttemptId"
+          },
+          "failure_event_id": {
+            "$ref": "#/$defs/EventId"
+          },
+          "based_on_sequence": {
+            "minimum": 1,
+            "title": "Based On Sequence",
+            "type": "integer"
+          },
+          "policy_version": {
+            "const": "bounded-retry-v1",
+            "default": "bounded-retry-v1",
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "contract_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Contract Sha256",
+            "type": "string"
+          },
+          "action": {
+            "$ref": "#/$defs/RecoveryAction"
+          },
+          "reason": {
+            "$ref": "#/$defs/RecoveryReason"
+          },
+          "delay_ms": {
+            "default": 0,
+            "maximum": 5000,
+            "minimum": 0,
+            "title": "Delay Ms",
+            "type": "integer"
+          },
+          "supersedes_decision_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/EventId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "event_id": {
+            "$ref": "#/$defs/EventId"
+          },
+          "sequence": {
+            "minimum": 1,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "activity_id",
+          "attempt_id",
+          "failure_event_id",
+          "based_on_sequence",
+          "contract_sha256",
+          "action",
+          "reason",
+          "event_id",
+          "sequence",
+          "occurred_at"
+        ],
+        "title": "RecoveryDecision",
+        "type": "object"
+      },
+      "RecoveryReason": {
+        "enum": [
+          "safe_transient",
+          "attempts_exhausted",
+          "deadline_exhausted",
+          "budget_exhausted",
+          "effect_indeterminate",
+          "model_submission_unknown",
+          "non_retryable",
+          "contract_changed"
+        ],
+        "title": "RecoveryReason",
+        "type": "string"
+      },
+      "RunId": {
+        "description": "Identify one user-request execution.",
+        "format": "uuid4",
+        "title": "RunId",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Schema Version",
+        "type": "integer"
+      },
+      "command": {
+        "const": "attempts",
+        "default": "attempts",
+        "title": "Command",
+        "type": "string"
+      },
+      "result": {
+        "$ref": "#/$defs/AttemptPage"
+      }
+    },
+    "required": [
+      "result"
+    ],
+    "title": "AttemptsCommandOutput",
+    "type": "object"
+  },
   "CheckCommandOutput": {
     "$defs": {
       "ActivityId": {
@@ -50,7 +499,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -87,8 +537,11 @@
             "type": "string"
           },
           "state_format_version": {
-            "const": 1,
             "default": 1,
+            "enum": [
+              1,
+              2
+            ],
             "title": "State Format Version",
             "type": "integer"
           },
@@ -320,7 +773,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -895,7 +1349,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -1314,7 +1769,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"
@@ -1390,7 +1846,8 @@
       "command": {
         "enum": [
           "replay",
-          "check"
+          "check",
+          "attempts"
         ],
         "title": "Command",
         "type": "string"
@@ -1457,8 +1914,11 @@
             "type": "string"
           },
           "state_format_version": {
-            "const": 1,
             "default": 1,
+            "enum": [
+              1,
+              2
+            ],
             "title": "State Format Version",
             "type": "integer"
           },
@@ -1871,7 +2331,8 @@
           "workspace_limit_exceeded",
           "workspace_access_failed",
           "persistence_error",
-          "internal_error"
+          "internal_error",
+          "effect_indeterminate"
         ],
         "title": "ErrorCode",
         "type": "string"

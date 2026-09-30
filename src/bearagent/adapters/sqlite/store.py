@@ -13,6 +13,7 @@ from typing import Final, cast
 from pydantic import JsonValue, ValidationError
 
 from bearagent.domain._base import thaw_json_mapping
+from bearagent.domain.attempts import RunStateV5
 from bearagent.domain.errors import ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.events import MAX_EVENT_PAYLOAD_BYTES, Event
 from bearagent.domain.ids import RunId
@@ -33,6 +34,7 @@ from bearagent.runtime.reducer import reduce_event, validate_event_history
 DEFAULT_BUSY_TIMEOUT_MS: Final = 5_000
 MAX_BUSY_TIMEOUT_MS: Final = 60_000
 _MIGRATION_NAME: Final = "0001_initial.sql"
+_ATTEMPT_MIGRATION_NAME: Final = "0002_attempt_projections.sql"
 _RUN_COLUMN_COUNT: Final = 19
 _ACTIVITY_COLUMN_COUNT: Final = 12
 
@@ -121,8 +123,10 @@ class SqliteEventStore:
                     "SELECT version, name, checksum FROM schema_migrations ORDER BY version"
                 ).fetchall(),
             )
-            if any(_db_int(row[0]) > 1 for row in rows):
+            if any(_db_int(row[0]) > 2 for row in rows):
                 raise _migration_error("Database schema is newer than this BearAgent build.")
+            if tuple(_db_int(row[0]) for row in rows) != tuple(range(1, len(rows) + 1)):
+                raise _migration_error("Database migration history has a gap.")
             version_one = next((row for row in rows if _db_int(row[0]) == 1), None)
             if version_one is None:
                 for statement in _sql_statements(migration_sql):
@@ -133,19 +137,34 @@ class SqliteEventStore:
                 )
             elif str(version_one[1]) != _MIGRATION_NAME or str(version_one[2]) != checksum:
                 raise _migration_error("Applied database migration does not match this build.")
+            attempt_sql = _read_attempt_migration()
+            attempt_checksum = hashlib.sha256(attempt_sql.encode("utf-8")).hexdigest()
+            version_two = next((row for row in rows if _db_int(row[0]) == 2), None)
+            if version_two is None:
+                for statement in _sql_statements(attempt_sql):
+                    connection.execute(statement)
+                connection.execute(
+                    "INSERT INTO schema_migrations(version, name, checksum) VALUES (?, ?, ?)",
+                    (2, _ATTEMPT_MIGRATION_NAME, attempt_checksum),
+                )
+            elif (
+                str(version_two[1]) != _ATTEMPT_MIGRATION_NAME
+                or str(version_two[2]) != attempt_checksum
+            ):
+                raise _migration_error("Applied database migration does not match this build.")
             _verify_required_tables(connection)
             connection.commit()
         except EventStoreMigrationError:
             connection.rollback()
             raise
-        except sqlite3.Error as cause:
+        except (sqlite3.Error, OSError) as cause:
             connection.rollback()
             raise _migration_error("Database schema initialization failed.", cause=cause) from cause
         finally:
             connection.close()
 
     def _append_sync(self, event: Event, payload_json: str) -> RunState:
-        connection = self._open_initialized()
+        connection = self._open_initialized(require_current_schema=True)
         event_inserted = False
         try:
             connection.execute("BEGIN IMMEDIATE")
@@ -271,7 +290,7 @@ class SqliteEventStore:
         connection.execute("PRAGMA synchronous=FULL")
         return connection
 
-    def _open_initialized(self) -> sqlite3.Connection:
+    def _open_initialized(self, *, require_current_schema: bool = False) -> sqlite3.Connection:
         if not self._database_path.is_file():
             raise EventStoreNotInitializedError(
                 _persistence_info("EventStore has not been initialized.")
@@ -279,7 +298,7 @@ class SqliteEventStore:
         connection: sqlite3.Connection | None = None
         try:
             connection = self._connect()
-            verify_store_schema(connection)
+            verify_store_schema(connection, require_current_schema=require_current_schema)
             return connection
         except EventStoreError:
             if connection is not None:
@@ -301,6 +320,14 @@ def _read_migration() -> str:
     )
 
 
+def _read_attempt_migration() -> str:
+    return (
+        resources.files("bearagent.adapters.sqlite")
+        .joinpath("migrations", _ATTEMPT_MIGRATION_NAME)
+        .read_text(encoding="utf-8")
+    )
+
+
 def _sql_statements(script: str) -> tuple[str, ...]:
     statements: list[str] = []
     current: list[str] = []
@@ -316,7 +343,10 @@ def _sql_statements(script: str) -> tuple[str, ...]:
 
 
 def verify_store_schema(
-    connection: sqlite3.Connection, *, require_projections: bool = True
+    connection: sqlite3.Connection,
+    *,
+    require_projections: bool = True,
+    require_current_schema: bool = False,
 ) -> None:
     table = connection.execute(
         "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'"
@@ -330,10 +360,13 @@ def verify_store_schema(
     rows = cast(
         list[tuple[object, ...]],
         connection.execute(
-            "SELECT version, name, checksum FROM schema_migrations ORDER BY version LIMIT 2"
+            "SELECT version, name, checksum FROM schema_migrations ORDER BY version LIMIT 3"
         ).fetchall(),
     )
-    if len(rows) != 1 or _db_int(rows[0][0]) != 1:
+    allowed_lengths = {2} if require_current_schema else {1, 2}
+    if len(rows) not in allowed_lengths or tuple(_db_int(row[0]) for row in rows) != tuple(
+        range(1, len(rows) + 1)
+    ):
         raise EventStoreMigrationError(
             _persistence_info("Database schema version is not supported.")
         )
@@ -341,7 +374,18 @@ def verify_store_schema(
         raise EventStoreMigrationError(
             _persistence_info("Applied database migration does not match this build.")
         )
-    _verify_required_tables(connection, require_projections=require_projections)
+    if len(rows) == 2:
+        expected_attempt_checksum = hashlib.sha256(
+            _read_attempt_migration().encode("utf-8")
+        ).hexdigest()
+        if (
+            str(rows[1][1]) != _ATTEMPT_MIGRATION_NAME
+            or str(rows[1][2]) != expected_attempt_checksum
+        ):
+            raise _migration_error("Applied database migration does not match this build.")
+    _verify_required_tables(
+        connection, require_projections=require_projections, require_attempts=len(rows) == 2
+    )
     journal_mode = cast(tuple[object, ...], connection.execute("PRAGMA journal_mode").fetchone())
     if str(journal_mode[0]).lower() != "wal":
         raise EventStoreCorruptionError(
@@ -350,17 +394,26 @@ def verify_store_schema(
 
 
 def _verify_required_tables(
-    connection: sqlite3.Connection, *, require_projections: bool = True
+    connection: sqlite3.Connection,
+    *,
+    require_projections: bool = True,
+    require_attempts: bool = True,
 ) -> None:
     required = (
-        {"events", "run_projections", "activity_projections"} if require_projections else {"events"}
+        {"events", "run_projections", "activity_projections", "run_attempt_projections"}
+        if require_projections
+        else {"events"}
     )
+    if not require_attempts:
+        required.discard("run_attempt_projections")
     rows = cast(
         list[tuple[object, ...]],
         connection.execute(
             """
             SELECT name FROM sqlite_master
-            WHERE type = 'table' AND name IN ('events', 'run_projections', 'activity_projections')
+            WHERE type = 'table' AND name IN (
+                'events', 'run_projections', 'activity_projections', 'run_attempt_projections'
+            )
             """
         ).fetchall(),
     )
@@ -457,7 +510,7 @@ def load_run_projection(connection: sqlite3.Connection, run_id: RunId) -> RunSta
         if len(run_row) != _RUN_COLUMN_COUNT or len(activity_rows) != _db_int(run_row[18]):
             raise ValueError("projection row shape mismatch")
         activities = tuple(_activity_from_row(row, run_id) for row in activity_rows)
-        return RunState.model_validate(
+        base_state = RunState.model_validate(
             {
                 "run_id": str(run_row[0]),
                 "session_id": str(run_row[1]),
@@ -484,6 +537,23 @@ def load_run_projection(connection: sqlite3.Connection, run_id: RunId) -> RunSta
                 "last_sequence": _db_int(run_row[17]),
             }
         )
+        created = connection.execute(
+            "SELECT schema_version FROM events WHERE run_id = ? AND sequence = 1", (str(run_id),)
+        ).fetchone()
+        if created is not None and _db_int(created[0]) == 5:
+            extra = connection.execute(
+                "SELECT state_json FROM run_attempt_projections WHERE run_id = ?", (str(run_id),)
+            ).fetchone()
+            if extra is None:
+                raise ValueError("Attempt projection is missing")
+            state = RunStateV5.model_validate_json(str(extra[0]))
+            if (
+                RunState.model_validate(state.model_dump(include=set(RunState.model_fields)))
+                != base_state
+            ):
+                raise ValueError("Attempt and logical projections disagree")
+            return state
+        return base_state
     except (TypeError, ValueError, ValidationError) as cause:
         raise EventStoreCorruptionError(
             _persistence_info("Persisted Run projection is invalid."), cause=cause
@@ -577,6 +647,13 @@ def _write_run_projection(connection: sqlite3.Connection, state: RunState) -> No
                 None if activity.tool_call_id is None else str(activity.tool_call_id),
                 activity.tool_name,
             ),
+        )
+
+    if isinstance(state, RunStateV5):
+        connection.execute(
+            "INSERT INTO run_attempt_projections(run_id, state_json) VALUES (?, ?) "
+            "ON CONFLICT(run_id) DO UPDATE SET state_json=excluded.state_json",
+            (str(state.run_id), state.model_dump_json()),
         )
 
 

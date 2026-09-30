@@ -26,6 +26,7 @@ from openai.types.chat.chat_completion_chunk import (
 from pydantic import ValidationError
 
 from bearagent.domain._base import thaw_json_mapping
+from bearagent.domain.attempts import ModelFailureEvidence
 from bearagent.domain.errors import ErrorCode
 from bearagent.domain.ids import ToolCallId
 from bearagent.domain.messages import MessageRole, TextPart, ToolCallPart, ToolResultPart
@@ -89,6 +90,7 @@ class OpenAIChatCompletionsProvider:
         return self._thinking_mode
 
     async def stream(self, request: ModelRequest) -> AsyncIterator[ModelEvent]:
+        request_opened = False
         terminal_seen = False
         finish_reason: ModelFinishReason | None = None
         usage: ModelUsage | None = None
@@ -113,6 +115,7 @@ class OpenAIChatCompletionsProvider:
                     else None
                 ),
             )
+            request_opened = True
             async for chunk in stream:
                 if terminal_seen:
                     raise protocol_error("Provider emitted an event after completion.")
@@ -185,7 +188,10 @@ class OpenAIChatCompletionsProvider:
         except ModelProviderError:
             raise
         except Exception as cause:
-            raise classify_openai_error(cause) from cause
+            error = classify_openai_error(cause)
+            if request_opened:
+                error = ModelProviderError(error.info, cause=cause, evidence=ModelFailureEvidence())
+            raise error from cause
         if not terminal_seen:
             if finish_reason is not None and usage is None:
                 raise protocol_error("Provider completion omitted required usage.")

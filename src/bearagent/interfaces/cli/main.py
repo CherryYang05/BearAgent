@@ -25,6 +25,7 @@ from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, Er
 from bearagent.domain.ids import RunId, SessionId
 from bearagent.domain.runs import RunStatus
 from bearagent.interfaces.cli.contracts import (
+    AttemptsCommandOutput,
     CheckCommandOutput,
     CommandErrorOutput,
     EventsCommandOutput,
@@ -34,6 +35,7 @@ from bearagent.interfaces.cli.contracts import (
     RunCommandOutput,
 )
 from bearagent.interfaces.cli.renderers import (
+    render_attempts,
     render_check,
     render_error,
     render_events,
@@ -88,8 +90,8 @@ run_app = typer.Typer(
         "Execution options: --config, --profile, --workspace, --database, --json. "
         "Use `bearagent run execute --help` for option details. "
         "Run options may appear before or after OBJECTIVE. "
-        "Use `bearagent run -- OBJECTIVE` when the objective is named inspect/events/replay/check "
-        "or begins with a dash."
+        "Use `bearagent run -- OBJECTIVE` for objectives named "
+        "inspect/events/replay/check/attempts or beginning with a dash."
     ),
     no_args_is_help=True,
     add_completion=False,
@@ -238,7 +240,7 @@ def run_objective(
     objective: Annotated[str, typer.Argument(help="The objective for this Run.")],
     profile: Annotated[
         Path,
-        typer.Option("--profile", help="Path to a version 1 or 2 Run profile."),
+        typer.Option("--profile", help="Path to a version 1, 2 or 3 Run profile."),
     ] = DEFAULT_PROFILE_PATH,
     config: Annotated[
         Path,
@@ -383,8 +385,31 @@ def check_runs(
         raise typer.Exit(code=result.exit_code)
 
 
+@run_app.command("attempts")
+def inspect_attempts(
+    run_id: Annotated[str, typer.Argument(help="Run UUID to inspect without executing.")],
+    after_sequence: Annotated[int, typer.Option("--after-sequence", min=0, max=2**63 - 1)] = 0,
+    limit: Annotated[int, typer.Option("--limit", min=1, max=1000)] = 100,
+    database: Annotated[Path, typer.Option("--database")] = DEFAULT_DATABASE_PATH,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Read recorded Attempts and decisions from Events, without credentials or execution."""
+    try:
+        service = build_run_replay_service(database)
+        result = asyncio.run(
+            service.attempts(RunId.parse(run_id), after_sequence=after_sequence, limit=limit)
+        )
+    except Exception as error:
+        _exit_replay_error("attempts", error, json_output=json_output)
+    typer.echo(
+        render_json(AttemptsCommandOutput(result=result))
+        if json_output
+        else render_attempts(result)
+    )
+
+
 def _exit_replay_error(
-    command: Literal["replay", "check"], error: BaseException, *, json_output: bool
+    command: Literal["replay", "check", "attempts"], error: BaseException, *, json_output: bool
 ) -> NoReturn:
     if isinstance(error, EventReplayError):
         info = replay_error(error.info.code).info
