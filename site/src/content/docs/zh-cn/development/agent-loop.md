@@ -1,8 +1,10 @@
 ---
 title: 有界 Agent Loop 与 Run contract identity 实现导读
-description: 找到 ContextBuilder、v4 RunCreated、串行协调器、费用估算和 crash observability 测试。
+description: 找到 ContextBuilder、v5 RunCreated、AttemptRunner、费用估算和中断边界测试。
 bearStatus: implemented
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - F-0016
   - PLAN-F-0016
   - ADR-0013
@@ -20,10 +22,10 @@ EventStore 中的最新事实
   -> check_activity_budget
   -> ContextBuilder.build
   -> ModelCallRequested / Started
-  -> ModelProvider.stream
+  -> AttemptRunner.model：AttemptRequested / Started -> ModelProvider.stream
   -> ModelCallCompleted / Failed
   -> ToolCallRequested / Started
-  -> ToolExecutor.execute_recorded
+  -> AttemptRunner.tool：AttemptRequested -> prepare / Policy -> AttemptStarted -> Executor
   -> ToolCallCompleted / Failed
   -> 下一轮或 RunSucceeded / RunFailed
 ```
@@ -33,10 +35,10 @@ EventStore 中的最新事实
 | 位置 | 责任 |
 |---|---|
 | `domain/agent.py` | AgentConfig、版本化定价、Context 报告、Run 输入和终态结果 |
-| `domain/run_events.py` | v1-v4 payload registry；v4 RunCreated 携带 fingerprint，其余 v4 复用 v2 shape |
+| `domain/run_events.py` | v1-v5 payload registry；v5 RunCreated 保存 retry policy 与恢复契约 |
 | `domain/fingerprints.py` | 有界的 Policy、Tool 与 Run contract identity Value Objects |
 | `domain/tools.py` | 原始/规范化请求、Policy 决定、是否到达 adapter 和 ToolResult 的执行记录 |
-| `runtime/context.py` | 从已提交的 v2-shaped Activity Event 构造 exact ModelRequest；当前新 Run 使用 schema v4 |
+| `runtime/context.py` | 从已提交的 v2-shaped Activity Event 构造 exact ModelRequest；当前新 Run 使用 schema v5 |
 | `runtime/model_stream.py` | 有界组装 text delta、Tool call 和唯一 completion |
 | `runtime/pricing.py` | input/output 分别向上取整的整数 micro-USD 估算 |
 | `runtime/fingerprints.py` | 对可信注册信息做 canonical JSON + SHA-256，不读取 adapter 状态 |
@@ -46,7 +48,7 @@ EventStore 中的最新事实
 
 ## v4 RunCreated 怎样复用 v2 Activity 事实
 
-F-0018 以后，新 Run 全部写 schema version 4，SQLite 表结构不变。RunCreated v4 保存目标、预算、
+F-0018 在当时让新 Run 写 schema version 4，SQLite 表结构不变。历史 RunCreated v4 保存目标、预算、
 非敏感 AgentConfig、可选 Provider 选择和 `RunFingerprint`。其余 v4 Event 复用 v2 payload shape：
 Model requested 保存 exact request 和 Context 报告；Model completed 保存 assistant Message、
 Provider request ID、实际模型、finish reason、usage 和费用估算。
@@ -65,7 +67,7 @@ PreparedToolRequest、PolicyDecision、是否真正进入 adapter，以及完整
 模型协议失败。若 Tool 已执行但完整执行记录过大，Loop 保存 `persistence_truncated=true` 的有限失败
 记录，保留原始请求和 `reached_adapter`，随后终止 Run，不把可能已经发生的副作用自动重试。
 
-Reducer 继续只读取 v1-v4 共有的状态字段，所以 projection schema 不需要 migration。解析 Event 时会
+历史 v1-v4 使用原 RunState 和预算规则。F-0022 的新 Run 使用 v5、独立 RunStateV5 与 migration 2。解析 Event 时会
 把冻结 JSON 容器还原成普通 JSON，再按事件类型和 schema version 严格校验。
 
 ## 五个容易改坏的边界
@@ -76,17 +78,15 @@ Reducer 继续只读取 v1-v4 共有的状态字段，所以 projection schema �
 第二，ToolExecutor 的两个公共入口只决定返回 `ToolResult` 还是完整执行记录。lookup、输入限制、
 prepare、Policy、timeout、adapter 调用和输出检查只存在一份。Agent Loop 不能直接调用具体 Tool。
 
-第三，调用者取消时 `CancelledError` 原样传播。模型或 Tool Activity 可能保持 RUNNING；P1 不
-添加恢复、自动 retry 或 `UNKNOWN` 来掩盖这个事实。
+第三，调用者取消时 `CancelledError` 原样传播。模型或 Tool Activity 可能保持 RUNNING；当前进程内的有限 retry 不会掩盖取消；重启续跑和 `UNKNOWN` 仍未实现。
 
 第四，同一个版本中的 ToolCallRequested 与 v2-shaped terminal evidence 必须包含值相等的原始
-ToolRequest。当前 schema v2、v3、v4 都执行这条检查。Reducer 依据解析后的 payload shape 判断，避免
+ToolRequest。当前 schema v2-v5 都执行这条检查。Reducer 依据解析后的 payload shape 判断，避免
 新增复用相同 shape 的版本时漏掉校验；检查仍只读取 Event 历史，不给 Run/Activity projection 添加
 版本专属字段。
 
 第五，`ErrorInfo.retryable` 与 `ToolRetrySafety` 只保留来源观测和 Tool contract 声明。AgentLoop 不根据
-它们启动第二次调用。未来的恢复必须建立新的 Attempt 与 RecoveryDecision，不能在当前 Loop 增加隐藏
-retry 分支。
+它们启动第二次调用。F-0022 通过 AttemptRunner 保存新的 Attempt 与 RecoveryDecision；不存在只靠 hint 的隐藏 retry。
 
 ## 从哪里看测试
 
@@ -105,3 +105,15 @@ F-0019 没有在 Loop 中增加 logger 分支。production bootstrap 只用 Even
 输出固定 Event 元数据；sink 失败不能改变这里描述的任何保存或调用顺序。继续阅读
 [结构化诊断为什么不能成为第二套 Event](/zh-cn/development/diagnostics/)了解 Log、Event 和未来 Trace
 之间的边界。
+
+## F-0022 把每次尝试接在哪一层
+
+AgentLoop 仍负责逻辑 Activity 和下一轮 Context；`application/attempt_execution.py` 负责每次
+Attempt 的持久边界、退避等待和最终结果。`runtime/attempts.py` 只计算恢复规则，
+`runtime/attempt_reducer.py` 校验已保存事实。所有 Tool 执行仍经过同一个 ToolExecutor。
+
+新 RunCreated v5 保留 v4 的身份与 Provider selection，再增加 retry policy 和恢复契约。旧 v1-v4
+读取保持原义，旧 RunState 不增加默认字段。Token 与费用在 Attempt 结束时记账，Activity 最终结果
+不重复累加。写入不明会停止整个 Run，普通只读失败才可能交回模型。
+
+完整时序、代码地图与回归入口见[有限重试导读](/zh-cn/development/bounded-attempt-retry/)。

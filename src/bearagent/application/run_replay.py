@@ -5,6 +5,8 @@ import time
 from pydantic import ValidationError
 
 from bearagent._bounded_read import run_bounded_read
+from bearagent.domain.attempt_queries import AttemptPage, AttemptSummary
+from bearagent.domain.attempts import RunStateV5
 from bearagent.domain.errors import ErrorCode
 from bearagent.domain.ids import RunId
 from bearagent.domain.replay import (
@@ -32,6 +34,52 @@ class RunReplayService:
 
     async def replay(self, run_id: RunId) -> RunReplay:
         return await self._replay(run_id, self._deadline())
+
+    async def attempts(
+        self, run_id: RunId, *, after_sequence: int = 0, limit: int = 100
+    ) -> AttemptPage:
+        if (
+            type(limit) is not int
+            or not 1 <= limit <= 1000
+            or type(after_sequence) is not int
+            or not 0 <= after_sequence <= 2**63 - 1
+        ):
+            raise replay_error(ErrorCode.INVALID_INPUT)
+        deadline = self._deadline()
+        replay = await self._replay(run_id, deadline)
+        state = replay.state
+        items: list[AttemptSummary] = []
+        has_more = False
+        if isinstance(state, RunStateV5):
+            for attempt in state.attempts:
+                self._remaining(deadline)
+                if attempt.requested_sequence <= after_sequence:
+                    continue
+                if len(items) == limit:
+                    has_more = True
+                    break
+                items.append(
+                    AttemptSummary(
+                        **attempt.model_dump(include=set(AttemptSummary.model_fields)),
+                        error_code=attempt.error.code if attempt.error else None,
+                        decisions=tuple(
+                            d
+                            for d in state.recovery_decisions
+                            if d.attempt_id == attempt.attempt_id
+                        ),
+                    )
+                )
+        return AttemptPage(
+            run_id=run_id,
+            recording="recorded" if isinstance(state, RunStateV5) else "legacy_not_recorded",
+            last_sequence=state.last_sequence,
+            projection=replay.summary.projection,
+            after_sequence=after_sequence,
+            limit=limit,
+            attempts=tuple(items),
+            next_after_sequence=items[-1].requested_sequence if items else after_sequence,
+            has_more=has_more,
+        )
 
     async def check(
         self, *, after_run_id: RunId | None = None, limit: int = DEFAULT_SCAN_RUNS

@@ -1,8 +1,10 @@
 ---
 title: ModelProvider 与三种协议 adapter 实现导读
-description: 从 config.json 走到 protocol factory、流事件翻译、v4 Provider selection 和 live gate。
+description: 从 config.json 走到 protocol factory、流事件翻译、版本化 Provider selection 和 live gate。
 bearStatus: implemented
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - F-0004
   - ADR-0010
   - F-0017
@@ -79,13 +81,13 @@ ToolCall 之前结束、完成后又出现关键事件、未知关键 event 或 
 ## 配置与 secret 怎样分开
 
 `config.json` 保存 `provider_id`、厂商显示名、protocol、HTTPS base URL、直接填写的 `api_key`、模型列表、
-可选 thinking mode 和 `default_model`，并拒绝 pricing；RunProfile v2 只保存 `provider_id`、Agent 行为和预算。`SecretStr`
+可选 thinking mode 和 `default_model`，并拒绝 pricing；RunProfile v2/v3 保存 `provider_id`、Agent 行为和预算。`SecretStr`
 防止 key 出现在配置 model 的 repr/JSON；factory 只在创建选定 adapter 时解封。
 
-Bootstrap 从默认模型构造 `unpriced` 的 `AgentConfig`；真实 gate 单独注入 pricing snapshot。新 Run 使用
+Bootstrap 从默认模型构造 `unpriced` 的 `AgentConfig`；真实 gate 单独注入 pricing snapshot。F-0018 的历史 Run 使用
 RunCreated v4 保存 `provider_id`、由非密钥 Provider/model 字段计算的 config version、protocol、配置
 model、pricing version 和 contract fingerprint。它不保存 base URL 或 key。旧 RunCreated v1/v2/v3 与
-RunProfile v1 继续可读，SQLite 不需要新增表或列。
+RunProfile v1 继续可读。F-0022 的新 RunCreated v5 还保存 retry policy；SQLite 使用 migration 2。
 
 缺少、空白或非法 key 会在数据库和 Run 创建前返回安全的 `invalid_input`。有效 key 不进入
 AgentConfig、Event、SQLite、CLI 输出或 live report。零预算仍会在创建 SDK client 前停止。
@@ -97,8 +99,8 @@ AgentConfig、Event、SQLite、CLI 输出或 live report。零预算仍会在创
 header、Prompt、输出、endpoint 或原始异常文本。
 
 一次 Run 只使用选中的协议与 endpoint。自动 fallback 可能把同一个 Prompt 和 key 发往另一处，还会
-让 Activity 次数和费用无法从 Event 解释。P1 因此既不自动 retry，也不自动 fallback；P2 才定义带
-Attempt 的恢复与重试语义。
+让调用次数和费用无法从 Event 解释。当前仍不自动 fallback；F-0022 只在明确未提交且已知
+零用量时重试同一个 ModelRequest。
 
 ## 测试证据在哪里
 
@@ -117,3 +119,13 @@ Provider、model、独立 pricing snapshot、commit 与费用上限，然后由 
 2026-08-23 的 suite v1.1.1 使用 DeepSeek V4 经 production composition 通过 5/5，脱敏证据见
 [F-0017 P1 live report v1](https://github.com/CherryYang05/BearAgent/blob/main/docs/evidence/F-0017-p1-live-report-v1.json)。
 这份证据关闭 F-0017/P1，但不证明其他 endpoint、model 或 protocol 已付费联调。
+
+## 提交证据怎样控制重发
+
+ModelProviderError 携带内部 ModelFailureEvidence。只有连接阶段的具体 ConnectError/ConnectTimeout
+能表示 not_submitted 与已知零用量。读写错误、响应头已到达、部分流、429、5xx 和一般 unavailable
+都不能提供这个证据；异常链中更早的连接错误不能覆盖后来的读写错误。
+
+AttemptRunner 对失败流已产生的事件再做检查，不能用 adapter 的未提交声明抹掉 partial stream。
+三协议的真实 SDK + MockTransport 测试位于 `tests/contract/test_model_attempt_evidence.py`；
+它断言实际请求数、请求内容不变、SDK 隐藏重试关闭，以及不泄漏错误文本。

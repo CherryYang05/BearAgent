@@ -7,6 +7,15 @@ from pydantic import Field, model_validator
 
 from bearagent.domain._base import DomainModel, thaw_json_mapping
 from bearagent.domain.agent import AgentConfig, ContextBuildReport
+from bearagent.domain.attempts import (
+    AttemptFailedPayload,
+    AttemptRequestedPayload,
+    AttemptStartedPayload,
+    AttemptSucceededPayload,
+    RecoveryDecisionPayload,
+    RetryPolicy,
+    ToolRecoveryContract,
+)
 from bearagent.domain.errors import ErrorInfo
 from bearagent.domain.events import Event
 from bearagent.domain.fingerprints import RunFingerprint
@@ -26,7 +35,8 @@ RUN_EVENT_SCHEMA_VERSION = 1
 RUN_EVENT_SCHEMA_VERSION_V2 = 2
 RUN_EVENT_SCHEMA_VERSION_V3 = 3
 RUN_EVENT_SCHEMA_VERSION_V4 = 4
-LATEST_RUN_EVENT_SCHEMA_VERSION = RUN_EVENT_SCHEMA_VERSION_V4
+RUN_EVENT_SCHEMA_VERSION_V5 = 5
+LATEST_RUN_EVENT_SCHEMA_VERSION = RUN_EVENT_SCHEMA_VERSION_V5
 
 
 class RunCreatedPayload(DomainModel):
@@ -135,6 +145,23 @@ class RunCreatedPayloadV4(RunCreatedPayloadV2):
     provider_selection: ProviderSelection | None = None
 
 
+class RunCreatedPayloadV5(RunCreatedPayloadV4):
+    """v5 captures retry rules separately from the unchanged historical fingerprint."""
+
+    retry_policy: RetryPolicy
+    recovery_contracts: tuple[ToolRecoveryContract, ...] = ()
+
+    @model_validator(mode="after")
+    def matching_recovery_contracts(self) -> Self:
+        names = tuple(contract.name for contract in self.recovery_contracts)
+        if names != tuple(sorted(set(names))):
+            raise ValueError("recovery contracts must be sorted and unique")
+        fingerprints = {tool.name: tool.sha256 for tool in self.run_fingerprint.tools}
+        if {c.name: c.spec_sha256 for c in self.recovery_contracts} != fingerprints:
+            raise ValueError("recovery contracts must match the registered Tool fingerprints")
+        return self
+
+
 class RunStartedPayloadV2(RunStartedPayload):
     """v2 Run start marker."""
 
@@ -233,7 +260,13 @@ class ToolCallFailedPayloadV2(ToolCallFailedPayload):
 
 
 type RunEventPayload = (
-    RunCreatedPayload
+    RunCreatedPayloadV5
+    | AttemptRequestedPayload
+    | AttemptStartedPayload
+    | AttemptSucceededPayload
+    | AttemptFailedPayload
+    | RecoveryDecisionPayload
+    | RunCreatedPayload
     | RunStartedPayload
     | RunSucceededPayload
     | RunFailedPayload
@@ -262,7 +295,7 @@ type RunEventPayload = (
 )
 
 
-_PAYLOAD_TYPES = {
+_PAYLOAD_TYPES: dict[tuple[str, int], type[RunEventPayload]] = {
     ("RunCreated", RUN_EVENT_SCHEMA_VERSION): RunCreatedPayload,
     ("RunStarted", RUN_EVENT_SCHEMA_VERSION): RunStartedPayload,
     ("RunSucceeded", RUN_EVENT_SCHEMA_VERSION): RunSucceededPayload,
@@ -312,6 +345,24 @@ _PAYLOAD_TYPES = {
     ("ToolCallCompleted", RUN_EVENT_SCHEMA_VERSION_V4): ToolCallCompletedPayloadV2,
     ("ToolCallFailed", RUN_EVENT_SCHEMA_VERSION_V4): ToolCallFailedPayloadV2,
 }
+
+_PAYLOAD_TYPES.update(
+    {
+        (name, RUN_EVENT_SCHEMA_VERSION_V5): payload
+        for (name, version), payload in tuple(_PAYLOAD_TYPES.items())
+        if version == RUN_EVENT_SCHEMA_VERSION_V4
+    }
+)
+_PAYLOAD_TYPES.update(
+    {
+        ("RunCreated", RUN_EVENT_SCHEMA_VERSION_V5): RunCreatedPayloadV5,
+        ("AttemptRequested", RUN_EVENT_SCHEMA_VERSION_V5): AttemptRequestedPayload,
+        ("AttemptStarted", RUN_EVENT_SCHEMA_VERSION_V5): AttemptStartedPayload,
+        ("AttemptSucceeded", RUN_EVENT_SCHEMA_VERSION_V5): AttemptSucceededPayload,
+        ("AttemptFailed", RUN_EVENT_SCHEMA_VERSION_V5): AttemptFailedPayload,
+        ("RecoveryDecisionRecorded", RUN_EVENT_SCHEMA_VERSION_V5): RecoveryDecisionPayload,
+    }
+)
 
 RUN_EVENT_PAYLOAD_TYPES = MappingProxyType(_PAYLOAD_TYPES)
 

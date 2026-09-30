@@ -3,6 +3,8 @@ title: 命令行手册：运行、查看与排错
 description: 从源码安装 BearAgent，配置模型服务和 Run profile，运行本地文件任务，并用 inspect/events 核对已经保存的事实。
 bearStatus: mixed
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - F-0020
   - F-0021
   - ADR-0020
@@ -152,7 +154,7 @@ uv run bearagent doctor --check-config
 
 BearAgent 故意不提供 `--api-key`。新配置把 key 只写在被 Git 忽略的本机 `data/config.json` 中；不要把
 凭据写进 RunProfile、objective、命令参数、Event、Git、截图或 issue。Config loader 使用 `SecretStr`
-遮蔽 key。新 Run 的 Event v4 保存 `provider_id`、非密钥 `config_version`、protocol、model、pricing
+遮蔽 key。新 Run 的 Event v5 保存 `provider_id`、非密钥 `config_version`、protocol、model、pricing
 version 与声明的 Policy/Tool contract fingerprint，不保存 endpoint、key 或完整 Policy 配置。
 
 Config v1 缺少、空白或非法 key 时，会在数据库和 Run 创建前返回 `invalid_input`。旧 RunProfile v1 仍
@@ -299,7 +301,43 @@ state hash 用于比较重建状态，不是 Event 签名或执行权限。两�
 
 目标恰好是新命令名时，用 `uv run bearagent run -- replay` 或 `uv run bearagent run -- check`。
 
-## 9. 原有命令的退出码和失败排查
+## 9. 查看尝试，并显式启用有限重试
+
+```console
+uv run bearagent run attempts RUN_ID
+uv run bearagent run attempts RUN_ID --limit 100 --json
+uv run bearagent run attempts RUN_ID --after-sequence 12 --limit 100 --json
+```
+
+这里的 12 应替换成上一页 JSON 的 next_after_sequence，以 has_more 判断是否还有下一页。
+默认 100 条，最多 1,000 条。输出只包含 ID、状态、期限、失败类别、提交证据、已知用量和决定，
+不导出请求、路径或 ToolResult。旧 v1-v4 Run 显示 legacy_not_recorded，不补造尝试。
+查询使用默认数据库，不读取 config/profile，也不会创建数据库或恢复执行。
+
+默认仍只有一次尝试。要允许最多两次，将已有 `data/p1-run-profile.json` 改为 schema_version 3，
+保留 provider_id、agent_config 和 budget_limits，增加：
+
+```json
+{
+  "retry_policy": {
+    "version": "bounded-retry-v1",
+    "max_attempts": 2,
+    "initial_backoff_ms": 250,
+    "max_backoff_ms": 2000
+  }
+}
+```
+
+这只是新增字段片段，不能覆盖整个 profile。完整示例见
+[run-profile-v3.example.json](https://github.com/CherryYang05/BearAgent/blob/main/examples/run-profile-v3.example.json)。
+示例预算为零，实际调用前必须配置非零预算；init 不覆盖现有文件，旧 v1/v2 profile 仍按一次尝试处理。
+max_attempts 包括第一次，范围 1–3；退避须满足 1 ≤ initial_backoff_ms ≤ max_backoff_ms ≤ 5000。
+
+只读 Tool 短暂失败和明确未提交的模型连接失败才可能再试，每次消耗同一 Run 预算。写入进入 adapter
+后失败会停止整个 Run；effect_indeterminate 不表示写入未发生。重启续跑、核对与正式 UNKNOWN 尚未实现。
+升级数据库前保存一致备份；max_attempts=1 只关闭 retry，旧程序仍不能读写新 v5 数据库。
+
+## 10. 原有命令的退出码和失败排查
 
 | 退出码 | 表示什么 |
 |---:|---|
@@ -317,14 +355,14 @@ state hash 用于比较重建状态，不是 Event 签名或执行权限。两�
 | Run 长期显示 `running` | 进程可能在 Activity 边界中断；P1 只如实显示，不会自动 resume 或补写成功 |
 | 文件存在但 inspect 没有 Artifact | 写入可能完成，但 Tool completed Event 未提交；P1 不从文件系统反推事实 |
 
-## 10. 当前限制
+## 11. 当前限制
 
 - 单用户、单 Agent、单进程；同一 Run 串行执行 Activity；
 - 支持 Responses、Chat Completions 和 Anthropic Messages 三种 wire protocol；一次 DeepSeek V4 真实
   5/5 不代表其他服务或协议都已付费联调；
 - 只有四个 workspace Tool；没有 shell、代码执行、浏览器、MCP 或任意 HTTP Tool；
 - Policy 是启动时固定 allowlist，没有用户 Approval 或持久 Grant；
-- SQLite 保存事实，但没有 Checkpoint、resume、retry、Attempt、Receipt 或 `UNKNOWN`；
+- SQLite 保存 Attempt 与进程内有限 retry；没有 Checkpoint、resume、Receipt、重启续跑或 `UNKNOWN`；
 - check 只报告检查范围与异常项，不是完整 Run 管理列表；没有删除命令、后台 daemon、HTTP API 或 Web UI；
 - 任务产生的 `outputs/**` 和数据库由用户管理，P1 不提供生命周期清理。
 

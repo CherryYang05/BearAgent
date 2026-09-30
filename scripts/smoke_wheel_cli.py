@@ -91,7 +91,7 @@ def main() -> None:
 
         config_path.unlink()
         profile_path.unlink()
-        for command in ("inspect", "events", "replay", "check"):
+        for command in ("inspect", "events", "replay", "check", "attempts"):
             result = runner.invoke(
                 cli_main.app,
                 [
@@ -109,7 +109,7 @@ def main() -> None:
             if payload["command"] != command:
                 raise RuntimeError(f"installed wheel {command} output is invalid")
 
-    print("Installed wheel Run/inspect/events/replay/check smoke test passed.")
+    print("Installed wheel Run/inspect/events/replay/check/attempts smoke test passed.")
 
 
 def _inject_provider(provider: ModelProvider) -> None:

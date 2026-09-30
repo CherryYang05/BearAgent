@@ -147,10 +147,13 @@ def test_agent_loop_persists_a_text_run_and_deterministic_cost() -> None:
         "RunStarted",
         "ModelCallRequested",
         "ModelCallStarted",
+        "AttemptRequested",
+        "AttemptStarted",
+        "AttemptSucceeded",
         "ModelCallCompleted",
         "RunSucceeded",
     )
-    assert all(event.schema_version == 4 for event in events)
+    assert all(event.schema_version == 5 for event in events)
     requested = parse_run_event_payload(events[2])
     assert requested.request == provider.requests[0]  # type: ignore[union-attr]
 
@@ -220,12 +223,21 @@ def test_agent_loop_executes_tool_then_rebuilds_context_for_final_answer() -> No
         "RunStarted",
         "ModelCallRequested",
         "ModelCallStarted",
+        "AttemptRequested",
+        "AttemptStarted",
+        "AttemptSucceeded",
         "ModelCallCompleted",
         "ToolCallRequested",
         "ToolCallStarted",
+        "AttemptRequested",
+        "AttemptStarted",
+        "AttemptSucceeded",
         "ToolCallCompleted",
         "ModelCallRequested",
         "ModelCallStarted",
+        "AttemptRequested",
+        "AttemptStarted",
+        "AttemptSucceeded",
         "ModelCallCompleted",
         "RunSucceeded",
     )

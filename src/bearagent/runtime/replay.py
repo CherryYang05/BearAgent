@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
 from uuid import UUID
 
+from bearagent.domain.attempts import RunStateV5
 from bearagent.domain.errors import ErrorCode
 from bearagent.domain.events import Event
 from bearagent.domain.replay import (
@@ -25,7 +26,10 @@ from bearagent.runtime.reducer import reduce_events
 def state_hash(state: RunState) -> str:
     """Hash format v1: complete state, UTC microseconds, lowercase UUIDs, canonical JSON."""
     encoded = json.dumps(
-        {"state_format_version": 1, "state": state.model_dump(mode="python")},
+        {
+            "state_format_version": 2 if isinstance(state, RunStateV5) else 1,
+            "state": state.model_dump(mode="python"),
+        },
         default=_canonical_value,
         ensure_ascii=False,
         allow_nan=False,
@@ -87,6 +91,7 @@ def reconstruct_run(
         last_sequence=state.last_sequence,
         last_event_type=snapshot.events[-1].event_type,
         state_hash=state_hash(state),
+        state_format_version=2 if isinstance(state, RunStateV5) else 1,
         projection=comparison,
         active_activity_id=active.activity_id if active else None,
         active_activity_status=active.status if active else None,

@@ -11,9 +11,25 @@ from bearagent.domain.agent import (
     RunInput,
     RunProfile,
     RunProfileV2,
+    RunProfileV3,
     RunResult,
 )
 from bearagent.domain.artifacts import Artifact
+from bearagent.domain.attempt_queries import AttemptPage, AttemptSummary
+from bearagent.domain.attempts import (
+    ActivityEvidence,
+    AttemptFailedPayload,
+    AttemptRequestedPayload,
+    AttemptStartedPayload,
+    AttemptState,
+    AttemptSucceededPayload,
+    ModelFailureEvidence,
+    RecoveryDecision,
+    RecoveryDecisionPayload,
+    RetryPolicy,
+    RunStateV5,
+    ToolRecoveryContract,
+)
 from bearagent.domain.errors import ErrorInfo
 from bearagent.domain.events import Event
 from bearagent.domain.fingerprints import (
@@ -24,6 +40,7 @@ from bearagent.domain.fingerprints import (
 from bearagent.domain.ids import (
     ActivityId,
     ArtifactId,
+    AttemptId,
     CausationId,
     CorrelationId,
     EventId,
@@ -65,6 +82,7 @@ from bearagent.domain.run_events import (
     RunCreatedPayloadV2,
     RunCreatedPayloadV3,
     RunCreatedPayloadV4,
+    RunCreatedPayloadV5,
     RunFailedPayload,
     RunFailedPayloadV2,
     RunStartedPayload,
@@ -97,6 +115,22 @@ from bearagent.domain.tools import (
 )
 
 PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
+    AttemptPage,
+    AttemptSummary,
+    AttemptId,
+    RetryPolicy,
+    ModelFailureEvidence,
+    ToolRecoveryContract,
+    ActivityEvidence,
+    AttemptRequestedPayload,
+    AttemptStartedPayload,
+    AttemptSucceededPayload,
+    AttemptFailedPayload,
+    RecoveryDecisionPayload,
+    AttemptState,
+    RecoveryDecision,
+    RunStateV5,
+    RunCreatedPayloadV5,
     ReplayLimits,
     EventReplaySnapshot,
     EventRunPage,
@@ -154,6 +188,7 @@ PUBLIC_SCHEMA_MODELS: tuple[type[BaseModel], ...] = (
     RunInspection,
     RunProfile,
     RunProfileV2,
+    RunProfileV3,
     RunStartedPayload,
     RunStartedPayloadV2,
     RunState,

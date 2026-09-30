@@ -53,7 +53,7 @@ P1 已于 2026-09-08 收口，F-0020 的本机资料保护与首次使用补强�
 | Tool 执行边界 | 有界 Tool 数据、精确 Registry、默认拒绝 Policy 和统一 ToolExecutor |
 | workspace 只读边界 | 一层目录列出、分段 UTF-8 读取、普通字符串搜索和跨平台路径拒绝 |
 | workspace 输出边界 | `outputs/**` UTF-8 原子创建/替换、Artifact 元数据和失败前旧目标保护 |
-| Agent 执行链 | 从已提交 Event 构造有界 Context，串行调用模型与 Tool，以 schema v4 保存 v2-shaped Activity 事实和 Run contract identity |
+| Agent 执行链 | 从已提交 Event 构造有界 Context，串行调用模型与 Tool，以 schema v5 保存 Activity、Attempt、恢复决定和 Run contract identity |
 | 固定任务 | 五个版本化文件任务使用 Fake Provider 完成确定性验证；DeepSeek V4 suite v1.1.1 也通过同一 rubric 的真实 5/5 |
 | 用户入口 | `run/inspect/events` CLI、config v1、RunProfile v1/v2、human/JSON renderer 和安全退出码 |
 | 查询 | application query service 只通过 EventStore 读取 projection 与分页 Event，并重建 Artifact 元数据 |
@@ -79,7 +79,7 @@ projection 行或表缺失不阻止重建；Event 或 migration 损坏仍安全�
 
 ### 3.2 Roadmap 中的后续方向（尚未形成当前实现）
 
-- P2 后续：Checkpoint、Attempt、恢复语义、控制命令和 `UNKNOWN` 处置；
+- P2 当前：Event-only 重建与进程内有限 Attempt/retry；后续增加 Checkpoint、核对、控制命令和 `UNKNOWN`；
 - P3：Grant、三态 Policy、参数绑定 Approval 和隔离 runner；
 - P4：HTTP/SSE、认证、自托管、Skill、MCP、Web UI、Memory 和受控联网；
 - P5：跨版本 trace 与持续评测。
@@ -198,21 +198,22 @@ Reducer 只接受同一 Run、连续 sequence、白名单类型和版本，以�
 `RunState`，不访问数据库、模型、工具、系统时钟或随机数。
 
 Tool terminal Event 如果携带 v2-shaped execution evidence，还必须与同版本 `ToolCallRequested` 中的
-原始 `ToolRequest` 完全一致。当前 schema v2、v3、v4 都执行这条跨 Event 校验；判断依据是解析后的
+原始 `ToolRequest` 完全一致。当前 schema v2-v5 都执行这条跨 Event 校验；判断依据是解析后的
 payload shape，不是容易漏掉新版本的数字分支。
 
 ### 7.2 预算
 
-Run 创建时固定模型调用次数、工具调用次数、token、费用和总时间上限。模型/工具次数在请求 Event
-记账；实际 token/费用在模型完成或失败时记账。预算检查只阻止新的 Activity，不丢弃已经发生的
-完成或失败事实。
+Run 创建时固定模型调用次数、工具调用次数、token、费用和总时间上限。v1-v4 在逻辑请求 Event
+记调用次数，在模型 Activity 结束时记已知用量。v5 在 AttemptRequested 记调用次数，在 Attempt
+结束时记已知用量，逻辑 terminal 不重复累加。预算阻止新的执行，不丢弃已发生的完成或失败事实。
 
 因此某次模型调用可能让实际 token 超过上限。Runtime 要记录超额，然后禁止下一步，而不是修改
 历史让数字看起来合规。
 
 ### 7.3 P2/P3 状态扩展
 
-P2 将增加 pause、cancel、Attempt、RecoveryDecision 和 `UNKNOWN`；P3 再增加等待、批准和拒绝
+F-0022 已增加 Attempt 和 RecoveryDecision，Run/Activity 的逻辑状态仍不变。P2 后续增加
+pause、cancel 和 `UNKNOWN`；P3 再增加等待、批准和拒绝
 Approval 的状态。这些状态必须由新 Event 明确表达，不能由 P1 Reducer 猜测生成。
 
 ## 8. Event 保存与恢复
@@ -231,12 +232,30 @@ occurred_at, causation_id, correlation_id, payload
 
 不兼容 payload 使用新 schema version 和明确迁移/upcaster，不改变旧 JSON 的含义。
 
-F-0018 的新 Run 统一写 Event schema v4。`RunCreatedPayloadV4` 在已有目标、预算、AgentConfig 和可选
+F-0018 当时统一写 Event schema v4；这些历史格式继续可读。`RunCreatedPayloadV4` 在已有目标、预算、AgentConfig 和可选
 Provider 选择之外保存 `RunFingerprint`。Fingerprint 由 composition root 根据 package version、
 `FixedToolPolicy` 和 Registry 中的 `ToolSpec` 构造；query 从 sequence 1 的 Event 读取，legacy Run 返回
 缺失，不用当前配置反推历史。SQLite 仍使用已有 `payload_json`，projection 和 migration 都不增加字段。
 
-### 8.2 P2 将怎样恢复
+### 8.2 当前进程内的有限重试
+
+F-0022 的新 Run 统一写 v5。RunCreated 增加固定 RetryPolicy 与恢复契约，默认 max_attempts=1，
+显式最多 3 次。每次 Attempt 保存请求引用、开始/结束边界与失败类别；失败后先提交恢复决定再等待。
+只读 Tool 的短暂失败可以再试，每次重新 prepare/Policy 并检查参数和契约 hash。
+模型只有连接阶段明确未提交且已知零用量才可重发同一个 ModelRequest；读写失败、响应头、部分流、
+429、5xx 和未知提交/usage 都停止 Run。SDK retry 保持关闭。
+
+所有尝试共用首次 Activity 请求确定的 deadline，受 Run 总时间和调用预算限制。写入进入 adapter
+后失败记录 effect_indeterminate 并停止整个 Run，不执行排队 Tool 或后续模型。Event 保存失败、
+取消和进程退出都停在最后已提交事实。RunFailed 表示协调器停止，不表示副作用未发生。
+
+RunStateV5 使用 state hash format v2；旧 RunState、历史 JSON、固定 hash 与预算规则不变。
+公开 schema 增加类型、联合分支和错误码，不给旧状态添加默认字段。run attempts 从 Event 重建
+后输出安全摘要，默认 100、最多 1,000 条；完整历史仍受 F-0021 的数量、字节和期限限制。
+
+### 8.3 后续的重启恢复设计
+
+下述核对、Checkpoint 与继续执行尚未实现。replay/check/attempts 都只读，不自动续跑。
 
 Runtime 启动后扫描非终态 Run。完整 Event 永远是事实来源；Checkpoint 只保存 sequence、版本和
 state hash，用于加速重建。Checkpoint 缺失、损坏或不兼容时回到完整 Event。恢复只发生在模型或
@@ -289,7 +308,7 @@ P1 不自动 retry 或 fallback。调用方必须显式修正配置或重新启�
 F-0006 已建立统一入口。F-0007 在这条入口后实现 `workspace.list`、`workspace.read` 和
 `workspace.search`。每个 Tool 先用 `ToolSpec` 声明 `spec_version`、输入/输出 schema、副作用类别、
 timeout、输出上限和粗粒度 retry safety。`spec_version` 标识 schema 之外的 prepare/validation 行为
-contract；完整 ToolSpec 的 canonical JSON SHA-256 随 RunCreated v4 保存。`ToolResult` 返回结构化 JSON
+contract；完整 ToolSpec 的 canonical JSON SHA-256 随 RunCreated 保存，历史 v4 与当前 v5 均可读取。`ToolResult` 返回结构化 JSON
 或安全 Error，不只返回任意字符串。
 
 ```text
@@ -363,12 +382,13 @@ schema、timeout、输出上限、恢复语义和 Grant。
 
 ## 12. SQLite 与本地数据（F-0003 已实现子集；P2 扩展）
 
-F-0003 当前 schema v1 已经包含：
+F-0003 的 migration 1 包含以下表，F-0022 的 migration 2 增加派生缓存：
 
 ```text
 events                  只追加的事实
 run_projections         当前 Run 查询状态
 activity_projections    当前 Activity 查询状态
+run_attempt_projections v5 状态缓存，包含 Attempt 和恢复决定
 schema_migrations       带名称和 SHA-256 的 migration ledger
 ```
 
@@ -389,6 +409,10 @@ artifacts      文件路径、hash、类型和来源 Activity
 `event_id` 全局唯一，`run_id + sequence` 唯一。F-0008 已把 Artifact 文件写入 workspace 的
 `outputs/**`。F-0016 已把包含 Artifact 的完整 ToolResult、来源 ToolCallId 和 ActivityId 写进 v2
 Event；SQLite 继续复用现有 payload JSON 列，没有新增 Artifact 查询表或 migration。
+
+F-0022 的数据库升级在事务内应用 migration 2，失败全部回滚；0001 和旧 Event 不改写，旧 Run
+不补造 Attempt。升级前停止 writer 并保存一致备份。max_attempts=1 只关闭重试，不能降级格式。
+旧 writer 拒绝 migration 2；回退旧二进制必须恢复升级前备份或使用新库，并保留新库供检查。
 
 建议数据目录：
 
@@ -429,7 +453,7 @@ bearagent doctor
 不创建模型 client、数据库或 Run。普通 doctor 仍只检查 Python。`--workspace` 不改变其他默认路径。
 普通 v2 Run 的价格是 `unpriced`；cost=0 不代表免费，费用字段不能限制真实账单。
 
-`inspect` 返回 Reducer projection、RunCreated v4 的安全 Provider 选择与 RunFingerprint，以及从已提交
+`inspect` 返回 Reducer projection、RunCreated v4/v5 的安全 Provider 选择与 RunFingerprint，以及从已提交
 v2 shape Tool Event 重建的 Artifact。旧 v1-v3 Run 没有 fingerprint 时明确返回缺失。`events` 使用有界页、
 sequence cursor 和 `has_more`；默认 human 输出不打印 payload，显式 `--json` 才导出完整 Event。查询
 只调用 EventStore port，数据库不存在时不会创建空库。进程中断后的非终态 Run 会原样显示，不会
@@ -468,7 +492,7 @@ P1 从固定任务、安全结构化日志和 Event 查询开始；P2 增加中�
 ## 15. 安全边界
 
 科研扩展保持“策略提出提议，Runtime 检查执行”的边界。现有 causation ID 不是完整依赖图；P2 要
-另行定义 Attempt、阶段与因果引用的契约。副作用核对、诊断假设验证与授权分别记录，不能互相替代。
+继续扩展核对与阶段契约；F-0022 已定义 Attempt 和恢复决定的失败引用。副作用核对、诊断假设验证与授权分别记录，不能互相替代。
 具体阶段和实验设计见[科研 Runtime 规划](../project/research-runtime.md)，这些策略接口尚未实现。
 
 以下输入都不可信：用户附件、workspace 文件、网页、MCP、模型输出、Tool 输出、第三方 Skill、模型

@@ -25,6 +25,7 @@ from anthropic.types import (
 from pydantic import ValidationError
 
 from bearagent.domain._base import thaw_json_mapping
+from bearagent.domain.attempts import ModelFailureEvidence
 from bearagent.domain.errors import ErrorCode
 from bearagent.domain.ids import ToolCallId
 from bearagent.domain.messages import MessageRole, TextPart, ToolCallPart
@@ -79,6 +80,7 @@ class AnthropicMessagesProvider:
         self._base_url = base_url
 
     async def stream(self, request: ModelRequest) -> AsyncIterator[ModelEvent]:
+        request_opened = False
         terminal_seen = False
         message_started = False
         message_delta_seen = False
@@ -102,6 +104,7 @@ class AnthropicMessagesProvider:
                 stream=True,
                 timeout=request.timeout_ms / 1_000,
             )
+            request_opened = True
             async for raw_event in stream:
                 event = _runtime_value(raw_event)
                 if terminal_seen:
@@ -272,7 +275,10 @@ class AnthropicMessagesProvider:
         except ModelProviderError:
             raise
         except Exception as cause:
-            raise classify_anthropic_error(cause) from cause
+            error = classify_anthropic_error(cause)
+            if request_opened:
+                error = ModelProviderError(error.info, cause=cause, evidence=ModelFailureEvidence())
+            raise error from cause
         if not terminal_seen:
             raise protocol_error("Provider stream ended without a completion event.")
 

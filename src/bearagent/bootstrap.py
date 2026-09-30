@@ -27,7 +27,7 @@ from bearagent.adapters.tools import build_workspace_tools
 from bearagent.application import AgentLoop, RunQueryService
 from bearagent.application.run_replay import RunReplayService
 from bearagent.configuration import ProviderCatalog, ProviderConfig
-from bearagent.domain.agent import AgentConfig, ModelPricing, RunProfile, RunProfileV2
+from bearagent.domain.agent import AgentConfig, ModelPricing, RunProfile, RunProfileV2, RunProfileV3
 from bearagent.domain.errors import BearAgentError, ErrorCategory, ErrorCode, ErrorInfo
 from bearagent.domain.ids import IdGenerator
 from bearagent.domain.providers import ModelProtocol, ProviderSelection
@@ -43,8 +43,8 @@ _WINDOWS_REPARSE_POINT = 0x400
 MAX_PROVIDER_CATALOG_BYTES = 128 * 1_024
 
 
-_RUN_PROFILE_ADAPTER: TypeAdapter[RunProfile | RunProfileV2] = TypeAdapter(
-    Annotated[RunProfile | RunProfileV2, Field(discriminator="schema_version")]
+_RUN_PROFILE_ADAPTER: TypeAdapter[RunProfile | RunProfileV2 | RunProfileV3] = TypeAdapter(
+    Annotated[RunProfile | RunProfileV2 | RunProfileV3, Field(discriminator="schema_version")]
 )
 
 
@@ -56,7 +56,7 @@ class BootstrapError(BearAgentError):
 class RunServices:
     """Production services sharing one initialized durable EventStore."""
 
-    profile: RunProfile | RunProfileV2
+    profile: RunProfile | RunProfileV2 | RunProfileV3
     agent_config: AgentConfig
     agent_loop: AgentLoop
     queries: RunQueryService
@@ -66,14 +66,16 @@ class RunServices:
 class RunConfiguration:
     """Validated offline composition shared by doctor and actual Run startup."""
 
-    profile: RunProfile | RunProfileV2
+    profile: RunProfile | RunProfileV2 | RunProfileV3
     agent_config: AgentConfig
     provider_selection: ProviderSelection
     provider_config: ProviderConfig | None
     registry: ToolRegistry
 
 
-def load_run_profile(profile_path: str | os.PathLike[str]) -> RunProfile | RunProfileV2:
+def load_run_profile(
+    profile_path: str | os.PathLike[str],
+) -> RunProfile | RunProfileV2 | RunProfileV3:
     """Load one bounded UTF-8 JSON profile without accepting links or secrets."""
     path = Path(profile_path)
     try:
@@ -198,6 +200,9 @@ async def _build_run_services(
             tool_executor=executor,
             id_generator=id_generator,
             provider_selection=configured.provider_selection,
+            retry_policy=configured.profile.retry_policy
+            if isinstance(configured.profile, RunProfileV3)
+            else None,
             run_fingerprint=build_run_fingerprint(
                 bearagent_version=package_version(),
                 policy=policy.fingerprint,
@@ -266,7 +271,7 @@ def validate_run_configuration(
 
 
 def resolve_agent_config(
-    profile: RunProfile | RunProfileV2,
+    profile: RunProfile | RunProfileV2 | RunProfileV3,
     provider_config: ProviderConfig | None,
 ) -> AgentConfig:
     if isinstance(profile, RunProfile):
@@ -314,7 +319,7 @@ def build_model_provider(provider_config: ProviderConfig) -> ModelProvider:
 
 
 def _resolve_provider_selection(
-    profile: RunProfile | RunProfileV2,
+    profile: RunProfile | RunProfileV2 | RunProfileV3,
     *,
     config_path: str | os.PathLike[str],
     provider_catalog: ProviderCatalog | None = None,

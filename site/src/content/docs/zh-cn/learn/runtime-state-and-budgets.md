@@ -3,6 +3,8 @@ title: 状态和预算怎样计算
 description: 先理解 Event 与 Reducer 的分工，再看下一次模型或工具调用为什么会被允许或拒绝。
 bearStatus: implemented
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - F-0002
   - F-0003
 ---
@@ -11,7 +13,7 @@ sourceRefs:
 SQLite 查询和命令行也可能算出不同结果。F-0002 选择先记录发生过的事实，再用同一段代码计算状态。
 
 :::note[这部分已经实现]
-Run、Activity、12 种 Event payload、Reducer 和预算检查已有代码和测试。F-0003 已让同一套规则
+Run、Activity、版本化 Event payload、Reducer 和预算检查已有代码和测试。F-0003 已让同一套规则
 同时服务内存与 SQLite EventStore；崩溃后的启动扫描、Checkpoint 和继续执行仍未实现。
 :::
 
@@ -48,14 +50,20 @@ Run 只有 `QUEUED`、`RUNNING`、`SUCCEEDED`、`FAILED`；每个 Activity 经�
 如果把“正在调用模型”“正在读文件”都塞进 Run 状态，两个层次会纠缠在一起。分开以后，用户
 可以看到整次请求是否完成，也能定位具体是哪一次调用失败。
 
+## 一个 Activity 为什么可以有两个 Attempt
+
+读取第一次超时，第二次成功，仍然是同一个读取 Activity。每次进入执行流程称为 Attempt；
+第一次失败不能被后来的成功覆盖。两次 Attempt 消耗两次调用预算，逻辑 Activity 只结束一次。
+每次 Tool 尝试都重新经过 prepare 和 Policy，所有尝试共用第一次请求时确定的 deadline。
+
 ## 五类预算在不同时间记账
 
 | 限制 | 什么时候增加用量 | 什么时候阻止新 Activity |
 |---|---|---|
-| 模型调用次数 | 接受 `ModelCallRequested` 时 | 下一次模型请求将超过上限 |
-| 工具调用次数 | 接受 `ToolCallRequested` 时 | 下一次工具请求将超过上限 |
-| token | 模型报告完成或失败时 | 已知用量达到上限 |
-| 费用 | 模型报告完成或失败时，以整数 micro-USD 保存 | 已知费用达到上限 |
+| 模型调用次数 | v5 接受模型 `AttemptRequested` 时；v1-v4 在 `ModelCallRequested` 时 | 下一次模型请求将超过上限 |
+| 工具调用次数 | v5 接受工具 `AttemptRequested` 时；v1-v4 在 `ToolCallRequested` 时 | 下一次工具请求将超过上限 |
+| token | v5 模型 Attempt 结束时；旧版模型 Activity 结束时 | 已知用量达到上限 |
+| 费用 | 与 token 同时，以整数 micro-USD 保存 | 已知费用达到上限 |
 | 总时间 | 从 `RunStarted` 计算 | 准备请求下一次 Activity 时已过期限 |
 
 token 和费用只有模型返回后才知道准确数字。因此某次已经开始的调用可能让实际用量超过上限。
@@ -63,8 +71,8 @@ Runtime 必须保留这个事实，然后禁止下一次 Activity；它不能为
 
 ## 这还不是崩溃恢复
 
-确定性计算状态是恢复的前提，但不是完整恢复。当前没有 SQLite 启动扫描、Checkpoint、重试
-Attempt 或 `UNKNOWN`。P2 才会决定进程重启后哪些 Activity 能重试、哪些必须停住。
+确定性计算状态是恢复的前提，但不是完整恢复。当前没有自动启动扫描、Checkpoint、重启续跑或 `UNKNOWN`。F-0021 提供显式只读检查；
+F-0022 的 Attempt 与有限重试只在当前进程运行。
 
 继续阅读[逐条读懂一次 Run](/zh-cn/learn/run-event-reducer-walkthrough/)，或进入
 [F-0002 代码导读](/zh-cn/development/run-reducer-and-budgets/)。

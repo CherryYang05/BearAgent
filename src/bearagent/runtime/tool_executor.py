@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 
 from pydantic import JsonValue
 
@@ -38,11 +38,23 @@ class ToolExecutor:
         """Run one request through the complete P1 Tool boundary."""
         return (await self._execute(request)).result
 
-    async def execute_recorded(self, request: ToolRequest) -> ToolExecutionRecord:
+    async def execute_recorded(
+        self,
+        request: ToolRequest,
+        *,
+        before_execute: Callable[[PreparedToolRequest, PolicyDecision], Awaitable[int]]
+        | None = None,
+    ) -> ToolExecutionRecord:
         """Run one request and return safe evidence for Event persistence."""
-        return await self._execute(request)
+        return await self._execute(request, before_execute=before_execute)
 
-    async def _execute(self, request: ToolRequest) -> ToolExecutionRecord:
+    async def _execute(
+        self,
+        request: ToolRequest,
+        *,
+        before_execute: Callable[[PreparedToolRequest, PolicyDecision], Awaitable[int]]
+        | None = None,
+    ) -> ToolExecutionRecord:
         tool = self._registry.get(request.name)
         spec = self._registry.get_spec(request.name)
         if tool is None or spec is None:
@@ -132,8 +144,15 @@ class ToolExecutor:
                 decision=decision,
             )
 
+        # Durable execution boundary: errors must propagate before adapter I/O.
+        # In particular, storage failures cannot become retryable Tool results.
+        timeout_ms = spec.timeout_ms
+        if before_execute is not None:
+            timeout_ms = min(timeout_ms, await before_execute(prepared, decision))
         try:
-            async with asyncio.timeout(spec.timeout_ms / 1_000):
+            if timeout_ms <= 0:
+                raise TimeoutError
+            async with asyncio.timeout(timeout_ms / 1_000):
                 result_value = _runtime_value(await tool.execute(prepared))
         except TimeoutError:
             return _record(

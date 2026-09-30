@@ -217,7 +217,15 @@ def test_p1_fixed_task_suite_reaches_5_of_5_on_both_stores(
     provider, result, events = asyncio.run(exercise())
 
     assert tuple(event.sequence for event in events) == tuple(range(1, len(events) + 1))
-    assert tuple(event.event_type for event in events) == task.expected_event_types
+    assert (
+        tuple(
+            event.event_type
+            for event in events
+            if not event.event_type.startswith("Attempt")
+            and event.event_type != "RecoveryDecisionRecorded"
+        )
+        == task.expected_event_types
+    )
     requested_calls = tuple(
         (payload.tool_name, dict(payload.request.arguments))
         for event in events
@@ -291,7 +299,15 @@ def test_p1_fixed_task_suite_reaches_5_of_5_through_production_composition(
 
     result, events = asyncio.run(exercise())
 
-    assert tuple(event.event_type for event in events) == task.expected_event_types
+    assert (
+        tuple(
+            event.event_type
+            for event in events
+            if not event.event_type.startswith("Attempt")
+            and event.event_type != "RecoveryDecisionRecorded"
+        )
+        == task.expected_event_types
+    )
     requested_calls = tuple(
         (payload.tool_name, dict(payload.request.arguments))
         for event in events

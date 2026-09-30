@@ -32,6 +32,7 @@ from openai.types.responses.response_output_refusal import ResponseOutputRefusal
 from pydantic import ValidationError
 
 from bearagent.domain._base import thaw_json_mapping
+from bearagent.domain.attempts import ModelFailureEvidence
 from bearagent.domain.errors import ErrorCode, SafeDetailValue
 from bearagent.domain.ids import ToolCallId
 from bearagent.domain.messages import MessageRole, TextPart, ToolCallPart, ToolResultPart
@@ -94,6 +95,7 @@ class OpenAIResponsesProvider:
         self._base_url = base_url
 
     async def stream(self, request: ModelRequest) -> AsyncIterator[ModelEvent]:
+        request_opened = False
         terminal_seen = False
         output_chars = 0
         provider_tool_calls: dict[str, tuple[str, str]] = {}
@@ -109,6 +111,7 @@ class OpenAIResponsesProvider:
                 stream=True,
                 timeout=request.timeout_ms / 1_000,
             )
+            request_opened = True
             async for provider_event in stream:
                 if terminal_seen:
                     raise protocol_error("Provider emitted an event after completion.")
@@ -139,7 +142,10 @@ class OpenAIResponsesProvider:
         except ModelProviderError:
             raise
         except Exception as cause:
-            raise classify_openai_error(cause) from cause
+            error = classify_openai_error(cause)
+            if request_opened:
+                error = ModelProviderError(error.info, cause=cause, evidence=ModelFailureEvidence())
+            raise error from cause
         if not terminal_seen:
             raise protocol_error("Provider stream ended without a completion event.")
 

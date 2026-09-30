@@ -20,9 +20,11 @@ Plan 不重复 Spec 的需求，也不代替 ADR。开始前确认 Spec 已 `acc
 
 ## 当前计划
 
-当前没有 active Plan。P2 的 F-0021 已完成收口，F-0022 尚未接受。
+P2 的 F-0021 与 F-0022 已完成实现及验证，当前没有 active Plan。
 
 ## 已完成计划
+
+- [PLAN-F-0022：先让尝试可重建，再接入受限重试](PLAN-F-0022-bounded-attempt-retry.md)
 
 - [PLAN-F-0021：Event-only 重建与显式启动检查](PLAN-F-0021-event-replay-startup-check.md)
 - [PLAN-F-0020：保护本机运行资料并简化首次使用](PLAN-F-0020-safe-local-startup.md)

@@ -81,6 +81,7 @@ class ErrorCode(StrEnum):
     WORKSPACE_ACCESS_FAILED = "workspace_access_failed"
     PERSISTENCE_ERROR = "persistence_error"
     INTERNAL_ERROR = "internal_error"
+    EFFECT_INDETERMINATE = "effect_indeterminate"
 
 
 _CODE_CATEGORIES = {
@@ -114,6 +115,7 @@ _CODE_CATEGORIES = {
     ErrorCode.WORKSPACE_ACCESS_FAILED: ErrorCategory.TOOL,
     ErrorCode.PERSISTENCE_ERROR: ErrorCategory.PERSISTENCE,
     ErrorCode.INTERNAL_ERROR: ErrorCategory.INTERNAL,
+    ErrorCode.EFFECT_INDETERMINATE: ErrorCategory.TOOL,
 }
 
 

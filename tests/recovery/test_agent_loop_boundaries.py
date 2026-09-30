@@ -201,8 +201,8 @@ def test_cancellation_propagates_and_keeps_last_committed_activity_non_terminal(
     store, provider = asyncio.run(exercise())
 
     assert len(provider.requests) == 1
-    assert store.attempted_types[-1] == "ModelCallStarted"
-    assert store.committed_events[-1].event_type == "ModelCallStarted"
+    assert store.attempted_types[-1] == "AttemptStarted"
+    assert store.committed_events[-1].event_type == "AttemptStarted"
     assert "ModelCallFailed" not in store.attempted_types
     assert "RunFailed" not in store.attempted_types
     inspection = asyncio.run(RunQueryService(store).inspect(store.committed_events[0].run_id))

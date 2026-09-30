@@ -3,6 +3,8 @@ title: 一次失败后，Runtime 应先问哪三个问题
 description: 用文件写入超时分清记录、恢复、授权与隔离，以及它们为什么不能塞进一个模块。
 bearStatus: mixed
 sourceRefs:
+  - F-0022
+  - ADR-0021
   - F-0021
   - roadmap
   - architecture/overview
@@ -19,7 +21,7 @@ BearAgent 会把问题按顺序拆开：
 | 阶段 | Runtime 要回答的问题 | 目前状态 |
 |---|---|---|
 | P1 | 发生了什么？ | 已实现：Event、Reducer、预算和 Artifact 可查 |
-| P2 | 根据已有证据，下一步怎样做才安全？ | 进行中；F-0021 只读重建已实现，恢复执行仍待交付 |
+| P2 | 根据已有证据，下一步怎样做才安全？ | 进行中；只读重建与进程内有限重试已实现，重启续跑待交付 |
 | P3 | 这个动作是否获准，又只能影响哪里？ | 未实现 |
 
 这三问看起来接近，实际上负责不同的系统边界。
@@ -34,7 +36,7 @@ P1 会在外部调用前后保存 Event。它也会记录 Tool 的规范化请�
 
 ## P2 先分类，再决定
 
-P2 会把逻辑 Activity 和真实 Attempt 分开。第一次执行失败后，下一次重试是新的 Attempt，旧失败
+F-0022 已把逻辑 Activity 和执行 Attempt 分开。第一次执行失败后，下一次重试是新的 Attempt，旧失败
 仍然保留。
 
 Runtime 还要判断动作属于哪类：
@@ -46,7 +48,7 @@ RECONCILABLE     可以检查目标状态或 Receipt
 NON_IDEMPOTENT   没有证据时不能自动重做
 ```
 
-因此恢复路径不是统一的“失败后重试”：
+下面是后续完整恢复设计；当前只开放进程内的安全重试。写入不明会停止 Run，尚不进入正式 UNKNOWN：
 
 ```mermaid
 flowchart TB
@@ -64,7 +66,7 @@ flowchart TB
 输入写错、临时网络故障、永久失败、权限拒绝和“副作用可能已经发生”也必须分开。Error 上的
 `retryable=true` 只是信息，不能单独授予重做外部写入的权力。
 
-Checkpoint 只加快状态重建。删除 Checkpoint 后，完整 Event 仍要得到同一个 RunState。
+Checkpoint 尚未实现。未来它只加快状态重建，删除后仍须从完整 Event 得到同一个 RunState。
 
 ## hard budget 仍然要保留
 
@@ -108,3 +110,16 @@ BearAgent 当前只有有限 workspace Tool，固定 Tool subset 足够。P4 在
 完整范围和 Feature 顺序见[项目阶段](/zh-cn/project/milestones/)与
 [工程 Roadmap](https://github.com/CherryYang05/BearAgent/blob/main/docs/project/roadmap.md)。当前实现边界
 见[实现状态](/zh-cn/project/status/)。
+
+## 当前可以观察一次只读重试
+
+显式启用最多两次尝试后，只读 Tool 首次超时、第二次成功，会留下两个 Attempt 和一个逻辑
+Activity。Runtime 先保存失败和恢复决定，再等待、重查预算、重新 prepare 与 Policy，最后开始
+第二次调用。模型只接收一个最终 ToolResult。默认 max_attempts=1，仍不会自动再试。
+
+模型只有明确未提交且已知零用量的连接失败可重试。部分响应、读写错误、429、5xx 或提交情况
+不明都会停止 Run。写入进入 adapter 后失败则记录 effect_indeterminate，停止排队 Tool 和后续模型。
+重启后的查询不会继续执行；它也不能从文件存在推断写入成功。
+
+配置与查询见[命令行手册](/zh-cn/guides/cli/)，实现顺序见
+[一次读取失败，什么时候可以再试](/zh-cn/development/bounded-attempt-retry/)。

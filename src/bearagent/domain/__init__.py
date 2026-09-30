@@ -9,6 +9,7 @@ from bearagent.domain.agent import (
     RunInput,
     RunProfile,
     RunProfileV2,
+    RunProfileV3,
     RunResult,
 )
 from bearagent.domain.artifacts import (
@@ -182,6 +183,7 @@ __all__ = [
     "RunInspection",
     "RunProfile",
     "RunProfileV2",
+    "RunProfileV3",
     "RunResult",
     "RunStartedPayload",
     "RunStartedPayloadV2",

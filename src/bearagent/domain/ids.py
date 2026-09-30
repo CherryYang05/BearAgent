@@ -37,6 +37,10 @@ class ActivityId(OpaqueId):
     """Identify one model or tool operation."""
 
 
+class AttemptId(OpaqueId):
+    """Identify one attempt to execute a logical Activity."""
+
+
 class EventId(OpaqueId):
     """Identify one immutable persisted fact."""
 
